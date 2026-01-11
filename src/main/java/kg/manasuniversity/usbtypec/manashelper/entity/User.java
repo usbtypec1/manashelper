@@ -18,10 +18,10 @@ public class User {
   @Id
   private Long id;
 
-  @Column(name = "student_number", nullable = false, length = 64)
+  @Column(name = "student_number", nullable = true, length = 64)
   private String studentNumber;
 
-  @Column(name = "encrypted_password", nullable = false)
+  @Column(name = "encrypted_password", nullable = true)
   private String encryptedPassword;
 
   @CreatedDate
