@@ -1,4 +1,4 @@
-package kg.manasuniversity.usbtypec.manashelper.service;
+package kg.manasuniversity.usbtypec.manashelper.service.telegram;
 
 import kg.manasuniversity.usbtypec.manashelper.entity.TelegramMessage;
 import kg.manasuniversity.usbtypec.manashelper.repository.TelegramMessageRepository;

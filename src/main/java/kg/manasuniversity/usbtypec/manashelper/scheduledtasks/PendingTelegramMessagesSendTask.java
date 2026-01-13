@@ -1,6 +1,6 @@
 package kg.manasuniversity.usbtypec.manashelper.scheduledtasks;
 
-import kg.manasuniversity.usbtypec.manashelper.service.TelegramMessageService;
+import kg.manasuniversity.usbtypec.manashelper.service.telegram.TelegramMessageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
