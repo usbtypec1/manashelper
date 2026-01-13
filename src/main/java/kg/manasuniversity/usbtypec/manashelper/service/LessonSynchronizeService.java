@@ -2,7 +2,9 @@ package kg.manasuniversity.usbtypec.manashelper.service;
 
 import kg.manasuniversity.usbtypec.manashelper.entity.Course;
 import kg.manasuniversity.usbtypec.manashelper.entity.Lesson;
+import kg.manasuniversity.usbtypec.manashelper.mapper.LessonMapper;
 import kg.manasuniversity.usbtypec.manashelper.model.PeriodTimetable;
+import kg.manasuniversity.usbtypec.manashelper.model.TimetableLessonChanges;
 import kg.manasuniversity.usbtypec.manashelper.payload.response.CourseTimetableResponse;
 import kg.manasuniversity.usbtypec.manashelper.repository.CourseRepository;
 import kg.manasuniversity.usbtypec.manashelper.repository.LessonRepository;
@@ -26,13 +28,15 @@ public class LessonSynchronizeService {
   private final TimetableParser timetableParser;
   private final LessonRepository lessonRepository;
   private final CourseRepository courseRepository;
+  private final LessonMapper lessonMapper;
 
   public LessonSynchronizeService(TimetableClient timetableClient, TimetableParser timetableParser,
-                                  LessonRepository lessonRepository, CourseRepository courseRepository) {
+                                  LessonRepository lessonRepository, CourseRepository courseRepository, LessonMapper lessonMapper) {
     this.timetableClient = timetableClient;
     this.timetableParser = timetableParser;
     this.lessonRepository = lessonRepository;
     this.courseRepository = courseRepository;
+    this.lessonMapper = lessonMapper;
   }
 
   public void synchronizeLessons() {
@@ -44,7 +48,6 @@ public class LessonSynchronizeService {
       log.info("Fetching timetable for course ID: {}", course.getId());
       String html = timetableClient.fetchTimetableHtml(course.getId());
       CourseTimetableResponse timetableResponse = timetableParser.parse(course.getId(), html);
-      System.out.println(timetableResponse);
 
       // Get the last synchronization ID
       UUID lastSynchronizationId = lessonRepository
@@ -54,16 +57,25 @@ public class LessonSynchronizeService {
 
       // Get all lessons from the last synchronization
       List<Lesson> storedLessons = lastSynchronizationId != null
-              ? lessonRepository.findByCourseAndSynchronizationId(course, lastSynchronizationId)
+              ? lessonRepository.findByCourseAndSynchronizationIdWithCourse(course, lastSynchronizationId)
               : Collections.emptyList();
 
       // Build new lessons from the timetable response
       List<Lesson> newLessons = buildLessonsFromTimetable(course, timetableResponse, newSynchronizationId);
 
-      // Check if there are any changes
-      if (hasChanges(storedLessons, newLessons)) {
+      TimetableLessonChanges timetableLessonChanges = getChanges(storedLessons, newLessons);
 
+      boolean anyChanges = !timetableLessonChanges.addedLessons().isEmpty() || !timetableLessonChanges.removedLessons().isEmpty();
+
+      if (anyChanges) {
         lessonRepository.saveAll(newLessons);
+
+        timetableLessonChanges.addedLessons().forEach(lesson ->
+                log.info("Added lesson: {} (Course ID: {}). Weekday {}", lesson.name(), course.getId(), lesson.weekday())
+        );
+        timetableLessonChanges.removedLessons().forEach(lesson ->
+                log.info("Removed lesson: {} (Course ID: {}). Weekday {}", lesson.name(), course.getId(), lesson.weekday())
+        );
 
         log.info("Detected changes for course ID: {}. Saved {} lessons with new synchronization ID: {}",
                 course.getId(), newLessons.size(), newSynchronizationId);
@@ -166,12 +178,7 @@ public class LessonSynchronizeService {
     return lessons;
   }
 
-  private boolean hasChanges(List<Lesson> storedLessons, List<Lesson> newLessons) {
-    if (storedLessons.size() != newLessons.size()) {
-      return true;
-    }
-
-    // Create signatures for comparison
+  private TimetableLessonChanges getChanges(List<Lesson> storedLessons, List<Lesson> newLessons) {
     Set<String> storedSignatures = storedLessons.stream()
             .map(this::createLessonSignature)
             .collect(Collectors.toSet());
@@ -180,15 +187,28 @@ public class LessonSynchronizeService {
             .map(this::createLessonSignature)
             .collect(Collectors.toSet());
 
-    return !storedSignatures.equals(newSignatures);
+    List<kg.manasuniversity.usbtypec.manashelper.model.Lesson> addedLessons = newLessons.stream()
+            .filter(lesson -> !storedSignatures.contains(createLessonSignature(lesson)))
+            .map(lessonMapper::mapEntityToLesson)
+            .collect(Collectors.toList());
+
+    List<kg.manasuniversity.usbtypec.manashelper.model.Lesson> removedLessons = storedLessons.stream()
+            .filter(lesson -> !newSignatures.contains(createLessonSignature(lesson)))
+            .map(lessonMapper::mapEntityToLesson)
+            .toList();
+
+    return new TimetableLessonChanges(addedLessons, removedLessons);
   }
 
   private String createLessonSignature(Lesson lesson) {
-    return lesson.getName() + "|" +
-            lesson.getTeacherName() + "|" +
-            lesson.getLocation() + "|" +
-            lesson.getType() + "|" +
-            lesson.getStartsAt() + "|" +
-            lesson.getEndsAt();
+    return String.join("|",
+            String.valueOf(lesson.getName()),
+            String.valueOf(lesson.getTeacherName()),
+            String.valueOf(lesson.getLocation()),
+            String.valueOf(lesson.getType()),
+            String.valueOf(lesson.getStartsAt()),
+            String.valueOf(lesson.getEndsAt()),
+            String.valueOf(lesson.getWeekday())
+    );
   }
 }

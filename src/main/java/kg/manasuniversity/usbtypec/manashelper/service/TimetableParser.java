@@ -32,21 +32,22 @@ public class TimetableParser {
     return LessonType.ELECTIVE_OTHER;
   }
 
-  private Lesson parseLessonCard(int courseId, Element div) {
+  private Lesson parseLessonCard(int courseId, Element div, int weekday) {
     String[] parts = div.html().split("<br>");
     return new Lesson(
             courseId,
             parts.length > 0 ? parts[0].trim() : null,
             parts.length > 1 ? parts[1].trim() : null,
             parts.length > 2 ? parts[2].trim() : null,
-            getLessonType(div)
+            getLessonType(div),
+            weekday
     );
   }
 
-  private List<Lesson> parseLessonsColumn(int courseId, Element td) {
+  private List<Lesson> parseLessonsColumn(int courseId, Element td, int weekday) {
     List<Lesson> lessons = new ArrayList<>();
     for (Element div : td.select("div")) {
-      lessons.add(parseLessonCard(courseId, div));
+      lessons.add(parseLessonCard(courseId, div, weekday));
     }
     return lessons;
   }
@@ -67,11 +68,11 @@ public class TimetableParser {
 
       result.add(new PeriodTimetable(
               tds.get(0).text(),
-              parseLessonsColumn(courseId, tds.get(1)),
-              parseLessonsColumn(courseId, tds.get(2)),
-              parseLessonsColumn(courseId, tds.get(3)),
-              parseLessonsColumn(courseId, tds.get(4)),
-              parseLessonsColumn(courseId, tds.get(5))
+              parseLessonsColumn(courseId, tds.get(1), 1),
+              parseLessonsColumn(courseId, tds.get(2), 2),
+              parseLessonsColumn(courseId, tds.get(3), 3),
+              parseLessonsColumn(courseId, tds.get(4), 4),
+              parseLessonsColumn(courseId, tds.get(5), 5)
       ));
     }
     return new CourseTimetableResponse(

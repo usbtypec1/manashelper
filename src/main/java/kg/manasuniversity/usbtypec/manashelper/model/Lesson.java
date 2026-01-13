@@ -7,6 +7,7 @@ public record Lesson(
         String name,
         String teacherName,
         String location,
-        LessonType type
+        LessonType type,
+        int weekday
 ) {
 }
