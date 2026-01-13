@@ -18,7 +18,7 @@ public class DailyMenuService {
   }
 
   public List<kg.manasuniversity.usbtypec.manashelper.model.DailyMenu> getLastDailyMenus() {
-    List<DailyMenu> dailyMenus = dailyMenuRepository.findTop30ByOrderByDateDesc();
+    List<DailyMenu> dailyMenus = dailyMenuRepository.findTop30ByOrderByDateAsc();
     return dailyMenus.stream().map(dailyMenuMapper::mapEntityToModel).toList();
   }
 }

@@ -47,7 +47,7 @@ public class SynchronizeDailyMenusTask {
             .collect(Collectors.toSet());
   }
 
-  @Scheduled(cron = "0 * * * * *")
+  @Scheduled(cron = "0 0 * * * *")
   @Transactional
   public void synchronizeDailyMenus() {
     String html = dailyMenuClient.fetchDailyMenuHtml();

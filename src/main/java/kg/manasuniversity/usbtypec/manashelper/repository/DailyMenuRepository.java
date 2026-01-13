@@ -11,5 +11,5 @@ import java.util.UUID;
 public interface DailyMenuRepository extends JpaRepository<DailyMenu, UUID> {
   Optional<DailyMenu> findByDate(LocalDate date);
 
-  List<DailyMenu> findTop30ByOrderByDateDesc();
+  List<DailyMenu> findTop30ByOrderByDateAsc();
 }
