@@ -75,14 +75,6 @@ public class User {
     return encryptedPassword;
   }
 
-  public LocalDateTime getCreatedAt() {
-    return createdAt;
-  }
-
-  public LocalDateTime getUpdatedAt() {
-    return updatedAt;
-  }
-
   public void setStudentNumber(String studentNumber) {
     this.studentNumber = studentNumber;
   }
@@ -106,5 +98,13 @@ public class User {
 
   public Set<Course> getCourses() {
     return courses;
+  }
+
+  public void setFullName(String fullName) {
+    this.fullName = fullName;
+  }
+
+  public void setUsername(String username) {
+    this.username = username;
   }
 }

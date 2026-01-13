@@ -5,31 +5,40 @@ import kg.manasuniversity.usbtypec.manashelper.exception.UserNotFoundException;
 import kg.manasuniversity.usbtypec.manashelper.payload.request.UserUpdateCredentialsRequest;
 import kg.manasuniversity.usbtypec.manashelper.payload.request.UserUpsertRequest;
 import kg.manasuniversity.usbtypec.manashelper.repository.UserRepository;
-import kg.manasuniversity.usbtypec.manashelper.service.obis.ObisClient;
 import kg.manasuniversity.usbtypec.manashelper.service.obis.ObisService;
 import org.springframework.stereotype.Service;
+
+import java.util.function.Consumer;
 
 @Service
 public class UserService {
   private final UserRepository userRepository;
   private final CryptoService cryptoService;
   private final ObisService obisService;
-  private final ObisClient obisClient;
 
-  public UserService(UserRepository userRepository, CryptoService cryptoService, ObisService obisService, ObisClient obisClient) {
+  public UserService(UserRepository userRepository, CryptoService cryptoService, ObisService obisService) {
     this.userRepository = userRepository;
     this.cryptoService = cryptoService;
     this.obisService = obisService;
-    this.obisClient = obisClient;
   }
 
   public void upsertUser(UserUpsertRequest userRequest) {
-    User user = new User(
-            userRequest.id(),
-            userRequest.fullName(),
-            userRequest.username()
-    );
-    userRepository.save(user);
+    Consumer<User> onPresent = (user) -> {
+      user.setFullName(userRequest.fullName());
+      user.setUsername(userRequest.username());
+      userRepository.save(user);
+    };
+    Runnable onMissing = () -> {
+      User user = new User(
+              userRequest.id(),
+              userRequest.fullName(),
+              userRequest.username()
+      );
+      userRepository.save(user);
+    };
+    userRepository
+            .findById(userRequest.id())
+            .ifPresentOrElse(onPresent, onMissing);
   }
 
   public void updateUserCredentials(
