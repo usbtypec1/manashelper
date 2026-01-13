@@ -8,7 +8,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
 public class TelegramClient {
-  private record SendMessageRequest(long chat_id, String text) {
+  private record SendMessageRequest(long chat_id, String text, String parse_mode) {
   }
 
   public record ResponseData(boolean ok, @Nullable String description) {
@@ -24,7 +24,7 @@ public class TelegramClient {
     return webClient.post()
             .uri("/sendMessage")
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(new SendMessageRequest(chatId, text))
+            .bodyValue(new SendMessageRequest(chatId, text, "html"))
             .retrieve()
             .bodyToMono(ResponseData.class)
             .block();

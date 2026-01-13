@@ -34,7 +34,7 @@ public class TimetableService {
       courseIdsToCheck.remove(course.getId());
     }
     if (!courseIdsToCheck.isEmpty()) {
-      throw new CourseNotFoundException(new ArrayList<>(courseIdsToCheck));
+      throw new CourseNotFoundException("Courses not found with ids: " + new ArrayList<>(courseIdsToCheck));
     }
   }
 

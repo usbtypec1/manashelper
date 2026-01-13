@@ -1,6 +1,5 @@
 package kg.manasuniversity.usbtypec.manashelper.exception;
 
-import jakarta.servlet.http.HttpServletRequest;
 import kg.manasuniversity.usbtypec.manashelper.enums.ApiErrorCode;
 import kg.manasuniversity.usbtypec.manashelper.payload.response.ApiError;
 import org.slf4j.Logger;

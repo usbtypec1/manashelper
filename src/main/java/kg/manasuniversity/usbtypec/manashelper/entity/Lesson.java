@@ -119,10 +119,6 @@ public class Lesson {
     return type;
   }
 
-  public LocalDateTime getCreatedAt() {
-    return createdAt;
-  }
-
   public UUID getSynchronizationId() {
     return synchronizationId;
   }

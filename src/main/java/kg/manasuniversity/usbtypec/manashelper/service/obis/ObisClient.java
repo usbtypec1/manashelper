@@ -38,8 +38,7 @@ public class ObisClient {
 
     HttpEntity<MultiValueMap<String, String>> loginEntity = new HttpEntity<>(formData, headers);
 
-    ResponseEntity<String> response = restTemplate
-            .exchange("https://obistest.manas.edu.kg/site/login", HttpMethod.POST, loginEntity, String.class);
+    restTemplate.exchange("https://obistest.manas.edu.kg/site/login", HttpMethod.POST, loginEntity, String.class);
   }
 
   public String fetchAttendancePageHtml() {

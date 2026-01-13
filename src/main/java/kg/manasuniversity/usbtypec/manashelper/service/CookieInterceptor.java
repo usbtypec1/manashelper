@@ -33,12 +33,4 @@ public class CookieInterceptor implements ClientHttpRequestInterceptor {
 
     return response;
   }
-
-  public List<String> getCookies() {
-    return new ArrayList<>(cookies);
-  }
-
-  public void clearCookies() {
-    cookies.clear();
-  }
 }

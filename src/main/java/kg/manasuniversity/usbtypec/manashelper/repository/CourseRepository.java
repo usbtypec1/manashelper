@@ -17,5 +17,5 @@ public interface CourseRepository extends JpaRepository<Course, Integer> {
          FROM Course c
          LEFT JOIN FETCH c.department d
   """)
-  public List<Course> findAllWithDepartment();
+  List<Course> findAllWithDepartment();
 }

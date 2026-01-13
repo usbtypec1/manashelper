@@ -9,5 +9,5 @@ import java.util.UUID;
 
 @Repository
 public interface DepartmentRepository extends JpaRepository<Department, UUID> {
-  public List<Department> findByFacultyId(UUID facultyId);
+  List<Department> findByFacultyId(UUID facultyId);
 }
