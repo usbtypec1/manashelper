@@ -30,4 +30,12 @@ public class Department {
     this.name = name;
     this.faculty = faculty;
   }
+
+  public UUID getId() {
+    return id;
+  }
+
+  public String getName() {
+    return name;
+  }
 }

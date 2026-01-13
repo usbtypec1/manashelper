@@ -1,6 +1,7 @@
 package kg.manasuniversity.usbtypec.manashelper.service;
 
 import kg.manasuniversity.usbtypec.manashelper.entity.User;
+import kg.manasuniversity.usbtypec.manashelper.exception.UserHasNoCredentialsException;
 import kg.manasuniversity.usbtypec.manashelper.exception.UserNotFoundException;
 import kg.manasuniversity.usbtypec.manashelper.model.LessonAttendance;
 import kg.manasuniversity.usbtypec.manashelper.model.LessonExams;
@@ -30,8 +31,15 @@ public final class ObisService {
     User user = userRepository
             .findById(userId)
             .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+
     String studentNumber = user.getStudentNumber();
-    String plainPassword = cryptoService.decrypt(user.getEncryptedPassword());
+    String encryptedPassword = user.getEncryptedPassword();
+
+    if (studentNumber == null || encryptedPassword == null) {
+      throw new UserHasNoCredentialsException("User credentials are incomplete for id: " + userId);
+    }
+
+    String plainPassword = cryptoService.decrypt(encryptedPassword);
 
     String loginPageHtml = obisClient.fetchLoginPageHtml();
     String csrf = obisParser.parseLoginPageCsrfToken(loginPageHtml);
@@ -45,7 +53,12 @@ public final class ObisService {
             .findById(userId)
             .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
     String studentNumber = user.getStudentNumber();
-    String plainPassword = cryptoService.decrypt(user.getEncryptedPassword());
+    String encryptedPassword = user.getEncryptedPassword();
+
+    if (studentNumber == null || encryptedPassword == null) {
+      throw new UserHasNoCredentialsException("User credentials are incomplete for id: " + userId);
+    }
+    String plainPassword = cryptoService.decrypt(encryptedPassword);
 
     String loginPageHtml = obisClient.fetchLoginPageHtml();
     String csrf = obisParser.parseLoginPageCsrfToken(loginPageHtml);

@@ -1,0 +1,11 @@
+package kg.manasuniversity.usbtypec.manashelper.enums;
+
+public enum ApiErrorCode {
+  USER_NOT_FOUND,
+  USER_HAS_NO_CREDENTIALS,
+  VALIDATION_FAILED,
+  INTERNAL_ERROR,
+  COURSE_NOT_FOUND,
+  DEPARTMENT_NOT_FOUND,
+  FACULTY_NOT_FOUND
+}
