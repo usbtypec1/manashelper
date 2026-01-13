@@ -1,6 +1,6 @@
 package kg.manasuniversity.usbtypec.manashelper.scheduledtasks;
 
-import kg.manasuniversity.usbtypec.manashelper.service.LessonSynchronizeService;
+import kg.manasuniversity.usbtypec.manashelper.service.timetable.LessonSynchronizeService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 

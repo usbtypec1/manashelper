@@ -1,8 +1,10 @@
-package kg.manasuniversity.usbtypec.manashelper.service;
+package kg.manasuniversity.usbtypec.manashelper.service.timetable;
 
 import kg.manasuniversity.usbtypec.manashelper.enums.LessonType;
 import kg.manasuniversity.usbtypec.manashelper.model.CourseLesson;
+import org.springframework.stereotype.Component;
 
+@Component
 public class CourseLessonFormatter {
 
   public String formatAddedLesson(CourseLesson courseLesson) {
