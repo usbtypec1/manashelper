@@ -1,4 +1,4 @@
-package kg.manasuniversity.usbtypec.manashelper.service;
+package kg.manasuniversity.usbtypec.manashelper.service.obis;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;

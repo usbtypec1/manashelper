@@ -1,4 +1,4 @@
-package kg.manasuniversity.usbtypec.manashelper.service;
+package kg.manasuniversity.usbtypec.manashelper.service.obis;
 
 import kg.manasuniversity.usbtypec.manashelper.entity.User;
 import kg.manasuniversity.usbtypec.manashelper.exception.UserHasNoCredentialsException;
@@ -6,12 +6,10 @@ import kg.manasuniversity.usbtypec.manashelper.exception.UserNotFoundException;
 import kg.manasuniversity.usbtypec.manashelper.model.LessonAttendance;
 import kg.manasuniversity.usbtypec.manashelper.model.LessonExams;
 import kg.manasuniversity.usbtypec.manashelper.repository.UserRepository;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
+import kg.manasuniversity.usbtypec.manashelper.service.CryptoService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public final class ObisService {

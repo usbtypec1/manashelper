@@ -1,4 +1,4 @@
-package kg.manasuniversity.usbtypec.manashelper.service;
+package kg.manasuniversity.usbtypec.manashelper.service.obis;
 
 import kg.manasuniversity.usbtypec.manashelper.model.Exam;
 import kg.manasuniversity.usbtypec.manashelper.model.LessonAttendance;

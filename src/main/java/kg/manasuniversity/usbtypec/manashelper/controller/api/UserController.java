@@ -5,7 +5,7 @@ import kg.manasuniversity.usbtypec.manashelper.model.LessonAttendance;
 import kg.manasuniversity.usbtypec.manashelper.model.LessonExams;
 import kg.manasuniversity.usbtypec.manashelper.payload.request.UserUpdateCredentialsRequest;
 import kg.manasuniversity.usbtypec.manashelper.payload.request.UserUpsertRequest;
-import kg.manasuniversity.usbtypec.manashelper.service.ObisService;
+import kg.manasuniversity.usbtypec.manashelper.service.obis.ObisService;
 import kg.manasuniversity.usbtypec.manashelper.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
