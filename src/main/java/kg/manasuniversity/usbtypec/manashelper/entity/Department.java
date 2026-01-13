@@ -38,4 +38,8 @@ public class Department {
   public String getName() {
     return name;
   }
+
+  public Faculty getFaculty() {
+    return faculty;
+  }
 }

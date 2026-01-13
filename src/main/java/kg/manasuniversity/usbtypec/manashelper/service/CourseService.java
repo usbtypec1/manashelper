@@ -33,6 +33,8 @@ public class CourseService {
     return new DepartmentCoursesResponse(
             department.getId(),
             department.getName(),
+            department.getFaculty().getId(),
+            department.getFaculty().getName(),
             departmentCourses
     );
   }
