@@ -2,15 +2,22 @@ package kg.manasuniversity.usbtypec.manashelper.service;
 
 import kg.manasuniversity.usbtypec.manashelper.entity.Course;
 import kg.manasuniversity.usbtypec.manashelper.entity.Lesson;
+import kg.manasuniversity.usbtypec.manashelper.entity.TelegramMessage;
+import kg.manasuniversity.usbtypec.manashelper.entity.User;
+import kg.manasuniversity.usbtypec.manashelper.enums.LessonType;
 import kg.manasuniversity.usbtypec.manashelper.mapper.LessonMapper;
+import kg.manasuniversity.usbtypec.manashelper.model.CourseLesson;
 import kg.manasuniversity.usbtypec.manashelper.model.PeriodTimetable;
 import kg.manasuniversity.usbtypec.manashelper.model.TimetableLessonChanges;
 import kg.manasuniversity.usbtypec.manashelper.payload.response.CourseTimetableResponse;
 import kg.manasuniversity.usbtypec.manashelper.repository.CourseRepository;
 import kg.manasuniversity.usbtypec.manashelper.repository.LessonRepository;
+import kg.manasuniversity.usbtypec.manashelper.repository.TelegramMessageRepository;
+import kg.manasuniversity.usbtypec.manashelper.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.cfg.MapperBuilder;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -28,22 +35,28 @@ public class LessonSynchronizeService {
   private final TimetableParser timetableParser;
   private final LessonRepository lessonRepository;
   private final CourseRepository courseRepository;
+  private final UserRepository userRepository;
+  private final TelegramMessageRepository telegramMessageRepository;
   private final LessonMapper lessonMapper;
+  private final CourseLessonFormatter courseLessonFormatter;
 
   public LessonSynchronizeService(TimetableClient timetableClient, TimetableParser timetableParser,
-                                  LessonRepository lessonRepository, CourseRepository courseRepository, LessonMapper lessonMapper) {
+                                  LessonRepository lessonRepository, CourseRepository courseRepository, UserRepository userRepository, TelegramMessageRepository telegramMessageRepository, LessonMapper lessonMapper, CourseLessonFormatter courseLessonFormatter) {
     this.timetableClient = timetableClient;
     this.timetableParser = timetableParser;
     this.lessonRepository = lessonRepository;
     this.courseRepository = courseRepository;
+    this.userRepository = userRepository;
+    this.telegramMessageRepository = telegramMessageRepository;
     this.lessonMapper = lessonMapper;
+    this.courseLessonFormatter = courseLessonFormatter;
   }
 
   public void synchronizeLessons() {
     log.info("Starting lessons synchronization task");
     UUID newSynchronizationId = UUID.randomUUID();
 
-    List<Course> courses = courseRepository.findAll();
+    List<Course> courses = courseRepository.findAllWithDepartment();
     for (Course course : courses) {
       log.info("Fetching timetable for course ID: {}", course.getId());
       String html = timetableClient.fetchTimetableHtml(course.getId());
@@ -63,24 +76,32 @@ public class LessonSynchronizeService {
       // Build new lessons from the timetable response
       List<Lesson> newLessons = buildLessonsFromTimetable(course, timetableResponse, newSynchronizationId);
 
-      TimetableLessonChanges timetableLessonChanges = getChanges(storedLessons, newLessons);
+      TimetableLessonChanges timetableLessonChanges = getChanges(storedLessons, newLessons, course);
 
       boolean anyChanges = !timetableLessonChanges.addedLessons().isEmpty() || !timetableLessonChanges.removedLessons().isEmpty();
 
       if (anyChanges) {
         lessonRepository.saveAll(newLessons);
 
-        timetableLessonChanges.addedLessons().forEach(lesson ->
-                log.info("Added lesson: {} (Course ID: {}). Weekday {}", lesson.name(), course.getId(), lesson.weekday())
-        );
-        timetableLessonChanges.removedLessons().forEach(lesson ->
-                log.info("Removed lesson: {} (Course ID: {}). Weekday {}", lesson.name(), course.getId(), lesson.weekday())
-        );
+        for (var lesson : timetableLessonChanges.addedLessons()) {
+          List<User> users = userRepository.findByCourses_Id(lesson.courseId());
 
-        log.info("Detected changes for course ID: {}. Saved {} lessons with new synchronization ID: {}",
-                course.getId(), newLessons.size(), newSynchronizationId);
-      } else {
-        log.info("No changes detected for course ID: {}", course.getId());
+          List<TelegramMessage> messages = users.stream().map(user -> {
+            String messageText = courseLessonFormatter.formatAddedLesson(lesson);
+            return new TelegramMessage(messageText, user.getId());
+          }).toList();
+          telegramMessageRepository.saveAll(messages);
+        }
+
+        for (var lesson : timetableLessonChanges.removedLessons()) {
+          List<User> users = userRepository.findByCourses_Id(lesson.courseId());
+
+          List<TelegramMessage> messages = users.stream().map(user -> {
+            String messageText = courseLessonFormatter.formatRemovedLesson(lesson);
+            return new TelegramMessage(messageText, user.getId());
+          }).toList();
+          telegramMessageRepository.saveAll(messages);
+        }
       }
     }
 
@@ -178,7 +199,7 @@ public class LessonSynchronizeService {
     return lessons;
   }
 
-  private TimetableLessonChanges getChanges(List<Lesson> storedLessons, List<Lesson> newLessons) {
+  private TimetableLessonChanges getChanges(List<Lesson> storedLessons, List<Lesson> newLessons, Course course) {
     Set<String> storedSignatures = storedLessons.stream()
             .map(this::createLessonSignature)
             .collect(Collectors.toSet());
@@ -187,14 +208,14 @@ public class LessonSynchronizeService {
             .map(this::createLessonSignature)
             .collect(Collectors.toSet());
 
-    List<kg.manasuniversity.usbtypec.manashelper.model.Lesson> addedLessons = newLessons.stream()
+    List<CourseLesson> addedLessons = newLessons.stream()
             .filter(lesson -> !storedSignatures.contains(createLessonSignature(lesson)))
-            .map(lessonMapper::mapEntityToLesson)
+            .map(lesson -> lessonMapper.mapEntityAndCourseToCourseLesson(lesson, course))
             .collect(Collectors.toList());
 
-    List<kg.manasuniversity.usbtypec.manashelper.model.Lesson> removedLessons = storedLessons.stream()
+    List<CourseLesson> removedLessons = storedLessons.stream()
             .filter(lesson -> !newSignatures.contains(createLessonSignature(lesson)))
-            .map(lessonMapper::mapEntityToLesson)
+            .map(lesson -> lessonMapper.mapEntityAndCourseToCourseLesson(lesson, course))
             .toList();
 
     return new TimetableLessonChanges(addedLessons, removedLessons);
