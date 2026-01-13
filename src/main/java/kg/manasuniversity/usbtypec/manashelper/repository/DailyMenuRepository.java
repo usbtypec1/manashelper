@@ -9,5 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface DailyMenuRepository extends JpaRepository<DailyMenu, UUID> {
-  public Optional<DailyMenu> findByDate(LocalDate date);
+  Optional<DailyMenu> findByDate(LocalDate date);
+
+  List<DailyMenu> findTop30ByOrderByDateDesc();
 }

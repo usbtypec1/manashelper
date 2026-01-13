@@ -45,6 +45,10 @@ public class DailyMenu {
     dishes = new LinkedHashSet<>();
   }
 
+  public LocalDate getDate() {
+    return date;
+  }
+
   public Set<Dish> getDishes() {
     return dishes;
   }

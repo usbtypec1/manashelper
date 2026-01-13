@@ -52,4 +52,12 @@ public class Dish {
   public String getName() {
     return name;
   }
+
+  public String getPhotoUrl() {
+    return photoUrl;
+  }
+
+  public Integer getCalories() {
+    return calories;
+  }
 }
