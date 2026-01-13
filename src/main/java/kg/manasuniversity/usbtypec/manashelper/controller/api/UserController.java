@@ -37,7 +37,7 @@ public class UserController {
           @Valid @RequestBody UserUpsertRequest userRequest
   ) {
     userService.upsertUser(userRequest);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.noContent().build();
   }
 
   @PutMapping("/{id}/credentials")
@@ -46,7 +46,7 @@ public class UserController {
           @Valid @RequestBody UserUpdateCredentialsRequest userRequest
   ) {
     userService.updateUserCredentials(id, userRequest);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.noContent().build();
   }
 
   @GetMapping("/{id}/attendance")

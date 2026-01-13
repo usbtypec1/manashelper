@@ -25,6 +25,12 @@ public final class ObisService {
     this.cryptoService = cryptoService;
   }
 
+  public void authenticate(String studentNumber, String plainPassword) {
+    String loginPageHtml = obisClient.fetchLoginPageHtml();
+    String csrf = obisParser.parseLoginPageCsrfToken(loginPageHtml);
+    obisClient.sendLoginRequest(studentNumber, plainPassword, csrf);
+  }
+
   public List<LessonAttendance> getUserAttendance(long userId) throws UserNotFoundException {
     User user = userRepository
             .findById(userId)
@@ -38,10 +44,7 @@ public final class ObisService {
     }
 
     String plainPassword = cryptoService.decrypt(encryptedPassword);
-
-    String loginPageHtml = obisClient.fetchLoginPageHtml();
-    String csrf = obisParser.parseLoginPageCsrfToken(loginPageHtml);
-    obisClient.sendLoginRequest(studentNumber, plainPassword, csrf);
+    authenticate(studentNumber, plainPassword);
     String attendancePageHtml = obisClient.fetchAttendancePageHtml();
     return obisParser.parseLessonsAttendancePage(attendancePageHtml);
   }
@@ -56,11 +59,9 @@ public final class ObisService {
     if (studentNumber == null || encryptedPassword == null) {
       throw new UserHasNoCredentialsException("User credentials are incomplete for id: " + userId);
     }
-    String plainPassword = cryptoService.decrypt(encryptedPassword);
 
-    String loginPageHtml = obisClient.fetchLoginPageHtml();
-    String csrf = obisParser.parseLoginPageCsrfToken(loginPageHtml);
-    obisClient.sendLoginRequest(studentNumber, plainPassword, csrf);
+    String plainPassword = cryptoService.decrypt(encryptedPassword);
+    authenticate(studentNumber, plainPassword);
     String attendancePageHtml = obisClient.fetchExamsPageHtml();
     return obisParser.parseTakenGradesPage(attendancePageHtml);
   }

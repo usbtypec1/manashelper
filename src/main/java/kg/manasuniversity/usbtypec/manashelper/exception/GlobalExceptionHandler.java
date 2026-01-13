@@ -16,6 +16,18 @@ import java.util.List;
 public class GlobalExceptionHandler {
   private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+  @ExceptionHandler(ObisLoginException.class)
+  public ResponseEntity<ApiError> handleObisLoginException(
+          ObisLoginException ex
+  ) {
+    ApiError apiError = new ApiError(
+            ApiErrorCode.OBIS_LOGIN_FAILED,
+            ex.getMessage(),
+            null
+    );
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiError);
+  }
+
   @ExceptionHandler(DepartmentNotFoundException.class)
   public ResponseEntity<ApiError> handleDepartmentNotFound(
           DepartmentNotFoundException ex

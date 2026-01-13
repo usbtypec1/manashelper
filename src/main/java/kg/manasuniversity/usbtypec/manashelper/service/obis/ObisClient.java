@@ -1,5 +1,6 @@
 package kg.manasuniversity.usbtypec.manashelper.service.obis;
 
+import kg.manasuniversity.usbtypec.manashelper.exception.ObisLoginException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -24,9 +25,11 @@ public class ObisClient {
     return response.getBody();
   }
 
-  public void sendLoginRequest(String studentNumber, String plainPassword, String csrfToken) {
-
-
+  public void sendLoginRequest(
+          String studentNumber,
+          String plainPassword,
+          String csrfToken
+  ) throws ObisLoginException {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -38,7 +41,15 @@ public class ObisClient {
 
     HttpEntity<MultiValueMap<String, String>> loginEntity = new HttpEntity<>(formData, headers);
 
-    restTemplate.exchange("https://obistest.manas.edu.kg/site/login", HttpMethod.POST, loginEntity, String.class);
+    String response = restTemplate
+            .exchange("https://obistest.manas.edu.kg/site/login", HttpMethod.POST, loginEntity, String.class)
+            .toString();
+
+    System.out.println(response);
+
+    if (response.contains("/site/login")) {
+      throw new ObisLoginException("Login Failed");
+    }
   }
 
   public String fetchAttendancePageHtml() {
