@@ -2,9 +2,13 @@ package kg.manasuniversity.usbtypec.manashelper.model;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 public record DailyMenu(
+        UUID id,
         List<Dish> dishes,
-        LocalDate date
+        LocalDate date,
+        double averageRatingScore,
+        int ratingsCount
 ) {
 }

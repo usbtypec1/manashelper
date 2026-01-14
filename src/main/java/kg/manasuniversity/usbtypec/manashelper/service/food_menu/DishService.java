@@ -44,19 +44,23 @@ public class DishService {
     Dish dish = dishRepository.getReferenceById(dishId);
     User user = userRepository.getReferenceById(requestBody.userId());
 
-    DishRating rating = dishRatingRepository.findByDishAndUser(dish, user)
-            .orElseGet(() -> new DishRating(dish, user, requestBody.score(), requestBody.comment()));
+    DishRating rating = dishRatingRepository
+            .findByDishAndUser(dish, user)
+            .orElse(null);
 
-    boolean sameScore = Objects.equals(rating.getScore(), requestBody.score());
-    boolean sameComment = Objects.equals(rating.getComment(), requestBody.comment());
+    if (rating != null) {
+      boolean sameScore = Objects.equals(rating.getScore(), requestBody.score());
+      boolean sameComment = Objects.equals(rating.getComment(), requestBody.comment());
 
-    if (sameScore && sameComment) {
-      return;
+      if (sameScore && sameComment) {
+        return;
+      }
+      rating.setScore(requestBody.score());
+      rating.setComment(requestBody.comment());
+      dishRatingRepository.save(rating);
+    } else {
+      rating = new DishRating(dish, user, requestBody.score(), requestBody.comment());
+      dishRatingRepository.save(rating);
     }
-
-    rating.setScore(requestBody.score());
-    rating.setComment(requestBody.comment());
-
-    dishRatingRepository.save(rating);
   }
 }

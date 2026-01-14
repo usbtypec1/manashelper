@@ -14,8 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class DailyMenuService {
@@ -23,6 +25,12 @@ public class DailyMenuService {
   private final DailyMenuMapper dailyMenuMapper;
   private final DailyMenuRatingRepository dailyMenuRatingRepository;
   private final UserRepository userRepository;
+
+  private record RatingStats(long count, long sum) {
+    double average() {
+      return count == 0 ? 0.0 : (double) sum / count;
+    }
+  }
 
   public DailyMenuService(
           DailyMenuRepository dailyMenuRepository,
@@ -38,7 +46,25 @@ public class DailyMenuService {
 
   public List<kg.manasuniversity.usbtypec.manashelper.model.DailyMenu> getLastDailyMenus() {
     List<DailyMenu> dailyMenus = dailyMenuRepository.findTop30ByOrderByDateAsc();
-    return dailyMenus.stream().map(dailyMenuMapper::mapEntityToModel).toList();
+    List<DailyMenuRating> dailyMenuRatings = dailyMenuRatingRepository.findByDailyMenuIn(dailyMenus);
+
+    Map<UUID, RatingStats> statsByMenuId = dailyMenuRatings.stream()
+            .collect(Collectors.groupingBy(
+                    r -> r.getDailyMenu().getId(),
+                    Collectors.collectingAndThen(
+                            Collectors.summarizingInt(DailyMenuRating::getScore),
+                            s -> new RatingStats(s.getCount(), s.getSum())
+                    )
+            ));
+
+    return dailyMenus.stream()
+            .map(menu -> {
+              RatingStats stats = statsByMenuId.get(menu.getId());
+              int count = (stats == null) ? 0 : (int) stats.count();
+              double avg = (stats == null) ? 0.0 : stats.average();
+              return dailyMenuMapper.mapEntityToModel(menu, avg, count);
+            })
+            .toList();
   }
 
   @Transactional
@@ -55,23 +81,21 @@ public class DailyMenuService {
 
     DailyMenuRating rating = dailyMenuRatingRepository
             .findByDailyMenuAndUser(dailyMenu, user)
-            .orElseGet(() -> new DailyMenuRating(
-                    dailyMenu,
-                    user,
-                    requestBody.score(),
-                    requestBody.comment()
-            ));
+            .orElse(null);
 
-    boolean sameScore = Objects.equals(rating.getScore(), requestBody.score());
-    boolean sameComment = Objects.equals(rating.getComment(), requestBody.comment());
+    if (rating != null) {
+      boolean sameScore = Objects.equals(rating.getScore(), requestBody.score());
+      boolean sameComment = Objects.equals(rating.getComment(), requestBody.comment());
 
-    if (sameScore && sameComment) {
-      return;
+      if (sameScore && sameComment) {
+        return;
+      }
+      rating.setScore(requestBody.score());
+      rating.setComment(requestBody.comment());
+      dailyMenuRatingRepository.save(rating);
+    } else {
+      rating = new DailyMenuRating(dailyMenu, user, requestBody.score(), requestBody.comment());
+      dailyMenuRatingRepository.save(rating);
     }
-
-    rating.setScore(requestBody.score());
-    rating.setComment(requestBody.comment());
-
-    dailyMenuRatingRepository.save(rating);
   }
 }

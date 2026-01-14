@@ -5,6 +5,8 @@ import kg.manasuniversity.usbtypec.manashelper.model.Dish;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Component
 public class DailyMenuMapper {
@@ -14,10 +16,14 @@ public class DailyMenuMapper {
     this.dishMapper = dishMapper;
   }
 
-  public DailyMenu mapEntityToModel(kg.manasuniversity.usbtypec.manashelper.entity.DailyMenu entity) {
+  public DailyMenu mapEntityToModel(
+          kg.manasuniversity.usbtypec.manashelper.entity.DailyMenu entity,
+          double averageRating,
+          int ratingsCount
+  ) {
     List<Dish> dailyMenus = entity.getDishes().stream()
             .map(dishMapper::mapEntityToModel)
             .toList();
-    return new DailyMenu(dailyMenus, entity.getDate());
+    return new DailyMenu(entity.getId(), dailyMenus, entity.getDate(), averageRating, ratingsCount);
   }
 }

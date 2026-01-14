@@ -46,7 +46,7 @@ public class DailyMenuParser {
       parsedFoodItems.add(dish);
     }
 
-    return new DailyMenu(parsedFoodItems, date);
+    return new DailyMenu(null, parsedFoodItems, date, 0.0, 0);
   }
 
   public List<DailyMenu> parse(String html) {
