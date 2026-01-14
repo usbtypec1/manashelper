@@ -34,7 +34,7 @@ public class FoodMenuController {
     return dailyMenuService.getDailyMenuByDate(date);
   }
 
-  @GetMapping("/{dailyMenuId}/rating/users/{userId}")
+  @GetMapping("/{dailyMenuId}/ratings/users/{userId}")
   public ResponseEntity<DailyMenuRatingResponse> getDailyMenuRating(
           @PathVariable UUID dailyMenuId,
           @PathVariable long userId
@@ -43,7 +43,7 @@ public class FoodMenuController {
     return ResponseEntity.ok(rating);
   }
 
-  @PutMapping("/{dailyMenuId}/rating")
+  @PutMapping("/{dailyMenuId}/ratings")
   public ResponseEntity<Void> updateDailyMenuRating(
           @PathVariable UUID dailyMenuId,
           @Valid @RequestBody RatingUpdateRequest requestBody
@@ -52,7 +52,7 @@ public class FoodMenuController {
     return ResponseEntity.noContent().build();
   }
 
-  @PutMapping("/dishes/{dishId}/rating")
+  @PutMapping("/dishes/{dishId}/ratings")
   public ResponseEntity<Void> updateDishRating(
           @PathVariable UUID dishId,
           @Valid @RequestBody RatingUpdateRequest requestBody
