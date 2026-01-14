@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -15,6 +16,18 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
   private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+  @ExceptionHandler(DailyMenuNotFoundException.class)
+  public ResponseEntity<ApiError> handleDailyMenuNotFound(
+          DailyMenuNotFoundException ex
+  ) {
+    ApiError apiError = new ApiError(
+            ApiErrorCode.DAILY_MENU_NOT_FOUND,
+            ex.getMessage(),
+            null
+    );
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiError);
+  }
 
   @ExceptionHandler(ObisLoginException.class)
   public ResponseEntity<ApiError> handleObisLoginException(
@@ -104,6 +117,18 @@ public class GlobalExceptionHandler {
             fields
     );
 
+    return ResponseEntity.badRequest().body(error);
+  }
+
+  @ExceptionHandler(MissingServletRequestParameterException.class)
+  public ResponseEntity<ApiError> handleMissingRequestParam(
+          MissingServletRequestParameterException ex
+  ) {
+    ApiError error = new ApiError(
+            ApiErrorCode.VALIDATION_FAILED,
+            ex.getMessage(),
+            List.of(new ApiError.FieldError(ex.getParameterName(), "Required parameter is missing"))
+    );
     return ResponseEntity.badRequest().body(error);
   }
 

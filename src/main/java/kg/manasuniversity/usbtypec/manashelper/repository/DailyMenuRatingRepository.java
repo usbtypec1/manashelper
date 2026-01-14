@@ -12,5 +12,5 @@ import java.util.UUID;
 public interface DailyMenuRatingRepository extends JpaRepository<DailyMenuRating, UUID> {
   Optional<DailyMenuRating> findByDailyMenuAndUser(DailyMenu dailyMenu, User user);
 
-  List<DailyMenuRating> findByDailyMenuIn(List<DailyMenu> dailyMenus);
+  List<DailyMenuRating> findByDailyMenu(DailyMenu dailyMenu);
 }

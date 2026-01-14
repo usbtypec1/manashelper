@@ -13,11 +13,10 @@ import kg.manasuniversity.usbtypec.manashelper.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class DailyMenuService {
@@ -25,12 +24,6 @@ public class DailyMenuService {
   private final DailyMenuMapper dailyMenuMapper;
   private final DailyMenuRatingRepository dailyMenuRatingRepository;
   private final UserRepository userRepository;
-
-  private record RatingStats(long count, long sum) {
-    double average() {
-      return count == 0 ? 0.0 : (double) sum / count;
-    }
-  }
 
   public DailyMenuService(
           DailyMenuRepository dailyMenuRepository,
@@ -44,27 +37,19 @@ public class DailyMenuService {
     this.userRepository = userRepository;
   }
 
-  public List<kg.manasuniversity.usbtypec.manashelper.model.DailyMenu> getLastDailyMenus() {
-    List<DailyMenu> dailyMenus = dailyMenuRepository.findTop30ByOrderByDateAsc();
-    List<DailyMenuRating> dailyMenuRatings = dailyMenuRatingRepository.findByDailyMenuIn(dailyMenus);
+  public kg.manasuniversity.usbtypec.manashelper.model.DailyMenu getDailyMenuByDate(LocalDate date) {
+    DailyMenu dailyMenu = dailyMenuRepository.findByDate(date)
+            .orElseThrow(() -> new DailyMenuNotFoundException("Daily menu not found for date: " + date));
 
-    Map<UUID, RatingStats> statsByMenuId = dailyMenuRatings.stream()
-            .collect(Collectors.groupingBy(
-                    r -> r.getDailyMenu().getId(),
-                    Collectors.collectingAndThen(
-                            Collectors.summarizingInt(DailyMenuRating::getScore),
-                            s -> new RatingStats(s.getCount(), s.getSum())
-                    )
-            ));
+    List<DailyMenuRating> dailyMenuRatings = dailyMenuRatingRepository.findByDailyMenu(dailyMenu);
 
-    return dailyMenus.stream()
-            .map(menu -> {
-              RatingStats stats = statsByMenuId.get(menu.getId());
-              int count = (stats == null) ? 0 : (int) stats.count();
-              double avg = (stats == null) ? 0.0 : stats.average();
-              return dailyMenuMapper.mapEntityToModel(menu, avg, count);
-            })
-            .toList();
+    int count = dailyMenuRatings.size();
+    double avg = dailyMenuRatings.stream()
+            .mapToInt(DailyMenuRating::getScore)
+            .average()
+            .orElse(0.0);
+
+    return dailyMenuMapper.mapEntityToModel(dailyMenu, avg, count);
   }
 
   @Transactional
