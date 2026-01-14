@@ -1,4 +1,4 @@
-package kg.manasuniversity.usbtypec.manashelper.service;
+package kg.manasuniversity.usbtypec.manashelper.service.food_menu;
 
 import kg.manasuniversity.usbtypec.manashelper.entity.DailyMenu;
 import kg.manasuniversity.usbtypec.manashelper.mapper.DailyMenuMapper;

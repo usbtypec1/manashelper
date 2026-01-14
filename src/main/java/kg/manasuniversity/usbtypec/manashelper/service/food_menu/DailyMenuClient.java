@@ -1,4 +1,4 @@
-package kg.manasuniversity.usbtypec.manashelper.service;
+package kg.manasuniversity.usbtypec.manashelper.service.food_menu;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
