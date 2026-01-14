@@ -1,7 +1,9 @@
 package kg.manasuniversity.usbtypec.manashelper.service;
 
 import kg.manasuniversity.usbtypec.manashelper.enums.LessonType;
+import kg.manasuniversity.usbtypec.manashelper.model.Period;
 import kg.manasuniversity.usbtypec.manashelper.payload.response.CourseTimetableResponse;
+import kg.manasuniversity.usbtypec.manashelper.service.timetable.TimeRangeParser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -20,8 +22,6 @@ public class TimetableParser {
           "#b8daff", LessonType.MANDATORY_GENERAL,
           "#ffeeba", LessonType.ELECTIVE_MAJOR
   );
-
-  private record Period(LocalTime startsAt, LocalTime endsAt) {}
 
   private LessonType getLessonType(Element div) {
     String bg = div.attr("style");
@@ -57,13 +57,6 @@ public class TimetableParser {
             .toList();
   }
 
-  private Period parsePeriod(String periodText) {
-    String[] times = periodText.split("-");
-    LocalTime startsAt = LocalTime.parse(times[0].trim());
-    LocalTime endsAt = LocalTime.parse(times[1].trim());
-    return new Period(startsAt, endsAt);
-  }
-
   public CourseTimetableResponse parse(int courseId, String html) {
     Document doc = Jsoup.parse(html);
 
@@ -75,7 +68,8 @@ public class TimetableParser {
       Element tr = rows.get(i);
       Elements tds = tr.select("td");
 
-      Period period = parsePeriod(tds.get(0).text());
+      Period period = TimeRangeParser.parse(tds.get(0).text());
+
       for (int weekday = 1; weekday <= 5; weekday++) {
         result.addAll(parseLessonsColumn(period, tds.get(weekday), weekday));
       }

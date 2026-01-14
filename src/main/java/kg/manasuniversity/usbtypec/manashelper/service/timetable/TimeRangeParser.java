@@ -1,15 +1,17 @@
 package kg.manasuniversity.usbtypec.manashelper.service.timetable;
 
+import kg.manasuniversity.usbtypec.manashelper.model.Period;
+
 import java.time.LocalTime;
 
-class TimeRangeParser {
+public class TimeRangeParser {
   private TimeRangeParser() {}
 
-  static TimeRange parse(String period) {
+  public static Period parse(String period) {
     String[] times = period.split("-");
     LocalTime startsAt = parseTime(times[0]);
     LocalTime endsAt = parseTime(times[1]);
-    return new TimeRange(startsAt, endsAt);
+    return new Period(startsAt, endsAt);
   }
 
   private static LocalTime parseTime(String time) {
