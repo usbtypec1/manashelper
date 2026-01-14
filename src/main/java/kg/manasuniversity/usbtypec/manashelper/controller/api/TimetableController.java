@@ -10,9 +10,8 @@ import kg.manasuniversity.usbtypec.manashelper.payload.response.UserTrackingCour
 import kg.manasuniversity.usbtypec.manashelper.service.CourseService;
 import kg.manasuniversity.usbtypec.manashelper.service.DepartmentService;
 import kg.manasuniversity.usbtypec.manashelper.service.FacultyService;
-import kg.manasuniversity.usbtypec.manashelper.service.TimetableClient;
-import kg.manasuniversity.usbtypec.manashelper.service.TimetableParser;
 import kg.manasuniversity.usbtypec.manashelper.service.TimetableService;
+import kg.manasuniversity.usbtypec.manashelper.service.timetable.LessonService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,29 +27,25 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/timetable")
 public class TimetableController {
-
-  private final TimetableClient client;
-  private final TimetableParser parser;
-
+  private final LessonService lessonService;
   private final FacultyService facultyService;
   private final DepartmentService departmentService;
   private final TimetableService timetableService;
   private final CourseService courseService;
 
-  public TimetableController(TimetableClient client, TimetableParser parser, FacultyService facultyService, DepartmentService departmentService, TimetableService timetableService, CourseService courseService) {
-    this.client = client;
-    this.parser = parser;
+  public TimetableController(LessonService lessonService, FacultyService facultyService, DepartmentService departmentService, TimetableService timetableService, CourseService courseService) {
+    this.lessonService = lessonService;
     this.facultyService = facultyService;
     this.departmentService = departmentService;
     this.timetableService = timetableService;
     this.courseService = courseService;
   }
 
-  @GetMapping("/courses/{id}")
+  @GetMapping
   public CourseTimetableResponse getTimetable(
-          @PathVariable int id
+          @RequestParam(name = "courseId") int courseId
   ) {
-    return parser.parse(id, client.fetchTimetableHtml(id));
+    return lessonService.getCourseTimetable(courseId);
   }
 
   @GetMapping("/faculties")

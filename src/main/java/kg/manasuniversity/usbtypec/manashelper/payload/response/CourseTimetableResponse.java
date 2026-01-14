@@ -1,12 +1,22 @@
 package kg.manasuniversity.usbtypec.manashelper.payload.response;
 
-import kg.manasuniversity.usbtypec.manashelper.model.PeriodTimetable;
+import kg.manasuniversity.usbtypec.manashelper.enums.LessonType;
 
+import java.time.LocalTime;
 import java.util.List;
 
 public record CourseTimetableResponse(
         int courseId,
-        String courseName,
-        List<PeriodTimetable> timetable
+        List<Lesson> lessons
 ) {
+  public record Lesson(
+          String name,
+          String teacherName,
+          String location,
+          LocalTime startsAt,
+          LocalTime endsAt,
+          int weekday,
+          LessonType type
+  ) {
+  }
 }

@@ -7,5 +7,5 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface DishRepository extends JpaRepository<Dish, UUID> {
-  public Optional<Dish> findByName(String name);
+  Optional<Dish> findByName(String name);
 }

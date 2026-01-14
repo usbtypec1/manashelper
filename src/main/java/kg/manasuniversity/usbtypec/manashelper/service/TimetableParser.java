@@ -1,7 +1,5 @@
 package kg.manasuniversity.usbtypec.manashelper.service;
 
-import kg.manasuniversity.usbtypec.manashelper.model.Lesson;
-import kg.manasuniversity.usbtypec.manashelper.model.PeriodTimetable;
 import kg.manasuniversity.usbtypec.manashelper.enums.LessonType;
 import kg.manasuniversity.usbtypec.manashelper.payload.response.CourseTimetableResponse;
 import org.jsoup.Jsoup;
@@ -10,6 +8,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +21,8 @@ public class TimetableParser {
           "#ffeeba", LessonType.ELECTIVE_MAJOR
   );
 
+  private record Period(LocalTime startsAt, LocalTime endsAt) {}
+
   private LessonType getLessonType(Element div) {
     String bg = div.attr("style");
     for (var entry : LESSON_TYPE_MAP.entrySet()) {
@@ -32,53 +33,53 @@ public class TimetableParser {
     return LessonType.ELECTIVE_OTHER;
   }
 
-  private Lesson parseLessonCard(int courseId, Element div, int weekday) {
+  private CourseTimetableResponse.Lesson parseLessonCard(Period period, Element div, int weekday) {
     String[] parts = div.html().split("<br>");
-    return new Lesson(
-            courseId,
-            parts.length > 0 ? parts[0].trim() : null,
-            parts.length > 1 ? parts[1].trim() : null,
-            parts.length > 2 ? parts[2].trim() : null,
-            getLessonType(div),
-            weekday
+    String name = parts.length > 0 ? parts[0].trim() : null;
+    String teacherName = parts.length > 1 ? parts[1].trim() : null;
+    String location = parts.length > 2 ? parts[2].trim() : null;
+    LessonType lessonType = getLessonType(div);
+    return new CourseTimetableResponse.Lesson(
+            name,
+            teacherName,
+            location,
+            period.startsAt(),
+            period.endsAt(),
+            weekday,
+            lessonType
     );
   }
 
-  private List<Lesson> parseLessonsColumn(int courseId, Element td, int weekday) {
-    List<Lesson> lessons = new ArrayList<>();
-    for (Element div : td.select("div")) {
-      lessons.add(parseLessonCard(courseId, div, weekday));
-    }
-    return lessons;
+  private List<CourseTimetableResponse.Lesson> parseLessonsColumn(Period period, Element td, int weekday) {
+    return td.select("div")
+            .stream()
+            .map(div -> parseLessonCard(period, div, weekday))
+            .toList();
+  }
+
+  private Period parsePeriod(String periodText) {
+    String[] times = periodText.split("-");
+    LocalTime startsAt = LocalTime.parse(times[0].trim());
+    LocalTime endsAt = LocalTime.parse(times[1].trim());
+    return new Period(startsAt, endsAt);
   }
 
   public CourseTimetableResponse parse(int courseId, String html) {
     Document doc = Jsoup.parse(html);
 
-    Elements titles = doc.select("h3");
-    String courseName = !titles.isEmpty() ? titles.get(0).text() : null;
-
     Elements rows = doc.select("tr");
 
-    List<PeriodTimetable> result = new ArrayList<>();
+    List<CourseTimetableResponse.Lesson> result = new ArrayList<>();
 
     for (int i = 1; i < rows.size(); i++) {
       Element tr = rows.get(i);
       Elements tds = tr.select("td");
 
-      result.add(new PeriodTimetable(
-              tds.get(0).text(),
-              parseLessonsColumn(courseId, tds.get(1), 1),
-              parseLessonsColumn(courseId, tds.get(2), 2),
-              parseLessonsColumn(courseId, tds.get(3), 3),
-              parseLessonsColumn(courseId, tds.get(4), 4),
-              parseLessonsColumn(courseId, tds.get(5), 5)
-      ));
+      Period period = parsePeriod(tds.get(0).text());
+      for (int weekday = 1; weekday <= 5; weekday++) {
+        result.addAll(parseLessonsColumn(period, tds.get(weekday), weekday));
+      }
     }
-    return new CourseTimetableResponse(
-            courseId,
-            courseName,
-            result
-    );
+    return new CourseTimetableResponse(courseId, result);
   }
 }
