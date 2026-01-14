@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.data.annotation.CreatedDate;
@@ -19,7 +20,10 @@ import java.util.UUID;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "daily_menu_ratings")
+@Table(
+        name = "daily_menu_ratings",
+        uniqueConstraints = @UniqueConstraint(name = "uk_menu_user", columnNames = {"daily_menu_id", "user_id"})
+)
 public class DailyMenuRating {
   @Id
   @GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
@@ -52,6 +56,26 @@ public class DailyMenuRating {
     this.dailyMenu = dailyMenu;
     this.user = user;
     this.score = score;
+    this.comment = comment;
+  }
+
+  public UUID getId() {
+    return id;
+  }
+
+  public Integer getScore() {
+    return score;
+  }
+
+  public void setScore(Integer score) {
+    this.score = score;
+  }
+
+  public String getComment() {
+    return comment;
+  }
+
+  public void setComment(String comment) {
     this.comment = comment;
   }
 }
