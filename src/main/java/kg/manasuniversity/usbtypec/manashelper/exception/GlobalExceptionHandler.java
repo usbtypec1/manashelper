@@ -17,6 +17,18 @@ import java.util.List;
 public class GlobalExceptionHandler {
   private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+  @ExceptionHandler(DailyMenuRatingNotFoundException.class)
+  public ResponseEntity<ApiError> handleDailyMenuRatingNotFound(
+          DailyMenuRatingNotFoundException ex
+  ) {
+    ApiError apiError = new ApiError(
+            ApiErrorCode.DAILY_MENU_RATING_NOT_FOUND,
+            ex.getMessage(),
+            null
+    );
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiError);
+  }
+
   @ExceptionHandler(DailyMenuNotFoundException.class)
   public ResponseEntity<ApiError> handleDailyMenuNotFound(
           DailyMenuNotFoundException ex

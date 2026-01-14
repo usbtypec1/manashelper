@@ -4,9 +4,11 @@ import kg.manasuniversity.usbtypec.manashelper.entity.DailyMenu;
 import kg.manasuniversity.usbtypec.manashelper.entity.DailyMenuRating;
 import kg.manasuniversity.usbtypec.manashelper.entity.User;
 import kg.manasuniversity.usbtypec.manashelper.exception.DailyMenuNotFoundException;
+import kg.manasuniversity.usbtypec.manashelper.exception.DailyMenuRatingNotFoundException;
 import kg.manasuniversity.usbtypec.manashelper.exception.UserNotFoundException;
 import kg.manasuniversity.usbtypec.manashelper.mapper.DailyMenuMapper;
 import kg.manasuniversity.usbtypec.manashelper.payload.request.RatingUpdateRequest;
+import kg.manasuniversity.usbtypec.manashelper.payload.response.DailyMenuRatingResponse;
 import kg.manasuniversity.usbtypec.manashelper.repository.DailyMenuRatingRepository;
 import kg.manasuniversity.usbtypec.manashelper.repository.DailyMenuRepository;
 import kg.manasuniversity.usbtypec.manashelper.repository.UserRepository;
@@ -50,6 +52,13 @@ public class DailyMenuService {
             .orElse(0.0);
 
     return dailyMenuMapper.mapEntityToModel(dailyMenu, avg, count);
+  }
+
+  public DailyMenuRatingResponse getDailyMenuRating(UUID dailyMenuId, long userId) {
+    DailyMenuRating rating = dailyMenuRatingRepository
+            .findByDailyMenu_IdAndUser_Id(dailyMenuId, userId)
+            .orElseThrow(() -> new DailyMenuRatingNotFoundException("Rating not found"));
+    return new DailyMenuRatingResponse(rating.getScore());
   }
 
   @Transactional

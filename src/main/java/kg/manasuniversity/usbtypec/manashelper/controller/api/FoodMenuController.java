@@ -3,6 +3,7 @@ package kg.manasuniversity.usbtypec.manashelper.controller.api;
 import jakarta.validation.Valid;
 import kg.manasuniversity.usbtypec.manashelper.model.DailyMenu;
 import kg.manasuniversity.usbtypec.manashelper.payload.request.RatingUpdateRequest;
+import kg.manasuniversity.usbtypec.manashelper.payload.response.DailyMenuRatingResponse;
 import kg.manasuniversity.usbtypec.manashelper.service.food_menu.DailyMenuService;
 import kg.manasuniversity.usbtypec.manashelper.service.food_menu.DishService;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,15 @@ public class FoodMenuController {
   @GetMapping
   public DailyMenu getDailyMenuList(@RequestParam(name = "date") LocalDate date) {
     return dailyMenuService.getDailyMenuByDate(date);
+  }
+
+  @GetMapping("/{dailyMenuId}/rating/users/{userId}")
+  public ResponseEntity<DailyMenuRatingResponse> getDailyMenuRating(
+          @PathVariable UUID dailyMenuId,
+          @PathVariable long userId
+  ) {
+    DailyMenuRatingResponse rating = dailyMenuService.getDailyMenuRating(dailyMenuId, userId);
+    return ResponseEntity.ok(rating);
   }
 
   @PutMapping("/{dailyMenuId}/rating")
