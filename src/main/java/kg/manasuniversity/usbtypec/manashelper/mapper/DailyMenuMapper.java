@@ -19,11 +19,12 @@ public class DailyMenuMapper {
   public DailyMenu mapEntityToModel(
           kg.manasuniversity.usbtypec.manashelper.entity.DailyMenu entity,
           double averageRating,
-          int ratingsCount
+          int ratingsCount,
+          boolean hasComments
   ) {
     List<Dish> dailyMenus = entity.getDishes().stream()
             .map(dishMapper::mapEntityToModel)
             .toList();
-    return new DailyMenu(entity.getId(), dailyMenus, entity.getDate(), averageRating, ratingsCount);
+    return new DailyMenu(entity.getId(), dailyMenus, entity.getDate(), averageRating, ratingsCount, hasComments);
   }
 }

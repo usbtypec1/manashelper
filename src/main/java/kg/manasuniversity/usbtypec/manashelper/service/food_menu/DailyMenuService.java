@@ -52,8 +52,10 @@ public class DailyMenuService {
             .mapToInt(DailyMenuRating::getScore)
             .average()
             .orElse(0.0);
+    boolean hasComments = dailyMenuRatings.stream()
+            .anyMatch(rating -> rating.getComment() != null && !rating.getComment().isBlank());
 
-    return dailyMenuMapper.mapEntityToModel(dailyMenu, avg, count);
+    return dailyMenuMapper.mapEntityToModel(dailyMenu, avg, count, hasComments);
   }
 
   public List<DailyMenuRatingResponse> getDailyMenuRatings(UUID dailyMenuId, Long userId) {

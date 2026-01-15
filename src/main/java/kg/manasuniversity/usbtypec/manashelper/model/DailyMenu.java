@@ -9,6 +9,7 @@ public record DailyMenu(
         List<Dish> dishes,
         LocalDate date,
         double averageRatingScore,
-        int ratingsCount
+        int ratingsCount,
+        boolean hasComments
 ) {
 }
