@@ -13,7 +13,17 @@ import java.util.UUID;
 public interface DailyMenuRatingRepository extends JpaRepository<DailyMenuRating, UUID> {
   Optional<DailyMenuRating> findByDailyMenuAndUser(DailyMenu dailyMenu, User user);
 
-  List<DailyMenuRating> findByDailyMenu(DailyMenu dailyMenu);
+  @Query("""
+          SELECT dmr FROM DailyMenuRating dmr
+          JOIN FETCH dmr.user
+          WHERE dmr.dailyMenu.id = :dailyMenu
+          """)
+  List<DailyMenuRating> findByDailyMenu_IdWithUser(UUID dailyMenu);
 
-  Optional<DailyMenuRating> findByDailyMenu_IdAndUser_Id(UUID dailyMenuId, long userId);
+  @Query("""
+          SELECT dmr FROM DailyMenuRating dmr
+          JOIN FETCH dmr.user
+          WHERE dmr.dailyMenu.id = :dailyMenuId AND dmr.user.id = :userId
+          """)
+  List<DailyMenuRating> findByDailyMenu_IdAndUser_IdWithUser(UUID dailyMenuId, long userId);
 }

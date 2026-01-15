@@ -2,6 +2,9 @@ package kg.manasuniversity.usbtypec.manashelper.payload.response;
 
 
 public record DailyMenuRatingResponse(
-        double score
+        long userId,
+        String userFullName,
+        double score,
+        String comment
 ) {
 }

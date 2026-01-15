@@ -82,4 +82,8 @@ public class DailyMenuRating {
   public DailyMenu getDailyMenu() {
     return dailyMenu;
   }
+
+  public User getUser() {
+    return user;
+  }
 }

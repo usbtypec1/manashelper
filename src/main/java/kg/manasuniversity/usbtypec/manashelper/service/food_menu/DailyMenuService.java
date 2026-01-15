@@ -4,9 +4,9 @@ import kg.manasuniversity.usbtypec.manashelper.entity.DailyMenu;
 import kg.manasuniversity.usbtypec.manashelper.entity.DailyMenuRating;
 import kg.manasuniversity.usbtypec.manashelper.entity.User;
 import kg.manasuniversity.usbtypec.manashelper.exception.DailyMenuNotFoundException;
-import kg.manasuniversity.usbtypec.manashelper.exception.DailyMenuRatingNotFoundException;
 import kg.manasuniversity.usbtypec.manashelper.exception.UserNotFoundException;
 import kg.manasuniversity.usbtypec.manashelper.mapper.DailyMenuMapper;
+import kg.manasuniversity.usbtypec.manashelper.mapper.DailyMenuRatingMapper;
 import kg.manasuniversity.usbtypec.manashelper.payload.request.RatingUpdateRequest;
 import kg.manasuniversity.usbtypec.manashelper.payload.response.DailyMenuRatingResponse;
 import kg.manasuniversity.usbtypec.manashelper.repository.DailyMenuRatingRepository;
@@ -26,24 +26,26 @@ public class DailyMenuService {
   private final DailyMenuMapper dailyMenuMapper;
   private final DailyMenuRatingRepository dailyMenuRatingRepository;
   private final UserRepository userRepository;
+  private final DailyMenuRatingMapper dailyMenuRatingMapper;
 
   public DailyMenuService(
           DailyMenuRepository dailyMenuRepository,
           DailyMenuMapper dailyMenuMapper,
           DailyMenuRatingRepository dailyMenuRatingRepository,
-          UserRepository userRepository
-  ) {
+          UserRepository userRepository,
+          DailyMenuRatingMapper dailyMenuRatingMapper) {
     this.dailyMenuRepository = dailyMenuRepository;
     this.dailyMenuMapper = dailyMenuMapper;
     this.dailyMenuRatingRepository = dailyMenuRatingRepository;
     this.userRepository = userRepository;
+    this.dailyMenuRatingMapper = dailyMenuRatingMapper;
   }
 
   public kg.manasuniversity.usbtypec.manashelper.model.DailyMenu getDailyMenuByDate(LocalDate date) {
     DailyMenu dailyMenu = dailyMenuRepository.findByDate(date)
             .orElseThrow(() -> new DailyMenuNotFoundException("Daily menu not found for date: " + date));
 
-    List<DailyMenuRating> dailyMenuRatings = dailyMenuRatingRepository.findByDailyMenu(dailyMenu);
+    List<DailyMenuRating> dailyMenuRatings = dailyMenuRatingRepository.findByDailyMenu_IdWithUser(dailyMenu.getId());
 
     int count = dailyMenuRatings.size();
     double avg = dailyMenuRatings.stream()
@@ -54,11 +56,14 @@ public class DailyMenuService {
     return dailyMenuMapper.mapEntityToModel(dailyMenu, avg, count);
   }
 
-  public DailyMenuRatingResponse getDailyMenuRating(UUID dailyMenuId, long userId) {
-    DailyMenuRating rating = dailyMenuRatingRepository
-            .findByDailyMenu_IdAndUser_Id(dailyMenuId, userId)
-            .orElseThrow(() -> new DailyMenuRatingNotFoundException("Rating not found"));
-    return new DailyMenuRatingResponse(rating.getScore());
+  public List<DailyMenuRatingResponse> getDailyMenuRatings(UUID dailyMenuId, Long userId) {
+    List<DailyMenuRating> ratings;
+    if (userId == null) {
+      ratings = dailyMenuRatingRepository.findByDailyMenu_IdWithUser(dailyMenuId);
+    } else {
+      ratings = dailyMenuRatingRepository.findByDailyMenu_IdAndUser_IdWithUser(dailyMenuId, userId);
+    }
+    return ratings.stream().map(dailyMenuRatingMapper::mapEntityToResponse).toList();
   }
 
   @Transactional

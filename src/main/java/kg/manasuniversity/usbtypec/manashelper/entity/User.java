@@ -92,6 +92,10 @@ public class User {
     }
   }
 
+  public String getFullName() {
+    return fullName;
+  }
+
   public void clearCourses() {
     courses.clear();
   }

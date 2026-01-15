@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -34,12 +35,12 @@ public class FoodMenuController {
     return dailyMenuService.getDailyMenuByDate(date);
   }
 
-  @GetMapping("/{dailyMenuId}/ratings/users/{userId}")
-  public ResponseEntity<DailyMenuRatingResponse> getDailyMenuRating(
+  @GetMapping("/{dailyMenuId}/ratings")
+  public ResponseEntity<List<DailyMenuRatingResponse>> getDailyMenuRating(
           @PathVariable UUID dailyMenuId,
-          @PathVariable long userId
+          @RequestParam(name = "userId", required = false) Long userId
   ) {
-    DailyMenuRatingResponse rating = dailyMenuService.getDailyMenuRating(dailyMenuId, userId);
+    List<DailyMenuRatingResponse> rating = dailyMenuService.getDailyMenuRatings(dailyMenuId, userId);
     return ResponseEntity.ok(rating);
   }
 
