@@ -1,5 +1,6 @@
 package kg.manasuniversity.usbtypec.manashelper.user.service;
 
+import kg.manasuniversity.usbtypec.manashelper.user.dto.response.UsersStatisticsResponse;
 import kg.manasuniversity.usbtypec.manashelper.user.entity.User;
 import kg.manasuniversity.usbtypec.manashelper.user.exception.UserNotFoundException;
 import kg.manasuniversity.usbtypec.manashelper.user.dto.request.UserUpdateCredentialsRequest;
@@ -57,5 +58,15 @@ public class UserService {
     user.setStudentNumber(userRequest.studentNumber());
     user.setEncryptedPassword(encryptedPassword);
     userRepository.save(user);
+  }
+
+  public UsersStatisticsResponse getUsersStatistics() {
+    int totalUsersCount = (int) userRepository.count();
+    int usersWithCredentialsCount = userRepository.countByStudentNumberIsNotNullAndEncryptedPasswordIsNotNull();
+
+    return new UsersStatisticsResponse(
+            totalUsersCount,
+            usersWithCredentialsCount
+    );
   }
 }
