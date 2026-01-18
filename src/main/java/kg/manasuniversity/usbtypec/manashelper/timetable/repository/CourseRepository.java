@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -24,7 +23,7 @@ public interface CourseRepository extends JpaRepository<Course, Integer> {
          SELECT c
          FROM Course c
          LEFT JOIN FETCH c.department d
-         WHERE c.id = :id
+         WHERE c.id IN :ids
   """)
-  Optional<Course> findByIdWithDepartment(int id);
+  List<Course> findByIdInWithDepartment(List<Integer> ids);
 }

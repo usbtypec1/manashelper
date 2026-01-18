@@ -1,14 +1,14 @@
 package kg.manasuniversity.usbtypec.manashelper.timetable.service;
 
+import kg.manasuniversity.usbtypec.manashelper.timetable.dto.response.CourseTimetableResponse;
 import kg.manasuniversity.usbtypec.manashelper.timetable.entity.Course;
 import kg.manasuniversity.usbtypec.manashelper.timetable.entity.Lesson;
-import kg.manasuniversity.usbtypec.manashelper.timetable.exception.CourseNotFoundException;
 import kg.manasuniversity.usbtypec.manashelper.timetable.mapper.LessonMapper;
-import kg.manasuniversity.usbtypec.manashelper.timetable.dto.response.CourseTimetableResponse;
 import kg.manasuniversity.usbtypec.manashelper.timetable.repository.CourseRepository;
 import kg.manasuniversity.usbtypec.manashelper.timetable.repository.LessonRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -23,23 +23,28 @@ public class LessonService {
     this.lessonMapper = lessonMapper;
   }
 
-  public CourseTimetableResponse getCourseTimetable(int courseId) {
-    Course course = courseRepository
-            .findByIdWithDepartment(courseId)
-            .orElseThrow(() -> new CourseNotFoundException("Course with id " + courseId + " not found"));
+  public List<CourseTimetableResponse> getCourseTimetable(List<Integer> courseIds) {
+    List<Course> courses = courseRepository.findByIdInWithDepartment(courseIds);
 
-    Lesson lesson = lessonRepository
-            .findTopByCourseOrderByCreatedAtDesc(course)
-            .orElseThrow(() -> new CourseNotFoundException("Course with id " + courseId + " not found"));
+    List<CourseTimetableResponse> result = new ArrayList<>();
 
-    List<Lesson> lessons = lessonRepository
-            .findByCourseAndSynchronizationIdWithCourse(course, lesson.getSynchronizationId());
+    for (var course : courses) {
+      Lesson lesson = lessonRepository
+              .findTopByCourseOrderByCreatedAtDesc(course)
+              .orElse(null);
+      if (lesson == null) {
+        continue;
+      }
 
-    List<CourseTimetableResponse.Lesson> responseLessons = lessons
-            .stream()
-            .map(lessonMapper::mapEntityToResponseLesson)
-            .toList();
+      List<Lesson> lessons = lessonRepository
+              .findByCourseAndSynchronizationIdWithCourse(course, lesson.getSynchronizationId());
 
-    return new CourseTimetableResponse(course.getId(), responseLessons);
+      List<CourseTimetableResponse> responseLessons = lessons
+              .stream()
+              .map(lessonMapper::mapEntityToResponseLesson)
+              .toList();
+      result.addAll(responseLessons);
+    }
+    return result;
   }
 }

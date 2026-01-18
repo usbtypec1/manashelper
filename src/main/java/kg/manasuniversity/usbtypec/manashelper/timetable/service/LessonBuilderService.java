@@ -34,10 +34,9 @@ public class LessonBuilderService {
 
   public List<Lesson> buildLessons(
           Course course,
-          CourseTimetableResponse timetableResponse,
+          List<CourseTimetableResponse> timetableResponse,
           UUID synchronizationId) {
     return timetableResponse
-            .lessons()
             .stream()
             .map(lesson -> lessonMapper.mapResponseLessonToEntity(lesson, course, synchronizationId))
             .toList();

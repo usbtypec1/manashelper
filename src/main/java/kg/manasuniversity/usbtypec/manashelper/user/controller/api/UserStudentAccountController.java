@@ -2,8 +2,6 @@ package kg.manasuniversity.usbtypec.manashelper.user.controller.api;
 
 import kg.manasuniversity.usbtypec.manashelper.user.dto.response.LessonAttendanceResponse;
 import kg.manasuniversity.usbtypec.manashelper.user.dto.response.LessonExamsResponse;
-import kg.manasuniversity.usbtypec.manashelper.user.integration.obis.model.LessonAttendance;
-import kg.manasuniversity.usbtypec.manashelper.user.integration.obis.model.LessonExams;
 import kg.manasuniversity.usbtypec.manashelper.user.service.ObisService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

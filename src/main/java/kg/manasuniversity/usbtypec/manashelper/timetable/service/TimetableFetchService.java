@@ -6,6 +6,8 @@ import kg.manasuniversity.usbtypec.manashelper.timetable.integration.manas.clien
 import kg.manasuniversity.usbtypec.manashelper.timetable.integration.manas.parser.TimetableParser;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class TimetableFetchService {
   private final TimetableClient timetableClient;
@@ -16,7 +18,7 @@ public class TimetableFetchService {
     this.timetableParser = timetableParser;
   }
 
-  public CourseTimetableResponse fetchTimetable(Course course) {
+  public List<CourseTimetableResponse> fetchTimetable(Course course) {
     String html = timetableClient.fetchTimetableHtml(course.getId());
     return timetableParser.parse(course.getId(), html);
   }

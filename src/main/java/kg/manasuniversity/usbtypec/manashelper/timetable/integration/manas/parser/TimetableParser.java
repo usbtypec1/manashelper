@@ -32,13 +32,14 @@ public class TimetableParser {
     return LessonType.ELECTIVE_OTHER;
   }
 
-  private CourseTimetableResponse.Lesson parseLessonCard(Period period, Element div, int weekday) {
+  private CourseTimetableResponse parseLessonCard(int courseId, Period period, Element div, int weekday) {
     String[] parts = div.html().split("<br>");
     String name = parts.length > 0 ? parts[0].trim() : null;
     String teacherName = parts.length > 1 ? parts[1].trim() : null;
     String location = parts.length > 2 ? parts[2].trim() : null;
     LessonType lessonType = getLessonType(div);
-    return new CourseTimetableResponse.Lesson(
+    return new CourseTimetableResponse(
+            courseId,
             name,
             teacherName,
             location,
@@ -49,19 +50,19 @@ public class TimetableParser {
     );
   }
 
-  private List<CourseTimetableResponse.Lesson> parseLessonsColumn(Period period, Element td, int weekday) {
+  private List<CourseTimetableResponse> parseLessonsColumn(int courseId, Period period, Element td, int weekday) {
     return td.select("div")
             .stream()
-            .map(div -> parseLessonCard(period, div, weekday))
+            .map(div -> parseLessonCard(courseId, period, div, weekday))
             .toList();
   }
 
-  public CourseTimetableResponse parse(int courseId, String html) {
+  public List<CourseTimetableResponse> parse(int courseId, String html) {
     Document doc = Jsoup.parse(html);
 
     Elements rows = doc.select("tr");
 
-    List<CourseTimetableResponse.Lesson> result = new ArrayList<>();
+    List<CourseTimetableResponse> result = new ArrayList<>();
 
     for (int i = 1; i < rows.size(); i++) {
       Element tr = rows.get(i);
@@ -70,9 +71,9 @@ public class TimetableParser {
       Period period = TimeRangeParser.parse(tds.get(0).text());
 
       for (int weekday = 1; weekday <= 5; weekday++) {
-        result.addAll(parseLessonsColumn(period, tds.get(weekday), weekday));
+        result.addAll(parseLessonsColumn(courseId, period, tds.get(weekday), weekday));
       }
     }
-    return new CourseTimetableResponse(courseId, result);
+    return result;
   }
 }

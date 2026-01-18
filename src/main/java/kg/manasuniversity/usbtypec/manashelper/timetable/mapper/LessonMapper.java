@@ -25,8 +25,9 @@ public class LessonMapper {
     );
   }
 
-  public CourseTimetableResponse.Lesson mapEntityToResponseLesson(Lesson lesson) {
-    return new CourseTimetableResponse.Lesson(
+  public CourseTimetableResponse mapEntityToResponseLesson(Lesson lesson) {
+    return new CourseTimetableResponse(
+            lesson.getCourse().getId(),
             lesson.getName(),
             lesson.getTeacherName(),
             lesson.getLocation(),
@@ -38,7 +39,7 @@ public class LessonMapper {
   }
 
   public Lesson mapResponseLessonToEntity(
-          CourseTimetableResponse.Lesson responseLesson,
+          CourseTimetableResponse responseLesson,
           Course course,
           UUID synchronizationId) {
     return new Lesson(

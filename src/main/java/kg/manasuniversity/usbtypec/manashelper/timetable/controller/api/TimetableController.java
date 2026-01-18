@@ -42,10 +42,10 @@ public class TimetableController {
   }
 
   @GetMapping
-  public CourseTimetableResponse getTimetable(
-          @RequestParam(name = "courseId") int courseId
+  public List<CourseTimetableResponse> getTimetable(
+          @RequestParam(name = "courseId") List<Integer> courseIds
   ) {
-    return lessonService.getCourseTimetable(courseId);
+    return lessonService.getCourseTimetable(courseIds);
   }
 
   @GetMapping("/faculties")

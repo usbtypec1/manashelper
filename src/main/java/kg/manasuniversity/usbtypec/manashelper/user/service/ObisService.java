@@ -2,13 +2,11 @@ package kg.manasuniversity.usbtypec.manashelper.user.service;
 
 import kg.manasuniversity.usbtypec.manashelper.user.dto.response.LessonAttendanceResponse;
 import kg.manasuniversity.usbtypec.manashelper.user.dto.response.LessonExamsResponse;
-import kg.manasuniversity.usbtypec.manashelper.user.integration.obis.client.ObisClient;
-import kg.manasuniversity.usbtypec.manashelper.user.integration.obis.parser.ObisParser;
 import kg.manasuniversity.usbtypec.manashelper.user.entity.User;
 import kg.manasuniversity.usbtypec.manashelper.user.exception.UserHasNoCredentialsException;
 import kg.manasuniversity.usbtypec.manashelper.user.exception.UserNotFoundException;
-import kg.manasuniversity.usbtypec.manashelper.user.integration.obis.model.LessonAttendance;
-import kg.manasuniversity.usbtypec.manashelper.user.integration.obis.model.LessonExams;
+import kg.manasuniversity.usbtypec.manashelper.user.integration.obis.client.ObisClient;
+import kg.manasuniversity.usbtypec.manashelper.user.integration.obis.parser.ObisParser;
 import kg.manasuniversity.usbtypec.manashelper.user.mapper.LessonAttendanceMapper;
 import kg.manasuniversity.usbtypec.manashelper.user.mapper.LessonExamsMapper;
 import kg.manasuniversity.usbtypec.manashelper.user.repository.UserRepository;
