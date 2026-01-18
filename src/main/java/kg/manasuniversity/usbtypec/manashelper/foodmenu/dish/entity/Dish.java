@@ -63,4 +63,8 @@ public class Dish {
   public Integer getCalories() {
     return calories;
   }
+
+  public String getUpscaledPhotoUrl() {
+    return upscaledPhotoUrl;
+  }
 }

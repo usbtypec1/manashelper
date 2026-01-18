@@ -42,7 +42,7 @@ public class DailyMenuParser {
                       .split(" ")[1]
       );
 
-      Dish dish = new Dish(foodName, caloriesCount,photoUrl);
+      Dish dish = new Dish(foodName, caloriesCount, photoUrl, null);
       parsedFoodItems.add(dish);
     }
 

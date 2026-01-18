@@ -9,7 +9,8 @@ public class DishMapper {
     return new Dish(
             entity.getName(),
             entity.getCalories(),
-            entity.getPhotoUrl()
+            entity.getPhotoUrl(),
+            entity.getUpscaledPhotoUrl()
     );
   }
 }
