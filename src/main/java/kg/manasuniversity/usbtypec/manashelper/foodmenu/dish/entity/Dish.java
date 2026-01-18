@@ -36,6 +36,9 @@ public class Dish {
   @Column(name = "calories", nullable = false)
   private Integer calories;
 
+  @Column(name = "upscaled_photo_url", length = 255)
+  private String upscaledPhotoUrl;
+
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
