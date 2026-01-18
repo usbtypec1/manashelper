@@ -23,7 +23,7 @@ public class LessonService {
     this.lessonMapper = lessonMapper;
   }
 
-  public List<CourseTimetableResponse> getCourseTimetable(List<Integer> courseIds) {
+  public List<CourseTimetableResponse> getCourseTimetable(List<Integer> courseIds, Integer weekday) {
     List<Course> courses = courseRepository.findByIdInWithDepartment(courseIds);
 
     List<CourseTimetableResponse> result = new ArrayList<>();
@@ -36,8 +36,15 @@ public class LessonService {
         continue;
       }
 
-      List<Lesson> lessons = lessonRepository
-              .findByCourseAndSynchronizationIdWithCourse(course, lesson.getSynchronizationId());
+      List<Lesson> lessons;
+      if (weekday == null) {
+        lessons = lessonRepository
+                .findByCourseAndSynchronizationIdWithCourse(course, lesson.getSynchronizationId());
+      } else {
+        lessons = lessonRepository.findByCourseAndSynchronizationIdAndWeekdayWithCourse(
+                course, lesson.getSynchronizationId(), weekday
+        );
+      }
 
       List<CourseTimetableResponse> responseLessons = lessons
               .stream()

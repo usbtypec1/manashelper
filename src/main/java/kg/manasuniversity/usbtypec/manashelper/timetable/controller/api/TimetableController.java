@@ -43,9 +43,10 @@ public class TimetableController {
 
   @GetMapping
   public List<CourseTimetableResponse> getTimetable(
-          @RequestParam(name = "courseId") List<Integer> courseIds
+          @RequestParam(name = "courseId") List<Integer> courseIds,
+          @RequestParam(name = "weekday", required = false) Integer weekday
   ) {
-    return lessonService.getCourseTimetable(courseIds);
+    return lessonService.getCourseTimetable(courseIds, weekday);
   }
 
   @GetMapping("/faculties")
