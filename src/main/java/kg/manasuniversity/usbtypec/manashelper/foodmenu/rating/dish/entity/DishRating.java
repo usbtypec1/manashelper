@@ -51,7 +51,7 @@ public class DishRating {
   @Max(5)
   private Integer score;
 
-  @Column(name = "comment", length = 255)
+  @Column(name = "comment")
   private String comment;
 
   @CreatedDate

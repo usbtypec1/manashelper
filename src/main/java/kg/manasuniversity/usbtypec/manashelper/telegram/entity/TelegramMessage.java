@@ -32,13 +32,13 @@ public class TelegramMessage {
   @Column(name = "chat_id", nullable = false)
   private Long chatId;
 
-  @Column(name = "sent_message_id", nullable = true)
+  @Column(name = "sent_message_id")
   private Long sentMessageId;
 
-  @Column(name = "sent_at", nullable = true)
+  @Column(name = "sent_at")
   private LocalDateTime sentAt;
 
-  @Column(name = "error_text", nullable = true, length = 1024)
+  @Column(name = "error_text", length = 1024)
   private String errorText;
 
   @Column(name = "retries_count", nullable = false)

@@ -32,13 +32,13 @@ public class User {
   @Column(name = "full_name", nullable = false, length = 128)
   private String fullName;
 
-  @Column(name = "username", nullable = true, length = 128)
+  @Column(name = "username", length = 128)
   private String username;
 
-  @Column(name = "student_number", nullable = true, length = 64)
+  @Column(name = "student_number", length = 64)
   private String studentNumber;
 
-  @Column(name = "encrypted_password", nullable = true)
+  @Column(name = "encrypted_password")
   private String encryptedPassword;
 
   @Column(name = "is_timetable_change_notifications_enabled", nullable = false)

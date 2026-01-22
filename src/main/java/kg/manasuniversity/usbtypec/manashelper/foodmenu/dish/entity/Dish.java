@@ -31,16 +31,16 @@ public class Dish {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @Column(name = "name", unique = true, nullable = false, length = 255)
+  @Column(name = "name", unique = true, nullable = false)
   private String name;
 
-  @Column(name = "photo_url", nullable = false, length = 255)
+  @Column(name = "photo_url", nullable = false)
   private String photoUrl;
 
   @Column(name = "calories", nullable = false)
   private Integer calories;
 
-  @Column(name = "upscaled_photo_url", length = 255)
+  @Column(name = "upscaled_photo_url")
   private String upscaledPhotoUrl;
 
   @CreatedDate
