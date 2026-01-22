@@ -11,6 +11,8 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.dish.entity.Dish;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.LinkedHashSet;
@@ -19,6 +21,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "daily_menus")
+@Getter
+@NoArgsConstructor
 public class DailyMenu {
   @Id
   @GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
@@ -38,20 +42,9 @@ public class DailyMenu {
   )
   private Set<Dish> dishes;
 
-  protected DailyMenu() {
-  }
-
   public DailyMenu(LocalDate date) {
     this.date = date;
     dishes = new LinkedHashSet<>();
-  }
-
-  public LocalDate getDate() {
-    return date;
-  }
-
-  public Set<Dish> getDishes() {
-    return dishes;
   }
 
   public void addDish(Dish dish) {
@@ -61,14 +54,4 @@ public class DailyMenu {
   public void clearDishes() {
     dishes.clear();
   }
-
-  public UUID getId() {
-    return id;
-  }
-
-  public void setDishes(Set<Dish> dishes) {
-    this.dishes.clear();
-    this.dishes.addAll(dishes);
-  }
-
 }

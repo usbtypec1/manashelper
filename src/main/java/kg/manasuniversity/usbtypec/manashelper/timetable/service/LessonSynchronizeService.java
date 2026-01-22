@@ -5,8 +5,7 @@ import kg.manasuniversity.usbtypec.manashelper.timetable.entity.Lesson;
 import kg.manasuniversity.usbtypec.manashelper.timetable.model.TimetableLessonChanges;
 import kg.manasuniversity.usbtypec.manashelper.timetable.repository.CourseRepository;
 import kg.manasuniversity.usbtypec.manashelper.timetable.repository.LessonRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,9 +13,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class LessonSynchronizeService {
-  private static final Logger log = LoggerFactory.getLogger(LessonSynchronizeService.class);
-
   private final CourseRepository courseRepository;
   private final LessonRepository lessonRepository;
   private final TimetableFetchService timetableFetchService;

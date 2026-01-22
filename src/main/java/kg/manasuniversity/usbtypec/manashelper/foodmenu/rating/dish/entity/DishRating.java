@@ -15,6 +15,9 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import kg.manasuniversity.usbtypec.manashelper.user.entity.User;
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.dish.entity.Dish;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -27,6 +30,9 @@ import java.util.UUID;
         name = "dish_ratings",
         uniqueConstraints = @UniqueConstraint(name = "uk_dish_user", columnNames = {"dish_id", "user_id"})
 )
+@Getter
+@Setter
+@NoArgsConstructor
 public class DishRating {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -52,33 +58,10 @@ public class DishRating {
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
-  protected DishRating() {
-  }
-
   public DishRating(Dish dish, User user, Integer score, String comment) {
     this.dish = dish;
     this.user = user;
     this.score = score;
-    this.comment = comment;
-  }
-
-  public UUID getId() {
-    return id;
-  }
-
-  public Integer getScore() {
-    return score;
-  }
-
-  public String getComment() {
-    return comment;
-  }
-
-  public void setScore(Integer score) {
-    this.score = score;
-  }
-
-  public void setComment(String comment) {
     this.comment = comment;
   }
 }

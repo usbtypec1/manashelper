@@ -14,6 +14,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import kg.manasuniversity.usbtypec.manashelper.timetable.enums.LessonType;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -30,6 +32,8 @@ import java.util.UUID;
                 @Index(name = "idx_lessons_time", columnList = "starts_at, ends_at")
         }
 )
+@Getter
+@NoArgsConstructor
 public class Lesson {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -68,9 +72,6 @@ public class Lesson {
   @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "timestamp default now()")
   private LocalDateTime createdAt;
 
-  protected Lesson() {
-  }
-
   public Lesson(UUID synchronizationId, String name, Course course, String teacherName, String location, LocalTime startsAt, LocalTime endsAt, int weekday, LessonType type) {
     this.synchronizationId = synchronizationId;
     this.name = name;
@@ -81,45 +82,5 @@ public class Lesson {
     this.endsAt = endsAt;
     this.weekday = weekday;
     this.type = type;
-  }
-
-  public UUID getId() {
-    return id;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public Course getCourse() {
-    return course;
-  }
-
-  public String getTeacherName() {
-    return teacherName;
-  }
-
-  public String getLocation() {
-    return location;
-  }
-
-  public LocalTime getStartsAt() {
-    return startsAt;
-  }
-
-  public LocalTime getEndsAt() {
-    return endsAt;
-  }
-
-  public Integer getWeekday() {
-    return weekday;
-  }
-
-  public LessonType getType() {
-    return type;
-  }
-
-  public UUID getSynchronizationId() {
-    return synchronizationId;
   }
 }

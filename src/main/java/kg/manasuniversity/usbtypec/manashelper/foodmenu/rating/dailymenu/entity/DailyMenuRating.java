@@ -14,6 +14,9 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import kg.manasuniversity.usbtypec.manashelper.user.entity.User;
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.dailymenu.entity.DailyMenu;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -26,6 +29,9 @@ import java.util.UUID;
         name = "daily_menu_ratings",
         uniqueConstraints = @UniqueConstraint(name = "uk_menu_user", columnNames = {"daily_menu_id", "user_id"})
 )
+@Getter
+@Setter
+@NoArgsConstructor
 public class DailyMenuRating {
   @Id
   @GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
@@ -51,41 +57,10 @@ public class DailyMenuRating {
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
-  protected DailyMenuRating() {
-  }
-
   public DailyMenuRating(DailyMenu dailyMenu, User user, Integer score, String comment) {
     this.dailyMenu = dailyMenu;
     this.user = user;
     this.score = score;
     this.comment = comment;
-  }
-
-  public UUID getId() {
-    return id;
-  }
-
-  public Integer getScore() {
-    return score;
-  }
-
-  public void setScore(Integer score) {
-    this.score = score;
-  }
-
-  public String getComment() {
-    return comment;
-  }
-
-  public void setComment(String comment) {
-    this.comment = comment;
-  }
-
-  public DailyMenu getDailyMenu() {
-    return dailyMenu;
-  }
-
-  public User getUser() {
-    return user;
   }
 }

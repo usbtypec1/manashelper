@@ -7,6 +7,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -15,6 +18,9 @@ import java.time.LocalDateTime;
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "telegram_messages")
+@Getter
+@Setter
+@NoArgsConstructor
 public class TelegramMessage {
   @Id
   @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -45,36 +51,10 @@ public class TelegramMessage {
   @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "timestamp default now()")
   private LocalDateTime createdAt;
 
-  protected TelegramMessage() {}
-
   public TelegramMessage(String text, Long chatId) {
     this.text = text;
     this.chatId = chatId;
     retriesCount = 3;
     priority = 0;
-  }
-
-  public void setSentAt(LocalDateTime sentAt) {
-    this.sentAt = sentAt;
-  }
-
-  public void setRetriesCount(Integer retriesCount) {
-    this.retriesCount = retriesCount;
-  }
-
-  public void setErrorText(String errorText) {
-    this.errorText = errorText;
-  }
-
-  public Integer getRetriesCount() {
-    return retriesCount;
-  }
-
-  public Long getChatId() {
-    return chatId;
-  }
-
-  public String getText() {
-    return text;
   }
 }

@@ -8,17 +8,15 @@ import kg.manasuniversity.usbtypec.manashelper.timetable.integration.initialdata
 import kg.manasuniversity.usbtypec.manashelper.timetable.repository.CourseRepository;
 import kg.manasuniversity.usbtypec.manashelper.timetable.repository.DepartmentRepository;
 import kg.manasuniversity.usbtypec.manashelper.timetable.repository.FacultyRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
 
 @Service
+@Slf4j
 public class TimetableDataLoadService {
-  private static final Logger log = LoggerFactory.getLogger(TimetableDataLoadService.class);
-
   private final TimetableDataLoader timetableDataLoader;
   private final FacultyRepository facultyRepository;
   private final DepartmentRepository departmentRepository;

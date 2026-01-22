@@ -1,24 +1,22 @@
 package kg.manasuniversity.usbtypec.manashelper.foodmenu.dailymenu.scheduler;
 
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.dailymenu.entity.DailyMenu;
-import kg.manasuniversity.usbtypec.manashelper.foodmenu.dish.entity.Dish;
-import kg.manasuniversity.usbtypec.manashelper.foodmenu.dailymenu.repository.DailyMenuRepository;
-import kg.manasuniversity.usbtypec.manashelper.foodmenu.dish.repository.DishRepository;
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.dailymenu.integration.manas.client.DailyMenuClient;
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.dailymenu.integration.manas.parser.DailyMenuParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kg.manasuniversity.usbtypec.manashelper.foodmenu.dailymenu.repository.DailyMenuRepository;
+import kg.manasuniversity.usbtypec.manashelper.foodmenu.dish.entity.Dish;
+import kg.manasuniversity.usbtypec.manashelper.foodmenu.dish.repository.DishRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Component
+@Service
+@Slf4j
 public class SynchronizeDailyMenusTask {
-  private static final Logger log = LoggerFactory.getLogger(SynchronizeDailyMenusTask.class);
-
   private final DailyMenuClient dailyMenuClient;
   private final DailyMenuParser dailyMenuParser;
   private final DishRepository dishRepository;

@@ -9,12 +9,14 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import kg.manasuniversity.usbtypec.manashelper.user.entity.User;
+import lombok.Getter;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "courses")
+@Getter
 public class Course {
   @Id
   private Integer id;
@@ -38,17 +40,5 @@ public class Course {
     this.number = number;
     this.department = department;
     users = new HashSet<>();
-  }
-
-  public Integer getId() {
-    return id;
-  }
-
-  public Integer getNumber() {
-    return number;
-  }
-
-  public Department getDepartment() {
-    return department;
   }
 }

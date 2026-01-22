@@ -6,8 +6,7 @@ import kg.manasuniversity.usbtypec.manashelper.telegram.exception.TelegramServer
 import kg.manasuniversity.usbtypec.manashelper.telegram.integration.botapi.model.TelegramSendMessageResponse;
 import kg.manasuniversity.usbtypec.manashelper.telegram.repository.TelegramMessageRepository;
 import kg.manasuniversity.usbtypec.manashelper.telegram.integration.botapi.client.TelegramClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -16,8 +15,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Slf4j
 public class TelegramMessageSenderService {
-  private final Logger log = LoggerFactory.getLogger(TelegramMessageSenderService.class);
 
   private final TelegramClient telegramClient;
   private final TelegramMessageRepository telegramMessageRepository;

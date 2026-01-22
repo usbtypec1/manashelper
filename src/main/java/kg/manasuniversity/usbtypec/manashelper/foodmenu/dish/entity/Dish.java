@@ -8,6 +8,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -22,6 +24,8 @@ import java.util.UUID;
                 @Index(name = "ix_dishes_name", columnList = "name")
         }
 )
+@Getter
+@NoArgsConstructor
 public class Dish {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -43,28 +47,9 @@ public class Dish {
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
-  protected Dish() {
-  }
-
   public Dish(String name, String photoUrl, Integer calories) {
     this.name = name;
     this.photoUrl = photoUrl;
     this.calories = calories;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public String getPhotoUrl() {
-    return photoUrl;
-  }
-
-  public Integer getCalories() {
-    return calories;
-  }
-
-  public String getUpscaledPhotoUrl() {
-    return upscaledPhotoUrl;
   }
 }
