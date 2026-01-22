@@ -2,7 +2,9 @@ package kg.manasuniversity.usbtypec.manashelper.user.controller.api;
 
 import jakarta.validation.Valid;
 import kg.manasuniversity.usbtypec.manashelper.user.dto.request.UserUpdateCredentialsRequest;
+import kg.manasuniversity.usbtypec.manashelper.user.dto.request.UserUpdateRequest;
 import kg.manasuniversity.usbtypec.manashelper.user.dto.request.UserUpsertRequest;
+import kg.manasuniversity.usbtypec.manashelper.user.dto.response.UserGetResponse;
 import kg.manasuniversity.usbtypec.manashelper.user.dto.response.UsersStatisticsResponse;
 import kg.manasuniversity.usbtypec.manashelper.user.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +30,21 @@ public class UserController {
           @Valid @RequestBody UserUpsertRequest userRequest
   ) {
     userService.upsertUser(userRequest);
+    return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/{id}")
+  public ResponseEntity<UserGetResponse> getUserById(@PathVariable long id) {
+    UserGetResponse userResponse = userService.getUserById(id);
+    return ResponseEntity.ok(userResponse);
+  }
+
+  @PutMapping("/{id}")
+  public ResponseEntity<Void> updateUser(
+          @PathVariable long id,
+          @Valid @RequestBody UserUpdateRequest userRequest
+  ) {
+    userService.updateUserById(id, userRequest);
     return ResponseEntity.noContent().build();
   }
 

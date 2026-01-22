@@ -9,6 +9,8 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import kg.manasuniversity.usbtypec.manashelper.timetable.entity.Course;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -21,6 +23,8 @@ import java.util.Set;
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "users")
+@Getter
+@Setter
 public class User {
   @Id
   private Long id;
@@ -36,6 +40,15 @@ public class User {
 
   @Column(name = "encrypted_password", nullable = true)
   private String encryptedPassword;
+
+  @Column(name = "is_timetable_change_notifications_enabled", nullable = false)
+  private Boolean isTimetableChangeNotificationsEnabled;
+
+  @Column(name = "is_noon_food_menu_notifications_enabled", nullable = false)
+  private Boolean isNoonFoodMenuNotificationsEnabled;
+
+  @Column(name = "is_evening_food_menu_notifications_enabled", nullable = false)
+  private Boolean isEveningFoodMenuNotificationsEnabled;
 
   @ManyToMany
   @JoinTable(
@@ -62,26 +75,9 @@ public class User {
     this.fullName = fullName;
     this.username = username;
     courses = new HashSet<>();
-  }
-
-  public Long getId() {
-    return id;
-  }
-
-  public String getStudentNumber() {
-    return studentNumber;
-  }
-
-  public String getEncryptedPassword() {
-    return encryptedPassword;
-  }
-
-  public void setStudentNumber(String studentNumber) {
-    this.studentNumber = studentNumber;
-  }
-
-  public void setEncryptedPassword(String encryptedPassword) {
-    this.encryptedPassword = encryptedPassword;
+    isTimetableChangeNotificationsEnabled = true;
+    isNoonFoodMenuNotificationsEnabled = true;
+    isEveningFoodMenuNotificationsEnabled = true;
   }
 
   public void setCourses(List<Course> courses) {
@@ -93,23 +89,7 @@ public class User {
     }
   }
 
-  public String getFullName() {
-    return fullName;
-  }
-
   public void clearCourses() {
     courses.clear();
-  }
-
-  public Set<Course> getCourses() {
-    return courses;
-  }
-
-  public void setFullName(String fullName) {
-    this.fullName = fullName;
-  }
-
-  public void setUsername(String username) {
-    this.username = username;
   }
 }

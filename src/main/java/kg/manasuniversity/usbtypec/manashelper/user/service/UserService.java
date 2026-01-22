@@ -1,10 +1,13 @@
 package kg.manasuniversity.usbtypec.manashelper.user.service;
 
+import kg.manasuniversity.usbtypec.manashelper.user.dto.request.UserUpdateRequest;
+import kg.manasuniversity.usbtypec.manashelper.user.dto.response.UserGetResponse;
 import kg.manasuniversity.usbtypec.manashelper.user.dto.response.UsersStatisticsResponse;
 import kg.manasuniversity.usbtypec.manashelper.user.entity.User;
 import kg.manasuniversity.usbtypec.manashelper.user.exception.UserNotFoundException;
 import kg.manasuniversity.usbtypec.manashelper.user.dto.request.UserUpdateCredentialsRequest;
 import kg.manasuniversity.usbtypec.manashelper.user.dto.request.UserUpsertRequest;
+import kg.manasuniversity.usbtypec.manashelper.user.mapper.UserMapper;
 import kg.manasuniversity.usbtypec.manashelper.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +18,13 @@ public class UserService {
   private final UserRepository userRepository;
   private final CryptoService cryptoService;
   private final ObisService obisService;
+  private final UserMapper userMapper;
 
-  public UserService(UserRepository userRepository, CryptoService cryptoService, ObisService obisService) {
+  public UserService(UserRepository userRepository, CryptoService cryptoService, ObisService obisService, UserMapper userMapper) {
     this.userRepository = userRepository;
     this.cryptoService = cryptoService;
     this.obisService = obisService;
+    this.userMapper = userMapper;
   }
 
   public void upsertUser(UserUpsertRequest userRequest) {
@@ -68,5 +73,24 @@ public class UserService {
             totalUsersCount,
             usersWithCredentialsCount
     );
+  }
+
+  public UserGetResponse getUserById(long id) throws UserNotFoundException {
+    User user = userRepository
+            .findById(id)
+            .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+    return userMapper.mapToUserGetResponse(user);
+  }
+
+  public void updateUserById(long id, UserUpdateRequest requestData) {
+    User user = userRepository
+            .findById(id)
+            .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+
+    user.setIsTimetableChangeNotificationsEnabled(requestData.isTimetableChangeNotificationsEnabled());
+    user.setIsNoonFoodMenuNotificationsEnabled(requestData.isNoonFoodMenuNotificationsEnabled());
+    user.setIsEveningFoodMenuNotificationsEnabled(requestData.isEveningFoodMenuNotificationsEnabled());
+
+    userRepository.save(user);
   }
 }
