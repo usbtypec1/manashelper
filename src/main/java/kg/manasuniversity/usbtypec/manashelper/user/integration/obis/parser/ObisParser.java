@@ -1,5 +1,6 @@
 package kg.manasuniversity.usbtypec.manashelper.user.integration.obis.parser;
 
+import kg.manasuniversity.usbtypec.manashelper.user.exception.ObisPageParserException;
 import kg.manasuniversity.usbtypec.manashelper.user.integration.obis.model.Exam;
 import kg.manasuniversity.usbtypec.manashelper.user.integration.obis.model.LessonAttendance;
 import kg.manasuniversity.usbtypec.manashelper.user.integration.obis.model.LessonExams;
@@ -7,8 +8,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,22 +15,24 @@ import java.util.List;
 
 @Service
 public class ObisParser {
-  private static final Logger log = LoggerFactory.getLogger(ObisParser.class);
 
-  public List<LessonExams> parseTakenGradesPage(String html) {
+  public List<LessonExams> parseTakenGradesPage(String html) throws ObisPageParserException {
     Document doc = Jsoup.parse(html);
 
     Elements tableBodies = doc.select("tbody");
     if (tableBodies.isEmpty()) {
-      return List.of();
+      throw new ObisPageParserException("На странице в OBIS отсутствует таблица с оценками.");
     }
 
     Element tbody = tableBodies.last();
+    if (tbody == null) {
+      throw new ObisPageParserException("На странице в OBIS отсутствует таблица с оценками.");
+    }
+
     Elements rows = tbody.select("> tr");
 
     List<LessonExams> lessons = new ArrayList<>();
     int i = 0;
-
     while (i < rows.size()) {
       Element mainRow = rows.get(i);
       Elements tds = mainRow.select("> td");
@@ -79,13 +80,12 @@ public class ObisParser {
     return lessons;
   }
 
-  public List<LessonAttendance> parseLessonsAttendancePage(String html) {
+  public List<LessonAttendance> parseLessonsAttendancePage(String html) throws ObisPageParserException {
     Document doc = Jsoup.parse(html);
 
     Element table = doc.selectFirst("table");
     if (table == null) {
-      log.warn("No attendance table found in the HTML page");
-      return List.of();
+      throw new ObisPageParserException("На странице в OBIS отсутствует таблица с посещаемостью.");
     }
 
     Elements rows = table.select("tr");
@@ -116,20 +116,43 @@ public class ObisParser {
     return lessons;
   }
 
-  public String parseLoginPageCsrfToken(String html) {
+  /**
+   * Retrieve CSRF token from OBIS login page HTML.
+   *
+   * @param html HTML content of the login page.
+   * @return CSRF token as a String.
+   * @throws ObisPageParserException if the CSRF token is not found.
+   */
+  public String parseLoginPageCsrfToken(String html) throws ObisPageParserException {
     Document doc = Jsoup.parse(html);
     Element csrfInput = doc.selectFirst("form input[name=_csrf]");
-    if (csrfInput != null) {
-      return csrfInput.attr("value");
+    if (csrfInput == null) {
+      throw new ObisPageParserException("CSRF токен не найден на странице логина OBIS.");
     }
-    return null;
+    String csrfToken = csrfInput.attr("value");
+    if (csrfToken.isBlank()) {
+      throw new ObisPageParserException("CSRF токен не найден на странице логина OBIS.");
+    }
+    return csrfToken;
   }
 
+  /**
+   * Get trimmed text from an Element or return null if empty.
+   *
+   * @param element JSoup Element.
+   * @return Trimmed text or null.
+   */
   private static String textOrNull(Element element) {
     String text = element.text().trim();
     return text.isEmpty() ? null : text;
   }
 
+  /**
+   * Try to parse a String to Double, return null if fails.
+   *
+   * @param value String value to parse.
+   * @return Parsed Double or null.
+   */
   private static Double tryParseDouble(String value) {
     try {
       return Double.parseDouble(value);
