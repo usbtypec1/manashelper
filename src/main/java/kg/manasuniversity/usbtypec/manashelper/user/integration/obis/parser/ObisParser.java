@@ -16,7 +16,7 @@ import java.util.List;
 @Service
 public class ObisParser {
 
-  public List<LessonExams> parseTakenGradesPage(String html) throws ObisPageParserException {
+  public List<LessonExams> parseAttendanceHtmlPage(String html) throws ObisPageParserException {
     Document doc = Jsoup.parse(html);
 
     Elements tableBodies = doc.select("tbody");

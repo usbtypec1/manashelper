@@ -3,9 +3,12 @@ package kg.manasuniversity.usbtypec.manashelper.user.service;
 import kg.manasuniversity.usbtypec.manashelper.user.dto.response.LessonAttendanceResponse;
 import kg.manasuniversity.usbtypec.manashelper.user.dto.response.LessonExamsResponse;
 import kg.manasuniversity.usbtypec.manashelper.user.entity.User;
+import kg.manasuniversity.usbtypec.manashelper.user.exception.ObisPageParserException;
 import kg.manasuniversity.usbtypec.manashelper.user.exception.UserHasNoCredentialsException;
 import kg.manasuniversity.usbtypec.manashelper.user.exception.UserNotFoundException;
 import kg.manasuniversity.usbtypec.manashelper.user.integration.obis.client.ObisClient;
+import kg.manasuniversity.usbtypec.manashelper.user.integration.obis.model.LessonAttendance;
+import kg.manasuniversity.usbtypec.manashelper.user.integration.obis.model.LessonExams;
 import kg.manasuniversity.usbtypec.manashelper.user.integration.obis.parser.ObisParser;
 import kg.manasuniversity.usbtypec.manashelper.user.mapper.LessonAttendanceMapper;
 import kg.manasuniversity.usbtypec.manashelper.user.mapper.LessonExamsMapper;
@@ -38,44 +41,51 @@ public final class ObisService {
     obisClient.sendLoginRequest(studentNumber, plainPassword, csrf);
   }
 
-  public List<LessonAttendanceResponse> getUserAttendance(long userId) throws UserNotFoundException {
+  private String getStudentNumber(User user) throws UserHasNoCredentialsException {
+    String studentNumber = user.getStudentNumber();
+    if (studentNumber == null) {
+      throw new UserHasNoCredentialsException("User credentials are incomplete for id: " + user.getId());
+    }
+    return studentNumber;
+  }
+
+  private String getPlainPassword(User user) throws UserHasNoCredentialsException {
+    String encryptedPassword = user.getEncryptedPassword();
+    if (encryptedPassword == null) {
+      throw new UserHasNoCredentialsException("User credentials are incomplete for id: " + user.getId());
+    }
+    return cryptoService.decrypt(encryptedPassword);
+  }
+
+  public List<LessonAttendanceResponse> getUserAttendance(long userId) throws UserNotFoundException, ObisPageParserException {
     User user = userRepository
             .findById(userId)
             .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+    String studentNumber = getStudentNumber(user);
+    String plainPassword = getPlainPassword(user);
 
-    String studentNumber = user.getStudentNumber();
-    String encryptedPassword = user.getEncryptedPassword();
-
-    if (studentNumber == null || encryptedPassword == null) {
-      throw new UserHasNoCredentialsException("User credentials are incomplete for id: " + userId);
-    }
-
-    String plainPassword = cryptoService.decrypt(encryptedPassword);
     authenticate(studentNumber, plainPassword);
     String attendancePageHtml = obisClient.fetchAttendancePageHtml();
-    return obisParser
-            .parseLessonsAttendancePage(attendancePageHtml)
+
+    List<LessonAttendance> lessonsAttendance = obisParser.parseLessonsAttendancePage(attendancePageHtml);
+    return lessonsAttendance
             .stream()
             .map(lessonAttendanceMapper::mapToResponse)
             .toList();
   }
 
-  public List<LessonExamsResponse> getUserExamGrades(long userId) throws UserNotFoundException {
+  public List<LessonExamsResponse> getUserExamGrades(long userId) throws UserNotFoundException, ObisPageParserException {
     User user = userRepository
             .findById(userId)
             .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
-    String studentNumber = user.getStudentNumber();
-    String encryptedPassword = user.getEncryptedPassword();
+    String studentNumber = getStudentNumber(user);
+    String plainPassword = getPlainPassword(user);
 
-    if (studentNumber == null || encryptedPassword == null) {
-      throw new UserHasNoCredentialsException("User credentials are incomplete for id: " + userId);
-    }
-
-    String plainPassword = cryptoService.decrypt(encryptedPassword);
     authenticate(studentNumber, plainPassword);
     String attendancePageHtml = obisClient.fetchExamsPageHtml();
-    return obisParser
-            .parseTakenGradesPage(attendancePageHtml)
+
+    List<LessonExams> lessonsExams = obisParser.parseAttendanceHtmlPage(attendancePageHtml);
+    return lessonsExams
             .stream()
             .map(lessonExamsMapper::mapToResponse)
             .toList();
