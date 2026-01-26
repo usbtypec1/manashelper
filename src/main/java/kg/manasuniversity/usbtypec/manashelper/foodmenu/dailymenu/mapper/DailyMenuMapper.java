@@ -24,6 +24,6 @@ public class DailyMenuMapper {
     List<Dish> dailyMenus = entity.getDishes().stream()
             .map(dishMapper::mapEntityToModel)
             .toList();
-    return new DailyMenu(entity.getId(), dailyMenus, entity.getDate(), averageRating, ratingsCount, hasComments);
+    return new DailyMenu(entity.getId(), dailyMenus, entity.getDate(), averageRating, ratingsCount, hasComments, entity.getViewsCount());
   }
 }

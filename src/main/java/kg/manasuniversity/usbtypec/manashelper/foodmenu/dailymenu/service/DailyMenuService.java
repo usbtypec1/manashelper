@@ -55,6 +55,8 @@ public class DailyMenuService {
     boolean hasComments = dailyMenuRatings.stream()
             .anyMatch(rating -> rating.getComment() != null && !rating.getComment().isBlank());
 
+    dailyMenu.setViewsCount(dailyMenu.getViewsCount() + 1);
+    dailyMenu.save();
     return dailyMenuMapper.mapEntityToModel(dailyMenu, avg, count, hasComments);
   }
 

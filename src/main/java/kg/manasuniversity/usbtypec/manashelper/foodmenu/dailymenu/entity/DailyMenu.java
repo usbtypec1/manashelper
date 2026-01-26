@@ -13,6 +13,7 @@ import jakarta.persistence.UniqueConstraint;
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.dish.entity.Dish;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.LinkedHashSet;
@@ -22,6 +23,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "daily_menus")
 @Getter
+@Setter
 @NoArgsConstructor
 public class DailyMenu {
   @Id
@@ -30,6 +32,9 @@ public class DailyMenu {
 
   @Column(name = "date", nullable = false)
   private LocalDate date;
+
+  @Column(name = "views_count", nullable = false)
+  private Integer viewsCount;
 
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(

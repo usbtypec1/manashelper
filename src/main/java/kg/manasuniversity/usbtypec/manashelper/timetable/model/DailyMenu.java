@@ -10,6 +10,7 @@ public record DailyMenu(
         LocalDate date,
         double averageRatingScore,
         int ratingsCount,
-        boolean hasComments
+        boolean hasComments,
+        int viewsCount
 ) {
 }
