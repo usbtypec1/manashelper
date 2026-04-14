@@ -11,26 +11,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CookieInterceptor implements ClientHttpRequestInterceptor {
-  private final List<String> cookies = new ArrayList<>();
+    private final List<String> cookies;
 
-  @Override
-  public ClientHttpResponse intercept(HttpRequest request, byte[] body,
-                                      ClientHttpRequestExecution execution) throws IOException {
-    // Add stored cookies to outgoing request
-    if (!cookies.isEmpty()) {
-      request.getHeaders().addAll(HttpHeaders.COOKIE, cookies);
+    public CookieInterceptor() {
+        cookies = new ArrayList<>();
     }
 
-    // Execute the request
-    ClientHttpResponse response = execution.execute(request, body);
+    @Override
+    public ClientHttpResponse intercept(HttpRequest request, byte[] body,
+                                        ClientHttpRequestExecution execution) throws IOException {
+        if (!cookies.isEmpty()) {
+            request.getHeaders().addAll(HttpHeaders.COOKIE, cookies);
+        }
 
-    // Capture Set-Cookie headers from response
-    List<String> setCookieHeaders = response.getHeaders().get(HttpHeaders.SET_COOKIE);
-    if (setCookieHeaders != null && !setCookieHeaders.isEmpty()) {
-      cookies.clear();
-      cookies.addAll(setCookieHeaders);
+        ClientHttpResponse response = execution.execute(request, body);
+
+        List<String> setCookieHeaders = response.getHeaders().get(HttpHeaders.SET_COOKIE);
+        if (setCookieHeaders != null && !setCookieHeaders.isEmpty()) {
+            cookies.clear();
+            cookies.addAll(setCookieHeaders);
+        }
+
+        return response;
     }
-
-    return response;
-  }
 }

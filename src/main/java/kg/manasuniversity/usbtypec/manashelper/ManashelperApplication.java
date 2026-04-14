@@ -8,8 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class ManashelperApplication {
 
-  public static void main(String[] args) {
-    SpringApplication.run(ManashelperApplication.class, args);
-  }
-  
+    public static void main(String[] args) {
+        SpringApplication.run(ManashelperApplication.class, args);
+    }
 }
