@@ -21,7 +21,6 @@ services:
     restart: always
     env_file:
       - .env
-      - .env.version
 
 volumes:
   postgres_data:

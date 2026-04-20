@@ -41,7 +41,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT }}
           script: |
-            echo "VERSION=${{ env.VERSION }}" > .env.version
-            docker image prune -f
+            export VERSION=${{ env.VERSION }}
             docker pull usbtypec1/manashelper:${{ env.VERSION }}
             docker compose up -d --remove-orphans
+            docker image prune -f
