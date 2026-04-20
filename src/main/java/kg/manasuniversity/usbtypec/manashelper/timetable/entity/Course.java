@@ -18,27 +18,43 @@ import java.util.Set;
 @Table(name = "courses")
 @Getter
 public class Course {
-  @Id
-  private Integer id;
+    @Id
+    private Integer id;
 
-  @Column(name = "number", nullable = false)
-  private Integer number;
+    @Column(name = "number", nullable = false)
+    private Integer number;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "department_id", nullable = false)
-  private Department department;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id", nullable = false)
+    private Department department;
 
-  @ManyToMany(mappedBy = "courses")
-  private Set<User> users;
+    @ManyToMany(mappedBy = "courses")
+    private Set<User> users;
 
-  protected Course() {
-    users = new HashSet<>();
-  }
+    protected Course() {
+        users = new HashSet<>();
+    }
 
-  public Course(Integer id, Integer number, Department department) {
-    this.id = id;
-    this.number = number;
-    this.department = department;
-    users = new HashSet<>();
-  }
+    public Course(Integer id, Integer number, Department department) {
+        this.id = id;
+        this.number = number;
+        this.department = department;
+        users = new HashSet<>();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Course other)) {
+            return false;
+        }
+        return id != null && id.equals(other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

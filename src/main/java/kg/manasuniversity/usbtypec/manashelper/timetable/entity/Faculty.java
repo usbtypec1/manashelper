@@ -16,9 +16,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Faculty {
-  @Id
-  private UUID id;
+    @Id
+    private UUID id;
 
-  @Column(name = "name", nullable = false, length = 128)
-  private String name;
+    @Column(name = "name", nullable = false, length = 128)
+    private String name;
 }

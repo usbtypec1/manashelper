@@ -1,6 +1,7 @@
 package kg.manasuniversity.usbtypec.manashelper.timetable.service;
 
-import kg.manasuniversity.usbtypec.manashelper.timetable.enums.LessonType;
+import kg.manasuniversity.usbtypec.manashelper.telegram.service.CourseLessonFormatter;
+import kg.manasuniversity.usbtypec.manashelper.timetable.model.LessonType;
 import kg.manasuniversity.usbtypec.manashelper.timetable.model.CourseLesson;
 import org.junit.jupiter.api.Test;
 

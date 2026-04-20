@@ -1,11 +1,9 @@
-name: ci-cd
+name: CI/CD Spring Boot
+
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    tags:
+      - 'v*'
 
 jobs:
   build-and-deploy:
@@ -15,11 +13,35 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
+      - name: Extract version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
 
-      - name: Build with Maven
-        run: mvn clean install -DskipTests
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: usbtypec1
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image (dual tag)
+        run: |
+          docker build \
+            -t usbtypec1/manashelper:$VERSION \
+            -t usbtypec1/manashelper:latest .
+
+      - name: Push Docker images
+        run: |
+          docker push usbtypec1/manashelper:$VERSION
+          docker push usbtypec1/manashelper:latest
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+          script: |
+            export VERSION=${{ env.VERSION }}
+            docker pull usbtypec1/manashelper:${{ env.VERSION }}
+            docker compose up -d --remove-orphans
+            docker image prune -f

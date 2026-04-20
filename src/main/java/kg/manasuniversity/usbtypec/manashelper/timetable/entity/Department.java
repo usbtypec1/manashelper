@@ -19,13 +19,13 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Department {
-  @Id
-  private UUID id;
+    @Id
+    private UUID id;
 
-  @Column(name = "name", nullable = false, length = 128)
-  private String name;
+    @Column(name = "name", nullable = false, length = 128)
+    private String name;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "faculty_id", nullable = false)
-  private Faculty faculty;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "faculty_id", nullable = false)
+    private Faculty faculty;
 }
