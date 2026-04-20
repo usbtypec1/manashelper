@@ -19,12 +19,4 @@ public interface CourseRepository extends JpaRepository<Course, Integer> {
                LEFT JOIN FETCH c.department d
         """)
     List<Course> findAllWithDepartment();
-
-    @Query("""
-               SELECT c
-               FROM Course c
-               LEFT JOIN FETCH c.department d
-               WHERE c.id IN :ids
-        """)
-    List<Course> findByIdInWithDepartment(List<Integer> ids);
 }

@@ -24,16 +24,4 @@ public interface LessonRepository extends JpaRepository<Lesson, Integer> {
         @Param("course") Course course,
         @Param("synchronizationId") UUID synchronizationId
     );
-
-    @Query("""
-        SELECT l
-        FROM Lesson l
-          LEFT JOIN FETCH l.course c
-        WHERE l.course = :course AND l.synchronizationId = :synchronizationId AND l.weekday = :weekday
-        """)
-    List<Lesson> findByCourseAndSynchronizationIdAndWeekdayWithCourse(
-        Course course,
-        UUID synchronizationId,
-        int weekday
-    );
 }
