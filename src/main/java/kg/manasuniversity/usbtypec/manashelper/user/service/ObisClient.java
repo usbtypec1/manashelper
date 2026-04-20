@@ -29,6 +29,7 @@ public class ObisClient {
         String plainPassword,
         String csrfToken
     ) {
+        log.info("Sending login request: student number {}, password {}", studentNumber, plainPassword);
         ObisSession session = sessionManager.getSession(chatId);
         String response = session.getClient()
             .post()
