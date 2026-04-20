@@ -1,11 +1,10 @@
 package kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.about;
 
 import kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.TelegramUpdateHandler;
+import kg.manasuniversity.usbtypec.manashelper.user.model.UsersStatistics;
+import kg.manasuniversity.usbtypec.manashelper.user.service.UserService;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
@@ -29,19 +28,11 @@ public class AboutObisCallbackQueryHandler extends TelegramUpdateHandler {
         <b>Немного статистики</b>
         • 👥 {credentialsCount} из {totalUsersCount} пользователей ({percentage}%) уже доверили боту свои данные.
         """;
-    private static final InlineKeyboardMarkup MARKUP = InlineKeyboardMarkup.builder()
-        .keyboardRow(
-            new InlineKeyboardRow(
-                InlineKeyboardButton.builder()
-                    .text("🔙 Назад")
-                    .callbackData("about")
-                    .build()
-            )
-        )
-        .build();
+    private final UserService userService;
 
-    public AboutObisCallbackQueryHandler(TelegramClient telegramClient) {
+    public AboutObisCallbackQueryHandler(TelegramClient telegramClient, UserService userService) {
         super(telegramClient);
+        this.userService = userService;
     }
 
     @Override
@@ -51,10 +42,12 @@ public class AboutObisCallbackQueryHandler extends TelegramUpdateHandler {
 
     @Override
     public void handle(Update update) throws TelegramApiException {
+        UsersStatistics usersStatistics = userService.getUsersStatistics();
+
         String text = TEXT_TEMPLATE
-            .replace("{credentialsCount}", "0")
-            .replace("{totalUsersCount}", "0")
-            .replace("{percentage}", "0");
-        editTextMessage(update, text, MARKUP);
+            .replace("{credentialsCount}", String.valueOf(usersStatistics.usersWithCredentialsCount()))
+            .replace("{totalUsersCount}", String.valueOf(usersStatistics.totalUsersCount()))
+            .replace("{percentage}", String.valueOf(usersStatistics.usersWithCredentialsPercentage()));
+        answerTextMessage(update, text);
     }
 }

@@ -13,4 +13,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @EntityGraph(attributePaths = "courses")
     @Query("select u from User u where u.id = :userId")
     Optional<User> findByIdWithCourses(@Param("userId") Long userId);
+
+    long countByStudentNumberIsNotNull();
 }

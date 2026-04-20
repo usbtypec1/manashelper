@@ -3,9 +3,6 @@ package kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhand
 import kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.TelegramUpdateHandler;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
@@ -20,16 +17,6 @@ public class AboutHowBotWorksCallbackQueryHandler extends TelegramUpdateHandler 
         
         Любой желающий может изучить код и убедиться, как именно работает бот.
         """;
-    private static final InlineKeyboardMarkup MARKUP = InlineKeyboardMarkup.builder()
-        .keyboardRow(
-            new InlineKeyboardRow(
-                InlineKeyboardButton.builder()
-                    .text("🔙 Назад")
-                    .callbackData("about")
-                    .build()
-            )
-        )
-        .build();
 
     public AboutHowBotWorksCallbackQueryHandler(TelegramClient telegramClient) {
         super(telegramClient);
@@ -42,6 +29,6 @@ public class AboutHowBotWorksCallbackQueryHandler extends TelegramUpdateHandler 
 
     @Override
     public void handle(Update update) throws TelegramApiException {
-        editTextMessage(update, TEXT, MARKUP);
+        answerTextMessage(update, TEXT);
     }
 }

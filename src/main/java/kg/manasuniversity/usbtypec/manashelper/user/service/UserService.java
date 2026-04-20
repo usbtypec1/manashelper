@@ -2,6 +2,7 @@ package kg.manasuniversity.usbtypec.manashelper.user.service;
 
 import kg.manasuniversity.usbtypec.manashelper.user.entity.User;
 import kg.manasuniversity.usbtypec.manashelper.user.exception.UserNotFoundException;
+import kg.manasuniversity.usbtypec.manashelper.user.model.UsersStatistics;
 import kg.manasuniversity.usbtypec.manashelper.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -47,5 +48,15 @@ public class UserService {
         user.setStudentNumber(studentNumber);
         user.setEncryptedPassword(encryptedPassword);
         userRepository.save(user);
+    }
+
+    public UsersStatistics getUsersStatistics() {
+        long totalUsersCount = userRepository.count();
+        long usersWithCredentialsCount = userRepository.countByStudentNumberIsNotNull();
+
+        int usersWithCredentialsPercentage = totalUsersCount != 0
+            ? (int) ((usersWithCredentialsCount * 100) / totalUsersCount) : 0;
+
+        return new UsersStatistics(totalUsersCount, usersWithCredentialsCount, usersWithCredentialsPercentage);
     }
 }
