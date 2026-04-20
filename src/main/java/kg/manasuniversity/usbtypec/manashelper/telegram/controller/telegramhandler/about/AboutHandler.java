@@ -10,7 +10,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 @Component
-public class AboutCallbackQueryHandler extends TelegramUpdateHandler {
+public class AboutHandler extends TelegramUpdateHandler {
     private static final String TEXT = """
         Привет друг 👋
         
@@ -49,27 +49,21 @@ public class AboutCallbackQueryHandler extends TelegramUpdateHandler {
                     .build()
             )
         )
-        .keyboardRow(
-            new InlineKeyboardRow(
-                InlineKeyboardButton.builder()
-                    .text("🔙 Назад")
-                    .callbackData("back")
-                    .build()
-            )
-        )
         .build();
 
-    public AboutCallbackQueryHandler(TelegramClient telegramClient) {
+    public AboutHandler(TelegramClient telegramClient) {
         super(telegramClient);
     }
 
     @Override
     public void handle(Update update) throws TelegramApiException {
-        editTextMessage(update, TEXT, MARKUP);
+        answerTextMessage(update, TEXT, MARKUP);
     }
 
     @Override
     public boolean shouldHandle(Update update) {
-        return update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("about");
+        return update.hasMessage() &&
+            update.getMessage().hasText() &&
+            update.getMessage().getText().equals("ℹ️ О боте");
     }
 }

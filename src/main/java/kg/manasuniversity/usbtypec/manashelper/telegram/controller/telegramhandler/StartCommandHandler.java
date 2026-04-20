@@ -1,45 +1,34 @@
 package kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler;
 
-import kg.manasuniversity.usbtypec.manashelper.telegram.model.CallbackData;
 import kg.manasuniversity.usbtypec.manashelper.user.service.UserService;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 @Component
 public class StartCommandHandler extends TelegramUpdateHandler {
-    private static final InlineKeyboardMarkup MARKUP = InlineKeyboardMarkup.builder()
+    private static final ReplyKeyboardMarkup MARKUP = ReplyKeyboardMarkup.builder()
+        .resizeKeyboard(true)
+        .isPersistent(true)
         .keyboardRow(
-            new InlineKeyboardRow(
-                InlineKeyboardButton.builder()
-                    .text("🍉 Йемек")
-                    .callbackData("food_menu")
-                    .build(),
-                InlineKeyboardButton.builder()
-                    .text("🔐 OBIS")
-                    .callbackData("obis")
-                    .build()
+            new KeyboardRow(
+                new KeyboardButton("🍉 Йемек"),
+                new KeyboardButton("🔐 OBIS")
             )
         )
         .keyboardRow(
-            new InlineKeyboardRow(
-                InlineKeyboardButton.builder()
-                    .text("📅 Расписание")
-                    .callbackData(CallbackData.FACULTY_LIST.name())
-                    .build()
+            new KeyboardRow(
+                new KeyboardButton("📅 Расписание")
             )
         )
         .keyboardRow(
-            new InlineKeyboardRow(
-                InlineKeyboardButton.builder()
-                    .text("ℹ️ О боте")
-                    .callbackData("about")
-                    .build()
+            new KeyboardRow(
+                new KeyboardButton("ℹ️ О боте")
             )
         )
         .build();

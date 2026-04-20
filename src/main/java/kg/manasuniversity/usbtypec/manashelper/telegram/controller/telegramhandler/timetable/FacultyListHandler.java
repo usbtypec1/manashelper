@@ -26,8 +26,9 @@ public class FacultyListHandler extends TelegramUpdateHandler {
 
     @Override
     public boolean shouldHandle(Update update) {
-        return update.hasCallbackQuery()
-            && update.getCallbackQuery().getData().equals(CallbackData.FACULTY_LIST.name());
+        return update.hasMessage() &&
+            update.getMessage().hasText() &&
+            update.getMessage().getText().equals("📅 Расписание");
     }
 
     @Override
@@ -38,7 +39,7 @@ public class FacultyListHandler extends TelegramUpdateHandler {
             .map(this::toRow)
             .toList();
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(rows);
-        editTextMessage(update, "Список факультетов", markup);
+        answerTextMessage(update, "Список факультетов", markup);
     }
 
     private InlineKeyboardRow toRow(Faculty faculty) {

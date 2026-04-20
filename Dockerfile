@@ -7,8 +7,9 @@ COPY pom.xml .
 RUN mvn dependency:go-offline
 
 COPY src ./src
+COPY checkstyle.xml .
 
-RUN mvn clean package
+RUN mvn clean verify
 
 
 # ----------- Stage 2: Run -----------

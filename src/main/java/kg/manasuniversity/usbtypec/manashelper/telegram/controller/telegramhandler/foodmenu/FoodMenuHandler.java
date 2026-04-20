@@ -56,7 +56,9 @@ public class FoodMenuHandler extends TelegramUpdateHandler {
 
     @Override
     public boolean shouldHandle(Update update) {
-        return update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("food_menu");
+        return update.hasMessage() &&
+            update.getMessage().hasText() &&
+            update.getMessage().getText().equals("🍉 Йемек");
     }
 
     @Override

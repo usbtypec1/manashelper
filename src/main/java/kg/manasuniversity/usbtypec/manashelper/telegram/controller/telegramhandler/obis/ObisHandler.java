@@ -10,7 +10,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 @Component
-public class ObisCallbackQueryHandler extends TelegramUpdateHandler {
+public class ObisHandler extends TelegramUpdateHandler {
     private static final InlineKeyboardMarkup MARKUP = InlineKeyboardMarkup.builder()
         .keyboardRow(
             new InlineKeyboardRow(
@@ -38,13 +38,15 @@ public class ObisCallbackQueryHandler extends TelegramUpdateHandler {
         )
         .build();
 
-    public ObisCallbackQueryHandler(TelegramClient telegramClient) {
+    public ObisHandler(TelegramClient telegramClient) {
         super(telegramClient);
     }
 
     @Override
     public boolean shouldHandle(Update update) {
-        return update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("obis");
+        return update.hasMessage() &&
+            update.getMessage().hasText() &&
+            update.getMessage().getText().equals("🔐 OBIS");
     }
 
     @Override
