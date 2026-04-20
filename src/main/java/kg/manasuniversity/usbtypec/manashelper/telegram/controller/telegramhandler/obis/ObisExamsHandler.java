@@ -3,7 +3,6 @@ package kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhand
 import kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.TelegramUpdateHandler;
 import kg.manasuniversity.usbtypec.manashelper.telegram.service.ExamsFormatter;
 import kg.manasuniversity.usbtypec.manashelper.user.exception.UserHasNoCredentialsException;
-import kg.manasuniversity.usbtypec.manashelper.user.model.LessonAttendance;
 import kg.manasuniversity.usbtypec.manashelper.user.model.LessonExams;
 import kg.manasuniversity.usbtypec.manashelper.user.service.ObisService;
 import org.springframework.stereotype.Component;
