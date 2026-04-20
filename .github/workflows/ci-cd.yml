@@ -22,7 +22,7 @@ jobs:
           username: usbtypec1
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Docker image (dual tag)
+      - name: Build Docker image
         run: |
           docker build \
             -t usbtypec1/manashelper:$VERSION \

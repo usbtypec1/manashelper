@@ -2,6 +2,8 @@ package kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhand
 
 import kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.TelegramUpdateHandler;
 import kg.manasuniversity.usbtypec.manashelper.telegram.service.ExamsFormatter;
+import kg.manasuniversity.usbtypec.manashelper.user.exception.UserHasNoCredentialsException;
+import kg.manasuniversity.usbtypec.manashelper.user.model.LessonAttendance;
 import kg.manasuniversity.usbtypec.manashelper.user.model.LessonExams;
 import kg.manasuniversity.usbtypec.manashelper.user.service.ObisService;
 import org.springframework.stereotype.Component;
@@ -28,8 +30,14 @@ public class ObisExamsHandler extends TelegramUpdateHandler {
     @Override
     public void handle(Update update) throws TelegramApiException {
         Long userId = update.getCallbackQuery().getFrom().getId();
-        List<LessonExams> responses = obisService.getUserExamGrades(userId);
-        String text = ExamsFormatter.format(responses);
+        List<LessonExams> lessonExamsList;
+        try {
+            lessonExamsList = obisService.getUserExamGrades(userId);
+        } catch (UserHasNoCredentialsException e) {
+            answerTextMessage(update, "Введите ваши данные от OBIS");
+            return;
+        }
+        String text = ExamsFormatter.format(lessonExamsList);
         answerTextMessage(update, text);
     }
 }

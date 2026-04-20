@@ -2,6 +2,9 @@ package kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhand
 
 import kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.TelegramUpdateHandler;
 import kg.manasuniversity.usbtypec.manashelper.telegram.service.AttendanceFormatter;
+import kg.manasuniversity.usbtypec.manashelper.user.exception.ObisPageParserException;
+import kg.manasuniversity.usbtypec.manashelper.user.exception.UserHasNoCredentialsException;
+import kg.manasuniversity.usbtypec.manashelper.user.exception.UserNotFoundException;
 import kg.manasuniversity.usbtypec.manashelper.user.model.LessonAttendance;
 import kg.manasuniversity.usbtypec.manashelper.user.service.ObisService;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +33,13 @@ public class ObisAttendanceHandler extends TelegramUpdateHandler {
     @Override
     public void handle(Update update) throws TelegramApiException {
         Long userId = update.getCallbackQuery().getFrom().getId();
-        List<LessonAttendance> attendanceResponseList = obisService.getUserAttendance(userId);
+        List<LessonAttendance> attendanceResponseList;
+        try {
+            attendanceResponseList = obisService.getUserAttendance(userId);
+        } catch (UserHasNoCredentialsException e) {
+            answerTextMessage(update, "Введите ваши данные от OBIS");
+            return;
+        }
 
         String text = AttendanceFormatter.formatAttendance(
             attendanceResponseList.stream().map(AttendanceFormatter::computeLessonSkipOpportunities).toList()
