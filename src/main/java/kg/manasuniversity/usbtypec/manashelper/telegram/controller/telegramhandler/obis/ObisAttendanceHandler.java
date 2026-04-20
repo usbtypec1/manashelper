@@ -25,12 +25,17 @@ public class ObisAttendanceHandler extends TelegramUpdateHandler {
 
     @Override
     public boolean shouldHandle(Update update) {
-        return update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("obis:attendance");
+        if (update.hasMessage()) {
+            return update.getMessage().hasText() && update.getMessage().getText().equals("/yoklama");
+        } else if (update.hasCallbackQuery()) {
+            return "obis:attendance".equals(update.getCallbackQuery().getData());
+        }
+        return false;
     }
 
     @Override
     public void handle(Update update) throws TelegramApiException {
-        Long userId = update.getCallbackQuery().getFrom().getId();
+        Long userId = getUserId(update);
         List<LessonAttendance> attendanceResponseList;
         try {
             attendanceResponseList = obisService.getUserAttendance(userId);

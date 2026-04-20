@@ -23,12 +23,17 @@ public class ObisExamsHandler extends TelegramUpdateHandler {
 
     @Override
     public boolean shouldHandle(Update update) {
-        return update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("obis:exams");
+        if (update.hasMessage()) {
+            return update.getMessage().hasText() && update.getMessage().getText().equals("/exams");
+        } else if (update.hasCallbackQuery()) {
+            return "obis:exams".equals(update.getCallbackQuery().getData());
+        }
+        return false;
     }
 
     @Override
     public void handle(Update update) throws TelegramApiException {
-        Long userId = update.getCallbackQuery().getFrom().getId();
+        Long userId = getUserId(update);
         List<LessonExams> lessonExamsList;
         try {
             lessonExamsList = obisService.getUserExamGrades(userId);

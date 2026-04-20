@@ -26,9 +26,11 @@ public class FacultyListHandler extends TelegramUpdateHandler {
 
     @Override
     public boolean shouldHandle(Update update) {
-        return update.hasMessage() &&
-            update.getMessage().hasText() &&
-            update.getMessage().getText().equals("📅 Расписание");
+        if (!update.hasMessage() || !update.getMessage().hasText()) {
+            return false;
+        }
+        String text = update.getMessage().getText();
+        return text.equals("📅 Расписание") || text.equals("/timetable");
     }
 
     @Override

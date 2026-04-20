@@ -34,6 +34,15 @@ public abstract class TelegramUpdateHandler {
         throw new IllegalArgumentException("Unknown update type");
     }
 
+    protected Long getUserId(Update update) {
+        if (update.hasMessage()) {
+            return update.getMessage().getFrom().getId();
+        } else if (update.hasCallbackQuery()) {
+            return update.getCallbackQuery().getFrom().getId();
+        }
+        throw new IllegalArgumentException("Unknown update type");
+    }
+
     protected Integer getMessageId(Update update) {
         if (update.hasMessage()) {
             return update.getMessage().getMessageId();
