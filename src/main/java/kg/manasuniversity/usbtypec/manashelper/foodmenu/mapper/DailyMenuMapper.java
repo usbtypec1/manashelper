@@ -15,7 +15,8 @@ public class DailyMenuMapper {
     public DailyMenu mapEntityToModel(
         kg.manasuniversity.usbtypec.manashelper.foodmenu.entity.DailyMenu entity,
         double averageRating,
-        int ratingsCount
+        int ratingsCount,
+        int viewsCount
     ) {
         List<Dish> dailyMenus = entity.getDishes().stream()
             .map(dishMapper::mapEntityToModel)
@@ -26,7 +27,7 @@ public class DailyMenuMapper {
             entity.getDate(),
             averageRating,
             ratingsCount,
-            entity.getViewsCount()
+            viewsCount
         );
     }
 }

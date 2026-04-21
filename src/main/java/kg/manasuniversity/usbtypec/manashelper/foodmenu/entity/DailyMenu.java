@@ -32,9 +32,6 @@ public class DailyMenu {
     @Column(name = "date", nullable = false)
     private LocalDate date;
 
-    @Column(name = "views_count", nullable = false)
-    private Integer viewsCount;
-
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "daily_menu_dishes",
@@ -49,7 +46,6 @@ public class DailyMenu {
     public DailyMenu(LocalDate date) {
         this.date = date;
         dishes = new LinkedHashSet<>();
-        viewsCount = 0;
     }
 
     public void addDish(Dish dish) {

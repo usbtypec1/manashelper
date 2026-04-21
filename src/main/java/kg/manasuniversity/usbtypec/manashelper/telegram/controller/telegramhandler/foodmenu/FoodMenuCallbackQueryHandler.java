@@ -41,6 +41,7 @@ public class FoodMenuCallbackQueryHandler extends TelegramUpdateHandler {
 
     @Override
     public void handle(Update update) throws TelegramApiException {
+        Long userId = getUserId(update);
         String callbackData = update.getCallbackQuery().getData();
         int skipDays = switch (callbackData) {
             case "food_menu:today" -> 0;
@@ -50,7 +51,7 @@ public class FoodMenuCallbackQueryHandler extends TelegramUpdateHandler {
         };
         DailyMenu dailyMenu;
         try {
-            dailyMenu = dailyMenuService.getDailyMenuBySkippingDays(skipDays);
+            dailyMenu = dailyMenuService.getDailyMenuBySkippingDays(skipDays, userId);
         } catch (DailyMenuNotFoundException e) {
             answerTextMessage(update, FoodMenuFormatter.formatNotFound(skipDays));
             return;

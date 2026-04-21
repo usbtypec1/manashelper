@@ -47,9 +47,11 @@ public class FoodMenuCommandHandler extends TelegramUpdateHandler {
             default -> Integer.parseInt(parts[1]);
         };
 
+        Long userId = getUserId(update);
+
         DailyMenu dailyMenu;
         try {
-            dailyMenu = dailyMenuService.getDailyMenuBySkippingDays(skipDays);
+            dailyMenu = dailyMenuService.getDailyMenuBySkippingDays(skipDays, userId);
         } catch (DailyMenuNotFoundException e) {
             answerTextMessage(update, FoodMenuFormatter.formatNotFound(skipDays));
             return;
