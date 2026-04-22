@@ -2,29 +2,27 @@ package kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhand
 
 import kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.TelegramUpdateHandler;
 import kg.manasuniversity.usbtypec.manashelper.telegram.model.CallbackData;
+import kg.manasuniversity.usbtypec.manashelper.telegram.service.AnswerUtils;
 import kg.manasuniversity.usbtypec.manashelper.telegram.service.CallbackDataByIdFilter;
 import kg.manasuniversity.usbtypec.manashelper.timetable.entity.Department;
 import kg.manasuniversity.usbtypec.manashelper.timetable.repository.DepartmentRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Component
-public class DepartmentListHandler extends TelegramUpdateHandler {
+@RequiredArgsConstructor
+public class DepartmentListHandler implements TelegramUpdateHandler {
     private final DepartmentRepository departmentRepository;
-
-    public DepartmentListHandler(TelegramClient telegramClient, DepartmentRepository departmentRepository) {
-        super(telegramClient);
-        this.departmentRepository = departmentRepository;
-    }
+    private final AnswerUtils answerUtils;
 
     @Override
     public boolean shouldHandle(Update update) {
@@ -44,8 +42,7 @@ public class DepartmentListHandler extends TelegramUpdateHandler {
             .map(this::toRow)
             .toList();
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(rows);
-        editTextMessage(update, "Список направлений", markup);
-
+        answerUtils.editTextMessage(update, "Список направлений", markup);
     }
 
     private InlineKeyboardRow toRow(Department department) {

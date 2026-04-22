@@ -1,16 +1,20 @@
 package kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.about;
 
 import kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.TelegramUpdateHandler;
+import kg.manasuniversity.usbtypec.manashelper.telegram.service.AnswerUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.generics.TelegramClient;
+
+import static kg.manasuniversity.usbtypec.manashelper.telegram.service.UpdateFilters.isMessageTextEquals;
 
 @Component
-public class AboutHandler extends TelegramUpdateHandler {
+@RequiredArgsConstructor
+public class AboutHandler implements TelegramUpdateHandler {
     private static final String TEXT = """
         Привет друг 👋
         
@@ -51,19 +55,16 @@ public class AboutHandler extends TelegramUpdateHandler {
         )
         .build();
 
-    public AboutHandler(TelegramClient telegramClient) {
-        super(telegramClient);
-    }
+    private final AnswerUtils answerUtils;
+
 
     @Override
     public void handle(Update update) throws TelegramApiException {
-        answerTextMessage(update, TEXT, MARKUP);
+        answerUtils.answerTextMessage(update, TEXT, MARKUP);
     }
 
     @Override
     public boolean shouldHandle(Update update) {
-        return update.hasMessage() &&
-            update.getMessage().hasText() &&
-            update.getMessage().getText().equals("ℹ️ О боте");
+        return isMessageTextEquals(update, "ℹ️ О боте") || isMessageTextEquals(update, "/about");
     }
 }

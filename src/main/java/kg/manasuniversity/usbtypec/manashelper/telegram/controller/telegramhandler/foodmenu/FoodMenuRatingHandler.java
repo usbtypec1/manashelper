@@ -4,20 +4,20 @@ import kg.manasuniversity.usbtypec.manashelper.foodmenu.model.FoodMenuRating;
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.service.DailyMenuService;
 import kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.TelegramUpdateHandler;
 import kg.manasuniversity.usbtypec.manashelper.telegram.service.FoodMenuRatingCallbackDataFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
-@Component
-public class FoodMenuRatingHandler extends TelegramUpdateHandler {
-    private final DailyMenuService dailyMenuService;
+import static kg.manasuniversity.usbtypec.manashelper.telegram.service.UpdateUtils.getUserId;
 
-    public FoodMenuRatingHandler(TelegramClient telegramClient, DailyMenuService dailyMenuService) {
-        super(telegramClient);
-        this.dailyMenuService = dailyMenuService;
-    }
+@Component
+@RequiredArgsConstructor
+public class FoodMenuRatingHandler implements TelegramUpdateHandler {
+    private final DailyMenuService dailyMenuService;
+    private final TelegramClient telegramClient;
 
     @Override
     public boolean shouldHandle(Update update) {
@@ -29,7 +29,7 @@ public class FoodMenuRatingHandler extends TelegramUpdateHandler {
     public void handle(Update update) throws TelegramApiException {
         String callbackData = update.getCallbackQuery().getData();
         FoodMenuRating foodMenuRating = FoodMenuRatingCallbackDataFilter.parse(callbackData).get();
-        Long userId = update.getCallbackQuery().getFrom().getId();
+        Long userId = getUserId(update);
         dailyMenuService.setRating(userId, foodMenuRating);
         AnswerCallbackQuery answerCallbackQuery = AnswerCallbackQuery.builder()
             .text("❤️ Спасибо за вашу оценку")

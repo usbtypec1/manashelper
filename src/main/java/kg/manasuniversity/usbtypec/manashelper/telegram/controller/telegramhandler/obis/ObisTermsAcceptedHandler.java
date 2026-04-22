@@ -1,6 +1,8 @@
 package kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.obis;
 
 import kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.TelegramUpdateHandler;
+import kg.manasuniversity.usbtypec.manashelper.telegram.service.AnswerUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -8,17 +10,17 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.generics.TelegramClient;
+
+import static kg.manasuniversity.usbtypec.manashelper.telegram.service.UpdateFilters.isCallbackDataEquals;
 
 @Component
-public class ObisTermsAcceptedHandler extends TelegramUpdateHandler {
-    public ObisTermsAcceptedHandler(TelegramClient telegramClient) {
-        super(telegramClient);
-    }
+@RequiredArgsConstructor
+public class ObisTermsAcceptedHandler implements TelegramUpdateHandler {
+    private final AnswerUtils answerUtils;
 
     @Override
     public boolean shouldHandle(Update update) {
-        return update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("obis:accept_terms");
+        return isCallbackDataEquals(update, "obis:accept_terms");
     }
 
     @Override
@@ -33,6 +35,6 @@ public class ObisTermsAcceptedHandler extends TelegramUpdateHandler {
                 )
             )
             .build();
-        answerTextMessage(update, "Введите данные", markup);
+        answerUtils.answerTextMessage(update, "Введите данные", markup);
     }
 }

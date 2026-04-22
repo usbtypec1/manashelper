@@ -1,34 +1,31 @@
 package kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.obis;
 
 import kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.TelegramUpdateHandler;
+import kg.manasuniversity.usbtypec.manashelper.telegram.service.AnswerUtils;
 import kg.manasuniversity.usbtypec.manashelper.telegram.service.ExamsFormatter;
 import kg.manasuniversity.usbtypec.manashelper.user.exception.UserHasNoCredentialsException;
 import kg.manasuniversity.usbtypec.manashelper.user.model.LessonExams;
 import kg.manasuniversity.usbtypec.manashelper.user.service.ObisService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.List;
 
-@Component
-public class ObisExamsHandler extends TelegramUpdateHandler {
-    private final ObisService obisService;
+import static kg.manasuniversity.usbtypec.manashelper.telegram.service.UpdateFilters.isCallbackDataEquals;
+import static kg.manasuniversity.usbtypec.manashelper.telegram.service.UpdateFilters.isMessageTextEquals;
+import static kg.manasuniversity.usbtypec.manashelper.telegram.service.UpdateUtils.getUserId;
 
-    public ObisExamsHandler(TelegramClient telegramClient, ObisService obisService) {
-        super(telegramClient);
-        this.obisService = obisService;
-    }
+@Component
+@RequiredArgsConstructor
+public class ObisExamsHandler implements TelegramUpdateHandler {
+    private final ObisService obisService;
+    private final AnswerUtils answerUtils;
 
     @Override
     public boolean shouldHandle(Update update) {
-        if (update.hasMessage()) {
-            return update.getMessage().hasText() && update.getMessage().getText().equals("/exams");
-        } else if (update.hasCallbackQuery()) {
-            return "obis:exams".equals(update.getCallbackQuery().getData());
-        }
-        return false;
+        return isCallbackDataEquals(update, "obis:exams") || isMessageTextEquals(update, "/exams");
     }
 
     @Override
@@ -38,10 +35,10 @@ public class ObisExamsHandler extends TelegramUpdateHandler {
         try {
             lessonExamsList = obisService.getUserExamGrades(userId);
         } catch (UserHasNoCredentialsException e) {
-            answerTextMessage(update, "Введите ваши данные от OBIS");
+            answerUtils.answerTextMessage(update, "Введите ваши данные от OBIS");
             return;
         }
         String text = ExamsFormatter.format(lessonExamsList);
-        answerTextMessage(update, text);
+        answerUtils.answerTextMessage(update, text);
     }
 }

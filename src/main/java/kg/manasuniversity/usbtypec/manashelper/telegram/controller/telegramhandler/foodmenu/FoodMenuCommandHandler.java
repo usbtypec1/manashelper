@@ -3,9 +3,11 @@ package kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhand
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.exception.DailyMenuNotFoundException;
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.service.DailyMenuService;
 import kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.TelegramUpdateHandler;
+import kg.manasuniversity.usbtypec.manashelper.telegram.service.AnswerUtils;
 import kg.manasuniversity.usbtypec.manashelper.telegram.service.FoodMenuFormatter;
 import kg.manasuniversity.usbtypec.manashelper.telegram.service.FoodMenuRatingCallbackDataFilter;
 import kg.manasuniversity.usbtypec.manashelper.timetable.model.DailyMenuInfo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -20,15 +22,16 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
-@Component
-public class FoodMenuCommandHandler extends TelegramUpdateHandler {
-    private static final Pattern PATTERN = Pattern.compile("/yemek (today|tomorrow|\\d+)");
-    private final DailyMenuService dailyMenuService;
+import static kg.manasuniversity.usbtypec.manashelper.telegram.service.UpdateUtils.getUserId;
 
-    public FoodMenuCommandHandler(TelegramClient telegramClient, DailyMenuService dailyMenuService) {
-        super(telegramClient);
-        this.dailyMenuService = dailyMenuService;
-    }
+@Component
+@RequiredArgsConstructor
+public class FoodMenuCommandHandler implements TelegramUpdateHandler {
+    private static final Pattern PATTERN = Pattern.compile("/yemek (today|tomorrow|\\d+)");
+
+    private final DailyMenuService dailyMenuService;
+    private final AnswerUtils answerUtils;
+    private final TelegramClient telegramClient;
 
     @Override
     public boolean shouldHandle(Update update) {
@@ -53,7 +56,7 @@ public class FoodMenuCommandHandler extends TelegramUpdateHandler {
         try {
             dailyMenu = dailyMenuService.getDailyMenuBySkippingDays(skipDays, userId);
         } catch (DailyMenuNotFoundException e) {
-            answerTextMessage(update, FoodMenuFormatter.formatNotFound(skipDays));
+            answerUtils.answerTextMessage(update, FoodMenuFormatter.formatNotFound(skipDays));
             return;
         }
         String answerText = FoodMenuFormatter.format(dailyMenu);
@@ -78,6 +81,6 @@ public class FoodMenuCommandHandler extends TelegramUpdateHandler {
             )
         );
         InlineKeyboardMarkup markup = InlineKeyboardMarkup.builder().keyboard(rows).build();
-        answerTextMessage(update, "Поставьте вашу оценку", markup);
+        answerUtils.answerTextMessage(update, "Поставьте вашу оценку", markup);
     }
 }

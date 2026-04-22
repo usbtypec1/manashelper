@@ -3,9 +3,11 @@ package kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhand
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.exception.DailyMenuNotFoundException;
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.service.DailyMenuService;
 import kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.TelegramUpdateHandler;
+import kg.manasuniversity.usbtypec.manashelper.telegram.service.AnswerUtils;
 import kg.manasuniversity.usbtypec.manashelper.telegram.service.FoodMenuFormatter;
 import kg.manasuniversity.usbtypec.manashelper.telegram.service.FoodMenuRatingCallbackDataFilter;
 import kg.manasuniversity.usbtypec.manashelper.timetable.model.DailyMenuInfo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -19,24 +21,21 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 import java.util.List;
 import java.util.stream.IntStream;
 
-@Component
-public class FoodMenuCallbackQueryHandler extends TelegramUpdateHandler {
-    private final DailyMenuService dailyMenuService;
+import static kg.manasuniversity.usbtypec.manashelper.telegram.service.UpdateFilters.isCallbackDataEquals;
+import static kg.manasuniversity.usbtypec.manashelper.telegram.service.UpdateUtils.getUserId;
 
-    public FoodMenuCallbackQueryHandler(TelegramClient telegramClient, DailyMenuService dailyMenuService) {
-        super(telegramClient);
-        this.dailyMenuService = dailyMenuService;
-    }
+@Component
+@RequiredArgsConstructor
+public class FoodMenuCallbackQueryHandler implements TelegramUpdateHandler {
+    private final DailyMenuService dailyMenuService;
+    private final AnswerUtils answerUtils;
+    private final TelegramClient telegramClient;
 
     @Override
     public boolean shouldHandle(Update update) {
-        if (!update.hasCallbackQuery()) {
-            return false;
-        }
-        String callbackData = update.getCallbackQuery().getData();
-        return callbackData.equals("food_menu:today") ||
-            callbackData.equals("food_menu:tomorrow") ||
-            callbackData.equals("food_menu:after_tomorrow");
+        return isCallbackDataEquals(update, "food_menu:today") ||
+            isCallbackDataEquals(update, "food_menu:tomorrow") ||
+            isCallbackDataEquals(update, "food_menu:after_tomorrow");
     }
 
     @Override
@@ -53,7 +52,7 @@ public class FoodMenuCallbackQueryHandler extends TelegramUpdateHandler {
         try {
             dailyMenu = dailyMenuService.getDailyMenuBySkippingDays(skipDays, userId);
         } catch (DailyMenuNotFoundException e) {
-            answerTextMessage(update, FoodMenuFormatter.formatNotFound(skipDays));
+            answerUtils.answerTextMessage(update, FoodMenuFormatter.formatNotFound(skipDays));
             return;
         }
         String answerText = FoodMenuFormatter.format(dailyMenu);
@@ -78,6 +77,6 @@ public class FoodMenuCallbackQueryHandler extends TelegramUpdateHandler {
             )
         );
         InlineKeyboardMarkup markup = InlineKeyboardMarkup.builder().keyboard(rows).build();
-        answerTextMessage(update, "Поставьте вашу оценку", markup);
+        answerUtils.answerTextMessage(update, "Поставьте вашу оценку", markup);
     }
 }

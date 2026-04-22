@@ -1,6 +1,8 @@
 package kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler;
 
+import kg.manasuniversity.usbtypec.manashelper.telegram.service.AnswerUtils;
 import kg.manasuniversity.usbtypec.manashelper.user.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -8,10 +10,10 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 @Component
-public class StartCommandHandler extends TelegramUpdateHandler {
+@RequiredArgsConstructor
+public class StartCommandHandler implements TelegramUpdateHandler {
     private static final ReplyKeyboardMarkup MARKUP = ReplyKeyboardMarkup.builder()
         .resizeKeyboard(true)
         .isPersistent(true)
@@ -32,12 +34,9 @@ public class StartCommandHandler extends TelegramUpdateHandler {
             )
         )
         .build();
-    private final UserService userService;
 
-    public StartCommandHandler(TelegramClient telegramClient, UserService userService) {
-        super(telegramClient);
-        this.userService = userService;
-    }
+    private final UserService userService;
+    private final AnswerUtils answerUtils;
 
     @Override
     public void handle(Update update) throws TelegramApiException {
@@ -47,7 +46,7 @@ public class StartCommandHandler extends TelegramUpdateHandler {
             fullName = user.getFirstName() + " " + user.getLastName();
         }
         userService.upsertUser(user.getId(), fullName, user.getUserName());
-        answerTextMessage(update, "Главное меню", MARKUP);
+        answerUtils.answerTextMessage(update, "Главное меню", MARKUP);
     }
 
     @Override

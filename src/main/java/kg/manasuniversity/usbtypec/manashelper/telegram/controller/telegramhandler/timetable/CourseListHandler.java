@@ -2,18 +2,19 @@ package kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhand
 
 import kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.TelegramUpdateHandler;
 import kg.manasuniversity.usbtypec.manashelper.telegram.model.CallbackData;
+import kg.manasuniversity.usbtypec.manashelper.telegram.service.AnswerUtils;
 import kg.manasuniversity.usbtypec.manashelper.telegram.service.CallbackDataByIdFilter;
 import kg.manasuniversity.usbtypec.manashelper.timetable.entity.Course;
 import kg.manasuniversity.usbtypec.manashelper.timetable.repository.CourseRepository;
 import kg.manasuniversity.usbtypec.manashelper.user.entity.User;
 import kg.manasuniversity.usbtypec.manashelper.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,17 +23,11 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
-public class CourseListHandler extends TelegramUpdateHandler {
+@RequiredArgsConstructor
+public class CourseListHandler implements TelegramUpdateHandler {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
-
-    public CourseListHandler(TelegramClient telegramClient,
-                             CourseRepository courseRepository,
-                             UserRepository userRepository) {
-        super(telegramClient);
-        this.courseRepository = courseRepository;
-        this.userRepository = userRepository;
-    }
+    private final AnswerUtils answerUtils;
 
     @Override
     public boolean shouldHandle(Update update) {
@@ -55,7 +50,7 @@ public class CourseListHandler extends TelegramUpdateHandler {
             .map(course -> toRow(course, courseIds))
             .toList();
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(rows);
-        editTextMessage(update, "Список курсов", markup);
+        answerUtils.editTextMessage(update, "Список курсов", markup);
     }
 
     private InlineKeyboardRow toRow(Course course, Set<Integer> userCourseIds) {

@@ -1,15 +1,19 @@
 package kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.about;
 
 import kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.TelegramUpdateHandler;
+import kg.manasuniversity.usbtypec.manashelper.telegram.service.AnswerUtils;
 import kg.manasuniversity.usbtypec.manashelper.user.model.UsersStatistics;
 import kg.manasuniversity.usbtypec.manashelper.user.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.generics.TelegramClient;
+
+import static kg.manasuniversity.usbtypec.manashelper.telegram.service.UpdateFilters.isCallbackDataEquals;
 
 @Component
-public class AboutObisCallbackQueryHandler extends TelegramUpdateHandler {
+@RequiredArgsConstructor
+public class AboutObisCallbackQueryHandler implements TelegramUpdateHandler {
     private static final String TEXT_TEMPLATE = """
         <b>Зачем боту нужен пароль от OBIS?</b>
         
@@ -28,16 +32,13 @@ public class AboutObisCallbackQueryHandler extends TelegramUpdateHandler {
         <b>Немного статистики</b>
         • 👥 {credentialsCount} из {totalUsersCount} пользователей ({percentage}%) уже доверили боту свои данные.
         """;
-    private final UserService userService;
 
-    public AboutObisCallbackQueryHandler(TelegramClient telegramClient, UserService userService) {
-        super(telegramClient);
-        this.userService = userService;
-    }
+    private final UserService userService;
+    private final AnswerUtils answerUtils;
 
     @Override
     public boolean shouldHandle(Update update) {
-        return update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("about:obis");
+        return isCallbackDataEquals(update, "about:obis");
     }
 
     @Override
@@ -48,6 +49,8 @@ public class AboutObisCallbackQueryHandler extends TelegramUpdateHandler {
             .replace("{credentialsCount}", String.valueOf(usersStatistics.usersWithCredentialsCount()))
             .replace("{totalUsersCount}", String.valueOf(usersStatistics.totalUsersCount()))
             .replace("{percentage}", String.valueOf(usersStatistics.usersWithCredentialsPercentage()));
-        answerTextMessage(update, text);
+
+        answerUtils.answerTextMessage(update, text);
+        answerUtils.answerEmptyCallbackQuery(update);
     }
 }

@@ -1,16 +1,20 @@
 package kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.obis;
 
 import kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.TelegramUpdateHandler;
+import kg.manasuniversity.usbtypec.manashelper.telegram.service.AnswerUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.generics.TelegramClient;
+
+import static kg.manasuniversity.usbtypec.manashelper.telegram.service.UpdateFilters.isCallbackDataEquals;
 
 @Component
-public class ObisCredentialsHandler extends TelegramUpdateHandler {
+@RequiredArgsConstructor
+public class ObisCredentialsHandler implements TelegramUpdateHandler {
     private static final String TEXT = "Пожалуйста, примите условия использования бота, чтобы продолжить.";
     private static final InlineKeyboardMarkup MARKUP = InlineKeyboardMarkup.builder()
         .keyboardRow(
@@ -31,17 +35,15 @@ public class ObisCredentialsHandler extends TelegramUpdateHandler {
         )
         .build();
 
-    public ObisCredentialsHandler(TelegramClient telegramClient) {
-        super(telegramClient);
-    }
+    private final AnswerUtils answerUtils;
 
     @Override
     public boolean shouldHandle(Update update) {
-        return update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("obis:credentials");
+        return isCallbackDataEquals(update, "obis:credentials");
     }
 
     @Override
     public void handle(Update update) throws TelegramApiException {
-        answerTextMessage(update, TEXT, MARKUP);
+        answerUtils.answerTextMessage(update, TEXT, MARKUP);
     }
 }
