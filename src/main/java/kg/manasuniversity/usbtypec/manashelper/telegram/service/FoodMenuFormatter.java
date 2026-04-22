@@ -37,11 +37,11 @@ public class FoodMenuFormatter {
         }
 
         int totalCalories = dailyMenu.dishes().stream().mapToInt(Dish::calories).sum();
-        stringBuilder.append("🔥 Сумма калорий: ").append(totalCalories);
+        stringBuilder.append("🔥 Всего ").append(totalCalories).append(" калорий");
 
         if (dailyMenu.ratingsCount() > 0) {
             stringBuilder.append("\n")
-                .append("Сегодняшняя средняя оценка: ")
+                .append("⭐ ")
                 .append(dailyMenu.averageRatingScore())
                 .append(" (")
                 .append(dailyMenu.ratingsCount())
@@ -49,7 +49,7 @@ public class FoodMenuFormatter {
         }
 
         if (dailyMenu.viewsCount() > 0) {
-            stringBuilder.append("\n👀 Просмотров: ").append(dailyMenu.viewsCount());
+            stringBuilder.append("\n👀 ").append(dailyMenu.viewsCount());
 
             if (dailyMenu.viewsCountForLastHour() > 0) {
                 stringBuilder.append(" (")
