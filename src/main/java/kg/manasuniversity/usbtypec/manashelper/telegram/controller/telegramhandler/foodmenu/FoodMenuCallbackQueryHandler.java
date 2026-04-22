@@ -5,7 +5,7 @@ import kg.manasuniversity.usbtypec.manashelper.foodmenu.service.DailyMenuService
 import kg.manasuniversity.usbtypec.manashelper.telegram.controller.telegramhandler.TelegramUpdateHandler;
 import kg.manasuniversity.usbtypec.manashelper.telegram.service.FoodMenuFormatter;
 import kg.manasuniversity.usbtypec.manashelper.telegram.service.FoodMenuRatingCallbackDataFilter;
-import kg.manasuniversity.usbtypec.manashelper.timetable.model.DailyMenu;
+import kg.manasuniversity.usbtypec.manashelper.timetable.model.DailyMenuInfo;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMediaGroup;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -49,7 +49,7 @@ public class FoodMenuCallbackQueryHandler extends TelegramUpdateHandler {
             case "food_menu:after_tomorrow" -> 2;
             default -> throw new IllegalStateException("Unexpected value: " + callbackData);
         };
-        DailyMenu dailyMenu;
+        DailyMenuInfo dailyMenu;
         try {
             dailyMenu = dailyMenuService.getDailyMenuBySkippingDays(skipDays, userId);
         } catch (DailyMenuNotFoundException e) {

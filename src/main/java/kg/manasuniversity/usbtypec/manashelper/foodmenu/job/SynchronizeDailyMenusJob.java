@@ -6,6 +6,7 @@ import kg.manasuniversity.usbtypec.manashelper.foodmenu.repository.DailyMenuRepo
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.repository.DishRepository;
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.service.manas.client.DailyMenuClient;
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.service.manas.parser.DailyMenuParser;
+import kg.manasuniversity.usbtypec.manashelper.timetable.model.DailyMenuInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -30,7 +31,7 @@ public class SynchronizeDailyMenusJob {
     }
 
     private static Set<String> toNameSetFromParsed(
-        kg.manasuniversity.usbtypec.manashelper.timetable.model.DailyMenu parsed) {
+        DailyMenuInfo parsed) {
         return parsed.dishes().stream()
             .map(d -> norm(d.name()))
             .collect(Collectors.toSet());

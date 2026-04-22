@@ -1,9 +1,10 @@
 package kg.manasuniversity.usbtypec.manashelper.telegram.service;
 
-import kg.manasuniversity.usbtypec.manashelper.timetable.model.DailyMenu;
+import kg.manasuniversity.usbtypec.manashelper.timetable.model.DailyMenuInfo;
 import kg.manasuniversity.usbtypec.manashelper.timetable.model.Dish;
 import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto;
 
+import java.time.DayOfWeek;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -19,12 +20,12 @@ public class FoodMenuFormatter {
         return "Меню на " + now.plusDays(skipDays).toLocalDate().format(DATE_TIME_FORMATTER) + " не найдено.";
     }
 
-    public static String format(DailyMenu dailyMenu) {
+    public static String format(DailyMenuInfo dailyMenu) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("🍽️ Меню на ")
-            .append(dailyMenu.date())
-            .append(" (")
             .append(dailyMenu.date().format(DATE_TIME_FORMATTER))
+            .append(" (")
+            .append(humanizeDayOfWeek(dailyMenu.date().getDayOfWeek()))
             .append(") 🍽️\n\n");
 
         for (Dish dish : dailyMenu.dishes()) {
@@ -36,23 +37,31 @@ public class FoodMenuFormatter {
         }
 
         int totalCalories = dailyMenu.dishes().stream().mapToInt(Dish::calories).sum();
-        stringBuilder
-            .append("🔥 Сумма калорий: ")
-            .append(totalCalories)
-            .append("\n")
-            .append("Сегодняшняя средняя оценка: ")
-            .append(dailyMenu.averageRatingScore())
-            .append(" (")
-            .append(dailyMenu.ratingsCount())
-            .append(" оценок)")
-            .append("\n")
-            .append("👀 Просмотров: ")
-            .append(dailyMenu.viewsCount());
+        stringBuilder.append("🔥 Сумма калорий: ").append(totalCalories);
+
+        if (dailyMenu.ratingsCount() > 0) {
+            stringBuilder.append("\n")
+                .append("Сегодняшняя средняя оценка: ")
+                .append(dailyMenu.averageRatingScore())
+                .append(" (")
+                .append(dailyMenu.ratingsCount())
+                .append(" оценок)");
+        }
+
+        if (dailyMenu.viewsCount() > 0) {
+            stringBuilder.append("\n👀 Просмотров: ").append(dailyMenu.viewsCount());
+
+            if (dailyMenu.viewsCountForLastHour() > 0) {
+                stringBuilder.append(" (")
+                    .append(dailyMenu.viewsCountForLastHour())
+                    .append(" за последний час)");
+            }
+        }
 
         return stringBuilder.toString();
     }
 
-    public static List<InputMediaPhoto> buildPhotos(String text, DailyMenu dailyMenu) {
+    public static List<InputMediaPhoto> buildPhotos(String text, DailyMenuInfo dailyMenu) {
         List<InputMediaPhoto> photos = new ArrayList<>(dailyMenu.dishes().size());
         photos.add(
             InputMediaPhoto.builder()
@@ -68,5 +77,17 @@ public class FoodMenuFormatter {
             .toList();
         photos.addAll(restPhotos);
         return photos;
+    }
+
+    private static String humanizeDayOfWeek(DayOfWeek dayOfWeek) {
+        return switch (dayOfWeek) {
+            case MONDAY -> "понедельник";
+            case TUESDAY -> "вторник";
+            case WEDNESDAY -> "среда";
+            case THURSDAY -> "четверг";
+            case FRIDAY -> "пятница";
+            case SATURDAY -> "суббота";
+            case SUNDAY -> "воскресенье";
+        };
     }
 }

@@ -1,6 +1,6 @@
 package kg.manasuniversity.usbtypec.manashelper.foodmenu.service.manas.parser;
 
-import kg.manasuniversity.usbtypec.manashelper.timetable.model.DailyMenu;
+import kg.manasuniversity.usbtypec.manashelper.timetable.model.DailyMenuInfo;
 import kg.manasuniversity.usbtypec.manashelper.timetable.model.Dish;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -84,7 +84,7 @@ public class DailyMenuParser {
         return Optional.of(dish);
     }
 
-    private Optional<DailyMenu> parseDailyFoodMenuHtml(
+    private Optional<DailyMenuInfo> parseDailyFoodMenuHtml(
         Element foodMenuDate,
         Element foodMenuItems
     ) {
@@ -101,11 +101,11 @@ public class DailyMenuParser {
             dish.ifPresent(parsedFoodItems::add);
         }
 
-        DailyMenu menu = new DailyMenu(null, parsedFoodItems, date.get(), 0.0, 0, 0);
+        DailyMenuInfo menu = new DailyMenuInfo(null, parsedFoodItems, date.get(), 0.0, 0, 0, 0);
         return Optional.of(menu);
     }
 
-    public List<DailyMenu> parse(String html) {
+    public List<DailyMenuInfo> parse(String html) {
         Document soup = Jsoup.parse(html);
 
         Element container = soup.select("div.container").get(1);
@@ -115,11 +115,11 @@ public class DailyMenuParser {
 
         Elements bodies = container.select("div.row.mt-2");
 
-        List<DailyMenu> result = new ArrayList<>();
+        List<DailyMenuInfo> result = new ArrayList<>();
 
         int count = Math.min(titles.size(), bodies.size());
         for (int i = 0; i < count; i++) {
-            Optional<DailyMenu> dailyMenu = parseDailyFoodMenuHtml(
+            Optional<DailyMenuInfo> dailyMenu = parseDailyFoodMenuHtml(
                 titles.get(i),
                 bodies.get(i)
             );

@@ -10,7 +10,7 @@
     </parent>
     <groupId>kg.manasuniversity.usbtypec</groupId>
     <artifactId>manashelper</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <name>manashelper</name>
     <description>manashelper</description>
     <url/>

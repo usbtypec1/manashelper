@@ -9,18 +9,21 @@ import kg.manasuniversity.usbtypec.manashelper.foodmenu.model.FoodMenuRating;
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.repository.DailyMenuRatingRepository;
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.repository.DailyMenuRepository;
 import kg.manasuniversity.usbtypec.manashelper.foodmenu.repository.DailyMenuViewRepository;
+import kg.manasuniversity.usbtypec.manashelper.timetable.model.DailyMenuInfo;
 import kg.manasuniversity.usbtypec.manashelper.user.entity.User;
 import kg.manasuniversity.usbtypec.manashelper.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -34,38 +37,27 @@ public class DailyMenuService {
     private final UserRepository userRepository;
     private final DailyMenuViewRepository dailyMenuViewRepository;
 
-    @Transactional
-    public kg.manasuniversity.usbtypec.manashelper.timetable.model.DailyMenu getDailyMenuBySkippingDays(
-        int skipDays,
-        Long userId
-    ) {
+    public DailyMenuInfo getDailyMenuBySkippingDays(int skipDays, Long userId) {
         ZonedDateTime now = ZonedDateTime.now(ZONE_ID);
         return getDailyMenuByDate(now.plusDays(skipDays).toLocalDate(), userId);
     }
 
-    @Transactional
-    public kg.manasuniversity.usbtypec.manashelper.timetable.model.DailyMenu getDailyMenuByDate(
-        LocalDate date,
-        Long userId
-    ) {
+    public DailyMenuInfo getDailyMenuByDate(LocalDate date, Long userId) {
         DailyMenu dailyMenu = dailyMenuRepository.findByDate(date)
             .orElseThrow(() -> new DailyMenuNotFoundException("Daily menu not found for date: " + date));
-
-        User user = userRepository.findById(userId).orElse(null);
 
         List<DailyMenuRating> dailyMenuRatings = dailyMenuRatingRepository.findByDailyMenuIdWithUser(dailyMenu.getId());
 
         int ratingsCount = dailyMenuRatings.size();
-        double avg = dailyMenuRatings.stream()
-            .mapToInt(DailyMenuRating::getScore)
-            .average()
-            .orElse(0.0);
-        DailyMenuView view = new DailyMenuView(user, dailyMenu);
-        dailyMenuRepository.save(dailyMenu);
-        dailyMenuViewRepository.save(view);
+        double averageRating = calculateAverageRating(dailyMenuRatings);
+
+        createView(dailyMenu, userId);
 
         int viewsCount = dailyMenuViewRepository.countByMenuId(dailyMenu.getId());
-        return dailyMenuMapper.mapEntityToModel(dailyMenu, avg, ratingsCount, viewsCount);
+        int viewsCountForLastHour = getViewsCountForLastHour(dailyMenu.getId());
+
+        return dailyMenuMapper.mapEntityToModel(
+            dailyMenu, averageRating, ratingsCount, viewsCount, viewsCountForLastHour);
     }
 
     public void setRating(Long userId, FoodMenuRating foodMenuRating) {
@@ -80,5 +72,25 @@ public class DailyMenuService {
         } else {
             dailyMenuRating.get().setScore(foodMenuRating.rating());
         }
+    }
+
+    private int getViewsCountForLastHour(UUID dailyMenuId) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime oneHourAgo = now.minusHours(1);
+        return dailyMenuViewRepository.countByMenuIdAndCreatedAtBetween(dailyMenuId, oneHourAgo, now);
+    }
+
+    private double calculateAverageRating(Collection<DailyMenuRating> dailyMenuRatings) {
+        double averageRating = dailyMenuRatings.stream()
+            .mapToInt(DailyMenuRating::getScore)
+            .average()
+            .orElse(0.0);
+        return Math.round(averageRating * 100.0) / 100.0;
+    }
+
+    private void createView(DailyMenu dailyMenu, Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        DailyMenuView view = new DailyMenuView(user, dailyMenu);
+        dailyMenuViewRepository.save(view);
     }
 }

@@ -4,12 +4,13 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-public record DailyMenu(
+public record DailyMenuInfo(
     UUID id,
     List<Dish> dishes,
     LocalDate date,
     double averageRatingScore,
     int ratingsCount,
-    int viewsCount
+    int viewsCount,
+    int viewsCountForLastHour
 ) {
 }
