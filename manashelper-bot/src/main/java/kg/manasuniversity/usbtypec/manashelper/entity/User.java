@@ -1,0 +1,98 @@
+package kg.manasuniversity.usbtypec.manashelper.entity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+@Entity
+@EntityListeners(AuditingEntityListener.class)
+@Table(name = "users")
+@Getter
+@Setter
+public class User {
+    @Id
+    private Long id;
+
+    @Column(name = "full_name", nullable = false, length = 128)
+    private String fullName;
+
+    @Column(name = "username", length = 128)
+    private String username;
+
+    @Column(name = "student_number", length = 64)
+    private String studentNumber;
+
+    @Column(name = "encrypted_password")
+    private String encryptedPassword;
+
+    @Column(name = "is_timetable_change_notifications_enabled", nullable = false)
+    private Boolean isTimetableChangeNotificationsEnabled;
+
+    @Column(name = "is_noon_food_menu_notifications_enabled", nullable = false)
+    private Boolean isNoonFoodMenuNotificationsEnabled;
+
+    @Column(name = "is_evening_food_menu_notifications_enabled", nullable = false)
+    private Boolean isEveningFoodMenuNotificationsEnabled;
+
+    @ManyToMany
+    @JoinTable(
+        name = "user_courses",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "course_id")
+    )
+    private Set<Course> courses;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    protected User() {
+        courses = new HashSet<>();
+    }
+
+    public User(Long id, String fullName, String username) {
+        this.id = id;
+        this.fullName = fullName;
+        this.username = username;
+        courses = new HashSet<>();
+        isTimetableChangeNotificationsEnabled = true;
+        isNoonFoodMenuNotificationsEnabled = true;
+        isEveningFoodMenuNotificationsEnabled = true;
+    }
+
+    public void setCourses(List<Course> courses) {
+        clearCourses();
+        this.courses.addAll(courses);
+    }
+
+    public void removeCourse(Course course) {
+        courses.remove(course);
+    }
+
+    public void addCourse(Course course) {
+        courses.add(course);
+    }
+
+    public void clearCourses() {
+        courses.clear();
+    }
+}
