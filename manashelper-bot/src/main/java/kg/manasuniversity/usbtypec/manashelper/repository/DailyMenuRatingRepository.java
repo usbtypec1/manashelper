@@ -1,0 +1,22 @@
+package kg.manasuniversity.usbtypec.manashelper.repository;
+
+import kg.manasuniversity.usbtypec.manashelper.entity.DailyMenuRating;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+public interface DailyMenuRatingRepository extends JpaRepository<DailyMenuRating, UUID> {
+
+    @Query("""
+        SELECT dmr FROM DailyMenuRating dmr
+        JOIN FETCH dmr.user
+        WHERE dmr.dailyMenu.id = :dailyMenuModel
+        """)
+    List<DailyMenuRating> findByDailyMenuIdWithUser(@Param("dailyMenuModel") UUID dailyMenuModel);
+
+    Optional<DailyMenuRating> findByUserIdAndDailyMenuId(Long userId, UUID dailyMenuId);
+}
