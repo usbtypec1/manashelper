@@ -1,7 +1,7 @@
 package kg.manasuniversity.usbtypec.manashelper.service;
 
-import kg.manasuniversity.usbtypec.manashelper.model.DailyMenu;
-import kg.manasuniversity.usbtypec.manashelper.model.Dish;
+import kg.manasuniversity.usbtypec.manashelper.model.DailyMenuModel;
+import kg.manasuniversity.usbtypec.manashelper.model.DishModel;
 import lombok.experimental.UtilityClass;
 import org.telegram.telegrambots.meta.api.objects.media.InputMediaPhoto;
 
@@ -21,50 +21,50 @@ public class FoodMenuFormatter {
         return "Меню на " + now.plusDays(skipDays).toLocalDate().format(DATE_TIME_FORMATTER) + " не найдено.";
     }
 
-    public String format(DailyMenu dailyMenu) {
+    public String format(DailyMenuModel dailyMenuModel) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("🍽️ Меню на ")
-            .append(dailyMenu.date())
+            .append(dailyMenuModel.date())
             .append(" (")
-            .append(dailyMenu.date().format(DATE_TIME_FORMATTER))
+            .append(dailyMenuModel.date().format(DATE_TIME_FORMATTER))
             .append(") 🍽️\n\n");
 
-        for (Dish dish : dailyMenu.dishes()) {
+        for (DishModel dishModel : dailyMenuModel.dishModels()) {
             stringBuilder.append("🧂 <u>")
-                .append(dish.name())
+                .append(dishModel.name())
                 .append("</u>\n🌱 Калории: ")
-                .append(dish.calories())
+                .append(dishModel.calories())
                 .append("\n\n");
         }
 
-        int totalCalories = dailyMenu.dishes().stream().mapToInt(Dish::calories).sum();
+        int totalCalories = dailyMenuModel.dishModels().stream().mapToInt(DishModel::calories).sum();
         stringBuilder
             .append("🔥 Сумма калорий: ")
             .append(totalCalories)
             .append("\n")
             .append("Сегодняшняя средняя оценка: ")
-            .append(dailyMenu.averageRatingScore())
+            .append(dailyMenuModel.averageRatingScore())
             .append(" (")
-            .append(dailyMenu.ratingsCount())
+            .append(dailyMenuModel.ratingsCount())
             .append(" оценок)")
             .append("\n")
             .append("👀 Просмотров: ")
-            .append(dailyMenu.viewsCount());
+            .append(dailyMenuModel.viewsCount());
 
         return stringBuilder.toString();
     }
 
-    public List<InputMediaPhoto> buildPhotos(String text, DailyMenu dailyMenu) {
-        List<InputMediaPhoto> photos = new ArrayList<>(dailyMenu.dishes().size());
+    public List<InputMediaPhoto> buildPhotos(String text, DailyMenuModel dailyMenuModel) {
+        List<InputMediaPhoto> photos = new ArrayList<>(dailyMenuModel.dishModels().size());
         photos.add(
             InputMediaPhoto.builder()
-                .media(dailyMenu.dishes().get(0).photoUrl())
+                .media(dailyMenuModel.dishModels().get(0).photoUrl())
                 .caption(text)
                 .parseMode("html")
                 .build()
         );
 
-        List<InputMediaPhoto> restPhotos = dailyMenu.dishes().subList(1, dailyMenu.dishes().size())
+        List<InputMediaPhoto> restPhotos = dailyMenuModel.dishModels().subList(1, dailyMenuModel.dishModels().size())
             .stream()
             .map(dish -> new InputMediaPhoto(dish.photoUrl()))
             .toList();

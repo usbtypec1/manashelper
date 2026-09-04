@@ -14,10 +14,10 @@ public interface MessageHandler {
     void handle(Message message, FlowContext context) throws TelegramApiException;
 
     /**
-     * Whether this handler should react to the given message. Override to
+     * Whether this handler should react to the given message. Defaults to always accepting; override to
      * filter, e.g. by text content, so several message handlers can share one step.
      */
     default boolean matches(Message message, FlowContext context) {
-        return false;
+        return true;
     }
 }

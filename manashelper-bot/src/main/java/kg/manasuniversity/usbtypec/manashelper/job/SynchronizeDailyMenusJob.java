@@ -2,6 +2,7 @@ package kg.manasuniversity.usbtypec.manashelper.job;
 
 import kg.manasuniversity.usbtypec.manashelper.entity.DailyMenu;
 import kg.manasuniversity.usbtypec.manashelper.entity.Dish;
+import kg.manasuniversity.usbtypec.manashelper.model.DailyMenuModel;
 import kg.manasuniversity.usbtypec.manashelper.repository.DailyMenuRepository;
 import kg.manasuniversity.usbtypec.manashelper.repository.DishRepository;
 import kg.manasuniversity.usbtypec.manashelper.client.DailyMenuClient;
@@ -29,10 +30,9 @@ public class SynchronizeDailyMenusJob {
         return s == null ? "" : s.trim().replaceAll("\\s+", " ").toLowerCase();
     }
 
-    private static Set<String> toNameSetFromParsed(
-        kg.manasuniversity.usbtypec.manashelper.model.DailyMenu parsed) {
-        return parsed.dishes().stream()
-            .map(d -> norm(d.name()))
+    private static Set<String> toNameSetFromParsed(DailyMenuModel parsed) {
+        return parsed.dishModels().stream()
+            .map(dish -> norm(dish.name()))
             .collect(Collectors.toSet());
     }
 
@@ -65,7 +65,7 @@ public class SynchronizeDailyMenusJob {
             log.info("Updating daily menu for date {}", parsedMenu.date());
 
             menu.clearDishes();
-            for (var parsedDish : parsedMenu.dishes()) {
+            for (var parsedDish : parsedMenu.dishModels()) {
                 String name = parsedDish.name();
                 Dish dish = dishRepository.findByName(name)
                     .orElseGet(() -> dishRepository.save(

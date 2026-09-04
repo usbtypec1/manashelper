@@ -33,7 +33,7 @@ up unlabeled.
 Do not write parsed data straight into entities on every run — both existing jobs compare against what's stored
 and skip the write when nothing changed:
 
-- `SynchronizeDailyMenusJob` normalizes dish names into a `Set<String>` and compares old vs. new per day; a match
+- `SynchronizeDailyMenusJob` normalizes dishModel names into a `Set<String>` and compares old vs. new per day; a match
   means it `continue`s without touching the DB.
 - `LessonChangeDetector` builds a content signature per lesson (name/teacher/location/type/time/weekday) and
   diffs the stored set against the newly-scraped set to compute `TimetableLessonChanges` (added/removed), which

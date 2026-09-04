@@ -1,6 +1,6 @@
 package kg.manasuniversity.usbtypec.manashelper.parser;
 
-import kg.manasuniversity.usbtypec.manashelper.model.LessonType;
+import kg.manasuniversity.usbtypec.manashelper.enums.LessonType;
 import kg.manasuniversity.usbtypec.manashelper.model.Period;
 import kg.manasuniversity.usbtypec.manashelper.model.CourseTimetable;
 import org.jsoup.Jsoup;

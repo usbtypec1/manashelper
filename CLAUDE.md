@@ -22,7 +22,7 @@ Core capabilities:
   tracked users of schedule changes.
 - **OBIS integration**: logs into the university's student portal (obistest.manas.edu.kg) on the user's behalf
   (credentials stored AES-encrypted) to fetch attendance and exam grades.
-- **Daily cafeteria menu**: scrapes and caches the daily menu, with per-dish user ratings.
+- **Daily cafeteria menu**: scrapes and caches the daily menu, with per-dishModel user ratings.
 - **Background jobs**: `@Scheduled` jobs synchronize lessons (hourly) and the daily menu (every 10 min).
 
 ## Commands

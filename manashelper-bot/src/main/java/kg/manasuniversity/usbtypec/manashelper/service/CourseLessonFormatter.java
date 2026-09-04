@@ -1,6 +1,6 @@
 package kg.manasuniversity.usbtypec.manashelper.service;
 
-import kg.manasuniversity.usbtypec.manashelper.model.LessonType;
+import kg.manasuniversity.usbtypec.manashelper.enums.LessonType;
 import kg.manasuniversity.usbtypec.manashelper.model.CourseLesson;
 import org.springframework.stereotype.Component;
 

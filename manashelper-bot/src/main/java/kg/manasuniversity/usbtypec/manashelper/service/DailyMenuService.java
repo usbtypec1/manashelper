@@ -4,6 +4,7 @@ import kg.manasuniversity.usbtypec.manashelper.entity.DailyMenu;
 import kg.manasuniversity.usbtypec.manashelper.entity.DailyMenuRating;
 import kg.manasuniversity.usbtypec.manashelper.exception.DailyMenuNotFoundException;
 import kg.manasuniversity.usbtypec.manashelper.mapper.DailyMenuMapper;
+import kg.manasuniversity.usbtypec.manashelper.model.DailyMenuModel;
 import kg.manasuniversity.usbtypec.manashelper.model.FoodMenuRating;
 import kg.manasuniversity.usbtypec.manashelper.repository.DailyMenuRatingRepository;
 import kg.manasuniversity.usbtypec.manashelper.repository.DailyMenuRepository;
@@ -28,12 +29,12 @@ public class DailyMenuService {
     private final DailyMenuRatingRepository dailyMenuRatingRepository;
     private final UserRepository userRepository;
 
-    public kg.manasuniversity.usbtypec.manashelper.model.DailyMenu getDailyMenuBySkippingDays(int skipDays) {
+    public DailyMenuModel getDailyMenuBySkippingDays(int skipDays) {
         ZonedDateTime now = ZonedDateTime.now(ZONE_ID);
         return getDailyMenuByDate(now.plusDays(skipDays).toLocalDate());
     }
 
-    public kg.manasuniversity.usbtypec.manashelper.model.DailyMenu getDailyMenuByDate(LocalDate date) {
+    public DailyMenuModel getDailyMenuByDate(LocalDate date) {
         DailyMenu dailyMenu = dailyMenuRepository.findByDate(date)
             .orElseThrow(() -> new DailyMenuNotFoundException("Daily menu not found for date: " + date));
 

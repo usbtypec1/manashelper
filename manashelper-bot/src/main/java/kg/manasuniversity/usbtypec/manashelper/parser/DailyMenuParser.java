@@ -1,7 +1,7 @@
 package kg.manasuniversity.usbtypec.manashelper.parser;
 
-import kg.manasuniversity.usbtypec.manashelper.model.DailyMenu;
-import kg.manasuniversity.usbtypec.manashelper.model.Dish;
+import kg.manasuniversity.usbtypec.manashelper.model.DailyMenuModel;
+import kg.manasuniversity.usbtypec.manashelper.model.DishModel;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -71,7 +71,7 @@ public class DailyMenuParser {
         }
     }
 
-    private Optional<Dish> parseDish(Element foodItem) {
+    private Optional<DishModel> parseDish(Element foodItem) {
         Optional<String> photoUrl = parsePhotoUrl(foodItem);
         Optional<String> foodName = parseFoodName(foodItem);
         Optional<Integer> calories = parseCalories(foodItem);
@@ -80,11 +80,11 @@ public class DailyMenuParser {
             return Optional.empty();
         }
 
-        Dish dish = new Dish(foodName.get(), calories.get(), photoUrl.get(), null);
-        return Optional.of(dish);
+        DishModel dishModel = new DishModel(foodName.get(), calories.get(), photoUrl.get(), null);
+        return Optional.of(dishModel);
     }
 
-    private Optional<DailyMenu> parseDailyFoodMenuHtml(
+    private Optional<DailyMenuModel> parseDailyFoodMenuHtml(
         Element foodMenuDate,
         Element foodMenuItems
     ) {
@@ -95,17 +95,17 @@ public class DailyMenuParser {
         }
 
         Elements foodItems = foodMenuItems.select("div.item");
-        List<Dish> parsedFoodItems = new ArrayList<>();
+        List<DishModel> parsedFoodItems = new ArrayList<>();
         for (Element foodItem : foodItems) {
-            Optional<Dish> dish = parseDish(foodItem);
+            Optional<DishModel> dish = parseDish(foodItem);
             dish.ifPresent(parsedFoodItems::add);
         }
 
-        DailyMenu menu = new DailyMenu(null, parsedFoodItems, date.get(), 0.0, 0, 0);
+        DailyMenuModel menu = new DailyMenuModel(null, parsedFoodItems, date.get(), 0.0, 0, 0);
         return Optional.of(menu);
     }
 
-    public List<DailyMenu> parse(String html) {
+    public List<DailyMenuModel> parse(String html) {
         Document soup = Jsoup.parse(html);
 
         Element container = soup.select("div.container").get(1);
@@ -115,11 +115,11 @@ public class DailyMenuParser {
 
         Elements bodies = container.select("div.row.mt-2");
 
-        List<DailyMenu> result = new ArrayList<>();
+        List<DailyMenuModel> result = new ArrayList<>();
 
         int count = Math.min(titles.size(), bodies.size());
         for (int i = 0; i < count; i++) {
-            Optional<DailyMenu> dailyMenu = parseDailyFoodMenuHtml(
+            Optional<DailyMenuModel> dailyMenu = parseDailyFoodMenuHtml(
                 titles.get(i),
                 bodies.get(i)
             );

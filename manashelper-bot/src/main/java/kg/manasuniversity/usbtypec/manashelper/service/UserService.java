@@ -4,21 +4,17 @@ import kg.manasuniversity.usbtypec.manashelper.entity.User;
 import kg.manasuniversity.usbtypec.manashelper.exception.UserNotFoundException;
 import kg.manasuniversity.usbtypec.manashelper.model.UsersStatistics;
 import kg.manasuniversity.usbtypec.manashelper.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.function.Consumer;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final CryptoService cryptoService;
     private final ObisService obisService;
-
-    public UserService(UserRepository userRepository, CryptoService cryptoService, ObisService obisService) {
-        this.userRepository = userRepository;
-        this.cryptoService = cryptoService;
-        this.obisService = obisService;
-    }
 
     public void upsertUser(Long userId, String fullName, String username) {
         Consumer<User> onPresent = user -> {

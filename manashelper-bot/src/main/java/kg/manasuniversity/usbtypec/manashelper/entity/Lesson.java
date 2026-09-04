@@ -13,7 +13,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import kg.manasuniversity.usbtypec.manashelper.model.LessonType;
+import kg.manasuniversity.usbtypec.manashelper.enums.LessonType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

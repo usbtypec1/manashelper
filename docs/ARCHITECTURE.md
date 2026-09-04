@@ -39,9 +39,9 @@ subfolders); a class's name tells you its feature, its package tells you its rol
 | `client` | Raw HTTP fetch of external HTML pages (`DailyMenuClient`, `TimetableClient`, `ObisClient`) | No parsing, no persistence |
 | `parser` | HTML → `model` record (`DailyMenuParser`, `TimetableParser`, `TimeRangeParser`, `ObisParser`) | No Spring/JPA dependencies, so parsers are directly unit-testable |
 | `mapper` | Entity ↔ model conversion (`DailyMenuMapper`, `DishMapper`, `LessonMapper`) | |
-| `entity` | JPA `@Entity` classes (`Course`, `Department`, `Faculty`, `Lesson`, `DailyMenu`, `DailyMenuRating`, `Dish`, `User`) | Never referenced outside `service`/`repository`/`mapper` |
+| `entity` | JPA `@Entity` classes (`Course`, `Department`, `Faculty`, `Lesson`, `DailyMenuModel`, `DailyMenuRating`, `DishModel`, `User`) | Never referenced outside `service`/`repository`/`mapper` |
 | `repository` | Spring Data JPA repositories | Only `service` classes inject repositories |
-| `model` | DTOs/records returned by services and consumed by controllers | Includes parser output (`CourseTimetable`) and view models (`DailyMenu`, `CourseSummary`, ...) |
+| `model` | DTOs/records returned by services and consumed by controllers | Includes parser output (`CourseTimetable`) and view models (`DailyMenuModel`, `CourseSummary`, ...) |
 | `job` | `@Scheduled` sync tasks | |
 | `exception` | Domain exceptions | |
 | `config` | Cross-cutting Spring config (`FlywayConfig`, `JpaConfig`, `TelegramBotConfig`) | |
@@ -180,7 +180,7 @@ client (Jsoup/RestClient HTTP GET of a university HTML page)
   `LessonSynchronizeService` (orchestrates, `@Transactional`, one course at a time) — all in `service/` — +
   `SynchronizeLessonsJob` (`job/`, `@Scheduled(cron = "0 0 * * * *")`, hourly).
 - Food menu: `DailyMenuClient` (`client/`) → `DailyMenuParser` (`parser/`) → `SynchronizeDailyMenusJob` (`job/`,
-  `@Scheduled(fixedDelay = 10min)`) does fetch + diff (by normalized dish-name set per day) + write in one method,
+  `@Scheduled(fixedDelay = 10min)`) does fetch + diff (by normalized dishModel-name set per day) + write in one method,
   `@Transactional`.
 
 Both intentionally avoid writing when nothing changed, to avoid needless `updated_at`/audit churn and (for

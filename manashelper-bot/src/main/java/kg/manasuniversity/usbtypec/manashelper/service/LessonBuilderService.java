@@ -8,8 +8,8 @@ import kg.manasuniversity.usbtypec.manashelper.repository.LessonRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -19,14 +19,13 @@ public class LessonBuilderService {
     private final LessonMapper lessonMapper;
 
     public List<Lesson> getLastSynchronizedLessons(Course course) {
-        UUID lastSynchronizationId = lessonRepository
+        Optional<UUID> lastSynchronizationId = lessonRepository
             .findTopByCourseOrderByCreatedAtDesc(course)
-            .map(Lesson::getSynchronizationId)
-            .orElse(null);
+            .map(Lesson::getSynchronizationId);
 
-        return lastSynchronizationId != null
-            ? lessonRepository.findByCourseAndSynchronizationIdWithCourse(course, lastSynchronizationId)
-            : Collections.emptyList();
+        return lastSynchronizationId.isPresent()
+            ? lessonRepository.findByCourseAndSynchronizationIdWithCourse(course, lastSynchronizationId.get())
+            : List.of();
     }
 
     public List<Lesson> buildLessons(

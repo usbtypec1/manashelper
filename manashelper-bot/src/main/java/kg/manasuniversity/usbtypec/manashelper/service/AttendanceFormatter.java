@@ -1,16 +1,19 @@
 package kg.manasuniversity.usbtypec.manashelper.service;
 
 import kg.manasuniversity.usbtypec.manashelper.model.LessonAttendance;
+import kg.manasuniversity.usbtypec.manashelper.model.LessonAttendanceAndSkipsOpportunity;
+import lombok.experimental.UtilityClass;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@UtilityClass
 public class AttendanceFormatter {
-    private static final int THEORY_SKIPS_THRESHOLD = 30;
-    private static final int PRACTICE_SKIPS_THRESHOLD = 20;
-    private static final double SKIP_PERCENTAGE_PER_LESSON = 6.25;
+    private final int THEORY_SKIPS_THRESHOLD = 30;
+    private final int PRACTICE_SKIPS_THRESHOLD = 20;
+    private final double SKIP_PERCENTAGE_PER_LESSON = 6.25;
 
-    public static String inflectWordSkips(int count) {
+    public String inflectWordSkips(int count) {
         count = Math.abs(count);
         if (count % 10 == 1 && count % 100 != 11) {
             return "пропуск";
@@ -21,7 +24,7 @@ public class AttendanceFormatter {
         return "пропусков";
     }
 
-    public static String formatFloat(Double value) {
+    public String formatFloat(Double value) {
         if (value == null) return "-";
         String s = String.valueOf(value);
         s = s.replaceAll("0+$", "");
@@ -29,7 +32,7 @@ public class AttendanceFormatter {
         return s;
     }
 
-    public static String formatAttendance(List<LessonAttendanceAndSkipsOpportunity> lessonsAttendance) {
+    public String formatAttendance(List<LessonAttendanceAndSkipsOpportunity> lessonsAttendance) {
         if (lessonsAttendance == null || lessonsAttendance.isEmpty()) {
             return "У вас нет предметов.";
         }
@@ -60,7 +63,7 @@ public class AttendanceFormatter {
         return String.join("\n\n", lines);
     }
 
-    public static LessonAttendanceAndSkipsOpportunity computeLessonSkipOpportunities(
+    public LessonAttendanceAndSkipsOpportunity computeLessonSkipOpportunities(
         LessonAttendance lesson
     ) {
         Integer theorySkippable = null;
@@ -79,24 +82,13 @@ public class AttendanceFormatter {
                 : (int) (diff / SKIP_PERCENTAGE_PER_LESSON);
         }
 
-        return new LessonAttendanceAndSkipsOpportunity(
-            lesson.lessonName(),
-            lesson.lessonCode(),
-            lesson.theorySkipsPercentage(),
-            lesson.practiceSkipsPercentage(),
-            theorySkippable,
-            practiceSkippable
-        );
-    }
-
-
-    public record LessonAttendanceAndSkipsOpportunity(
-        String lessonName,
-        String lessonCode,
-        Double theorySkipsPercentage,
-        Double practiceSkipsPercentage,
-        Integer theorySkippable,
-        Integer practiceSkippable
-    ) {
+        return LessonAttendanceAndSkipsOpportunity.builder()
+            .lessonName(lesson.lessonName())
+            .lessonCode(lesson.lessonCode())
+            .theorySkipsPercentage(lesson.theorySkipsPercentage())
+            .practiceSkipsPercentage(lesson.practiceSkipsPercentage())
+            .theorySkippable(theorySkippable)
+            .practiceSkippable(practiceSkippable)
+            .build();
     }
 }

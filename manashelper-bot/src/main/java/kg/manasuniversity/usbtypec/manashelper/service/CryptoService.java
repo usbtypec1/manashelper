@@ -19,7 +19,7 @@ public class CryptoService {
     private final SecretKeySpec secretKeySpec;
 
     public CryptoService(@Value("${crypto.secret-key}") String secretKey) {
-        secretKeySpec = new SecretKeySpec(secretKey.getBytes(), ALGORITHM);
+        secretKeySpec = new SecretKeySpec(Base64.getDecoder().decode(secretKey), ALGORITHM);
     }
 
     public String encrypt(String plainText) throws IllegalStateException {

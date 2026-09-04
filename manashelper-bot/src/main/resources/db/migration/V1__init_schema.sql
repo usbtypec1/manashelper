@@ -1,5 +1,3 @@
-CREATE SEQUENCE IF NOT EXISTS telegram_messages_seq START WITH 1 INCREMENT BY 50;
-
 CREATE TABLE courses
 (
     id            INTEGER NOT NULL,
@@ -74,20 +72,6 @@ CREATE TABLE lessons
     type               VARCHAR(255)                              NOT NULL,
     created_at         TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
     CONSTRAINT pk_lessons PRIMARY KEY (id)
-);
-
-CREATE TABLE telegram_messages
-(
-    id              BIGINT                                    NOT NULL,
-    text            VARCHAR(1024)                             NOT NULL,
-    chat_id         BIGINT                                    NOT NULL,
-    sent_message_id BIGINT,
-    sent_at         TIMESTAMP WITHOUT TIME ZONE,
-    error_text      VARCHAR(1024),
-    retries_count   INTEGER                                   NOT NULL,
-    priority        INTEGER                                   NOT NULL,
-    created_at      TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
-    CONSTRAINT pk_telegram_messages PRIMARY KEY (id)
 );
 
 CREATE TABLE user_courses

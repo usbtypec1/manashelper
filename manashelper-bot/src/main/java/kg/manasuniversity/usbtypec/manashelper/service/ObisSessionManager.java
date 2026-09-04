@@ -7,13 +7,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class ObisSessionManager {
-    private final Map<Long, ObisSession> sessions;
-
-    public ObisSessionManager() {
-        this.sessions = new ConcurrentHashMap<>();
-    }
+    private final Map<Long, ObisSession> sessions = new ConcurrentHashMap<>();
 
     public ObisSession getSession(Long chatId) {
-        return sessions.computeIfAbsent(chatId, id -> new ObisSession());
+        return sessions.computeIfAbsent(chatId, _ -> new ObisSession());
     }
 }

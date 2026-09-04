@@ -1,5 +1,7 @@
 package kg.manasuniversity.usbtypec.manashelper.model;
 
+import kg.manasuniversity.usbtypec.manashelper.enums.LessonType;
+
 import java.time.LocalTime;
 
 public record CourseLesson(

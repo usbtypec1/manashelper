@@ -1,6 +1,6 @@
 package kg.manasuniversity.usbtypec.manashelper.service;
 
-import kg.manasuniversity.usbtypec.manashelper.model.CallbackData;
+import kg.manasuniversity.usbtypec.manashelper.enums.CallbackData;
 import lombok.experimental.UtilityClass;
 
 import java.util.Optional;

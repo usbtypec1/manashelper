@@ -1,3 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5433/${DATASOURCE_NAME}
+    url: jdbc:postgresql://localhost:5432/${DATASOURCE_NAME:db123}
+    username: ${DATASOURCE_USERNAME:user123}
+    password: ${DATASOURCE_PASSWORD:pass123}
+
+crypto:
+  secret-key: ${CRYPTO_SECRET_KEY:EBd1SJePRfSJkrxOu9f370kB9YFeQnvrT2eFKP8SEck=}

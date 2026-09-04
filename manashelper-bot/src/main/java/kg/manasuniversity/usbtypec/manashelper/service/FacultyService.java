@@ -1,7 +1,7 @@
 package kg.manasuniversity.usbtypec.manashelper.service;
 
-import kg.manasuniversity.usbtypec.manashelper.entity.Faculty;
-import kg.manasuniversity.usbtypec.manashelper.model.FacultySummary;
+import kg.manasuniversity.usbtypec.manashelper.mapper.FacultyMapper;
+import kg.manasuniversity.usbtypec.manashelper.model.FacultyModel;
 import kg.manasuniversity.usbtypec.manashelper.repository.FacultyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,14 +12,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FacultyService {
     private final FacultyRepository facultyRepository;
+    private final FacultyMapper facultyMapper;
 
-    public List<FacultySummary> getAllFaculties() {
+    public List<FacultyModel> getAllFaculties() {
         return facultyRepository.findAll().stream()
-            .map(this::toSummary)
+            .map(facultyMapper::toModel)
             .toList();
-    }
-
-    private FacultySummary toSummary(Faculty faculty) {
-        return new FacultySummary(faculty.getId(), faculty.getName());
     }
 }

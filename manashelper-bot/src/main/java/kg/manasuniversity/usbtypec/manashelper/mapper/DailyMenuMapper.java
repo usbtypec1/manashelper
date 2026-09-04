@@ -1,32 +1,15 @@
 package kg.manasuniversity.usbtypec.manashelper.mapper;
 
-import kg.manasuniversity.usbtypec.manashelper.model.DailyMenu;
-import kg.manasuniversity.usbtypec.manashelper.model.Dish;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import kg.manasuniversity.usbtypec.manashelper.entity.DailyMenu;
+import kg.manasuniversity.usbtypec.manashelper.model.DailyMenuModel;
+import org.mapstruct.InjectionStrategy;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-import java.util.List;
+@Mapper(componentModel = "spring", injectionStrategy = InjectionStrategy.CONSTRUCTOR, uses = DishMapper.class)
+public interface DailyMenuMapper {
 
-@Component
-@RequiredArgsConstructor
-public class DailyMenuMapper {
-    private final DishMapper dishMapper;
-
-    public DailyMenu mapEntityToModel(
-        kg.manasuniversity.usbtypec.manashelper.entity.DailyMenu entity,
-        double averageRating,
-        int ratingsCount
-    ) {
-        List<Dish> dailyMenus = entity.getDishes().stream()
-            .map(dishMapper::mapEntityToModel)
-            .toList();
-        return new DailyMenu(
-            entity.getId(),
-            dailyMenus,
-            entity.getDate(),
-            averageRating,
-            ratingsCount,
-            entity.getViewsCount()
-        );
-    }
+    @Mapping(target = "dishModels", source = "entity.dishes")
+    @Mapping(target = "averageRatingScore", source = "averageRating")
+    DailyMenuModel mapEntityToModel(DailyMenu entity, double averageRating, int ratingsCount);
 }

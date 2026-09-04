@@ -1,7 +1,0 @@
-telegram:
-  bot:
-    token: ${TELEGRAM_BOT_TOKEN:CHANGE_ME}
-  fsm:
-    state-store:
-      type: in-memory
-      ttl: 30m

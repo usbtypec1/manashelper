@@ -1,6 +1,6 @@
 package kg.manasuniversity.usbtypec.manashelper.config;
 
-import kg.manasuniversity.usbtypec.manashelper.controller.TelegramConsumer;
+import kg.manasuniversity.usbtypec.manashelper.telegram.handler.TelegramConsumer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

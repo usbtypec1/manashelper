@@ -11,33 +11,28 @@ import java.util.List;
 public class ExamsFormatter {
 
     public String format(List<LessonExams> lessonsExams) {
-        List<String> lines = new ArrayList<>();
-
-        for (LessonExams lesson : lessonsExams) {
-
-            List<String> lessonLines = new ArrayList<>();
-
-            lessonLines.add(
-                "<b>" + lesson.lessonName()
-                    + " (" + lesson.lessonCode() + ")</b>"
-            );
-
-            for (Exam exam : lesson.exams()) {
-
-                lessonLines.add(
-                    " - " + exam.name()
-                        + ": " + formatNone(exam.score())
-                );
-            }
-
-            lines.add(String.join("\n", lessonLines));
-        }
-
-        if (lines.isEmpty()) {
+        if (lessonsExams == null || lessonsExams.isEmpty()) {
             return "У вас нет оценок за экзамены.";
         }
-
+        List<String> lines = lessonsExams.stream().map(ExamsFormatter::formatLessonExams).toList();
         return String.join("\n\n", lines);
+    }
+
+    private String formatLessonExams(LessonExams lessonExams) {
+        List<String> lessonLines = new ArrayList<>();
+
+        String line = "<b>%s (%s)</b>".formatted(lessonExams.lessonName(), lessonExams.lessonCode());
+        lessonLines.add(line);
+
+        lessonExams.exams().stream()
+            .map(ExamsFormatter::formatExam)
+            .forEach(lessonLines::add);
+
+        return String.join("\n", lessonLines);
+    }
+
+    private String formatExam(Exam exam) {
+        return "- %s: %s".formatted(exam.name(), formatNone(exam.score()));
     }
 
     private String formatNone(String value) {

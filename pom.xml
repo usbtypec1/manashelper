@@ -29,13 +29,12 @@
     </scm>
 
     <!-- Reactor: manashelper-bot is the Telegram bot; telegram-fsm-* is a framework-agnostic, reusable
-         Telegram flow/state-machine library (core engine, Spring Boot starter, and a standalone sample bot)
-         that manashelper-bot consumes but that is deliberately kept free of any manashelper-specific code so
-         it can be dropped into other projects unchanged. Add further modules here as they're created. -->
+         Telegram flow/state-machine library (core engine and Spring Boot starter) that manashelper-bot
+         consumes but that is deliberately kept free of any manashelper-specific code so it can be dropped
+         into other projects unchanged. Add further modules here as they're created. -->
     <modules>
         <module>telegram-fsm-core</module>
         <module>telegram-fsm-spring-boot-starter</module>
-        <module>telegram-fsm-sample</module>
         <module>manashelper-bot</module>
     </modules>
 
@@ -110,6 +109,12 @@
                     <configLocation>${maven.multiModuleProjectDirectory}/checkstyle.xml</configLocation>
                     <consoleOutput>true</consoleOutput>
                     <failOnViolation>true</failOnViolation>
+                    <!-- Restrict to hand-written sources: without this, annotation-processor output
+                         (e.g. MapStruct's generated *Impl classes under target/generated-sources) gets
+                         added to compileSourceRoots and linted too, even though we don't control its style. -->
+                    <sourceDirectories>
+                        <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+                    </sourceDirectories>
                 </configuration>
 
                 <executions>

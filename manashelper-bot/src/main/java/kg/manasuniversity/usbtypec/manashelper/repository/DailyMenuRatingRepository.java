@@ -14,9 +14,9 @@ public interface DailyMenuRatingRepository extends JpaRepository<DailyMenuRating
     @Query("""
         SELECT dmr FROM DailyMenuRating dmr
         JOIN FETCH dmr.user
-        WHERE dmr.dailyMenu.id = :dailyMenu
+        WHERE dmr.dailyMenu.id = :dailyMenuModel
         """)
-    List<DailyMenuRating> findByDailyMenuIdWithUser(@Param("dailyMenu") UUID dailyMenu);
+    List<DailyMenuRating> findByDailyMenuIdWithUser(@Param("dailyMenuModel") UUID dailyMenuModel);
 
     Optional<DailyMenuRating> findByUserIdAndDailyMenuId(Long userId, UUID dailyMenuId);
 }

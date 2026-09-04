@@ -28,6 +28,3 @@ crypto:
 telegram:
   bot:
     token: ${TELEGRAM_BOT_TOKEN}
-
-server:
-  port: ${SERVER_PORT}
