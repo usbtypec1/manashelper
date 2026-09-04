@@ -1,6 +1,8 @@
 package kg.manasuniversity.usbtypec.manashelper.controller;
 
 import jakarta.annotation.PreDestroy;
+import kg.usbtypec.telegramfsm.core.engine.FlowEngine;
+import kg.usbtypec.telegramfsm.core.exception.FlowExecutionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,6 +21,7 @@ import java.util.concurrent.Executors;
 @RequiredArgsConstructor
 @Component
 public class TelegramConsumer implements LongPollingSingleThreadUpdateConsumer {
+    private final FlowEngine flowEngine;
     private final List<TelegramUpdateHandler> handlers;
 
     private final ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
@@ -66,6 +69,15 @@ public class TelegramConsumer implements LongPollingSingleThreadUpdateConsumer {
 
     @Override
     public void consume(Update update) {
+        try {
+            if (flowEngine.dispatch(update)) {
+                return;
+            }
+        } catch (FlowExecutionException e) {
+            log.error("Error executing flow step for Telegram update", e);
+            return;
+        }
+
         for (TelegramUpdateHandler handler : handlers) {
             if (handler.shouldHandle(update)) {
                 try {

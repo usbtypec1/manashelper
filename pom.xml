@@ -28,8 +28,14 @@
         <url/>
     </scm>
 
-    <!-- Reactor: manashelper-bot is the Telegram bot. Add further modules here as they're created. -->
+    <!-- Reactor: manashelper-bot is the Telegram bot; telegram-fsm-* is a framework-agnostic, reusable
+         Telegram flow/state-machine library (core engine, Spring Boot starter, and a standalone sample bot)
+         that manashelper-bot consumes but that is deliberately kept free of any manashelper-specific code so
+         it can be dropped into other projects unchanged. Add further modules here as they're created. -->
     <modules>
+        <module>telegram-fsm-core</module>
+        <module>telegram-fsm-spring-boot-starter</module>
+        <module>telegram-fsm-sample</module>
         <module>manashelper-bot</module>
     </modules>
 
