@@ -1,6 +1,7 @@
 package kg.usbtypec.telegramfsm.core;
 
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,7 @@ public final class FlowStep {
         return new FlowStep(List.copyOf(combined));
     }
 
-    public Optional<StepHandler> firstMatching(Update update, FlowContext context) {
-        return handlers.stream().filter(handler -> handler.matches(update, context)).findFirst();
+    public Optional<StepHandler> firstMatching(Update update, FlowContext context, TelegramClient telegramClient) {
+        return handlers.stream().filter(handler -> handler.matches(update, context, telegramClient)).findFirst();
     }
 }

@@ -5,6 +5,7 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.chat.Chat;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
+import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.Map;
 
@@ -12,14 +13,17 @@ import static kg.usbtypec.telegramfsm.core.FlowBuilder.onCallbackQuery;
 import static kg.usbtypec.telegramfsm.core.FlowBuilder.onMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
 
 class FlowBuilderTest {
 
     private static final long CHAT_ID = 1L;
 
-    private final MessageHandler noopMessageHandler = (message, context) -> {
+    private final TelegramClient telegramClient = mock(TelegramClient.class);
+
+    private final MessageHandler noopMessageHandler = context -> {
     };
-    private final CallbackQueryHandler noopCallbackHandler = (callbackQuery, context) -> {
+    private final CallbackQueryHandler noopCallbackHandler = context -> {
     };
 
     @Test
@@ -31,10 +35,10 @@ class FlowBuilderTest {
                 .build();
 
         assertThat(flow.stepCount()).isEqualTo(3);
-        assertThat(flow.step(0).firstMatching(messageUpdate("hi"), context())).isPresent();
-        assertThat(flow.step(0).firstMatching(callbackQueryUpdate("data"), context())).isEmpty();
-        assertThat(flow.step(2).firstMatching(callbackQueryUpdate("data"), context())).isPresent();
-        assertThat(flow.step(2).firstMatching(messageUpdate("hi"), context())).isEmpty();
+        assertThat(flow.step(0).firstMatching(messageUpdate("hi"), context(), telegramClient)).isPresent();
+        assertThat(flow.step(0).firstMatching(callbackQueryUpdate("data"), context(), telegramClient)).isEmpty();
+        assertThat(flow.step(2).firstMatching(callbackQueryUpdate("data"), context(), telegramClient)).isPresent();
+        assertThat(flow.step(2).firstMatching(messageUpdate("hi"), context(), telegramClient)).isEmpty();
     }
 
     @Test
@@ -46,24 +50,24 @@ class FlowBuilderTest {
                 .build();
 
         FlowStep lastStep = flow.step(1);
-        assertThat(lastStep.firstMatching(messageUpdate("hi"), context())).isPresent();
-        assertThat(lastStep.firstMatching(callbackQueryUpdate("data"), context())).isPresent();
+        assertThat(lastStep.firstMatching(messageUpdate("hi"), context(), telegramClient)).isPresent();
+        assertThat(lastStep.firstMatching(callbackQueryUpdate("data"), context(), telegramClient)).isPresent();
     }
 
     @Test
     void orAllowsSeveralHandlersOfTheSameKindEachWithItsOwnFilter() throws Exception {
         MessageHandler digitsHandler = new MessageHandler() {
             @Override
-            public void handle(Message message, FlowContext context) {
-                context.put("branch", "digits");
+            public void handle(MessageContext context) {
+                context.getFlowContext().put("branch", "digits");
             }
 
             @Override
-            public boolean matches(Message message, FlowContext context) {
-                return message.getText().matches("\\d+");
+            public boolean matches(MessageContext context) {
+                return context.getText().matches("\\d+");
             }
         };
-        MessageHandler otherHandler = (message, context) -> context.put("branch", "other");
+        MessageHandler otherHandler = context -> context.getFlowContext().put("branch", "other");
 
         Flow flow = new FlowBuilder()
                 .startOnMessage(digitsHandler)
@@ -71,13 +75,13 @@ class FlowBuilderTest {
                 .build();
 
         FlowContext digitsContext = context();
-        flow.step(0).firstMatching(messageUpdate("123"), digitsContext).orElseThrow()
-                .invoke(messageUpdate("123"), digitsContext);
+        flow.step(0).firstMatching(messageUpdate("123"), digitsContext, telegramClient).orElseThrow()
+                .invoke(messageUpdate("123"), digitsContext, telegramClient);
         assertThat(digitsContext.<String>get("branch")).isEqualTo("digits");
 
         FlowContext otherContext = context();
-        flow.step(0).firstMatching(messageUpdate("abc"), otherContext).orElseThrow()
-                .invoke(messageUpdate("abc"), otherContext);
+        flow.step(0).firstMatching(messageUpdate("abc"), otherContext, telegramClient).orElseThrow()
+                .invoke(messageUpdate("abc"), otherContext, telegramClient);
         assertThat(otherContext.<String>get("branch")).isEqualTo("other");
     }
 
@@ -85,18 +89,18 @@ class FlowBuilderTest {
     void noHandlerMatchesWhenItsOwnFilterRejects() {
         MessageHandler yesOnlyHandler = new MessageHandler() {
             @Override
-            public void handle(Message message, FlowContext context) {
+            public void handle(MessageContext context) {
             }
 
             @Override
-            public boolean matches(Message message, FlowContext context) {
-                return "yes".equals(message.getText());
+            public boolean matches(MessageContext context) {
+                return "yes".equals(context.getText());
             }
         };
 
         Flow flow = new FlowBuilder().startOnMessage(yesOnlyHandler).build();
 
-        assertThat(flow.step(0).firstMatching(messageUpdate("no"), context())).isEmpty();
+        assertThat(flow.step(0).firstMatching(messageUpdate("no"), context(), telegramClient)).isEmpty();
     }
 
     @Test

@@ -10,11 +10,13 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.chat.Chat;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
+import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.time.Duration;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 class FlowEngineTest {
 
@@ -26,22 +28,22 @@ class FlowEngineTest {
     @BeforeEach
     void setUp() {
         Flow topUpFlow = new FlowBuilder()
-                .startOnMessage((message, context) -> context.put("started", true))
-                .nextOnMessage((message, context) -> {
+                .startOnMessage(context -> context.getFlowContext().put("started", true))
+                .nextOnMessage(context -> {
                     int amount;
                     try {
-                        amount = Integer.parseInt(message.getText());
+                        amount = Integer.parseInt(context.getText());
                     } catch (NumberFormatException e) {
                         throw new RetryStepException("not a number");
                     }
-                    context.put("amount", amount);
+                    context.getFlowContext().put("amount", amount);
                 })
-                .nextOnCallbackQuery((callbackQuery, context) -> context.put("confirmed", true))
+                .nextOnCallbackQuery(context -> context.getFlowContext().put("confirmed", true))
                 .build();
 
         stateStore = new InMemoryFlowStateStore(Duration.ofMinutes(30));
         FlowRegistry registry = new FlowRegistry(Map.of("topUpFlow", topUpFlow), Map.of("/topup", "topUpFlow"));
-        engine = new FlowEngine(registry, stateStore);
+        engine = new FlowEngine(registry, stateStore, mock(TelegramClient.class));
     }
 
     @Test

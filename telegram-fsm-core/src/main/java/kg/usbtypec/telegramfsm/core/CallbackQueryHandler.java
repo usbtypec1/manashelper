@@ -1,6 +1,5 @@
 package kg.usbtypec.telegramfsm.core;
 
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 /**
@@ -11,14 +10,14 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 @FunctionalInterface
 public interface CallbackQueryHandler {
 
-    void handle(CallbackQuery callbackQuery, FlowContext context) throws TelegramApiException;
+    void handle(CallbackQueryContext context) throws TelegramApiException;
 
     /**
      * Whether this handler should react to the given callback query. Defaults to always accepting; override
      * to filter, e.g. by {@code callback_data} (see {@link kg.usbtypec.telegramfsm.core.callback.CallbackData}),
      * so several callback handlers can share one step.
      */
-    default boolean matches(CallbackQuery callbackQuery, FlowContext context) {
+    default boolean matches(CallbackQueryContext context) {
         return true;
     }
 }

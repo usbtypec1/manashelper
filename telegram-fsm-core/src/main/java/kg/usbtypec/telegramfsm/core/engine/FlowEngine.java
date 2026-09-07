@@ -10,6 +10,7 @@ import kg.usbtypec.telegramfsm.core.exception.FlowExecutionException;
 import kg.usbtypec.telegramfsm.core.state.FlowStateStore;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,10 +24,12 @@ public final class FlowEngine {
 
     private final FlowRegistry registry;
     private final FlowStateStore stateStore;
+    private final TelegramClient telegramClient;
 
-    public FlowEngine(FlowRegistry registry, FlowStateStore stateStore) {
+    public FlowEngine(FlowRegistry registry, FlowStateStore stateStore, TelegramClient telegramClient) {
         this.registry = registry;
         this.stateStore = stateStore;
+        this.telegramClient = telegramClient;
     }
 
     /**
@@ -60,14 +63,14 @@ public final class FlowEngine {
         Map<String, Object> contextData = new HashMap<>(state.context());
         FlowContext context = new FlowContext(contextData);
 
-        Optional<StepHandler> matched = step.firstMatching(update, context);
+        Optional<StepHandler> matched = step.firstMatching(update, context, telegramClient);
         if (matched.isEmpty()) {
             return false;
         }
 
         boolean retry = false;
         try {
-            matched.get().invoke(update, context);
+            matched.get().invoke(update, context, telegramClient);
         } catch (RetryStepException e) {
             retry = true;
         } catch (TelegramApiException e) {
