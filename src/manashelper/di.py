@@ -15,11 +15,14 @@ from manashelper.repositories.faculty_repository import FacultyRepository
 from manashelper.repositories.user_repository import UserRepository
 from manashelper.scraping.food_menu_client import FoodMenuClient
 from manashelper.scraping.food_menu_parser import FoodMenuParser
+from manashelper.scraping.obis_client import ObisClient
 from manashelper.services.course_service import CourseService
+from manashelper.services.crypto_service import CryptoService
 from manashelper.services.daily_menu_service import DailyMenuService
 from manashelper.services.department_service import DepartmentService
 from manashelper.services.faculty_service import FacultyService
 from manashelper.services.food_menu_sync_service import FoodMenuSyncService
+from manashelper.services.obis_service import ObisService
 
 
 class AppProvider(Provider):
@@ -46,6 +49,8 @@ class AppProvider(Provider):
 
     food_menu_client = provide(FoodMenuClient)
     food_menu_parser = provide(FoodMenuParser)
+    crypto_service = provide(CryptoService)
+    obis_client = provide(ObisClient)
 
 
 class RequestProvider(Provider):
@@ -74,3 +79,4 @@ class RequestProvider(Provider):
     course_service = provide(CourseService)
     daily_menu_service = provide(DailyMenuService)
     food_menu_sync_service = provide(FoodMenuSyncService)
+    obis_service = provide(ObisService)

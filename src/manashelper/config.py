@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     datasource_name: str = Field(alias="DATASOURCE_NAME")
     datasource_username: str = Field(alias="DATASOURCE_USERNAME")
     datasource_password: str = Field(alias="DATASOURCE_PASSWORD")
+    obis_encryption_key: str = Field(alias="OBIS_ENCRYPTION_KEY")
 
     @property
     def database_url(self) -> str:

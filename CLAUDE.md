@@ -7,15 +7,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Manashelper is a Telegram bot (Python 3.13, aiogram 3, SQLAlchemy 2 async, Dishka DI) for Manas University
 students. There is **no REST API** — all user interaction happens through Telegram long-polling.
 
-This is a from-scratch Python rewrite of a former Java/Spring Boot implementation. As of this rewrite, only one
-vertical slice is implemented: **timetable browsing** — faculty → department → course listing with per-user
-course tracking. OBIS integration, the cafeteria daily menu, lesson-change notifications, and the "About" screens
-from the original Java bot have not been ported yet (see Roadmap below).
+This is a from-scratch Python rewrite of a former Java/Spring Boot implementation. Timetable browsing, the
+cafeteria daily menu, and OBIS grade/attendance lookup have been ported; lesson-change notifications and the
+"About" screens from the original Java bot have not been ported yet (see Roadmap below).
 
 Core capabilities (current):
 
 - **Faculty/department/course catalog browsing** via inline keyboards, backed by Postgres.
 - **Per-user course tracking**: tapping a course toggles tracking it (✅) via a `user_courses` join table.
+- **Cafeteria daily menu**: scraped menu with dish photos/calories and per-user ratings.
+- **OBIS integration**: an aiogram FSM conversation collects a student's OBIS credentials, verifies them against
+  the real OBIS login before saving (AES-GCM encrypted at rest), and lets the user fetch their current exam
+  grades and lesson-attendance/skip-budget summary on demand — see `services/obis_service.py`,
+  `scraping/obis_client.py`, `scraping/obis_parser.py`, `bot/routers/obis.py`.
 - `/start` upserts the Telegram user and shows the main reply keyboard.
 
 ## Commands
@@ -41,10 +45,12 @@ respectively — see `pyproject.toml`/`[tool.ruff] extend-exclude`).
 ### Running locally
 
 The app needs Postgres and these environment variables (see `src/manashelper/config.py`): `TELEGRAM_BOT_TOKEN`,
-`DATASOURCE_NAME`, `DATASOURCE_USERNAME`, `DATASOURCE_PASSWORD`, and optionally `DATASOURCE_HOST` (defaults to
-`db`, the docker-compose service name — set to `localhost` for local dev outside Docker). `docker-compose.dev.yml`
-starts only Postgres, exposed on host port `5432`. A local `.env` file (gitignored) is read automatically via
-`pydantic-settings`.
+`DATASOURCE_NAME`, `DATASOURCE_USERNAME`, `DATASOURCE_PASSWORD`, `OBIS_ENCRYPTION_KEY` (a base64-encoded 32-byte
+AES-256 key used by `CryptoService` to encrypt stored OBIS passwords — generate one with
+`python3 -c "import base64,os;print(base64.b64encode(os.urandom(32)).decode())"`), and optionally
+`DATASOURCE_HOST` (defaults to `db`, the docker-compose service name — set to `localhost` for local dev outside
+Docker). `docker-compose.dev.yml` starts only Postgres, exposed on host port `5432`. A local `.env` file
+(gitignored) is read automatically via `pydantic-settings`.
 
 Deployment: pushing a `v*` tag triggers `.github/workflows/ci-cd.yml`, which first runs lint + type-check + tests
 against a Postgres service container, then — only if that passes — builds the Docker image
@@ -131,16 +137,22 @@ after the test, so tests can freely insert rows (including ones that collide in 
 as long as ids don't collide) without polluting the dev database. Tests run against the real dev Postgres
 (`docker-compose.dev.yml`), not SQLite — avoids dialect drift on native `UUID`/`TIMESTAMP` types.
 
+### OBIS integration notes
+
+`ObisClient` (`scraping/obis_client.py`) opens a fresh `httpx.AsyncClient` per call (base URL
+`https://obistest.manas.edu.kg`, `follow_redirects=True`) rather than keeping a persistent per-chat session like
+the Java `ObisSession`/`ObisSessionManager` did — OBIS is re-authenticated on every attendance/exam-grade fetch
+anyway (see `ObisService`), so there is no session reuse to preserve, and this avoids an unbounded
+`dict[chat_id, session]` growing for the process lifetime. Credentials are collected via an aiogram FSM
+(`bot/routers/obis.py::ObisCredentialsForm`, `MemoryStorage` — fine for a single-process deployment; move to
+`RedisStorage` if the bot ever runs multi-worker) rather than the Java version's external Telegram WebApp form,
+and are verified against a real OBIS login before being persisted. Passwords are encrypted at rest with AES-GCM
+(`services/crypto_service.py`) instead of the Java version's raw AES-ECB.
+
 ## Roadmap (not yet ported from the Java version)
 
 - **Lesson scraping/sync**: a `Lesson` model, timetable HTML scraping (`httpx` + an HTML parser) against
   `http://timetable.manas.edu.kg/department-printer/{course_id}`, a change-detection + sync pipeline, an
   APScheduler-driven hourly job — and, since the Java version never finished this, actually notifying users who
   track a course when its lessons change.
-- **OBIS integration**: student-portal login (cookie-based session per chat), attendance/exam-grade fetching and
-  parsing, encrypted credential storage (the Java version used raw AES-ECB — a Python rewrite should use AES-GCM
-  instead, which is a breaking change for any already-encrypted data and needs an explicit migration decision),
-  and a multi-step credential-entry conversation flow (aiogram FSM — e.g. `RedisStorage` for multi-worker
-  deployments — as the closest analog to the Java project's separate `telegram-fsm-core` library).
-- **Cafeteria daily menu**: menu scraping, dish ratings, the 10-minute sync job.
 - **About screens**: static informational callback handlers.

@@ -9,6 +9,9 @@ class UserRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    async def get_by_id(self, user_id: int) -> User | None:
+        return await self._session.get(User, user_id)
+
     async def get_with_tracked_courses(self, user_id: int) -> User | None:
         result = await self._session.execute(
             select(User).options(selectinload(User.tracked_courses)).where(User.id == user_id)
