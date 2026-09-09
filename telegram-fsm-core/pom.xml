@@ -21,11 +21,15 @@
     <name>telegram-fsm-core</name>
     <description>Framework-agnostic flow/state-machine engine for Telegram bots</description>
 
+    <properties>
+        <telegrambots.version>10.2.1</telegrambots.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots-meta</artifactId>
-            <version>9.5.0</version>
+            <version>${telegrambots.version}</version>
         </dependency>
 
         <dependency>

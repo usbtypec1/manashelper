@@ -16,12 +16,15 @@ import org.springframework.context.annotation.Configuration;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.chat.Chat;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
+import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 class TelegramFsmAutoConfigurationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+            .withBean(TelegramClient.class, () -> mock(TelegramClient.class))
             .withConfiguration(AutoConfigurations.of(
                     TelegramFsmAutoConfiguration.class,
                     InMemoryStateStoreAutoConfiguration.class,
@@ -72,9 +75,9 @@ class TelegramFsmAutoConfigurationTest {
         @FlowTrigger("/topup")
         Flow topUpFlow() {
             return new FlowBuilder()
-                    .startOnMessage((message, context) -> {
+                    .startOnMessage(context -> {
                     })
-                    .nextOnMessage((message, context) -> {
+                    .nextOnMessage(context -> {
                     })
                     .build();
         }

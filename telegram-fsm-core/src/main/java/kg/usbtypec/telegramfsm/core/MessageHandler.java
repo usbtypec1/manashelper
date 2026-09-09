@@ -1,6 +1,5 @@
 package kg.usbtypec.telegramfsm.core;
 
-import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 /**
@@ -11,13 +10,13 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 @FunctionalInterface
 public interface MessageHandler {
 
-    void handle(Message message, FlowContext context) throws TelegramApiException;
+    void handle(MessageContext context) throws TelegramApiException;
 
     /**
      * Whether this handler should react to the given message. Defaults to always accepting; override to
      * filter, e.g. by text content, so several message handlers can share one step.
      */
-    default boolean matches(Message message, FlowContext context) {
+    default boolean matches(MessageContext context) {
         return true;
     }
 }

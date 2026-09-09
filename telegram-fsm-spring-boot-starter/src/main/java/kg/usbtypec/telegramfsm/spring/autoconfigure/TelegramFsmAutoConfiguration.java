@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,8 +42,9 @@ public class TelegramFsmAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public FlowEngine flowEngine(FlowRegistry flowRegistry, FlowStateStore flowStateStore) {
-        return new FlowEngine(flowRegistry, flowStateStore);
+    public FlowEngine flowEngine(FlowRegistry flowRegistry, FlowStateStore flowStateStore,
+                                  TelegramClient telegramClient) {
+        return new FlowEngine(flowRegistry, flowStateStore, telegramClient);
     }
 
     @Bean

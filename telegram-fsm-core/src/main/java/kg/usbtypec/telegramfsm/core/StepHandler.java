@@ -2,6 +2,7 @@ package kg.usbtypec.telegramfsm.core;
 
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 /**
  * One (filter, handler) entry attached to a {@link FlowStep}. A step can hold any number of these, of any
@@ -10,7 +11,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
  */
 public sealed interface StepHandler permits MessageStepHandler, CallbackQueryStepHandler {
 
-    boolean matches(Update update, FlowContext context);
+    boolean matches(Update update, FlowContext context, TelegramClient telegramClient);
 
-    void invoke(Update update, FlowContext context) throws TelegramApiException;
+    void invoke(Update update, FlowContext context, TelegramClient telegramClient) throws TelegramApiException;
 }
