@@ -12,6 +12,7 @@ dependencies = [
     "apscheduler>=3.11.3",
     "asyncpg>=0.31.0",
     "beautifulsoup4>=4.15.0",
+    "cryptography>=50.0.1",
     "dishka>=1.10.1",
     "httpx>=0.28.1",
     "lxml>=6.1.3",

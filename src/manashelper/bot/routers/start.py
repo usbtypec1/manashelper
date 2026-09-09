@@ -13,6 +13,7 @@ def build_main_keyboard() -> ReplyKeyboardMarkup:
         keyboard=[
             [KeyboardButton(text="🍉 Йемек")],
             [KeyboardButton(text="📅 Расписание")],
+            [KeyboardButton(text="🔐 OBIS")],
         ],
         resize_keyboard=True,
     )
