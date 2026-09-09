@@ -33,6 +33,7 @@ jobs:
       DATASOURCE_NAME: db123
       DATASOURCE_USERNAME: user123
       DATASOURCE_PASSWORD: pass123
+      OBIS_ENCRYPTION_KEY: WN99UeaUfixAdP24uN3yBG8Gbbo9hTPf6jlsYrp9KOA=
 
     steps:
       - name: Checkout
