@@ -4,143 +4,143 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Manashelper is a Telegram bot (Spring Boot 4 / Java 25) for Manas University students. There is **no REST API** in
-this codebase — despite the README mentioning OpenAPI/Swagger, no `@RestController` exists. All user interaction
-happens through Telegram long-polling.
+Manashelper is a Telegram bot (Python 3.13, aiogram 3, SQLAlchemy 2 async, Dishka DI) for Manas University
+students. There is **no REST API** — all user interaction happens through Telegram long-polling.
 
-This is a **multi-module Maven project**: the root `pom.xml` is an aggregator/parent (packaging `pom`, no source of
-its own) holding shared build config — Checkstyle (bound directly so every module is checked the same way without
-redeclaring it) and `dependencyManagement`/`pluginManagement` for cross-module infra like Lombok/MapStruct.
-`manashelper-bot/` is the (currently only) module and contains the entire bot described below. Expect more sibling
-modules under the root later — when adding one, give it its own `pom.xml` with `<parent>` pointing at the root and
-add it to the root's `<modules>`; don't put module-specific dependencies (telegrambots, jsoup, springdoc, ...) into
-the root — those stay local to the module that needs them.
+This is a from-scratch Python rewrite of a former Java/Spring Boot implementation. As of this rewrite, only one
+vertical slice is implemented: **timetable browsing** — faculty → department → course listing with per-user
+course tracking. OBIS integration, the cafeteria daily menu, lesson-change notifications, and the "About" screens
+from the original Java bot have not been ported yet (see Roadmap below).
 
-Core capabilities:
+Core capabilities (current):
 
-- **Timetable**: scrapes the university timetable site, stores faculties/departments/courses/lessons, and notifies
-  tracked users of schedule changes.
-- **OBIS integration**: logs into the university's student portal (obistest.manas.edu.kg) on the user's behalf
-  (credentials stored AES-encrypted) to fetch attendance and exam grades.
-- **Daily cafeteria menu**: scrapes and caches the daily menu, with per-dishModel user ratings.
-- **Background jobs**: `@Scheduled` jobs synchronize lessons (hourly) and the daily menu (every 10 min).
+- **Faculty/department/course catalog browsing** via inline keyboards, backed by Postgres.
+- **Per-user course tracking**: tapping a course toggles tracking it (✅) via a `user_courses` join table.
+- `/start` upserts the Telegram user and shows the main reply keyboard.
 
 ## Commands
 
-There is no Maven wrapper in this repo — use a system-installed `mvn` (Java 25; the Dockerfile build/runtime images
-are `eclipse-temurin:25`).
-
-Run these from the repo root — Maven resolves the reactor and, for `-pl`, the target module — or `cd
-manashelper-bot` first and drop the `-pl manashelper-bot`:
+Dependency management is via `uv`. Run from the repo root:
 
 ```
-mvn clean verify                                  # builds the whole reactor: compile, tests, Checkstyle for every module
-mvn test -pl manashelper-bot                       # run tests only, just this module
-mvn test -pl manashelper-bot -Dtest=CourseLessonFormatterTest              # run a single test class
-mvn test -pl manashelper-bot -Dtest=CourseLessonFormatterTest#addedLesson_shouldUseUnknownDay_whenWeekdayIsZero
-mvn -pl manashelper-bot spring-boot:run            # run the bot locally (needs env vars below + a Postgres instance)
-mvn checkstyle:check                               # Checkstyle only, whole reactor
+uv sync                                                # install dependencies + create .venv
+uv run alembic upgrade head                            # apply migrations (also runs automatically on app boot)
+uv run alembic revision --autogenerate -m "message"    # generate a new migration from model changes
+uv run python -m manashelper.main                      # run the bot locally (needs env vars below + Postgres)
+uv run pytest                                          # run tests (needs the dev Postgres running)
+uv run ruff check .                                    # lint
+uv run ruff format .                                   # format
+uv run mypy src/manashelper                            # type check
 ```
 
-Checkstyle enforces: 120-char line length, no unused imports, no star imports, naming conventions
-(types/methods/parameters), and consistent indentation/whitespace. Its config (`checkstyle.xml`, at the repo root)
-is shared by every module — a violation in any module fails `mvn verify` (and thus the Docker build).
+Checkstyle-equivalent strictness: `ruff` enforces a 120-char line length, import ordering, no unused/wildcard
+imports, PEP8 naming, and pyupgrade rules (`pyproject.toml` → `[tool.ruff]`). `mypy --strict` runs over
+`src/manashelper` (not `tests/` or `alembic/versions/`, which are excluded from strict typing/line-length rules
+respectively — see `pyproject.toml`/`[tool.ruff] extend-exclude`).
 
 ### Running locally
 
-The app needs Postgres and these environment variables (see `manashelper-bot/src/main/resources/application.yml`):
-`DATASOURCE_NAME`, `DATASOURCE_USERNAME`, `DATASOURCE_PASSWORD`, `CRYPTO_SECRET_KEY`, `TELEGRAM_BOT_TOKEN`,
-`SERVER_PORT`. `docker-compose.dev.yml` starts only Postgres, exposed on host port `5433`, matching
-`application-dev.yml`'s datasource URL — use the `dev` Spring profile locally. `docker-compose.yml` runs the full
-stack (app + db) against a prebuilt image, driven by a `.env` file.
+The app needs Postgres and these environment variables (see `src/manashelper/config.py`): `TELEGRAM_BOT_TOKEN`,
+`DATASOURCE_NAME`, `DATASOURCE_USERNAME`, `DATASOURCE_PASSWORD`, and optionally `DATASOURCE_HOST` (defaults to
+`db`, the docker-compose service name — set to `localhost` for local dev outside Docker). `docker-compose.dev.yml`
+starts only Postgres, exposed on host port `5432`. A local `.env` file (gitignored) is read automatically via
+`pydantic-settings`.
 
-Deployment: pushing a `v*` tag triggers `.github/workflows/ci-cd.yml`, which runs the Docker multi-stage build
-(which itself runs `mvn clean verify`) and pushes `usbtypec1/manashelper:<version>` and `:latest` to Docker Hub.
-There is no automated deploy step beyond the image push.
+Deployment: pushing a `v*` tag triggers `.github/workflows/ci-cd.yml`, which first runs lint + type-check + tests
+against a Postgres service container, then — only if that passes — builds the Docker image
+(`docker/Dockerfile`) and pushes `usbtypec1/manashelper:<version>` / `:latest` to Docker Hub, then SSHes into the
+deploy host to pull and restart via `docker compose up -d`.
 
 ## Architecture
 
 ### Package layout (by layer, not by feature)
 
-Within the `manashelper-bot` module, code is organized under `kg.manasuniversity.usbtypec.manashelper` by
-technical layer, not by feature domain:
-`controller` (Telegram handlers), `service` (business logic, session management, formatters), `client` (raw HTTP
-fetch of external HTML pages), `parser` (HTML → model), `mapper` (entity ↔ model), `entity` (JPA), `repository`
-(Spring Data), `model` (DTOs/records), `job` (`@Scheduled` tasks), `exception`, `config`. Every package is flat —
-there are no per-feature subpackages (no `timetable/`, `foodmenu/`, `user/`); a class's name, not its folder,
-tells you which feature it belongs to (e.g. `CourseService`, `DailyMenuService`, `ObisService` all live directly
-in `service/`).
+Under `src/manashelper/`, code is organized by technical layer, mirroring the original Java structure:
+`bot/routers` (aiogram handlers), `bot/keyboards` (inline keyboard builders), `bot/middlewares`, `bot/callback_data.py`,
+`services` (business logic), `repositories` (SQLAlchemy queries), `db/models` (ORM models), `config.py`, `di.py`,
+`main.py`. As with the Java version, expect this to stay flat-by-layer rather than gaining per-feature
+subpackages as more of the roadmap gets ported.
 
-**Services return models, never entities.** `@Service`/`@Component` classes that a `controller` handler calls
-must return `model` records (or `void`), not `entity` types — controllers/handlers must never hold a JPA entity.
-Map entity → model at the bottom of the service method (see `DailyMenuMapper`, `CourseService.toSummaries`), not
-in the controller. The internal timetable-sync pipeline (`LessonBuilderService`, `LessonChangeDetector`,
-`LessonSynchronizeService`) is the one intentional exception: those collaborate with each other purely to
-build/diff/persist `Lesson` entities and are never called from `controller`, so there's no boundary to protect
-there — don't spread that pattern to anything a handler touches.
+**Services return plain dataclasses, never ORM models.** A `service` method called from a `bot/routers` handler
+returns a frozen `dataclass` (e.g. `FacultyModel`, `DepartmentSummary`, `CourseSummary`) or raises, never a
+SQLAlchemy model instance — routers must never hold an ORM object. Map ORM model → dataclass at the bottom of the
+service method (see `CourseService._to_summaries`).
 
-### Telegram update handling (chain of responsibility)
+### Telegram update handling (aiogram routers)
 
-Every bot interaction is a `TelegramUpdateHandler` (`controller/TelegramUpdateHandler.java`): an abstract Spring
-`@Component` with `shouldHandle(Update)` / `handle(Update)`. `TelegramConsumer` (the
-`LongPollingSingleThreadUpdateConsumer` registered with `TelegramBotConfig`) iterates over *all* handler beans in
-injection order and dispatches to the first whose `shouldHandle` returns true, then stops. There is no explicit
-priority/ordering mechanism — when adding a new handler, make sure its `shouldHandle` predicate doesn't
-accidentally shadow (or get shadowed by) an existing one. All handlers sit flat in `controller/`; group by name
-prefix (`Obis*`, `FoodMenu*`, `About*`, `Course*`/`Department*`/`Faculty*`) rather than by folder.
+Each feature area is an aiogram `Router` (`bot/routers/start.py`, `bot/routers/timetable.py`), included into the
+`Dispatcher` in `main.py`. Unlike the old Java chain-of-responsibility (`shouldHandle`/`handle` over a flat handler
+list, first match wins), aiogram matches each incoming update against filters declared on `@router.message(...)` /
+`@router.callback_query(...)` decorators — still effectively first-match-wins across included routers, so keep
+filters mutually exclusive the same way the Java handlers' `shouldHandle` predicates had to be.
 
-Handlers must go through a `service` for any data access — see `FacultyService`/`DepartmentService`/
-`CourseService`, which replaced four handlers that used to inject `*Repository` and manipulate entities directly.
+Callback data is packed via aiogram's typed `CallbackData` factories (`bot/callback_data.py` —
+`FacultyCallback`/`DepartmentCallback`/`CourseCallback`), replacing the old `CallbackDataByIdFilter.pack`/
+`.parseUUID`/`.parseInt` string convention — `SomeCallback.filter()` is passed directly to
+`@router.callback_query(...)`, and the parsed instance is injected into the handler as a `callback_data: SomeCallback`
+parameter.
 
-Callback button data is packed as `"<CallbackData enum name>:<id>"` strings (see `CallbackDataByIdFilter.pack` /
-`.parseUUID` / `.parseInt`) and matched back in `shouldHandle`. Free-text, multi-step flows (e.g. entering OBIS
-credentials) are tracked per-chat in-memory via `ObisSessionManager` rather than callback data, since they need to
-capture the next arbitrary text message.
+### Concurrency: per-chat ordering
 
-### Concurrency: virtual threads
+aiogram's `Dispatcher.start_polling` dispatches each update as its own `asyncio` task by default
+(`handle_as_tasks=True`), so two updates from the *same* chat could run concurrently unless something serializes
+them. `bot/middlewares/per_chat_ordering.py::PerChatOrderingMiddleware` (registered as an outer middleware on both
+`dispatcher.message` and `dispatcher.callback_query`) holds one `asyncio.Lock` per chat id so a chat's updates
+process strictly in order — this matters because `CourseService.toggle_tracked_course`'s tracked-courses
+read-modify-write isn't safe under concurrent access for the same user. This is the Python analog of the Java
+`TelegramConsumer`'s per-chat `CompletableFuture` chaining over a virtual-thread executor.
 
-`spring.threads.virtual.enabled: true` (`application.yml`) puts `@Scheduled` jobs (`SynchronizeLessonsJob`,
-`SynchronizeDailyMenusJob`) and the embedded Tomcat connector on virtual threads — relevant because handler/job
-code makes blocking calls (`RestClient` requests) rather than being reactive end-to-end.
+### Dependency injection (Dishka)
 
-`TelegramConsumer` overrides the library's default `consume(List<Update>)`, which otherwise funnels *every* chat's
-updates through one shared background thread (`LongPollingSingleThreadUpdateConsumer.updatesProcessorExecutor`).
-Instead it dispatches each update onto `Executors.newVirtualThreadPerTaskExecutor()`, chained per chat id via
-`CompletableFuture` so a single chat's updates still process in receipt order (important: `ObisSession`'s
-`CookieManager` and `User`'s tracked-courses read-modify-write in `CourseService` aren't safe under concurrent access for the
-*same* chat), while different chats now run concurrently instead of queueing behind one slow OBIS call. When
-adding new per-chat mutable state, keep it keyed by chat/user id (like `ObisSessionManager`) — don't assume a
-single global thread serializes access to it anymore.
+`di.py` defines two providers: `AppProvider` (`Scope.APP` — `Settings`, the `AsyncEngine`, the
+`async_sessionmaker`, created once per process) and `RequestProvider` (`Scope.REQUEST` — one `AsyncSession` per
+update, plus repositories/services built on top of it). `setup_dishka(container, dispatcher)` +
+`inject_router(dispatcher)` in `main.py` wire dependency injection into router handlers via `FromDishka[X]`
+parameter annotations — the analog of Spring's constructor injection into `@Component`/`@Service` beans. The
+`RequestProvider`'s session provider commits on success and rolls back on exception, giving each update
+transactional semantics equivalent to Spring's `@Transactional`.
 
-### Scraping + sync pattern
-
-Both the timetable and food-menu sync pipelines follow the same shape for pulling in external university data: a
-`client` class (Jsoup/RestClient HTTP call to the university site, returns raw HTML) → a `parser` class (HTML → a
-`model` record, no persistence knowledge) → a `job`/`service` that diffs the parsed result against stored entities
-and only writes on actual changes (`LessonChangeDetector` for lessons, name-set comparison in
-`SynchronizeDailyMenusJob` for menus). Follow this same shape for any new scraped data source rather than writing
-directly from the parser into the repository — new classes go straight into the top-level `client`/`parser`/`job`
-packages, not a new feature subpackage.
-
-### OBIS session handling
-
-`ObisService` (in `service/`) decrypts the user's stored password (`CryptoService`, AES via `crypto.secret-key`),
-re-authenticates against OBIS per-request (`ObisClient.sendLoginRequest`, in `client/`), and then fetches the
-target page. Each Telegram chat gets its own cookie-jar-backed `RestClient` session (`ObisSession`, held per-chat by
-`ObisSessionManager`, both in `service/`) since OBIS auth is cookie-based and stateful — don't share
-`RestClient`/cookies across users.
+**Do not use `dishka.integrations.aiogram.setup_dishka(..., auto_inject=True)`.** As of dishka 1.10.1 + aiogram
+3.31, it registers its handler-injection pass as a `router.startup` callback via
+`functools.partial(inject_router, router=router, ...)`, but aiogram's `Router.emit_startup` always injects its own
+`router=self` kwarg into every startup callback — colliding with the partial's bound `router` kwarg and raising
+`TypeError: inject_router() got multiple values for argument 'router'`. Instead call
+`setup_dishka(container, dispatcher)` (no `auto_inject`) followed by an explicit `inject_router(dispatcher)`, as
+done in `main.py` — confirmed working end-to-end against a real dispatcher, including through to a genuine
+Telegram API call.
 
 ### Data layer
 
-Flyway (`manashelper-bot/src/main/resources/db/migration/V*__*.sql`) is the source of truth for schema; JPA
-`ddl-auto` is `none`.
-Add new migrations rather than editing entities' `@Column` mappings alone. `FlywayConfig` runs migrations with
-`baselineOnMigrate(true)`.
+Alembic (`alembic/versions/*.py`) is the source of truth for schema — this is a fresh start, not a port of the old
+Flyway migration history, though the seed data (faculties/departments/courses) was carried over from the Java
+project's `V2__seed_faculties_and_departments.sql` into `e82d16133698_seed_faculties_departments_courses.py`.
+`alembic/env.py` points `target_metadata` at `manashelper.db.base.Base.metadata` and overrides `sqlalchemy.url`
+from `Settings.database_url` at runtime — `alembic.ini`'s `sqlalchemy.url` placeholder is never actually used.
+Migrations run automatically on boot (`main.py::run_migrations`, called before `asyncio.run(main())` — mirrors the
+old `FlywayConfig`'s `initMethod=migrate` bean) as well as being runnable manually via `uv run alembic upgrade head`.
 
-## Further docs
+Add new migrations with `uv run alembic revision --autogenerate -m "..."` after changing a model under
+`db/models/`, rather than hand-writing schema changes.
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — deeper dive: data model, update/OBIS request flows, formatting
-  layer.
-- [`docs/guides/`](docs/guides/) — step-by-step recipes for adding a Telegram handler, a scraped data source, or a
-  DB migration.
-- [`docs/ROADMAP.md`](docs/ROADMAP.md) — candidate/in-flight feature list (template — not yet populated).
+### Tests
+
+`tests/conftest.py` provides a `session` fixture: each test runs inside a transaction opened on a dedicated
+connection, with the `AsyncSession` bound via `join_transaction_mode="create_savepoint"` so that even if the code
+under test calls `session.commit()`, only a SAVEPOINT is released — the outer transaction is always rolled back
+after the test, so tests can freely insert rows (including ones that collide in shape with seeded catalog data,
+as long as ids don't collide) without polluting the dev database. Tests run against the real dev Postgres
+(`docker-compose.dev.yml`), not SQLite — avoids dialect drift on native `UUID`/`TIMESTAMP` types.
+
+## Roadmap (not yet ported from the Java version)
+
+- **Lesson scraping/sync**: a `Lesson` model, timetable HTML scraping (`httpx` + an HTML parser) against
+  `http://timetable.manas.edu.kg/department-printer/{course_id}`, a change-detection + sync pipeline, an
+  APScheduler-driven hourly job — and, since the Java version never finished this, actually notifying users who
+  track a course when its lessons change.
+- **OBIS integration**: student-portal login (cookie-based session per chat), attendance/exam-grade fetching and
+  parsing, encrypted credential storage (the Java version used raw AES-ECB — a Python rewrite should use AES-GCM
+  instead, which is a breaking change for any already-encrypted data and needs an explicit migration decision),
+  and a multi-step credential-entry conversation flow (aiogram FSM — e.g. `RedisStorage` for multi-worker
+  deployments — as the closest analog to the Java project's separate `telegram-fsm-core` library).
+- **Cafeteria daily menu**: menu scraping, dish ratings, the 10-minute sync job.
+- **About screens**: static informational callback handlers.

@@ -1,3 +1,0 @@
-kg.usbtypec.telegramfsm.spring.autoconfigure.TelegramFsmAutoConfiguration
-kg.usbtypec.telegramfsm.spring.autoconfigure.InMemoryStateStoreAutoConfiguration
-kg.usbtypec.telegramfsm.spring.autoconfigure.RedisStateStoreAutoConfiguration

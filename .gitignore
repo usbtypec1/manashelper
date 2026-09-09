@@ -1,39 +1,30 @@
-HELP.md
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+### Python ###
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+dist/
 
-### VS Code ###
+### Virtual environments ###
+.venv/
+venv/
+
+### uv ###
+# uv.lock is intentionally committed for reproducible installs.
+
+### Testing / tooling caches ###
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+### IDE ###
+.idea/
 .vscode/
 
+### Env / secrets ###
 .env
-.mvn
 
 logs/*
-

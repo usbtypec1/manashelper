@@ -1,32 +1,45 @@
 # Manashelper
 
+Telegram bot for Manas University students — Python 3.13, aiogram 3, SQLAlchemy 2 (async), Dishka.
+
 ## Functionality overview
 
-Manashelper is a Spring Boot service that aggregates university data and exposes it over REST APIs. Core functionality includes:
+This is a from-scratch Python rewrite of a former Java/Spring Boot implementation. Currently implemented (see
+[`CLAUDE.md`](CLAUDE.md) for architecture details and the full roadmap of what's not yet ported):
 
-- **Timetable lookup**: fetch course timetables and parse them into structured responses.
-- **Faculty/department/course catalog**: list faculties, departments per faculty, and courses per department.
-- **User tracking**: store and update which courses a user tracks for timetable updates.
-- **Daily menu**: retrieve and parse cafeteria menu data.
-- **Synchronization and notifications**: background tasks synchronize lessons and send pending Telegram messages.
+- **Timetable browsing**: browse faculties → departments → courses via inline keyboards.
+- **Course tracking**: tap a course to toggle tracking it; tracked courses are marked with ✅.
 
-These capabilities are implemented in the controller and service layers under
-`manashelper-bot/src/main/java/kg/manasuniversity/usbtypec/manashelper`. This is a multi-module Maven project;
-`manashelper-bot` is the Telegram bot module.
-
-## API documentation (OpenAPI)
-
-This project exposes an OpenAPI schema and Swagger UI via Springdoc.
-
-When the application is running:
-
-- OpenAPI JSON: `http://localhost:${SERVER_PORT}/v3/api-docs`
-- Swagger UI: `http://localhost:${SERVER_PORT}/swagger-ui/index.html`
-
-If you are using a different base URL or port, replace `SERVER_PORT` accordingly.
+There is no REST API — all interaction happens through Telegram long-polling.
 
 ## Quick start
 
-1. Provide the required environment variables (see `manashelper-bot/src/main/resources/application.yml`).
-2. Run the application (for example, `mvn -pl manashelper-bot spring-boot:run`).
-3. Open the Swagger UI link above to browse the API.
+Requires Python 3.13+, [`uv`](https://docs.astral.sh/uv/), and Docker (for the dev Postgres instance).
+
+1. Start Postgres: `docker compose -f docker-compose.dev.yml up -d`
+2. Create a `.env` file at the repo root:
+   ```
+   TELEGRAM_BOT_TOKEN=<your bot token>
+   DATASOURCE_HOST=localhost
+   DATASOURCE_NAME=db123
+   DATASOURCE_USERNAME=user123
+   DATASOURCE_PASSWORD=pass123
+   ```
+3. Install dependencies: `uv sync`
+4. Apply migrations (this also runs automatically on every boot): `uv run alembic upgrade head`
+5. Run the bot: `uv run python -m manashelper.main`
+
+## Development
+
+```
+uv run pytest                  # tests (needs the dev Postgres running)
+uv run ruff check .            # lint
+uv run ruff format .           # format
+uv run mypy src/manashelper    # type check
+```
+
+## Deployment
+
+Pushing a `v*` git tag runs `.github/workflows/ci-cd.yml`: lint + type-check + tests against a Postgres service
+container, then — only if that passes — a Docker build/push to `usbtypec1/manashelper` on Docker Hub, followed by
+a remote deploy over SSH via `docker compose`.

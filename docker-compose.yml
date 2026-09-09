@@ -16,11 +16,11 @@ services:
   app:
     image: usbtypec1/manashelper:${VERSION}
     container_name: app
-    ports:
-      - "${SERVER_PORT}:8080"
     restart: always
     env_file:
       - .env
+    depends_on:
+      - db
 
 volumes:
   postgres_data:
