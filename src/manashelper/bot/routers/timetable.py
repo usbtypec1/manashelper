@@ -11,10 +11,10 @@ from manashelper.bot.keyboards.timetable import (
     build_no_tracked_courses_keyboard,
     build_schedule_days_keyboard,
 )
-from manashelper.services.course_service import CourseNotFoundError, CourseService, UserNotFoundError
-from manashelper.services.daily_menu_service import BISHKEK_TZ
-from manashelper.services.department_service import DepartmentService
-from manashelper.services.schedule_service import NoTrackedCoursesError, ScheduleLessonModel, ScheduleService
+from manashelper.services.course import CourseNotFoundError, CourseService, UserNotFoundError
+from manashelper.services.daily_menu import BISHKEK_TZ
+from manashelper.services.department import DepartmentService
+from manashelper.services.schedule import NoTrackedCoursesError, ScheduleLessonModel, ScheduleService
 from manashelper.services.timetable_formatter import format_day_schedule
 
 router = Router(name="timetable")

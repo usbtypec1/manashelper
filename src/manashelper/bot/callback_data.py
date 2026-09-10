@@ -3,8 +3,8 @@ from enum import StrEnum
 
 from aiogram.filters.callback_data import CallbackData
 
-from manashelper.services.food_menu_notification_settings_service import FoodMenuMeal
-from manashelper.services.notification_settings_service import NotificationSetting
+from manashelper.services.food_menu_notification_settings import FoodMenuMeal
+from manashelper.services.notification_settings import NotificationSetting
 
 
 class FacultyCallback(CallbackData, prefix="faculty"):

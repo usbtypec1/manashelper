@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from manashelper.services.schedule_service import ScheduleLessonModel, parse_time_range_start_minutes
-from manashelper.services.timetable_sync_service import LessonChange
+from manashelper.services.schedule import ScheduleLessonModel, parse_time_range_start_minutes
+from manashelper.services.timetable_sync import LessonChange
 
 WEEKDAY_LABELS = {1: "Пн", 2: "Вт", 3: "Ср", 4: "Чт", 5: "Пт"}
 WEEKDAY_FULL_LABELS = {1: "Понедельник", 2: "Вторник", 3: "Среда", 4: "Четверг", 5: "Пятница"}

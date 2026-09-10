@@ -28,7 +28,7 @@ from manashelper.scheduler_jobs import (
     sync_daily_menus_job,
     sync_timetable_job,
 )
-from manashelper.services.daily_menu_service import BISHKEK_TZ
+from manashelper.services.daily_menu import BISHKEK_TZ
 
 logger = logging.getLogger(__name__)
 

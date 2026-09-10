@@ -9,9 +9,9 @@ from manashelper.bot.callback_data import (
     SettingsAction,
     SettingsCallback,
 )
-from manashelper.services.course_service import CourseSummary
-from manashelper.services.department_service import DepartmentSummary
-from manashelper.services.faculty_service import FacultyModel
+from manashelper.services.course import CourseSummary
+from manashelper.services.department import DepartmentSummary
+from manashelper.services.faculty import FacultyModel
 from manashelper.services.timetable_formatter import WEEKDAY_LABELS
 
 

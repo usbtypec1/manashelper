@@ -1,7 +1,7 @@
 from aiogram.enums import ParseMode
 from aiogram.types import InputMediaAudio, InputMediaDocument, InputMediaLivePhoto, InputMediaPhoto, InputMediaVideo
 
-from manashelper.services.daily_menu_service import DailyMenuModel
+from manashelper.services.daily_menu import DailyMenuModel
 
 MediaGroupItem = InputMediaAudio | InputMediaDocument | InputMediaLivePhoto | InputMediaPhoto | InputMediaVideo
 

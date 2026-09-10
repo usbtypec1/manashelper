@@ -8,7 +8,7 @@ from manashelper.bot.callback_data import (
     SettingsAction,
     SettingsCallback,
 )
-from manashelper.services.food_menu_notification_settings_service import (
+from manashelper.services.food_menu_notification_settings import (
     FoodMenuMeal,
     FoodMenuNotificationSettingsSummary,
 )

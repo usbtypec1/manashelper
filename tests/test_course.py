@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from manashelper.db.models import Course, Department, Faculty, User
 from manashelper.repositories.course_repository import CourseRepository
 from manashelper.repositories.user_repository import UserRepository
-from manashelper.services.course_service import CourseNotFoundError, CourseService, UserNotFoundError
+from manashelper.services.course import CourseNotFoundError, CourseService, UserNotFoundError
 
 
 async def _make_department(session: AsyncSession) -> Department:

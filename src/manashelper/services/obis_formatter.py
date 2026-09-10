@@ -1,5 +1,5 @@
-from manashelper.services.obis_notification_service import ExamGradeChange, LessonSkipChange, SkipType
-from manashelper.services.obis_service import LessonAttendanceModel, LessonExamsModel
+from manashelper.services.obis import LessonAttendanceModel, LessonExamsModel
+from manashelper.services.obis_notification import ExamGradeChange, LessonSkipChange, SkipType
 
 
 def format_exam_grades(lessons: list[LessonExamsModel]) -> str:

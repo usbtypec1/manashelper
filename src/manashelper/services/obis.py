@@ -8,7 +8,7 @@ from manashelper.scraping.obis_parser import (
     parse_attendance_page,
     parse_exam_grades_page,
 )
-from manashelper.services.crypto_service import CryptoService, DecryptionError
+from manashelper.services.crypto import CryptoService, DecryptionError
 
 THEORY_SKIPS_THRESHOLD = 30.0
 PRACTICE_SKIPS_THRESHOLD = 20.0
@@ -50,6 +50,34 @@ class LessonAttendanceModel:
     practice_skippable: int | None
 
 
+def _compute_skippable(percentage: float | None, threshold: float) -> int | None:
+    if percentage is None:
+        return None
+    diff = threshold - percentage
+    if diff == SKIP_PERCENTAGE_PER_LESSON:
+        return 0
+    return int(diff / SKIP_PERCENTAGE_PER_LESSON)
+
+
+def _to_exams_model(lesson: ScrapedLessonExams) -> LessonExamsModel:
+    return LessonExamsModel(
+        lesson_name=lesson.lesson_name,
+        lesson_code=lesson.lesson_code,
+        exams=[ExamModel(name=exam.name, score=exam.score) for exam in lesson.exams],
+    )
+
+
+def _to_attendance_model(lesson: ScrapedLessonAttendance) -> LessonAttendanceModel:
+    return LessonAttendanceModel(
+        lesson_name=lesson.lesson_name,
+        lesson_code=lesson.lesson_code,
+        theory_skips_percentage=lesson.theory_skips_percentage,
+        practice_skips_percentage=lesson.practice_skips_percentage,
+        theory_skippable=_compute_skippable(lesson.theory_skips_percentage, THEORY_SKIPS_THRESHOLD),
+        practice_skippable=_compute_skippable(lesson.practice_skips_percentage, PRACTICE_SKIPS_THRESHOLD),
+    )
+
+
 class ObisService:
     def __init__(
         self,
@@ -87,12 +115,12 @@ class ObisService:
     async def get_exam_grades(self, user_id: int) -> list[LessonExamsModel]:
         student_number, plain_password = await self._get_credentials(user_id)
         html = await self._obis_client.fetch_exam_grades_html(student_number, plain_password)
-        return [self._to_exams_model(lesson) for lesson in parse_exam_grades_page(html)]
+        return [_to_exams_model(lesson) for lesson in parse_exam_grades_page(html)]
 
     async def get_attendance(self, user_id: int) -> list[LessonAttendanceModel]:
         student_number, plain_password = await self._get_credentials(user_id)
         html = await self._obis_client.fetch_attendance_html(student_number, plain_password)
-        return [self._to_attendance_model(lesson) for lesson in parse_attendance_page(html)]
+        return [_to_attendance_model(lesson) for lesson in parse_attendance_page(html)]
 
     async def _get_credentials(self, user_id: int) -> tuple[str, str]:
         user = await self._user_repository.get_by_id(user_id)
@@ -107,31 +135,3 @@ class ObisService:
             raise UserHasNoCredentialsError(user_id) from error
 
         return user.student_number, plain_password
-
-    @staticmethod
-    def _to_exams_model(lesson: ScrapedLessonExams) -> LessonExamsModel:
-        return LessonExamsModel(
-            lesson_name=lesson.lesson_name,
-            lesson_code=lesson.lesson_code,
-            exams=[ExamModel(name=exam.name, score=exam.score) for exam in lesson.exams],
-        )
-
-    @staticmethod
-    def _to_attendance_model(lesson: ScrapedLessonAttendance) -> LessonAttendanceModel:
-        return LessonAttendanceModel(
-            lesson_name=lesson.lesson_name,
-            lesson_code=lesson.lesson_code,
-            theory_skips_percentage=lesson.theory_skips_percentage,
-            practice_skips_percentage=lesson.practice_skips_percentage,
-            theory_skippable=_compute_skippable(lesson.theory_skips_percentage, THEORY_SKIPS_THRESHOLD),
-            practice_skippable=_compute_skippable(lesson.practice_skips_percentage, PRACTICE_SKIPS_THRESHOLD),
-        )
-
-
-def _compute_skippable(percentage: float | None, threshold: float) -> int | None:
-    if percentage is None:
-        return None
-    diff = threshold - percentage
-    if diff == SKIP_PERCENTAGE_PER_LESSON:
-        return 0
-    return int(diff / SKIP_PERCENTAGE_PER_LESSON)
