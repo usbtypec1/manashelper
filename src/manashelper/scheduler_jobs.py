@@ -1,18 +1,21 @@
 import logging
+from datetime import datetime
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from dishka import AsyncContainer
 
-from manashelper.bot.keyboards.food_menu import build_unsubscribe_keyboard
+from manashelper.bot.keyboards.food_menu_notifications import build_open_food_menu_notifications_keyboard
 from manashelper.repositories.course_repository import CourseRepository
+from manashelper.repositories.food_menu_notification_settings_repository import (
+    FoodMenuNotificationSettingsRepository,
+)
 from manashelper.repositories.notification_settings_repository import NotificationSettingsRepository
 from manashelper.scraping.obis_client import ObisLoginError
 from manashelper.scraping.obis_parser import ObisParseError
-from manashelper.services.daily_menu_service import DailyMenuModel, DailyMenuNotFoundError, DailyMenuService
+from manashelper.services.daily_menu_service import BISHKEK_TZ, DailyMenuModel, DailyMenuNotFoundError, DailyMenuService
 from manashelper.services.food_menu_formatter import build_photos, format_daily_menu
 from manashelper.services.food_menu_sync_service import FoodMenuSyncService
-from manashelper.services.notification_settings_service import NotificationSetting
 from manashelper.services.obis_formatter import format_exam_grade_change, format_lesson_skip_change
 from manashelper.services.obis_notification_service import ExamGradeChange, LessonSkipChange, ObisNotificationService
 from manashelper.services.obis_service import UserHasNoCredentialsError
@@ -21,11 +24,6 @@ from manashelper.services.timetable_formatter import format_lesson_changes
 from manashelper.services.timetable_sync_service import TimetableSyncService
 
 logger = logging.getLogger(__name__)
-
-_UNSUBSCRIBE_LABELS = {
-    NotificationSetting.BEFORE_LUNCH: "🔕 Отписаться от обеденной рассылки",
-    NotificationSetting.BEFORE_DINNER: "🔕 Отписаться от вечерней рассылки",
-}
 
 
 async def sync_daily_menus_job(container: AsyncContainer) -> None:
@@ -37,12 +35,10 @@ async def sync_daily_menus_job(container: AsyncContainer) -> None:
         logger.exception("Failed to synchronize daily menus")
 
 
-async def _send_daily_menu_broadcast(
-    bot: Bot, daily_menu: DailyMenuModel, user_ids: list[int], setting: NotificationSetting
-) -> None:
+async def _send_daily_menu_broadcast(bot: Bot, daily_menu: DailyMenuModel, user_ids: list[int]) -> None:
     caption = format_daily_menu(daily_menu)
     media = build_photos(caption, daily_menu)
-    keyboard = build_unsubscribe_keyboard(setting, _UNSUBSCRIBE_LABELS[setting])
+    keyboard = build_open_food_menu_notifications_keyboard()
     for user_id in user_ids:
         try:
             await bot.send_media_group(chat_id=user_id, media=media)
@@ -55,14 +51,19 @@ async def broadcast_lunch_menu_job(container: AsyncContainer, bot: Bot) -> None:
     try:
         async with container() as request_container:
             daily_menu_service = await request_container.get(DailyMenuService)
-            notification_settings_repository = await request_container.get(NotificationSettingsRepository)
+            food_menu_notification_settings_repository = await request_container.get(
+                FoodMenuNotificationSettingsRepository
+            )
             try:
                 daily_menu = await daily_menu_service.get_daily_menu_by_skipping_days(0)
             except DailyMenuNotFoundError:
                 logger.warning("No daily menu to broadcast for lunch")
                 return
-            user_ids = await notification_settings_repository.get_user_ids_with_before_lunch_enabled()
-            await _send_daily_menu_broadcast(bot, daily_menu, user_ids, NotificationSetting.BEFORE_LUNCH)
+            weekday = datetime.now(BISHKEK_TZ).date().weekday()
+            user_ids = await food_menu_notification_settings_repository.get_user_ids_with_lunch_enabled_for_weekday(
+                weekday
+            )
+            await _send_daily_menu_broadcast(bot, daily_menu, user_ids)
     except Exception:
         logger.exception("Failed to broadcast lunch menu")
 
@@ -71,14 +72,19 @@ async def broadcast_dinner_menu_job(container: AsyncContainer, bot: Bot) -> None
     try:
         async with container() as request_container:
             daily_menu_service = await request_container.get(DailyMenuService)
-            notification_settings_repository = await request_container.get(NotificationSettingsRepository)
+            food_menu_notification_settings_repository = await request_container.get(
+                FoodMenuNotificationSettingsRepository
+            )
             try:
                 daily_menu = await daily_menu_service.get_daily_menu_by_skipping_days(0)
             except DailyMenuNotFoundError:
                 logger.warning("No daily menu to broadcast for dinner")
                 return
-            user_ids = await notification_settings_repository.get_user_ids_with_before_dinner_enabled()
-            await _send_daily_menu_broadcast(bot, daily_menu, user_ids, NotificationSetting.BEFORE_DINNER)
+            weekday = datetime.now(BISHKEK_TZ).date().weekday()
+            user_ids = await food_menu_notification_settings_repository.get_user_ids_with_dinner_enabled_for_weekday(
+                weekday
+            )
+            await _send_daily_menu_broadcast(bot, daily_menu, user_ids)
     except Exception:
         logger.exception("Failed to broadcast dinner menu")
 

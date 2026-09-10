@@ -3,6 +3,7 @@ from enum import StrEnum
 
 from aiogram.filters.callback_data import CallbackData
 
+from manashelper.services.food_menu_notification_settings_service import FoodMenuMeal
 from manashelper.services.notification_settings_service import NotificationSetting
 
 
@@ -38,6 +39,19 @@ class FoodMenuCallback(CallbackData, prefix="food_menu"):
 class FoodMenuRatingCallback(CallbackData, prefix="food_menu_rating"):
     daily_menu_id: uuid.UUID
     rating: int
+
+
+class FoodMenuNotificationDayCallback(CallbackData, prefix="food_menu_notification_day"):
+    weekday: int
+    meal: FoodMenuMeal
+
+
+class FoodMenuNotificationBulkCallback(CallbackData, prefix="food_menu_notification_bulk"):
+    enable: bool
+
+
+class FoodMenuNotificationNoopCallback(CallbackData, prefix="food_menu_notification_noop"):
+    pass
 
 
 class ObisAction(StrEnum):

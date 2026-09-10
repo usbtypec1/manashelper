@@ -1,0 +1,85 @@
+from aiogram import F, Router
+from aiogram.types import CallbackQuery, Message
+from dishka import FromDishka
+
+from manashelper.bot.callback_data import (
+    FoodMenuNotificationBulkCallback,
+    FoodMenuNotificationDayCallback,
+    FoodMenuNotificationNoopCallback,
+    SettingsAction,
+    SettingsCallback,
+)
+from manashelper.bot.keyboards.food_menu_notifications import build_food_menu_notifications_keyboard
+from manashelper.services.food_menu_notification_settings_service import (
+    FoodMenuNotificationSettingsService,
+    FoodMenuNotificationSettingsSummary,
+    UserNotFoundError,
+)
+
+router = Router(name="food_menu_notifications")
+
+FOOD_MENU_NOTIFICATIONS_TEXT = "🍽 Точечная настройка уведомлений о меню"
+NOOP_HINT_TEXT = "не жмакай сюды"
+
+
+async def _show_food_menu_notifications(
+    callback_query: CallbackQuery, summary: FoodMenuNotificationSettingsSummary
+) -> None:
+    if isinstance(callback_query.message, Message):
+        await callback_query.message.edit_text(
+            FOOD_MENU_NOTIFICATIONS_TEXT, reply_markup=build_food_menu_notifications_keyboard(summary)
+        )
+
+
+@router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_FOOD_MENU_NOTIFICATIONS))
+async def on_open_food_menu_notifications(
+    callback_query: CallbackQuery,
+    food_menu_notification_settings_service: FromDishka[FoodMenuNotificationSettingsService],
+) -> None:
+    try:
+        summary = await food_menu_notification_settings_service.get_settings(callback_query.from_user.id)
+    except UserNotFoundError:
+        await callback_query.answer("Пожалуйста, начните с команды /start", show_alert=True)
+        return
+    await _show_food_menu_notifications(callback_query, summary)
+    await callback_query.answer()
+
+
+@router.callback_query(FoodMenuNotificationDayCallback.filter())
+async def on_toggle_food_menu_notification_day(
+    callback_query: CallbackQuery,
+    callback_data: FoodMenuNotificationDayCallback,
+    food_menu_notification_settings_service: FromDishka[FoodMenuNotificationSettingsService],
+) -> None:
+    try:
+        summary = await food_menu_notification_settings_service.toggle(
+            callback_query.from_user.id, callback_data.weekday, callback_data.meal
+        )
+    except UserNotFoundError:
+        await callback_query.answer("Пожалуйста, начните с команды /start", show_alert=True)
+        return
+    await _show_food_menu_notifications(callback_query, summary)
+    await callback_query.answer()
+
+
+@router.callback_query(FoodMenuNotificationBulkCallback.filter())
+async def on_bulk_toggle_food_menu_notifications(
+    callback_query: CallbackQuery,
+    callback_data: FoodMenuNotificationBulkCallback,
+    food_menu_notification_settings_service: FromDishka[FoodMenuNotificationSettingsService],
+) -> None:
+    try:
+        if callback_data.enable:
+            summary = await food_menu_notification_settings_service.enable_all(callback_query.from_user.id)
+        else:
+            summary = await food_menu_notification_settings_service.disable_all(callback_query.from_user.id)
+    except UserNotFoundError:
+        await callback_query.answer("Пожалуйста, начните с команды /start", show_alert=True)
+        return
+    await _show_food_menu_notifications(callback_query, summary)
+    await callback_query.answer()
+
+
+@router.callback_query(FoodMenuNotificationNoopCallback.filter())
+async def on_food_menu_notification_noop(callback_query: CallbackQuery) -> None:
+    await callback_query.answer(NOOP_HINT_TEXT)

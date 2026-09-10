@@ -13,6 +13,7 @@ from dishka.integrations.aiogram import inject_router, setup_dishka
 from alembic import command
 from manashelper.bot.middlewares.per_chat_ordering import PerChatOrderingMiddleware
 from manashelper.bot.routers.food_menu import router as food_menu_router
+from manashelper.bot.routers.food_menu_notifications import router as food_menu_notifications_router
 from manashelper.bot.routers.obis import router as obis_router
 from manashelper.bot.routers.settings import router as settings_router
 from manashelper.bot.routers.start import router as start_router
@@ -52,6 +53,7 @@ async def main() -> None:
     dispatcher.include_router(start_router)
     dispatcher.include_router(timetable_router)
     dispatcher.include_router(food_menu_router)
+    dispatcher.include_router(food_menu_notifications_router)
     dispatcher.include_router(obis_router)
     dispatcher.include_router(settings_router)
 

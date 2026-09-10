@@ -40,23 +40,3 @@ def build_notifications_keyboard(
     )
     builder.adjust(1)
     return builder.as_markup()
-
-
-def build_food_menu_notifications_keyboard(
-    settings: NotificationSettingsSummary,
-) -> InlineKeyboardMarkup:
-    builder = InlineKeyboardBuilder()
-    builder.button(
-        text=f"{_mark(settings.before_lunch_enabled)} Перед обедом",
-        callback_data=NotificationSettingCallback(setting=NotificationSetting.BEFORE_LUNCH),
-    )
-    builder.button(
-        text=f"{_mark(settings.before_dinner_enabled)} Перед ужином",
-        callback_data=NotificationSettingCallback(setting=NotificationSetting.BEFORE_DINNER),
-    )
-    builder.button(
-        text="◀️ Назад",
-        callback_data=SettingsCallback(action=SettingsAction.BACK_TO_NOTIFICATIONS),
-    )
-    builder.adjust(1)
-    return builder.as_markup()

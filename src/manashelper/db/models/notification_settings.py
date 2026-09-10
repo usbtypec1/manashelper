@@ -12,8 +12,6 @@ class NotificationSettings(Base):
 
     user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"), primary_key=True)
     schedule_changes_enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
-    before_lunch_enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
-    before_dinner_enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     exam_grades_enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     lesson_skips_enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())

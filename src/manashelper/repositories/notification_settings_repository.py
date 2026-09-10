@@ -16,12 +16,6 @@ class NotificationSettingsRepository:
             self._session.add(settings)
         return settings
 
-    async def get_user_ids_with_before_lunch_enabled(self) -> list[int]:
-        return await self._get_user_ids_with_enabled(NotificationSettings.before_lunch_enabled)
-
-    async def get_user_ids_with_before_dinner_enabled(self) -> list[int]:
-        return await self._get_user_ids_with_enabled(NotificationSettings.before_dinner_enabled)
-
     async def get_user_ids_with_exam_grades_enabled(self) -> list[int]:
         return await self._get_user_ids_with_enabled(NotificationSettings.exam_grades_enabled)
 

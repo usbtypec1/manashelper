@@ -3,13 +3,7 @@ import uuid
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from manashelper.bot.callback_data import (
-    FoodMenuCallback,
-    FoodMenuDay,
-    FoodMenuRatingCallback,
-    NotificationSettingCallback,
-)
-from manashelper.services.notification_settings_service import NotificationSetting
+from manashelper.bot.callback_data import FoodMenuCallback, FoodMenuDay, FoodMenuRatingCallback
 
 _DAY_LABELS = {
     FoodMenuDay.TODAY: "📅 Сегодня",
@@ -36,11 +30,4 @@ def build_rating_keyboard(daily_menu_id: uuid.UUID) -> InlineKeyboardMarkup:
             callback_data=FoodMenuRatingCallback(daily_menu_id=daily_menu_id, rating=score),
         )
     builder.adjust(5)
-    return builder.as_markup()
-
-
-def build_unsubscribe_keyboard(setting: NotificationSetting, label: str) -> InlineKeyboardMarkup:
-    builder = InlineKeyboardBuilder()
-    builder.button(text=label, callback_data=NotificationSettingCallback(setting=setting))
-    builder.adjust(1)
     return builder.as_markup()
