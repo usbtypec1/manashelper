@@ -18,12 +18,12 @@ Core capabilities (current):
 - **Cafeteria daily menu**: scraped menu with dish photos/calories and per-user ratings.
 - **OBIS integration**: an aiogram FSM conversation collects a student's OBIS credentials, verifies them against
   the real OBIS login before saving (AES-GCM encrypted at rest), and lets the user fetch their current exam
-  grades and lesson-attendance/skip-budget summary on demand — see `services/obis_service.py`,
+  grades and lesson-attendance/skip-budget summary on demand — see `services/obis.py`,
   `scraping/obis_client.py`, `scraping/obis_parser.py`, `bot/routers/obis.py`.
 - **Notification settings**: a `⚙️ Настройки` menu (`bot/routers/settings.py`) lets each user toggle five
   notification kinds (schedule changes, before-lunch/before-dinner menu pings, exam-grade changes, lesson skips),
   backed by a lazily-created `NotificationSettings` row per user that defaults every toggle to enabled — see
-  `services/notification_settings_service.py`.
+  `services/notification_settings.py`.
 - **Scheduled notifications** (`scheduler_jobs.py`, wired up in `main.py`): the daily menu is broadcast to
   opted-in users at 11:00/17:00 Bishkek time; OBIS exam grades and lesson attendance are polled hourly per user
   and diffed against previously-seen state to notify only on actual changes; each tracked course's timetable is
@@ -78,8 +78,16 @@ subpackages as more of the roadmap gets ported.
 
 **Services return plain dataclasses, never ORM models.** A `service` method called from a `bot/routers` handler
 returns a frozen `dataclass` (e.g. `FacultyModel`, `DepartmentSummary`, `CourseSummary`) or raises, never a
-SQLAlchemy model instance — routers must never hold an ORM object. Map ORM model → dataclass at the bottom of the
-service method (see `CourseService._to_summaries`).
+SQLAlchemy model instance — routers must never hold an ORM object. Map ORM model → dataclass with a private
+module-level helper next to the service class (see `course._to_summaries`, used by `CourseService`).
+
+**`services/` classes exist to hold DI-injected collaborators, not as Java-style ceremony.** A `*Service` class's
+`__init__` takes the repositories (and other collaborators, e.g. `CryptoService`, `ObisClient`) it needs and
+stores them as attributes; its methods are the only thing a router or `scheduler_jobs.py` depends on via
+`FromDishka[...]`/`request_container.get(...)` — the presentation layer never sees a repository, an `AsyncSession`,
+or `Settings` directly, only the service. Pure helper logic that doesn't touch `self` (formatting, mapping a
+scraped/ORM object to a dataclass) is a private module-level function, not a `@staticmethod` — see
+`course._to_summaries` or `obis._to_exams_model`.
 
 ### Telegram update handling (aiogram routers)
 
@@ -156,7 +164,7 @@ anyway (see `ObisService`), so there is no session reuse to preserve, and this a
 (`bot/routers/obis.py::ObisCredentialsForm`, `MemoryStorage` — fine for a single-process deployment; move to
 `RedisStorage` if the bot ever runs multi-worker) rather than the Java version's external Telegram WebApp form,
 and are verified against a real OBIS login before being persisted. Passwords are encrypted at rest with AES-GCM
-(`services/crypto_service.py`) instead of the Java version's raw AES-ECB.
+(`CryptoService`) instead of the Java version's raw AES-ECB.
 
 ### Scheduled jobs & change detection
 
@@ -172,12 +180,12 @@ Three notification-producing jobs all follow one pattern: keep a Postgres table 
 notify on an actual difference (never on the first-ever observation, so enabling a setting doesn't dump a user's
 entire history at them):
 
-- **Timetable sync** (`services/timetable_sync_service.py`, hourly): `scraping/timetable_client.py` +
+- **Timetable sync** (`services/timetable_sync.py`, hourly): `scraping/timetable_client.py` +
   `scraping/timetable_parser.py` scrape `http://timetable.manas.edu.kg/department-printer/{course_id}` (plain
   HTTP, no auth — the site has no HTTPS listener) for every `Course.id`, parsed into one `Lesson` row per
   (course, weekday, time slot) holding a normalized "code name — teacher, room" string; a changed/added/removed
   slot notifies every tracker with `schedule_changes_enabled`.
-- **OBIS exam grades & lesson skips** (`services/obis_notification_service.py`, hourly, one poll per user):
+- **OBIS exam grades & lesson skips** (`services/obis_notification.py`, hourly, one poll per user):
   reuses `ObisService.get_exam_grades`/`get_attendance` (so it's re-login-per-poll like every other OBIS call),
   diffing against `UserExamGrade` (per user+lesson_code+exam_name) and `UserLessonAttendance` (per
   user+lesson_code) rows; a user with no saved OBIS credentials is skipped cheaply (a local DB check) before any

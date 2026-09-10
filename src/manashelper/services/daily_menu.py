@@ -34,6 +34,20 @@ class DailyMenuModel:
     views_count: int
 
 
+def _to_model(daily_menu: DailyMenu, average_rating: float, ratings_count: int) -> DailyMenuModel:
+    return DailyMenuModel(
+        id=daily_menu.id,
+        date=daily_menu.date,
+        dishes=[
+            DishModel(id=dish.id, name=dish.name, photo_url=dish.photo_url, calories=dish.calories)
+            for dish in daily_menu.dishes
+        ],
+        average_rating=average_rating,
+        ratings_count=ratings_count,
+        views_count=daily_menu.views_count,
+    )
+
+
 class DailyMenuService:
     def __init__(
         self,
@@ -57,7 +71,7 @@ class DailyMenuService:
 
         daily_menu.views_count += 1
 
-        return self._to_model(daily_menu, average_rating, len(ratings))
+        return _to_model(daily_menu, average_rating, len(ratings))
 
     async def set_rating(self, user_id: int, daily_menu_id: uuid.UUID, score: int) -> None:
         rating = await self._daily_menu_rating_repository.get_by_daily_menu_and_user(daily_menu_id, user_id)
@@ -67,17 +81,3 @@ class DailyMenuService:
             )
         else:
             rating.score = score
-
-    @staticmethod
-    def _to_model(daily_menu: DailyMenu, average_rating: float, ratings_count: int) -> DailyMenuModel:
-        return DailyMenuModel(
-            id=daily_menu.id,
-            date=daily_menu.date,
-            dishes=[
-                DishModel(id=dish.id, name=dish.name, photo_url=dish.photo_url, calories=dish.calories)
-                for dish in daily_menu.dishes
-            ],
-            average_rating=average_rating,
-            ratings_count=ratings_count,
-            views_count=daily_menu.views_count,
-        )

@@ -18,8 +18,8 @@ from manashelper.bot.keyboards.obis import (
 )
 from manashelper.scraping.obis_client import ObisLoginError
 from manashelper.scraping.obis_parser import ObisParseError
+from manashelper.services.obis import ObisService, UserHasNoCredentialsError, UserNotFoundError
 from manashelper.services.obis_formatter import format_attendance, format_exam_grades
-from manashelper.services.obis_service import ObisService, UserHasNoCredentialsError, UserNotFoundError
 
 router = Router(name="obis")
 

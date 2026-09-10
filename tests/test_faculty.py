@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models import Faculty
 from manashelper.repositories.faculty_repository import FacultyRepository
-from manashelper.services.faculty_service import FacultyService
+from manashelper.services.faculty import FacultyService
 
 
 async def test_get_all_faculties_returns_faculties_sorted_by_name(session: AsyncSession) -> None:

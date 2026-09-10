@@ -13,15 +13,15 @@ from manashelper.repositories.food_menu_notification_settings_repository import 
 from manashelper.repositories.notification_settings_repository import NotificationSettingsRepository
 from manashelper.scraping.obis_client import ObisLoginError
 from manashelper.scraping.obis_parser import ObisParseError
-from manashelper.services.daily_menu_service import BISHKEK_TZ, DailyMenuModel, DailyMenuNotFoundError, DailyMenuService
+from manashelper.services.daily_menu import BISHKEK_TZ, DailyMenuModel, DailyMenuNotFoundError, DailyMenuService
 from manashelper.services.food_menu_formatter import build_photos, format_daily_menu
-from manashelper.services.food_menu_sync_service import FoodMenuSyncService
+from manashelper.services.food_menu_sync import FoodMenuSyncService
+from manashelper.services.obis import UserHasNoCredentialsError
+from manashelper.services.obis import UserNotFoundError as ObisUserNotFoundError
 from manashelper.services.obis_formatter import format_exam_grade_change, format_lesson_skip_change
-from manashelper.services.obis_notification_service import ExamGradeChange, LessonSkipChange, ObisNotificationService
-from manashelper.services.obis_service import UserHasNoCredentialsError
-from manashelper.services.obis_service import UserNotFoundError as ObisUserNotFoundError
+from manashelper.services.obis_notification import ExamGradeChange, LessonSkipChange, ObisNotificationService
 from manashelper.services.timetable_formatter import format_lesson_changes
-from manashelper.services.timetable_sync_service import TimetableSyncService
+from manashelper.services.timetable_sync import TimetableSyncService
 
 logger = logging.getLogger(__name__)
 

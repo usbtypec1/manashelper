@@ -26,6 +26,33 @@ class ScrapedDailyMenu:
     dishes: list[ScrapedDish]
 
 
+def _parse_date(text: str) -> date:
+    match = _DATE_PATTERN.search(text)
+    if match is None:
+        raise FoodMenuParseError(f"Could not parse date from {text!r}")
+    day, month, year = match.groups()
+    return date(int(year), int(month), int(day))
+
+
+def _parse_dish(item: Tag) -> ScrapedDish:
+    image = item.select_one("img")
+    title = item.select_one("h5.item-title")
+    subtitle = item.select_one("h6.item-subtitle")
+    if image is None or title is None or subtitle is None:
+        raise FoodMenuParseError("Dish card is missing an expected element")
+
+    photo_url = image.get("src")
+    if not isinstance(photo_url, str):
+        raise FoodMenuParseError("Dish image is missing a src attribute")
+
+    name = " ".join(title.get_text().split())
+    calories_match = _CALORIES_PATTERN.search(subtitle.get_text())
+    if calories_match is None:
+        raise FoodMenuParseError(f"Could not parse calories from {subtitle.get_text()!r}")
+
+    return ScrapedDish(name=name, photo_url=photo_url, calories=int(calories_match.group(1)))
+
+
 class FoodMenuParser:
     def parse(self, html: str) -> list[ScrapedDailyMenu]:
         soup = BeautifulSoup(html, "lxml")
@@ -41,35 +68,8 @@ class FoodMenuParser:
 
         return [
             ScrapedDailyMenu(
-                date=self._parse_date(section_head.get_text()),
-                dishes=[self._parse_dish(item) for item in row.find_all("div", class_="item")],
+                date=_parse_date(section_head.get_text()),
+                dishes=[_parse_dish(item) for item in row.find_all("div", class_="item")],
             )
             for section_head, row in zip(section_heads, rows, strict=True)
         ]
-
-    @staticmethod
-    def _parse_date(text: str) -> date:
-        match = _DATE_PATTERN.search(text)
-        if match is None:
-            raise FoodMenuParseError(f"Could not parse date from {text!r}")
-        day, month, year = match.groups()
-        return date(int(year), int(month), int(day))
-
-    @staticmethod
-    def _parse_dish(item: Tag) -> ScrapedDish:
-        image = item.select_one("img")
-        title = item.select_one("h5.item-title")
-        subtitle = item.select_one("h6.item-subtitle")
-        if image is None or title is None or subtitle is None:
-            raise FoodMenuParseError("Dish card is missing an expected element")
-
-        photo_url = image.get("src")
-        if not isinstance(photo_url, str):
-            raise FoodMenuParseError("Dish image is missing a src attribute")
-
-        name = " ".join(title.get_text().split())
-        calories_match = _CALORIES_PATTERN.search(subtitle.get_text())
-        if calories_match is None:
-            raise FoodMenuParseError(f"Could not parse calories from {subtitle.get_text()!r}")
-
-        return ScrapedDish(name=name, photo_url=photo_url, calories=int(calories_match.group(1)))

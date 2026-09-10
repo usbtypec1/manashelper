@@ -10,7 +10,7 @@ from manashelper.bot.callback_data import (
     SettingsCallback,
 )
 from manashelper.bot.keyboards.food_menu_notifications import build_food_menu_notifications_keyboard
-from manashelper.services.food_menu_notification_settings_service import (
+from manashelper.services.food_menu_notification_settings import (
     FoodMenuNotificationSettingsService,
     FoodMenuNotificationSettingsSummary,
     UserNotFoundError,

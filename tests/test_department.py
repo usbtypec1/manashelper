@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models import Department, Faculty
 from manashelper.repositories.department_repository import DepartmentRepository
-from manashelper.services.department_service import DepartmentService
+from manashelper.services.department import DepartmentService
 
 
 async def test_get_departments_by_faculty_returns_only_that_faculty(session: AsyncSession) -> None:

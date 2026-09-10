@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from manashelper.repositories.lesson_repository import LessonRepository
 from manashelper.repositories.user_repository import UserRepository
-from manashelper.services.course_service import UserNotFoundError
+from manashelper.services.course import UserNotFoundError
 
 
 class NoTrackedCoursesError(Exception):

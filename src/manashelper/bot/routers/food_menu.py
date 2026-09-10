@@ -5,7 +5,7 @@ from dishka import FromDishka
 
 from manashelper.bot.callback_data import FOOD_MENU_DAY_TO_SKIP_DAYS, FoodMenuCallback, FoodMenuRatingCallback
 from manashelper.bot.keyboards.food_menu import build_day_keyboard, build_rating_keyboard
-from manashelper.services.daily_menu_service import DailyMenuNotFoundError, DailyMenuService
+from manashelper.services.daily_menu import DailyMenuNotFoundError, DailyMenuService
 from manashelper.services.food_menu_formatter import build_photos, format_daily_menu, format_not_found
 
 router = Router(name="food_menu")

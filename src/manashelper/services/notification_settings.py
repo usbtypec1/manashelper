@@ -25,6 +25,14 @@ class NotificationSettingsSummary:
     lesson_skips_enabled: bool
 
 
+def _to_summary(settings: NotificationSettings) -> NotificationSettingsSummary:
+    return NotificationSettingsSummary(
+        schedule_changes_enabled=settings.schedule_changes_enabled,
+        exam_grades_enabled=settings.exam_grades_enabled,
+        lesson_skips_enabled=settings.lesson_skips_enabled,
+    )
+
+
 class NotificationSettingsService:
     def __init__(
         self,
@@ -36,7 +44,7 @@ class NotificationSettingsService:
 
     async def get_settings(self, user_id: int) -> NotificationSettingsSummary:
         settings = await self._get_or_create(user_id)
-        return self._to_summary(settings)
+        return _to_summary(settings)
 
     async def toggle_setting(self, user_id: int, setting: NotificationSetting) -> NotificationSettingsSummary:
         settings = await self._get_or_create(user_id)
@@ -47,18 +55,10 @@ class NotificationSettingsService:
                 settings.exam_grades_enabled = not settings.exam_grades_enabled
             case NotificationSetting.LESSON_SKIPS:
                 settings.lesson_skips_enabled = not settings.lesson_skips_enabled
-        return self._to_summary(settings)
+        return _to_summary(settings)
 
     async def _get_or_create(self, user_id: int) -> NotificationSettings:
         user = await self._user_repository.get_by_id(user_id)
         if user is None:
             raise UserNotFoundError(user_id)
         return await self._notification_settings_repository.get_or_create(user_id)
-
-    @staticmethod
-    def _to_summary(settings: NotificationSettings) -> NotificationSettingsSummary:
-        return NotificationSettingsSummary(
-            schedule_changes_enabled=settings.schedule_changes_enabled,
-            exam_grades_enabled=settings.exam_grades_enabled,
-            lesson_skips_enabled=settings.lesson_skips_enabled,
-        )

@@ -2,7 +2,7 @@ from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from manashelper.bot.callback_data import NotificationSettingCallback, SettingsAction, SettingsCallback
-from manashelper.services.notification_settings_service import NotificationSetting, NotificationSettingsSummary
+from manashelper.services.notification_settings import NotificationSetting, NotificationSettingsSummary
 
 
 def _mark(is_enabled: bool) -> str:

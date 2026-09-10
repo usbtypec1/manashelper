@@ -15,6 +15,15 @@ class LessonChange:
     new_content: str | None
 
 
+def _format_slot_content(slot: ScrapedTimeSlot) -> str:
+    return " | ".join(_format_lesson(lesson) for lesson in slot.lessons)
+
+
+def _format_lesson(lesson: ScrapedLessonSlot) -> str:
+    code_prefix = f"{lesson.lesson_code} " if lesson.lesson_code else ""
+    return f"{code_prefix}{lesson.lesson_name} — {lesson.teacher}, {lesson.room}"
+
+
 class TimetableSyncService:
     def __init__(self, timetable_client: TimetableClient, lesson_repository: LessonRepository) -> None:
         self._timetable_client = timetable_client
@@ -64,12 +73,3 @@ class TimetableSyncService:
                 await self._lesson_repository.delete(existing)
 
         return changes
-
-
-def _format_slot_content(slot: ScrapedTimeSlot) -> str:
-    return " | ".join(_format_lesson(lesson) for lesson in slot.lessons)
-
-
-def _format_lesson(lesson: ScrapedLessonSlot) -> str:
-    code_prefix = f"{lesson.lesson_code} " if lesson.lesson_code else ""
-    return f"{code_prefix}{lesson.lesson_name} — {lesson.teacher}, {lesson.room}"

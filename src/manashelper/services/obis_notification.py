@@ -5,7 +5,7 @@ from enum import StrEnum
 from manashelper.db.models import UserExamGrade, UserLessonAttendance
 from manashelper.repositories.user_exam_grade_repository import UserExamGradeRepository
 from manashelper.repositories.user_lesson_attendance_repository import UserLessonAttendanceRepository
-from manashelper.services.obis_service import ObisService
+from manashelper.services.obis import ObisService
 
 
 @dataclass(frozen=True, slots=True)

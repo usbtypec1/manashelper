@@ -24,18 +24,18 @@ from manashelper.scraping.food_menu_client import FoodMenuClient
 from manashelper.scraping.food_menu_parser import FoodMenuParser
 from manashelper.scraping.obis_client import ObisClient
 from manashelper.scraping.timetable_client import TimetableClient
-from manashelper.services.course_service import CourseService
-from manashelper.services.crypto_service import CryptoService
-from manashelper.services.daily_menu_service import DailyMenuService
-from manashelper.services.department_service import DepartmentService
-from manashelper.services.faculty_service import FacultyService
-from manashelper.services.food_menu_notification_settings_service import FoodMenuNotificationSettingsService
-from manashelper.services.food_menu_sync_service import FoodMenuSyncService
-from manashelper.services.notification_settings_service import NotificationSettingsService
-from manashelper.services.obis_notification_service import ObisNotificationService
-from manashelper.services.obis_service import ObisService
-from manashelper.services.schedule_service import ScheduleService
-from manashelper.services.timetable_sync_service import TimetableSyncService
+from manashelper.services.course import CourseService
+from manashelper.services.crypto import CryptoService
+from manashelper.services.daily_menu import DailyMenuService
+from manashelper.services.department import DepartmentService
+from manashelper.services.faculty import FacultyService
+from manashelper.services.food_menu_notification_settings import FoodMenuNotificationSettingsService
+from manashelper.services.food_menu_sync import FoodMenuSyncService
+from manashelper.services.notification_settings import NotificationSettingsService
+from manashelper.services.obis import ObisService
+from manashelper.services.obis_notification import ObisNotificationService
+from manashelper.services.schedule import ScheduleService
+from manashelper.services.timetable_sync import TimetableSyncService
 
 
 class AppProvider(Provider):

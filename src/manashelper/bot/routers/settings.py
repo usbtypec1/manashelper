@@ -6,14 +6,14 @@ from manashelper.bot.callback_data import NotificationSettingCallback, SettingsA
 from manashelper.bot.keyboards.obis import build_obis_settings_keyboard
 from manashelper.bot.keyboards.settings import build_notifications_keyboard, build_settings_keyboard
 from manashelper.bot.keyboards.timetable import build_faculty_keyboard
-from manashelper.services.faculty_service import FacultyService
-from manashelper.services.notification_settings_service import (
+from manashelper.services.faculty import FacultyService
+from manashelper.services.notification_settings import (
     NotificationSettingsService,
     NotificationSettingsSummary,
     UserNotFoundError,
 )
-from manashelper.services.obis_service import ObisService
-from manashelper.services.obis_service import UserNotFoundError as ObisUserNotFoundError
+from manashelper.services.obis import ObisService
+from manashelper.services.obis import UserNotFoundError as ObisUserNotFoundError
 
 router = Router(name="settings")
 
