@@ -3,22 +3,26 @@ from aiogram.types import CallbackQuery, Message
 from dishka import FromDishka
 
 from manashelper.bot.callback_data import CourseCallback, DepartmentCallback, FacultyCallback
-from manashelper.bot.keyboards.timetable import (
-    build_course_keyboard,
-    build_department_keyboard,
-    build_faculty_keyboard,
-)
+from manashelper.bot.keyboards.timetable import build_course_keyboard, build_department_keyboard
 from manashelper.services.course_service import CourseNotFoundError, CourseService, UserNotFoundError
 from manashelper.services.department_service import DepartmentService
-from manashelper.services.faculty_service import FacultyService
+from manashelper.services.schedule_service import ScheduleService
+from manashelper.services.timetable_formatter import format_schedule
 
 router = Router(name="timetable")
 
 
 @router.message(F.text == "📅 Расписание")
-async def list_faculties(message: Message, faculty_service: FromDishka[FacultyService]) -> None:
-    faculties = await faculty_service.get_all_faculties()
-    await message.answer("Список факультетов", reply_markup=build_faculty_keyboard(faculties))
+async def show_schedule(message: Message, schedule_service: FromDishka[ScheduleService]) -> None:
+    if message.from_user is None:
+        return
+
+    try:
+        lessons = await schedule_service.get_user_schedule(message.from_user.id)
+    except UserNotFoundError:
+        await message.answer("Пожалуйста, начните с команды /start")
+        return
+    await message.answer(format_schedule(lessons))
 
 
 @router.callback_query(FacultyCallback.filter())

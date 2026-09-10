@@ -8,6 +8,8 @@ from manashelper.bot.keyboards.settings import (
     build_notifications_keyboard,
     build_settings_keyboard,
 )
+from manashelper.bot.keyboards.timetable import build_faculty_keyboard
+from manashelper.services.faculty_service import FacultyService
 from manashelper.services.notification_settings_service import (
     NotificationSetting,
     NotificationSettingsService,
@@ -72,6 +74,17 @@ async def on_open_food_menu_notifications(
         await callback_query.answer("Пожалуйста, начните с команды /start", show_alert=True)
         return
     await _show_food_menu_notifications(callback_query, settings)
+    await callback_query.answer()
+
+
+@router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_COURSE_TRACKING))
+async def on_open_course_tracking(
+    callback_query: CallbackQuery,
+    faculty_service: FromDishka[FacultyService],
+) -> None:
+    faculties = await faculty_service.get_all_faculties()
+    if isinstance(callback_query.message, Message):
+        await callback_query.message.edit_text("Список факультетов", reply_markup=build_faculty_keyboard(faculties))
     await callback_query.answer()
 
 
