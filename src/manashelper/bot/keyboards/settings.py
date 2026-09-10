@@ -12,14 +12,14 @@ def _mark(is_enabled: bool) -> str:
 def build_settings_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text="🔔 Уведомления", callback_data=SettingsCallback(action=SettingsAction.OPEN_NOTIFICATIONS))
-    builder.button(
-        text="📚 Мои уроки", callback_data=SettingsCallback(action=SettingsAction.OPEN_COURSE_TRACKING)
-    )
+    builder.button(text="📚 Мои уроки", callback_data=SettingsCallback(action=SettingsAction.OPEN_COURSE_TRACKING))
     builder.adjust(1)
     return builder.as_markup()
 
 
-def build_notifications_keyboard(settings: NotificationSettingsSummary) -> InlineKeyboardMarkup:
+def build_notifications_keyboard(
+    settings: NotificationSettingsSummary,
+) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
         text=f"{_mark(settings.schedule_changes_enabled)} Изменения расписания",
@@ -41,7 +41,9 @@ def build_notifications_keyboard(settings: NotificationSettingsSummary) -> Inlin
     return builder.as_markup()
 
 
-def build_food_menu_notifications_keyboard(settings: NotificationSettingsSummary) -> InlineKeyboardMarkup:
+def build_food_menu_notifications_keyboard(
+    settings: NotificationSettingsSummary,
+) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
         text=f"{_mark(settings.before_lunch_enabled)} Перед обедом",

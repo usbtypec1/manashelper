@@ -1,7 +1,13 @@
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from manashelper.bot.callback_data import CourseCallback, DepartmentCallback, FacultyCallback
+from manashelper.bot.callback_data import (
+    CourseCallback,
+    DepartmentCallback,
+    FacultyCallback,
+    SettingsAction,
+    SettingsCallback,
+)
 from manashelper.services.course_service import CourseSummary
 from manashelper.services.department_service import DepartmentSummary
 from manashelper.services.faculty_service import FacultyModel
@@ -20,6 +26,12 @@ def build_department_keyboard(departments: list[DepartmentSummary]) -> InlineKey
     for department in departments:
         builder.button(text=department.name, callback_data=DepartmentCallback(id=department.id))
     builder.adjust(1)
+    return builder.as_markup()
+
+
+def build_no_tracked_courses_keyboard() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(text="📚 Выбрать курсы", callback_data=SettingsCallback(action=SettingsAction.OPEN_COURSE_TRACKING))
     return builder.as_markup()
 
 
