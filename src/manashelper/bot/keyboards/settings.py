@@ -12,14 +12,15 @@ def _mark(is_enabled: bool) -> str:
 def build_settings_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text="🔔 Уведомления", callback_data=SettingsCallback(action=SettingsAction.OPEN_NOTIFICATIONS))
-    builder.button(
-        text="📚 Мои уроки", callback_data=SettingsCallback(action=SettingsAction.OPEN_COURSE_TRACKING)
-    )
+    builder.button(text="📚 Мои уроки", callback_data=SettingsCallback(action=SettingsAction.OPEN_COURSE_TRACKING))
+    builder.button(text="🔑 Данные OBIS", callback_data=SettingsCallback(action=SettingsAction.OPEN_OBIS))
     builder.adjust(1)
     return builder.as_markup()
 
 
-def build_notifications_keyboard(settings: NotificationSettingsSummary) -> InlineKeyboardMarkup:
+def build_notifications_keyboard(
+    settings: NotificationSettingsSummary,
+) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
         text=f"{_mark(settings.schedule_changes_enabled)} Изменения расписания",
@@ -36,24 +37,6 @@ def build_notifications_keyboard(settings: NotificationSettingsSummary) -> Inlin
     builder.button(
         text=f"{_mark(settings.lesson_skips_enabled)} Пропуски уроков",
         callback_data=NotificationSettingCallback(setting=NotificationSetting.LESSON_SKIPS),
-    )
-    builder.adjust(1)
-    return builder.as_markup()
-
-
-def build_food_menu_notifications_keyboard(settings: NotificationSettingsSummary) -> InlineKeyboardMarkup:
-    builder = InlineKeyboardBuilder()
-    builder.button(
-        text=f"{_mark(settings.before_lunch_enabled)} Перед обедом",
-        callback_data=NotificationSettingCallback(setting=NotificationSetting.BEFORE_LUNCH),
-    )
-    builder.button(
-        text=f"{_mark(settings.before_dinner_enabled)} Перед ужином",
-        callback_data=NotificationSettingCallback(setting=NotificationSetting.BEFORE_DINNER),
-    )
-    builder.button(
-        text="◀️ Назад",
-        callback_data=SettingsCallback(action=SettingsAction.BACK_TO_NOTIFICATIONS),
     )
     builder.adjust(1)
     return builder.as_markup()

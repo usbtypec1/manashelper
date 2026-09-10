@@ -12,6 +12,9 @@ from manashelper.repositories.daily_menu_repository import DailyMenuRepository
 from manashelper.repositories.department_repository import DepartmentRepository
 from manashelper.repositories.dish_repository import DishRepository
 from manashelper.repositories.faculty_repository import FacultyRepository
+from manashelper.repositories.food_menu_notification_settings_repository import (
+    FoodMenuNotificationSettingsRepository,
+)
 from manashelper.repositories.lesson_repository import LessonRepository
 from manashelper.repositories.notification_settings_repository import NotificationSettingsRepository
 from manashelper.repositories.user_exam_grade_repository import UserExamGradeRepository
@@ -26,6 +29,7 @@ from manashelper.services.crypto_service import CryptoService
 from manashelper.services.daily_menu_service import DailyMenuService
 from manashelper.services.department_service import DepartmentService
 from manashelper.services.faculty_service import FacultyService
+from manashelper.services.food_menu_notification_settings_service import FoodMenuNotificationSettingsService
 from manashelper.services.food_menu_sync_service import FoodMenuSyncService
 from manashelper.services.notification_settings_service import NotificationSettingsService
 from manashelper.services.obis_notification_service import ObisNotificationService
@@ -84,6 +88,7 @@ class RequestProvider(Provider):
     daily_menu_repository = provide(DailyMenuRepository)
     daily_menu_rating_repository = provide(DailyMenuRatingRepository)
     notification_settings_repository = provide(NotificationSettingsRepository)
+    food_menu_notification_settings_repository = provide(FoodMenuNotificationSettingsRepository)
     lesson_repository = provide(LessonRepository)
     user_exam_grade_repository = provide(UserExamGradeRepository)
     user_lesson_attendance_repository = provide(UserLessonAttendanceRepository)
@@ -95,6 +100,7 @@ class RequestProvider(Provider):
     food_menu_sync_service = provide(FoodMenuSyncService)
     obis_service = provide(ObisService)
     notification_settings_service = provide(NotificationSettingsService)
+    food_menu_notification_settings_service = provide(FoodMenuNotificationSettingsService)
     obis_notification_service = provide(ObisNotificationService)
     timetable_sync_service = provide(TimetableSyncService)
     schedule_service = provide(ScheduleService)

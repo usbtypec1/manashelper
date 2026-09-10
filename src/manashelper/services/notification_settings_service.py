@@ -14,8 +14,6 @@ class UserNotFoundError(Exception):
 
 class NotificationSetting(StrEnum):
     SCHEDULE_CHANGES = "schedule_changes"
-    BEFORE_LUNCH = "before_lunch"
-    BEFORE_DINNER = "before_dinner"
     EXAM_GRADES = "exam_grades"
     LESSON_SKIPS = "lesson_skips"
 
@@ -23,8 +21,6 @@ class NotificationSetting(StrEnum):
 @dataclass(frozen=True, slots=True)
 class NotificationSettingsSummary:
     schedule_changes_enabled: bool
-    before_lunch_enabled: bool
-    before_dinner_enabled: bool
     exam_grades_enabled: bool
     lesson_skips_enabled: bool
 
@@ -47,10 +43,6 @@ class NotificationSettingsService:
         match setting:
             case NotificationSetting.SCHEDULE_CHANGES:
                 settings.schedule_changes_enabled = not settings.schedule_changes_enabled
-            case NotificationSetting.BEFORE_LUNCH:
-                settings.before_lunch_enabled = not settings.before_lunch_enabled
-            case NotificationSetting.BEFORE_DINNER:
-                settings.before_dinner_enabled = not settings.before_dinner_enabled
             case NotificationSetting.EXAM_GRADES:
                 settings.exam_grades_enabled = not settings.exam_grades_enabled
             case NotificationSetting.LESSON_SKIPS:
@@ -67,8 +59,6 @@ class NotificationSettingsService:
     def _to_summary(settings: NotificationSettings) -> NotificationSettingsSummary:
         return NotificationSettingsSummary(
             schedule_changes_enabled=settings.schedule_changes_enabled,
-            before_lunch_enabled=settings.before_lunch_enabled,
-            before_dinner_enabled=settings.before_dinner_enabled,
             exam_grades_enabled=settings.exam_grades_enabled,
             lesson_skips_enabled=settings.lesson_skips_enabled,
         )

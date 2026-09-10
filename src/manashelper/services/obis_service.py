@@ -71,6 +71,19 @@ class ObisService:
         user.student_number = student_number
         user.encrypted_password = self._crypto_service.encrypt(plain_password)
 
+    async def has_credentials(self, user_id: int) -> bool:
+        user = await self._user_repository.get_by_id(user_id)
+        if user is None:
+            raise UserNotFoundError(user_id)
+        return user.student_number is not None and user.encrypted_password is not None
+
+    async def clear_credentials(self, user_id: int) -> None:
+        user = await self._user_repository.get_by_id(user_id)
+        if user is None:
+            raise UserNotFoundError(user_id)
+        user.student_number = None
+        user.encrypted_password = None
+
     async def get_exam_grades(self, user_id: int) -> list[LessonExamsModel]:
         student_number, plain_password = await self._get_credentials(user_id)
         html = await self._obis_client.fetch_exam_grades_html(student_number, plain_password)

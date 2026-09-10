@@ -5,11 +5,23 @@ from manashelper.repositories.user_repository import UserRepository
 from manashelper.services.course_service import UserNotFoundError
 
 
+class NoTrackedCoursesError(Exception):
+    def __init__(self, user_id: int) -> None:
+        super().__init__(f"User {user_id} has no tracked courses")
+        self.user_id = user_id
+
+
 @dataclass(frozen=True, slots=True)
 class ScheduleLessonModel:
     weekday: int
     time_range: str
     content: str
+
+
+def parse_time_range_start_minutes(time_range: str) -> int:
+    """Minutes since midnight for a "H:MM-H:MM" range's start — sorts "10:45" correctly after "9:50"."""
+    hours, minutes = time_range.split("-", 1)[0].split(":")
+    return int(hours) * 60 + int(minutes)
 
 
 class ScheduleService:
@@ -24,7 +36,7 @@ class ScheduleService:
 
         course_ids = [course.id for course in user.tracked_courses]
         if not course_ids:
-            return []
+            raise NoTrackedCoursesError(user_id)
 
         lessons = await self._lesson_repository.get_all_by_course_ids(course_ids)
         return sorted(
@@ -32,5 +44,5 @@ class ScheduleService:
                 ScheduleLessonModel(weekday=lesson.weekday, time_range=lesson.time_range, content=lesson.content)
                 for lesson in lessons
             ),
-            key=lambda lesson: (lesson.weekday, lesson.time_range),
+            key=lambda lesson: (lesson.weekday, parse_time_range_start_minutes(lesson.time_range)),
         )
