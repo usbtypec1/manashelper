@@ -14,6 +14,7 @@ def build_main_keyboard() -> ReplyKeyboardMarkup:
             [KeyboardButton(text="🍉 Йемек")],
             [KeyboardButton(text="📅 Расписание")],
             [KeyboardButton(text="🔐 OBIS")],
+            [KeyboardButton(text="⚙️ Настройки")],
         ],
         resize_keyboard=True,
     )
