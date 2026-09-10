@@ -42,7 +42,9 @@ def build_schedule_days_keyboard(current_weekday: int) -> InlineKeyboardMarkup:
     for weekday in sorted(WEEKDAY_LABELS):
         if weekday == current_weekday:
             continue
-        builder.button(text=WEEKDAY_LABELS[weekday], callback_data=ScheduleDayCallback(weekday=weekday))
+        emoji = "⬅️" if weekday < current_weekday else "➡️️"
+        text = f"{emoji} {WEEKDAY_LABELS[weekday]}"
+        builder.button(text=text, callback_data=ScheduleDayCallback(weekday=weekday))
     builder.adjust(4)
     return builder.as_markup()
 
