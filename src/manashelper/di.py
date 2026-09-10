@@ -30,6 +30,7 @@ from manashelper.services.food_menu_sync_service import FoodMenuSyncService
 from manashelper.services.notification_settings_service import NotificationSettingsService
 from manashelper.services.obis_notification_service import ObisNotificationService
 from manashelper.services.obis_service import ObisService
+from manashelper.services.schedule_service import ScheduleService
 from manashelper.services.timetable_sync_service import TimetableSyncService
 
 
@@ -96,3 +97,4 @@ class RequestProvider(Provider):
     notification_settings_service = provide(NotificationSettingsService)
     obis_notification_service = provide(ObisNotificationService)
     timetable_sync_service = provide(TimetableSyncService)
+    schedule_service = provide(ScheduleService)
