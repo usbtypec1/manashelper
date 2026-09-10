@@ -19,3 +19,7 @@ class CourseRepository:
 
     async def get_by_id(self, course_id: int) -> Course | None:
         return await self._session.get(Course, course_id)
+
+    async def get_all_ids(self) -> Sequence[int]:
+        result = await self._session.execute(select(Course.id))
+        return result.scalars().all()

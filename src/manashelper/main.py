@@ -7,7 +7,7 @@ from aiogram.enums import ParseMode
 from aiogram.types import ErrorEvent
 from alembic.config import Config
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from dishka import AsyncContainer, make_async_container
+from dishka import make_async_container
 from dishka.integrations.aiogram import inject_router, setup_dishka
 
 from alembic import command
@@ -19,22 +19,20 @@ from manashelper.bot.routers.start import router as start_router
 from manashelper.bot.routers.timetable import router as timetable_router
 from manashelper.config import get_settings
 from manashelper.di import AppProvider, RequestProvider
-from manashelper.services.food_menu_sync_service import FoodMenuSyncService
+from manashelper.scheduler_jobs import (
+    broadcast_dinner_menu_job,
+    broadcast_lunch_menu_job,
+    poll_obis_notifications_job,
+    sync_daily_menus_job,
+    sync_timetable_job,
+)
+from manashelper.services.daily_menu_service import BISHKEK_TZ
 
 logger = logging.getLogger(__name__)
 
 
 def run_migrations() -> None:
     command.upgrade(Config("alembic.ini"), "head")
-
-
-async def sync_daily_menus_job(container: AsyncContainer) -> None:
-    try:
-        async with container() as request_container:
-            service = await request_container.get(FoodMenuSyncService)
-            await service.synchronize_daily_menus()
-    except Exception:
-        logger.exception("Failed to synchronize daily menus")
 
 
 async def main() -> None:
@@ -63,6 +61,10 @@ async def main() -> None:
 
     scheduler = AsyncIOScheduler()
     scheduler.add_job(sync_daily_menus_job, "interval", minutes=10, args=[container])
+    scheduler.add_job(broadcast_lunch_menu_job, "cron", hour=11, minute=0, timezone=BISHKEK_TZ, args=[container, bot])
+    scheduler.add_job(broadcast_dinner_menu_job, "cron", hour=17, minute=0, timezone=BISHKEK_TZ, args=[container, bot])
+    scheduler.add_job(poll_obis_notifications_job, "interval", hours=1, args=[container, bot])
+    scheduler.add_job(sync_timetable_job, "interval", hours=1, args=[container, bot])
     scheduler.start()
 
     try:

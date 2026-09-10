@@ -1,3 +1,4 @@
+from manashelper.services.obis_notification_service import ExamGradeChange, LessonSkipChange, SkipType
 from manashelper.services.obis_service import LessonAttendanceModel, LessonExamsModel
 
 
@@ -64,3 +65,20 @@ def _inflect_skips(count: int) -> str:
     if count % 10 in (2, 3, 4) and not (12 <= count % 100 <= 14):
         return "пропуска"
     return "пропусков"
+
+
+def format_exam_grade_change(change: ExamGradeChange) -> str:
+    lesson = change.lesson_name or "Предмет"
+    exam = change.exam_name or "Экзамен"
+    return f"🔔 Новая оценка по предмету «{lesson}»\n{exam}: {change.score}"
+
+
+def format_lesson_skip_change(change: LessonSkipChange) -> str:
+    skip_type_label = "теория" if change.skip_type is SkipType.THEORY else "практика"
+    lines = [
+        f"⚠️ Зафиксирован пропуск по предмету «{change.lesson_name}» ({skip_type_label})",
+        f"Пропущено: {_format_float(change.skips_percentage)}%",
+    ]
+    if change.skippable is not None:
+        lines.append(f"Осталось {change.skippable} {_inflect_skips(change.skippable)}")
+    return "\n".join(lines)
