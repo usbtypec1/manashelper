@@ -19,6 +19,10 @@ class CourseCallback(CallbackData, prefix="course"):
     id: int
 
 
+class ScheduleDayCallback(CallbackData, prefix="schedule_day"):
+    weekday: int
+
+
 class FoodMenuDay(StrEnum):
     TODAY = "today"
     TOMORROW = "tomorrow"

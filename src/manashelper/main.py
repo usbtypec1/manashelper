@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from datetime import datetime
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -61,12 +62,16 @@ async def main() -> None:
     setup_dishka(container, dispatcher)
     inject_router(dispatcher)
 
+    # `IntervalTrigger` without an explicit `start_date` fires for the first time one full interval
+    # after the job is added, not immediately (see apscheduler.triggers.interval.IntervalTrigger) —
+    # pass `next_run_time` so a freshly started bot doesn't sit with empty data for up to an hour.
+    now = datetime.now(BISHKEK_TZ)
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(sync_daily_menus_job, "interval", minutes=10, args=[container])
+    scheduler.add_job(sync_daily_menus_job, "interval", minutes=10, args=[container], next_run_time=now)
     scheduler.add_job(broadcast_lunch_menu_job, "cron", hour=11, minute=0, timezone=BISHKEK_TZ, args=[container, bot])
     scheduler.add_job(broadcast_dinner_menu_job, "cron", hour=17, minute=0, timezone=BISHKEK_TZ, args=[container, bot])
-    scheduler.add_job(poll_obis_notifications_job, "interval", hours=1, args=[container, bot])
-    scheduler.add_job(sync_timetable_job, "interval", hours=1, args=[container, bot])
+    scheduler.add_job(poll_obis_notifications_job, "interval", hours=1, args=[container, bot], next_run_time=now)
+    scheduler.add_job(sync_timetable_job, "interval", hours=1, args=[container, bot], next_run_time=now)
     scheduler.start()
 
     try:
