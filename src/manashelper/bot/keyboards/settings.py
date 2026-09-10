@@ -13,6 +13,7 @@ def build_settings_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text="🔔 Уведомления", callback_data=SettingsCallback(action=SettingsAction.OPEN_NOTIFICATIONS))
     builder.button(text="📚 Мои уроки", callback_data=SettingsCallback(action=SettingsAction.OPEN_COURSE_TRACKING))
+    builder.button(text="🔑 Данные OBIS", callback_data=SettingsCallback(action=SettingsAction.OPEN_OBIS))
     builder.adjust(1)
     return builder.as_markup()
 

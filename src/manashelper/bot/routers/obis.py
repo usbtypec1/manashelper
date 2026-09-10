@@ -9,7 +9,13 @@ from aiogram.types import CallbackQuery, Message
 from dishka import FromDishka
 
 from manashelper.bot.callback_data import ObisAction, ObisCallback
-from manashelper.bot.keyboards.obis import build_cancel_keyboard, build_obis_menu_keyboard, build_terms_keyboard
+from manashelper.bot.keyboards.obis import (
+    build_cancel_keyboard,
+    build_confirm_clear_credentials_keyboard,
+    build_no_credentials_keyboard,
+    build_obis_settings_keyboard,
+    build_terms_keyboard,
+)
 from manashelper.scraping.obis_client import ObisLoginError
 from manashelper.scraping.obis_parser import ObisParseError
 from manashelper.services.obis_formatter import format_attendance, format_exam_grades
@@ -18,9 +24,10 @@ from manashelper.services.obis_service import ObisService, UserHasNoCredentialsE
 router = Router(name="obis")
 
 TERMS_TEXT = "Пожалуйста, примите условия использования бота, чтобы продолжить."
-NO_CREDENTIALS_TEXT = "Введите ваши данные от OBIS"
-INVALID_CREDENTIALS_TEXT = "Неверные данные от OBIS. Пожалуйста, введите их заново."
+NO_CREDENTIALS_TEXT = "У вас не сохранены данные от OBIS. Введите их кнопкой ниже."
+INVALID_CREDENTIALS_TEXT = "Неверные данные от OBIS. Введите их заново кнопкой ниже."
 FETCH_FAILED_TEXT = "Не удалось получить данные с OBIS. Попробуйте позже."
+CONFIRM_CLEAR_CREDENTIALS_TEXT = "Вы уверены, что хотите очистить сохранённые данные от OBIS?"
 
 
 class ObisCredentialsForm(StatesGroup):
@@ -28,51 +35,50 @@ class ObisCredentialsForm(StatesGroup):
     password = State()
 
 
-@router.message(F.text == "🔐 OBIS")
-async def on_obis_button(message: Message) -> None:
-    await message.answer("Меню OBIS", reply_markup=build_obis_menu_keyboard())
-
-
-@router.callback_query(ObisCallback.filter(F.action == ObisAction.ATTENDANCE))
-async def on_attendance(callback_query: CallbackQuery, obis_service: FromDishka[ObisService]) -> None:
-    await callback_query.answer()
-    if not isinstance(callback_query.message, Message):
+@router.message(F.text == "📋 Йоклама")
+async def on_attendance_button(message: Message, obis_service: FromDishka[ObisService]) -> None:
+    if message.from_user is None:
         return
 
     try:
-        attendance = await obis_service.get_attendance(callback_query.from_user.id)
-    except (UserNotFoundError, UserHasNoCredentialsError):
-        await callback_query.message.answer(NO_CREDENTIALS_TEXT, reply_markup=build_obis_menu_keyboard())
+        attendance = await obis_service.get_attendance(message.from_user.id)
+    except UserNotFoundError:
+        await message.answer("Пожалуйста, начните с команды /start")
+        return
+    except UserHasNoCredentialsError:
+        await message.answer(NO_CREDENTIALS_TEXT, reply_markup=build_no_credentials_keyboard())
         return
     except ObisLoginError:
-        await callback_query.message.answer(INVALID_CREDENTIALS_TEXT, reply_markup=build_obis_menu_keyboard())
+        await message.answer(INVALID_CREDENTIALS_TEXT, reply_markup=build_no_credentials_keyboard())
         return
     except ObisParseError:
-        await callback_query.message.answer(FETCH_FAILED_TEXT)
+        await message.answer(FETCH_FAILED_TEXT)
         return
 
-    await callback_query.message.answer(format_attendance(attendance))
+    await message.answer(format_attendance(attendance))
 
 
-@router.callback_query(ObisCallback.filter(F.action == ObisAction.EXAMS))
-async def on_exams(callback_query: CallbackQuery, obis_service: FromDishka[ObisService]) -> None:
-    await callback_query.answer()
-    if not isinstance(callback_query.message, Message):
+@router.message(F.text == "💯 Оценки")
+async def on_exams_button(message: Message, obis_service: FromDishka[ObisService]) -> None:
+    if message.from_user is None:
         return
 
     try:
-        lesson_exams = await obis_service.get_exam_grades(callback_query.from_user.id)
-    except (UserNotFoundError, UserHasNoCredentialsError):
-        await callback_query.message.answer(NO_CREDENTIALS_TEXT, reply_markup=build_obis_menu_keyboard())
+        lesson_exams = await obis_service.get_exam_grades(message.from_user.id)
+    except UserNotFoundError:
+        await message.answer("Пожалуйста, начните с команды /start")
+        return
+    except UserHasNoCredentialsError:
+        await message.answer(NO_CREDENTIALS_TEXT, reply_markup=build_no_credentials_keyboard())
         return
     except ObisLoginError:
-        await callback_query.message.answer(INVALID_CREDENTIALS_TEXT, reply_markup=build_obis_menu_keyboard())
+        await message.answer(INVALID_CREDENTIALS_TEXT, reply_markup=build_no_credentials_keyboard())
         return
     except ObisParseError:
-        await callback_query.message.answer(FETCH_FAILED_TEXT)
+        await message.answer(FETCH_FAILED_TEXT)
         return
 
-    await callback_query.message.answer(format_exam_grades(lesson_exams))
+    await message.answer(format_exam_grades(lesson_exams))
 
 
 @router.callback_query(ObisCallback.filter(F.action == ObisAction.START_CREDENTIALS))
@@ -95,6 +101,33 @@ async def on_cancel_credentials(callback_query: CallbackQuery, state: FSMContext
     await state.clear()
     if isinstance(callback_query.message, Message):
         await callback_query.message.answer("Отменено")
+    await callback_query.answer()
+
+
+@router.callback_query(ObisCallback.filter(F.action == ObisAction.CLEAR_CREDENTIALS))
+async def on_clear_credentials_requested(callback_query: CallbackQuery) -> None:
+    if isinstance(callback_query.message, Message):
+        await callback_query.message.edit_text(
+            CONFIRM_CLEAR_CREDENTIALS_TEXT, reply_markup=build_confirm_clear_credentials_keyboard()
+        )
+    await callback_query.answer()
+
+
+@router.callback_query(ObisCallback.filter(F.action == ObisAction.CONFIRM_CLEAR_CREDENTIALS))
+async def on_confirm_clear_credentials(
+    callback_query: CallbackQuery,
+    obis_service: FromDishka[ObisService],
+) -> None:
+    try:
+        await obis_service.clear_credentials(callback_query.from_user.id)
+    except UserNotFoundError:
+        await callback_query.answer("Пожалуйста, начните с команды /start", show_alert=True)
+        return
+
+    if isinstance(callback_query.message, Message):
+        await callback_query.message.edit_text(
+            "Данные от OBIS удалены ✅", reply_markup=build_obis_settings_keyboard(has_credentials=False)
+        )
     await callback_query.answer()
 
 
@@ -144,4 +177,4 @@ async def on_password_entered(
         return
 
     await state.clear()
-    await message.answer("Данные успешно сохранены ✅", reply_markup=build_obis_menu_keyboard())
+    await message.answer("Данные успешно сохранены ✅", reply_markup=build_obis_settings_keyboard(has_credentials=True))
