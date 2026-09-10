@@ -11,10 +11,8 @@ router = Router(name="start")
 def build_main_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="🍉 Йемек")],
-            [KeyboardButton(text="📅 Расписание")],
-            [KeyboardButton(text="🔐 OBIS")],
-            [KeyboardButton(text="⚙️ Настройки")],
+            [KeyboardButton(text="🍉 Йемек"), KeyboardButton(text="📅 Расписание")],
+            [KeyboardButton(text="🔐 OBIS"), KeyboardButton(text="⚙️ Настройки")],
         ],
         resize_keyboard=True,
     )
