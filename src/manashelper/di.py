@@ -12,17 +12,25 @@ from manashelper.repositories.daily_menu_repository import DailyMenuRepository
 from manashelper.repositories.department_repository import DepartmentRepository
 from manashelper.repositories.dish_repository import DishRepository
 from manashelper.repositories.faculty_repository import FacultyRepository
+from manashelper.repositories.lesson_repository import LessonRepository
+from manashelper.repositories.notification_settings_repository import NotificationSettingsRepository
+from manashelper.repositories.user_exam_grade_repository import UserExamGradeRepository
+from manashelper.repositories.user_lesson_attendance_repository import UserLessonAttendanceRepository
 from manashelper.repositories.user_repository import UserRepository
 from manashelper.scraping.food_menu_client import FoodMenuClient
 from manashelper.scraping.food_menu_parser import FoodMenuParser
 from manashelper.scraping.obis_client import ObisClient
+from manashelper.scraping.timetable_client import TimetableClient
 from manashelper.services.course_service import CourseService
 from manashelper.services.crypto_service import CryptoService
 from manashelper.services.daily_menu_service import DailyMenuService
 from manashelper.services.department_service import DepartmentService
 from manashelper.services.faculty_service import FacultyService
 from manashelper.services.food_menu_sync_service import FoodMenuSyncService
+from manashelper.services.notification_settings_service import NotificationSettingsService
+from manashelper.services.obis_notification_service import ObisNotificationService
 from manashelper.services.obis_service import ObisService
+from manashelper.services.timetable_sync_service import TimetableSyncService
 
 
 class AppProvider(Provider):
@@ -51,6 +59,7 @@ class AppProvider(Provider):
     food_menu_parser = provide(FoodMenuParser)
     crypto_service = provide(CryptoService)
     obis_client = provide(ObisClient)
+    timetable_client = provide(TimetableClient)
 
 
 class RequestProvider(Provider):
@@ -73,6 +82,10 @@ class RequestProvider(Provider):
     dish_repository = provide(DishRepository)
     daily_menu_repository = provide(DailyMenuRepository)
     daily_menu_rating_repository = provide(DailyMenuRatingRepository)
+    notification_settings_repository = provide(NotificationSettingsRepository)
+    lesson_repository = provide(LessonRepository)
+    user_exam_grade_repository = provide(UserExamGradeRepository)
+    user_lesson_attendance_repository = provide(UserLessonAttendanceRepository)
 
     faculty_service = provide(FacultyService)
     department_service = provide(DepartmentService)
@@ -80,3 +93,6 @@ class RequestProvider(Provider):
     daily_menu_service = provide(DailyMenuService)
     food_menu_sync_service = provide(FoodMenuSyncService)
     obis_service = provide(ObisService)
+    notification_settings_service = provide(NotificationSettingsService)
+    obis_notification_service = provide(ObisNotificationService)
+    timetable_sync_service = provide(TimetableSyncService)

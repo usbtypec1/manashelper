@@ -3,6 +3,8 @@ from enum import StrEnum
 
 from aiogram.filters.callback_data import CallbackData
 
+from manashelper.services.notification_settings_service import NotificationSetting
+
 
 class FacultyCallback(CallbackData, prefix="faculty"):
     id: uuid.UUID
@@ -48,3 +50,17 @@ class ObisAction(StrEnum):
 
 class ObisCallback(CallbackData, prefix="obis"):
     action: ObisAction
+
+
+class SettingsAction(StrEnum):
+    OPEN_NOTIFICATIONS = "open_notifications"
+    OPEN_FOOD_MENU_NOTIFICATIONS = "open_food_menu_notifications"
+    BACK_TO_NOTIFICATIONS = "back_to_notifications"
+
+
+class SettingsCallback(CallbackData, prefix="settings"):
+    action: SettingsAction
+
+
+class NotificationSettingCallback(CallbackData, prefix="notification_setting"):
+    setting: NotificationSetting

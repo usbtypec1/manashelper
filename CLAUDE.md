@@ -8,7 +8,7 @@ Manashelper is a Telegram bot (Python 3.13, aiogram 3, SQLAlchemy 2 async, Dishk
 students. There is **no REST API** — all user interaction happens through Telegram long-polling.
 
 This is a from-scratch Python rewrite of a former Java/Spring Boot implementation. Timetable browsing, the
-cafeteria daily menu, and OBIS grade/attendance lookup have been ported; lesson-change notifications and the
+cafeteria daily menu, OBIS grade/attendance lookup, and lesson-change notifications have been ported; the
 "About" screens from the original Java bot have not been ported yet (see Roadmap below).
 
 Core capabilities (current):
@@ -20,6 +20,15 @@ Core capabilities (current):
   the real OBIS login before saving (AES-GCM encrypted at rest), and lets the user fetch their current exam
   grades and lesson-attendance/skip-budget summary on demand — see `services/obis_service.py`,
   `scraping/obis_client.py`, `scraping/obis_parser.py`, `bot/routers/obis.py`.
+- **Notification settings**: a `⚙️ Настройки` menu (`bot/routers/settings.py`) lets each user toggle five
+  notification kinds (schedule changes, before-lunch/before-dinner menu pings, exam-grade changes, lesson skips),
+  backed by a lazily-created `NotificationSettings` row per user that defaults every toggle to enabled — see
+  `services/notification_settings_service.py`.
+- **Scheduled notifications** (`scheduler_jobs.py`, wired up in `main.py`): the daily menu is broadcast to
+  opted-in users at 11:00/17:00 Bishkek time; OBIS exam grades and lesson attendance are polled hourly per user
+  and diffed against previously-seen state to notify only on actual changes; each tracked course's timetable is
+  scraped hourly and diffed to notify trackers of schedule changes — see "Scheduled jobs & change detection"
+  below.
 - `/start` upserts the Telegram user and shows the main reply keyboard.
 
 ## Commands
@@ -149,10 +158,39 @@ anyway (see `ObisService`), so there is no session reuse to preserve, and this a
 and are verified against a real OBIS login before being persisted. Passwords are encrypted at rest with AES-GCM
 (`services/crypto_service.py`) instead of the Java version's raw AES-ECB.
 
+### Scheduled jobs & change detection
+
+`scheduler_jobs.py` holds every `AsyncIOScheduler` job function registered in `main.py::main`; each job opens its
+own short-lived Dishka request scope(s) (`async with container() as request_container`) rather than reusing one
+across the whole run, and wraps its body in a broad `except Exception: logger.exception(...)` so one failure
+(a bad HTML page, a dead OBIS login, a user who blocked the bot) never aborts the rest of the batch — the same
+resilience shape as the pre-existing `sync_daily_menus_job`. Per-recipient Telegram sends are wrapped individually
+in `except TelegramAPIError` for the same reason.
+
+Three notification-producing jobs all follow one pattern: keep a Postgres table of the *last known state* per
+(user or course, item), diff a freshly scraped/fetched snapshot against it, persist the new state, and only
+notify on an actual difference (never on the first-ever observation, so enabling a setting doesn't dump a user's
+entire history at them):
+
+- **Timetable sync** (`services/timetable_sync_service.py`, hourly): `scraping/timetable_client.py` +
+  `scraping/timetable_parser.py` scrape `http://timetable.manas.edu.kg/department-printer/{course_id}` (plain
+  HTTP, no auth — the site has no HTTPS listener) for every `Course.id`, parsed into one `Lesson` row per
+  (course, weekday, time slot) holding a normalized "code name — teacher, room" string; a changed/added/removed
+  slot notifies every tracker with `schedule_changes_enabled`.
+- **OBIS exam grades & lesson skips** (`services/obis_notification_service.py`, hourly, one poll per user):
+  reuses `ObisService.get_exam_grades`/`get_attendance` (so it's re-login-per-poll like every other OBIS call),
+  diffing against `UserExamGrade` (per user+lesson_code+exam_name) and `UserLessonAttendance` (per
+  user+lesson_code) rows; a user with no saved OBIS credentials is skipped cheaply (a local DB check) before any
+  network call, so polling every user hourly is safe.
+- **Daily menu broadcast** (`scheduler_jobs.py::broadcast_lunch_menu_job`/`broadcast_dinner_menu_job`, cron
+  11:00/17:00 `Asia/Bishkek`): re-sends the same media-group format used for an on-demand `/yemek` request to
+  every user with `before_lunch_enabled`/`before_dinner_enabled`.
+
+`NotificationSettingsRepository` centralizes "who should be notified": a user with no `NotificationSettings` row
+yet (never opened the settings menu) counts as every toggle being enabled — the repository queries use
+`LEFT JOIN ... WHERE column IS DISTINCT FROM FALSE`, not `= TRUE`, specifically so an absent row doesn't silently
+opt a user out.
+
 ## Roadmap (not yet ported from the Java version)
 
-- **Lesson scraping/sync**: a `Lesson` model, timetable HTML scraping (`httpx` + an HTML parser) against
-  `http://timetable.manas.edu.kg/department-printer/{course_id}`, a change-detection + sync pipeline, an
-  APScheduler-driven hourly job — and, since the Java version never finished this, actually notifying users who
-  track a course when its lessons change.
 - **About screens**: static informational callback handlers.
