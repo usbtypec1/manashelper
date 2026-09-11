@@ -1,7 +1,12 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from manashelper.services.schedule import ScheduleLessonModel, parse_time_range_start_minutes
+from manashelper.services.schedule import (
+    MAX_GAP_MINUTES_TO_GROUP,
+    ScheduleLessonModel,
+    parse_time_range_end_minutes,
+    parse_time_range_start_minutes,
+)
 from manashelper.services.timetable_sync import LessonChange
 
 WEEKDAY_LABELS = {1: "Пн", 2: "Вт", 3: "Ср", 4: "Чт", 5: "Пт"}
@@ -16,9 +21,6 @@ CURRENT_LESSON_EMOJI = "🔥"
 UPCOMING_LESSON_EMOJI = "⏰"
 UPCOMING_WINDOW_MINUTES = 45
 
-# Regular breaks between periods run ~10 minutes; anything longer (a free period, lunch) starts a new block.
-_MAX_GAP_MINUTES_TO_GROUP = 20
-
 
 @dataclass(slots=True)
 class _LessonBlock:
@@ -26,11 +28,6 @@ class _LessonBlock:
     start_minutes: int
     end_minutes: int
     periods: list[str] = field(default_factory=list)
-
-
-def _parse_end_minutes(time_range: str) -> int:
-    hours, minutes = time_range.split("-", 1)[1].split(":")
-    return int(hours) * 60 + int(minutes)
 
 
 def _period_marker(start: int, end: int, now_minutes: int) -> str:
@@ -45,7 +42,7 @@ def _group_into_blocks(day_lessons: list[ScheduleLessonModel], now_minutes: int,
     blocks: list[_LessonBlock] = []
     for lesson in day_lessons:
         start = parse_time_range_start_minutes(lesson.time_range)
-        end = _parse_end_minutes(lesson.time_range)
+        end = parse_time_range_end_minutes(lesson.time_range)
         marker = _period_marker(start, end, now_minutes) if is_today else ""
         period = f"- {marker}{lesson.time_range}"
 
@@ -53,7 +50,7 @@ def _group_into_blocks(day_lessons: list[ScheduleLessonModel], now_minutes: int,
         if (
             previous is not None
             and previous.content == lesson.content
-            and start - previous.end_minutes <= _MAX_GAP_MINUTES_TO_GROUP
+            and start - previous.end_minutes <= MAX_GAP_MINUTES_TO_GROUP
         ):
             previous.end_minutes = end
             previous.periods.append(period)
@@ -81,7 +78,7 @@ def _split_lesson_content(content: str) -> tuple[str, str | None]:
 
 def _should_show_lunch(day_lessons: list[ScheduleLessonModel]) -> bool:
     intervals = [
-        (parse_time_range_start_minutes(lesson.time_range), _parse_end_minutes(lesson.time_range))
+        (parse_time_range_start_minutes(lesson.time_range), parse_time_range_end_minutes(lesson.time_range))
         for lesson in day_lessons
     ]
     if any(start < LUNCH_END_MINUTES and end > LUNCH_START_MINUTES for start, end in intervals):

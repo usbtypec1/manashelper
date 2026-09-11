@@ -4,21 +4,30 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
 from dishka import FromDishka
 
-from manashelper.bot.callback_data import CourseCallback, DepartmentCallback, FacultyCallback, ScheduleDayCallback
+from manashelper.bot.callback_data import (
+    CourseCallback,
+    DepartmentCallback,
+    FacultyCallback,
+    ScheduleDayCallback,
+    TimetableMenuAction,
+    TimetableMenuCallback,
+)
 from manashelper.bot.keyboards.timetable import (
     build_course_keyboard,
     build_department_keyboard,
     build_no_tracked_courses_keyboard,
     build_schedule_days_keyboard,
+    build_timetable_menu_keyboard,
 )
 from manashelper.services.course import CourseNotFoundError, CourseService, UserNotFoundError
 from manashelper.services.daily_menu import BISHKEK_TZ
 from manashelper.services.department import DepartmentService
-from manashelper.services.schedule import NoTrackedCoursesError, ScheduleLessonModel, ScheduleService
+from manashelper.services.schedule import NoTrackedCoursesError, ScheduleService
 from manashelper.services.timetable_formatter import format_day_schedule
 
 router = Router(name="timetable")
 
+TIMETABLE_MENU_TEXT = "📅 Расписание"
 NO_TRACKED_COURSES_TEXT = "У вас нет отслеживаемых курсов. Выберите курсы кнопкой ниже, чтобы видеть расписание."
 SCHEDULE_NOT_SYNCED_TEXT = (
     "Расписание для ваших курсов ещё не загружено. Оно обновляется раз в час — попробуйте зайти чуть позже."
@@ -32,33 +41,40 @@ def _current_weekday(now: datetime) -> int:
     return weekday if weekday in _WORKDAYS else _WORKDAYS[0]
 
 
-async def _show_day_schedule(message: Message, weekday: int, lessons: list[ScheduleLessonModel]) -> None:
-    now = datetime.now(BISHKEK_TZ)
-    await message.answer(
-        format_day_schedule(weekday, lessons, now),
-        reply_markup=build_schedule_days_keyboard(weekday),
-    )
-
-
 @router.message(F.text == "📅 Расписание")
-async def show_schedule(message: Message, schedule_service: FromDishka[ScheduleService]) -> None:
-    if message.from_user is None:
-        return
+async def on_timetable_menu_button(message: Message) -> None:
+    await message.answer(TIMETABLE_MENU_TEXT, reply_markup=build_timetable_menu_keyboard())
 
+
+@router.callback_query(TimetableMenuCallback.filter(F.action == TimetableMenuAction.OPEN_MY_SCHEDULE))
+async def on_my_schedule_selected(
+    callback_query: CallbackQuery,
+    schedule_service: FromDishka[ScheduleService],
+) -> None:
     try:
-        lessons = await schedule_service.get_user_schedule(message.from_user.id)
+        lessons = await schedule_service.get_user_schedule(callback_query.from_user.id)
     except UserNotFoundError:
-        await message.answer("Пожалуйста, начните с команды /start")
+        await callback_query.answer("Пожалуйста, начните с команды /start", show_alert=True)
         return
     except NoTrackedCoursesError:
-        await message.answer(NO_TRACKED_COURSES_TEXT, reply_markup=build_no_tracked_courses_keyboard())
+        if isinstance(callback_query.message, Message):
+            await callback_query.message.edit_text(
+                NO_TRACKED_COURSES_TEXT, reply_markup=build_no_tracked_courses_keyboard()
+            )
+        await callback_query.answer()
         return
 
     if not lessons:
-        await message.answer(SCHEDULE_NOT_SYNCED_TEXT)
+        await callback_query.answer(SCHEDULE_NOT_SYNCED_TEXT, show_alert=True)
         return
 
-    await _show_day_schedule(message, _current_weekday(datetime.now(BISHKEK_TZ)), lessons)
+    weekday = _current_weekday(datetime.now(BISHKEK_TZ))
+    if isinstance(callback_query.message, Message):
+        await callback_query.message.edit_text(
+            format_day_schedule(weekday, lessons, datetime.now(BISHKEK_TZ)),
+            reply_markup=build_schedule_days_keyboard(weekday),
+        )
+    await callback_query.answer()
 
 
 @router.callback_query(ScheduleDayCallback.filter())

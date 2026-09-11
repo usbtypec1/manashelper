@@ -1,10 +1,12 @@
 import uuid
 from dataclasses import dataclass
 
-from manashelper.db.models import Lesson
+from manashelper.db.models import Lesson, LessonHistory
+from manashelper.repositories.lesson_history_repository import LessonHistoryRepository
 from manashelper.repositories.lesson_repository import LessonRepository
 from manashelper.scraping.timetable_client import TimetableClient
 from manashelper.scraping.timetable_parser import ScrapedLessonSlot, ScrapedTimeSlot, parse_timetable_page
+from manashelper.services.text_normalization import fold_turkish
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,9 +27,15 @@ def _format_lesson(lesson: ScrapedLessonSlot) -> str:
 
 
 class TimetableSyncService:
-    def __init__(self, timetable_client: TimetableClient, lesson_repository: LessonRepository) -> None:
+    def __init__(
+        self,
+        timetable_client: TimetableClient,
+        lesson_repository: LessonRepository,
+        lesson_history_repository: LessonHistoryRepository,
+    ) -> None:
         self._timetable_client = timetable_client
         self._lesson_repository = lesson_repository
+        self._lesson_history_repository = lesson_history_repository
 
     async def synchronize_course_timetable(self, course_id: int) -> list[LessonChange]:
         html = await self._timetable_client.fetch_timetable_html(course_id)
@@ -49,19 +57,25 @@ class TimetableSyncService:
                         weekday=weekday,
                         time_range=time_range,
                         content=content,
+                        normalized_content=fold_turkish(content),
                     )
                 )
                 if not is_first_sync:
                     changes.append(
                         LessonChange(weekday=weekday, time_range=time_range, previous_content=None, new_content=content)
                     )
-            elif existing.content != content:
-                changes.append(
-                    LessonChange(
-                        weekday=weekday, time_range=time_range, previous_content=existing.content, new_content=content
+            else:
+                if existing.content != content:
+                    changes.append(
+                        LessonChange(
+                            weekday=weekday,
+                            time_range=time_range,
+                            previous_content=existing.content,
+                            new_content=content,
+                        )
                     )
-                )
-                existing.content = content
+                    existing.content = content
+                existing.normalized_content = fold_turkish(content)
 
         for (weekday, time_range), existing in existing_by_key.items():
             if (weekday, time_range) not in scraped_by_key:
@@ -71,5 +85,17 @@ class TimetableSyncService:
                     )
                 )
                 await self._lesson_repository.delete(existing)
+
+        for change in changes:
+            self._lesson_history_repository.add(
+                LessonHistory(
+                    id=uuid.uuid4(),
+                    course_id=course_id,
+                    weekday=change.weekday,
+                    time_range=change.time_range,
+                    previous_content=change.previous_content,
+                    new_content=change.new_content,
+                )
+            )
 
         return changes

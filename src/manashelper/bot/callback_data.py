@@ -23,6 +23,19 @@ class ScheduleDayCallback(CallbackData, prefix="schedule_day"):
     weekday: int
 
 
+class TimetableMenuAction(StrEnum):
+    OPEN_MY_SCHEDULE = "open_my_schedule"
+    OPEN_LESSON_SEARCH = "open_lesson_search"
+
+
+class TimetableMenuCallback(CallbackData, prefix="timetable_menu"):
+    action: TimetableMenuAction
+
+
+class LessonSearchPageCallback(CallbackData, prefix="lesson_search_page"):
+    page: int
+
+
 class FoodMenuDay(StrEnum):
     TODAY = "today"
     TOMORROW = "tomorrow"

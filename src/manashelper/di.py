@@ -15,6 +15,7 @@ from manashelper.repositories.faculty_repository import FacultyRepository
 from manashelper.repositories.food_menu_notification_settings_repository import (
     FoodMenuNotificationSettingsRepository,
 )
+from manashelper.repositories.lesson_history_repository import LessonHistoryRepository
 from manashelper.repositories.lesson_repository import LessonRepository
 from manashelper.repositories.notification_settings_repository import NotificationSettingsRepository
 from manashelper.repositories.user_exam_grade_repository import UserExamGradeRepository
@@ -31,6 +32,7 @@ from manashelper.services.department import DepartmentService
 from manashelper.services.faculty import FacultyService
 from manashelper.services.food_menu_notification_settings import FoodMenuNotificationSettingsService
 from manashelper.services.food_menu_sync import FoodMenuSyncService
+from manashelper.services.lesson_search import LessonSearchService
 from manashelper.services.notification_settings import NotificationSettingsService
 from manashelper.services.obis import ObisService
 from manashelper.services.obis_notification import ObisNotificationService
@@ -90,6 +92,7 @@ class RequestProvider(Provider):
     notification_settings_repository = provide(NotificationSettingsRepository)
     food_menu_notification_settings_repository = provide(FoodMenuNotificationSettingsRepository)
     lesson_repository = provide(LessonRepository)
+    lesson_history_repository = provide(LessonHistoryRepository)
     user_exam_grade_repository = provide(UserExamGradeRepository)
     user_lesson_attendance_repository = provide(UserLessonAttendanceRepository)
 
@@ -104,3 +107,4 @@ class RequestProvider(Provider):
     obis_notification_service = provide(ObisNotificationService)
     timetable_sync_service = provide(TimetableSyncService)
     schedule_service = provide(ScheduleService)
+    lesson_search_service = provide(LessonSearchService)

@@ -7,6 +7,7 @@ from manashelper.db.models.dish import Dish
 from manashelper.db.models.faculty import Faculty
 from manashelper.db.models.food_menu_notification_settings import FoodMenuNotificationSettings
 from manashelper.db.models.lesson import Lesson
+from manashelper.db.models.lesson_history import LessonHistory
 from manashelper.db.models.notification_settings import NotificationSettings
 from manashelper.db.models.user import User
 from manashelper.db.models.user_exam_grade import UserExamGrade
@@ -21,6 +22,7 @@ __all__ = [
     "Faculty",
     "FoodMenuNotificationSettings",
     "Lesson",
+    "LessonHistory",
     "NotificationSettings",
     "User",
     "UserExamGrade",
