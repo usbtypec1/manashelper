@@ -8,11 +8,25 @@ from manashelper.bot.callback_data import (
     ScheduleDayCallback,
     SettingsAction,
     SettingsCallback,
+    TimetableMenuAction,
+    TimetableMenuCallback,
 )
 from manashelper.services.course import CourseSummary
 from manashelper.services.department import DepartmentSummary
 from manashelper.services.faculty import FacultyModel
 from manashelper.services.timetable_formatter import WEEKDAY_LABELS
+
+
+def build_timetable_menu_keyboard() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text="📅 Моё расписание", callback_data=TimetableMenuCallback(action=TimetableMenuAction.OPEN_MY_SCHEDULE)
+    )
+    builder.button(
+        text="🔎 Поиск предмета", callback_data=TimetableMenuCallback(action=TimetableMenuAction.OPEN_LESSON_SEARCH)
+    )
+    builder.adjust(1)
+    return builder.as_markup()
 
 
 def build_faculty_keyboard(faculties: list[FacultyModel]) -> InlineKeyboardMarkup:

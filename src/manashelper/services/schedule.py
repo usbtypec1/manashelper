@@ -24,6 +24,15 @@ def parse_time_range_start_minutes(time_range: str) -> int:
     return int(hours) * 60 + int(minutes)
 
 
+def parse_time_range_end_minutes(time_range: str) -> int:
+    hours, minutes = time_range.split("-", 1)[1].split(":")
+    return int(hours) * 60 + int(minutes)
+
+
+# Regular breaks between periods run ~10 minutes; anything longer (a free period, lunch) starts a new block.
+MAX_GAP_MINUTES_TO_GROUP = 20
+
+
 class ScheduleService:
     def __init__(self, lesson_repository: LessonRepository, user_repository: UserRepository) -> None:
         self._lesson_repository = lesson_repository
