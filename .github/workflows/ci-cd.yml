@@ -92,6 +92,29 @@ jobs:
           docker push usbtypec1/manashelper:$VERSION
           docker push usbtypec1/manashelper:latest
 
+      - name: Write .env file for deployment
+        run: printf '%s\n' "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Ensure remote deploy directory exists
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+          script: mkdir -p /opt/manashelper
+
+      - name: Copy docker-compose.yml and .env to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+          source: "docker-compose.yml,.env"
+          target: "/opt/manashelper"
+          strip_components: 0
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -100,6 +123,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT }}
           script: |
+            cd /opt/manashelper
             export VERSION=${{ env.VERSION }}
             docker pull usbtypec1/manashelper:${{ env.VERSION }}
             docker compose up -d --remove-orphans
