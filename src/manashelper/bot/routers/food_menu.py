@@ -58,7 +58,7 @@ async def cmd_yemek(
 ) -> None:
     skip_days = _parse_skip_days(command.args)
     if skip_days is None:
-        await message.answer(USAGE_TEXT)
+        await message.answer(USAGE_TEXT, reply_markup=build_day_keyboard())
         return
     await _send_daily_menu(message, skip_days, daily_menu_service)
 
