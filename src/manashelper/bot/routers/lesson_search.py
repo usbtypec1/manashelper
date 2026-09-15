@@ -1,5 +1,4 @@
-from aiogram import F, Router
-from aiogram.enums import ChatType
+from aiogram import F, Router, flags
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -13,8 +12,6 @@ from manashelper.services.lesson_search import LessonSearchResult, LessonSearchS
 from manashelper.services.lesson_search_formatter import format_lesson_search_page, total_page_count
 
 router = Router(name="lesson_search")
-router.message.filter(F.chat.type == ChatType.PRIVATE)
-router.callback_query.filter(F.message.chat.type == ChatType.PRIVATE)
 
 MIN_QUERY_LENGTH = 2
 RESULTS_KEY = "lesson_search_results"
@@ -25,6 +22,7 @@ class LessonSearchForm(StatesGroup):
 
 
 @router.callback_query(TimetableMenuCallback.filter(F.action == TimetableMenuAction.OPEN_LESSON_SEARCH))
+@flags.private_chat_only
 async def on_search_selected(callback_query: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(LessonSearchForm.query)
     if isinstance(callback_query.message, Message):
@@ -38,6 +36,7 @@ async def on_search_selected(callback_query: CallbackQuery, state: FSMContext) -
 
 
 @router.message(StateFilter(LessonSearchForm.query))
+@flags.private_chat_only
 async def on_search_query_entered(
     message: Message,
     state: FSMContext,
@@ -63,6 +62,7 @@ async def on_search_query_entered(
 
 
 @router.callback_query(LessonSearchPageCallback.filter())
+@flags.private_chat_only
 async def on_search_page_selected(
     callback_query: CallbackQuery,
     callback_data: LessonSearchPageCallback,

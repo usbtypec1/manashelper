@@ -15,6 +15,7 @@ from dishka.integrations.aiogram import inject_router, setup_dishka
 from alembic import command
 from manashelper.bot.middlewares.i18n import LocaleMiddleware
 from manashelper.bot.middlewares.per_chat_ordering import PerChatOrderingMiddleware
+from manashelper.bot.middlewares.private_chat_only import PrivateChatOnlyMiddleware
 from manashelper.bot.middlewares.rate_limit import RateLimitMiddleware
 from manashelper.bot.routers.food_menu import router as food_menu_router
 from manashelper.bot.routers.food_menu_notifications import router as food_menu_notifications_router
@@ -86,6 +87,12 @@ async def main() -> None:
 
     dispatcher.message.outer_middleware(PerChatOrderingMiddleware())
     dispatcher.callback_query.outer_middleware(PerChatOrderingMiddleware())
+
+    # Inner middleware (not outer): the `private_chat_only` flag lives on the matched handler,
+    # which is only resolved - and put into `data["handler"]` - once a router's filters have
+    # already picked it, so this can't run any earlier than that.
+    dispatcher.message.middleware(PrivateChatOnlyMiddleware())
+    dispatcher.callback_query.middleware(PrivateChatOnlyMiddleware())
 
     @dispatcher.errors()
     async def on_error(event: ErrorEvent) -> None:

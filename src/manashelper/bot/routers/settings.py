@@ -1,5 +1,4 @@
-from aiogram import F, Router
-from aiogram.enums import ChatType
+from aiogram import F, Router, flags
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
@@ -19,8 +18,6 @@ from manashelper.services.obis import ObisService
 from manashelper.services.obis import UserNotFoundError as ObisUserNotFoundError
 
 router = Router(name="settings")
-router.message.filter(F.chat.type == ChatType.PRIVATE)
-router.callback_query.filter(F.message.chat.type == ChatType.PRIVATE)
 
 
 async def _show_notifications_menu(callback_query: CallbackQuery, settings: NotificationSettingsSummary) -> None:
@@ -31,11 +28,13 @@ async def _show_notifications_menu(callback_query: CallbackQuery, settings: Noti
 
 
 @router.message(TranslatedText("⚙️ Settings"))
+@flags.private_chat_only
 async def on_settings_button(message: Message) -> None:
     await message.answer(_("Settings"), reply_markup=build_settings_keyboard())
 
 
 @router.callback_query(SettingsCallback.filter(F.action == SettingsAction.BACK_TO_SETTINGS))
+@flags.private_chat_only
 async def on_back_to_settings(callback_query: CallbackQuery) -> None:
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(_("Settings"), reply_markup=build_settings_keyboard())
@@ -43,6 +42,7 @@ async def on_back_to_settings(callback_query: CallbackQuery) -> None:
 
 
 @router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_NOTIFICATIONS))
+@flags.private_chat_only
 async def on_open_notifications(
     callback_query: CallbackQuery,
     notification_settings_service: FromDishka[NotificationSettingsService],
@@ -57,6 +57,7 @@ async def on_open_notifications(
 
 
 @router.callback_query(SettingsCallback.filter(F.action == SettingsAction.BACK_TO_NOTIFICATIONS))
+@flags.private_chat_only
 async def on_back_to_notifications(
     callback_query: CallbackQuery,
     notification_settings_service: FromDishka[NotificationSettingsService],
@@ -65,6 +66,7 @@ async def on_back_to_notifications(
 
 
 @router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_COURSE_TRACKING))
+@flags.private_chat_only
 async def on_open_course_tracking(
     callback_query: CallbackQuery,
     faculty_service: FromDishka[FacultyService],
@@ -76,6 +78,7 @@ async def on_open_course_tracking(
 
 
 @router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_OBIS))
+@flags.private_chat_only
 async def on_open_obis(
     callback_query: CallbackQuery,
     obis_service: FromDishka[ObisService],
@@ -94,6 +97,7 @@ async def on_open_obis(
 
 
 @router.callback_query(NotificationSettingCallback.filter())
+@flags.private_chat_only
 async def on_toggle_notification_setting(
     callback_query: CallbackQuery,
     callback_data: NotificationSettingCallback,

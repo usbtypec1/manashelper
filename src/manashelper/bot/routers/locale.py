@@ -1,5 +1,4 @@
-from aiogram import F, Router
-from aiogram.enums import ChatType
+from aiogram import F, Router, flags
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
@@ -12,16 +11,16 @@ from manashelper.localization.i18n import i18n
 from manashelper.services.locale import LocaleService
 
 router = Router(name="locale")
-router.message.filter(F.chat.type == ChatType.PRIVATE)
-router.callback_query.filter(F.message.chat.type == ChatType.PRIVATE)
 
 
 @router.message(Command("language"))
+@flags.private_chat_only
 async def on_language_command(message: Message) -> None:
     await message.answer(LOCALE_PROMPT_TEXT, reply_markup=build_locale_keyboard())
 
 
 @router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_LANGUAGE))
+@flags.private_chat_only
 async def on_open_language(callback_query: CallbackQuery) -> None:
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(LOCALE_PROMPT_TEXT, reply_markup=build_locale_keyboard())
@@ -29,6 +28,7 @@ async def on_open_language(callback_query: CallbackQuery) -> None:
 
 
 @router.callback_query(LocaleCallback.filter())
+@flags.private_chat_only
 async def on_locale_selected(
     callback_query: CallbackQuery,
     callback_data: LocaleCallback,
