@@ -44,10 +44,6 @@ def format_not_found(skip_days: int) -> str:
     return _("😔 The menu for that day hasn't been published yet.")
 
 
-def format_lunch_lesson_conflict() -> str:
-    return _("😱 There should have been lunch here, but you have a lesson instead.")
-
-
 def build_photos(caption: str, daily_menu: DailyMenuModel) -> list[MediaGroupItem]:
     photos: list[MediaGroupItem] = [
         InputMediaPhoto(
