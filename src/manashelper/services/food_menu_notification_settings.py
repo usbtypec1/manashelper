@@ -77,9 +77,7 @@ class FoodMenuNotificationSettingsService:
         return await self._build_summary(user_id)
 
     @staticmethod
-    def _is_meal_enabled(
-        by_weekday: dict[int, FoodMenuNotificationSettings], weekday: int, meal: FoodMenuMeal
-    ) -> bool:
+    def _is_meal_enabled(by_weekday: dict[int, FoodMenuNotificationSettings], weekday: int, meal: FoodMenuMeal) -> bool:
         if weekday not in by_weekday:
             return True
         settings = by_weekday[weekday]
