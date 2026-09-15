@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from aiogram import F, Router
+from aiogram.enums import ChatType
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
@@ -28,6 +29,9 @@ from manashelper.services.schedule import NoTrackedCoursesError, ScheduleService
 from manashelper.services.timetable_formatter import format_day_schedule
 
 router = Router(name="timetable")
+router.message.filter(F.chat.type == ChatType.PRIVATE)
+router.callback_query.filter(F.message.chat.type == ChatType.PRIVATE)
+
 
 _WORKDAYS = (1, 2, 3, 4, 5)
 

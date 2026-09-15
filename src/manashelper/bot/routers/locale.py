@@ -1,4 +1,5 @@
 from aiogram import F, Router
+from aiogram.enums import ChatType
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
@@ -11,7 +12,8 @@ from manashelper.localization.i18n import i18n
 from manashelper.services.locale import LocaleService
 
 router = Router(name="locale")
-
+router.message.filter(F.chat.type == ChatType.PRIVATE)
+router.callback_query.filter(F.message.chat.type == ChatType.PRIVATE)
 
 @router.message(Command("language"))
 async def on_language_command(message: Message) -> None:

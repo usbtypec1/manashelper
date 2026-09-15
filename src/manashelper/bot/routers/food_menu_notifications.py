@@ -1,4 +1,5 @@
 from aiogram import F, Router
+from aiogram.enums import ChatType
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
@@ -18,7 +19,8 @@ from manashelper.services.food_menu_notification_settings import (
 )
 
 router = Router(name="food_menu_notifications")
-
+router.message.filter(F.chat.type == ChatType.PRIVATE)
+router.callback_query.filter(F.message.chat.type == ChatType.PRIVATE)
 
 async def _show_food_menu_notifications(
     callback_query: CallbackQuery, summary: FoodMenuNotificationSettingsSummary
