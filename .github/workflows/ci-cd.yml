@@ -2,8 +2,6 @@ name: CI/CD
 
 on:
   push:
-    branches:
-      - main
     tags:
       - 'v*'
   pull_request:
@@ -130,4 +128,4 @@ jobs:
             export VERSION=${{ env.VERSION }}
             docker pull usbtypec1/manashelper:${{ env.VERSION }}
             docker compose up -d --remove-orphans
-            docker image prune -f
+            docker image prune -af

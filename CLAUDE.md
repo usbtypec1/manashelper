@@ -75,10 +75,14 @@ AES-256 key used by `CryptoService` to encrypt stored OBIS passwords — generat
 Docker). `docker-compose.dev.yml` starts only Postgres, exposed on host port `5432`. A local `.env` file
 (gitignored) is read automatically via `pydantic-settings`.
 
-Deployment: pushing a `v*` tag triggers `.github/workflows/ci-cd.yml`, which first runs lint + type-check + tests
-against a Postgres service container, then — only if that passes — builds the Docker image
-(`docker/Dockerfile`) and pushes `usbtypec1/manashelper:<version>` / `:latest` to Docker Hub, then SSHes into the
-deploy host to pull and restart via `docker compose up -d`.
+CI/CD (`.github/workflows/ci-cd.yml`): the `test` job (lint + type-check + tests against a Postgres service
+container) runs on every push to every branch, as well as on PRs targeting `main` and on `v*` tag pushes. The
+`build-and-deploy` job only runs after `test` passes on a push directly to `main` or a `v*` tag — it builds the
+Docker image (`docker/Dockerfile`), pushes `usbtypec1/manashelper:<version>` / `:latest` to Docker Hub, then SSHes
+into the deploy host to pull and restart via `docker compose up -d`, followed by `docker image prune -af` to drop
+old, no-longer-referenced versioned app images (`docker-compose.yml` pins the `app` service to a specific
+`:<version>` tag each deploy, so without `-a` only dangling/untagged images would be cleaned and old version tags
+would keep accumulating on disk).
 
 ## Architecture
 
