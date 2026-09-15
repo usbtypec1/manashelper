@@ -1,6 +1,7 @@
 from contextlib import suppress
 
 from aiogram import F, Router
+from aiogram.enums import ChatType
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
@@ -24,6 +25,8 @@ from manashelper.services.obis import ObisService, UserHasNoCredentialsError, Us
 from manashelper.services.obis_formatter import format_attendance, format_exam_grades
 
 router = Router(name="obis")
+router.message.filter(F.chat.type == ChatType.PRIVATE)
+router.callback_query.filter(F.message.chat.type == ChatType.PRIVATE)
 
 
 class ObisCredentialsForm(StatesGroup):

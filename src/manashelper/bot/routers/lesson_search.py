@@ -1,4 +1,5 @@
 from aiogram import F, Router
+from aiogram.enums import ChatType
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -12,6 +13,8 @@ from manashelper.services.lesson_search import LessonSearchResult, LessonSearchS
 from manashelper.services.lesson_search_formatter import format_lesson_search_page, total_page_count
 
 router = Router(name="lesson_search")
+router.message.filter(F.chat.type == ChatType.PRIVATE)
+router.callback_query.filter(F.message.chat.type == ChatType.PRIVATE)
 
 MIN_QUERY_LENGTH = 2
 RESULTS_KEY = "lesson_search_results"
