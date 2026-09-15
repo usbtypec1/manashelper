@@ -5,22 +5,18 @@ from datetime import datetime
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.types import ErrorEvent, BotCommand, \
-    BotCommandScopeAllPrivateChats, BotCommandScopeAllGroupChats
+from aiogram.types import BotCommand, BotCommandScopeAllGroupChats, BotCommandScopeAllPrivateChats, ErrorEvent
 from alembic.config import Config
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dishka import make_async_container
 from dishka.integrations.aiogram import inject_router, setup_dishka
 
 from alembic import command
-from manashelper.bot.middlewares.per_chat_ordering import \
-    PerChatOrderingMiddleware
+from manashelper.bot.middlewares.per_chat_ordering import PerChatOrderingMiddleware
 from manashelper.bot.middlewares.rate_limit import RateLimitMiddleware
 from manashelper.bot.routers.food_menu import router as food_menu_router
-from manashelper.bot.routers.food_menu_notifications import \
-    router as food_menu_notifications_router
-from manashelper.bot.routers.lesson_search import \
-    router as lesson_search_router
+from manashelper.bot.routers.food_menu_notifications import router as food_menu_notifications_router
+from manashelper.bot.routers.lesson_search import router as lesson_search_router
 from manashelper.bot.routers.obis import router as obis_router
 from manashelper.bot.routers.settings import router as settings_router
 from manashelper.bot.routers.start import router as start_router
@@ -35,7 +31,6 @@ from manashelper.scheduler_jobs import (
     sync_timetable_job,
 )
 from manashelper.services.daily_menu import BISHKEK_TZ
-
 
 logger = logging.getLogger(__name__)
 
