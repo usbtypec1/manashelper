@@ -15,6 +15,7 @@ from dishka.integrations.aiogram import inject_router, setup_dishka
 from alembic import command
 from manashelper.bot.middlewares.per_chat_ordering import \
     PerChatOrderingMiddleware
+from manashelper.bot.middlewares.rate_limit import RateLimitMiddleware
 from manashelper.bot.routers.food_menu import router as food_menu_router
 from manashelper.bot.routers.food_menu_notifications import \
     router as food_menu_notifications_router
@@ -68,6 +69,11 @@ async def main() -> None:
         default=DefaultBotProperties(parse_mode=ParseMode.HTML)
         )
     dispatcher = Dispatcher()
+
+    # Rate-limit first, so a chat over its allowance is rejected before it even queues up
+    # for the per-chat ordering lock below.
+    dispatcher.message.outer_middleware(RateLimitMiddleware())
+    dispatcher.callback_query.outer_middleware(RateLimitMiddleware())
 
     dispatcher.message.outer_middleware(PerChatOrderingMiddleware())
     dispatcher.callback_query.outer_middleware(PerChatOrderingMiddleware())
