@@ -4,6 +4,9 @@ from manashelper.repositories.lesson_repository import LessonRepository
 from manashelper.repositories.user_repository import UserRepository
 from manashelper.services.course import UserNotFoundError
 
+LUNCH_START_MINUTES = 12 * 60 + 25
+LUNCH_END_MINUTES = 14 * 60 + 25
+
 
 class NoTrackedCoursesError(Exception):
     def __init__(self, user_id: int) -> None:
@@ -54,4 +57,16 @@ class ScheduleService:
                 for lesson in lessons
             ),
             key=lambda lesson: (lesson.weekday, parse_time_range_start_minutes(lesson.time_range)),
+        )
+
+    async def has_lesson_during_lunch(self, user_id: int, weekday: int) -> bool:
+        try:
+            lessons = await self.get_user_schedule(user_id)
+        except NoTrackedCoursesError:
+            return False
+        return any(
+            lesson.weekday == weekday
+            and parse_time_range_start_minutes(lesson.time_range) < LUNCH_END_MINUTES
+            and parse_time_range_end_minutes(lesson.time_range) > LUNCH_START_MINUTES
+            for lesson in lessons
         )

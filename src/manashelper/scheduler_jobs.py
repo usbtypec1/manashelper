@@ -18,12 +18,13 @@ from manashelper.repositories.user_repository import UserRepository
 from manashelper.scraping.obis_client import ObisLoginError
 from manashelper.scraping.obis_parser import ObisParseError
 from manashelper.services.daily_menu import BISHKEK_TZ, DailyMenuModel, DailyMenuNotFoundError, DailyMenuService
-from manashelper.services.food_menu_formatter import build_photos, format_daily_menu
+from manashelper.services.food_menu_formatter import build_photos, format_daily_menu, format_lunch_lesson_conflict
 from manashelper.services.food_menu_sync import FoodMenuSyncService
 from manashelper.services.obis import UserHasNoCredentialsError
 from manashelper.services.obis import UserNotFoundError as ObisUserNotFoundError
 from manashelper.services.obis_formatter import format_exam_grade_change, format_lesson_skip_change
 from manashelper.services.obis_notification import ExamGradeChange, LessonSkipChange, ObisNotificationService
+from manashelper.services.schedule import ScheduleService
 from manashelper.services.timetable_formatter import format_lesson_changes
 from manashelper.services.timetable_sync import TimetableSyncService
 
@@ -47,12 +48,25 @@ async def sync_daily_menus_job(container: AsyncContainer) -> None:
 
 
 async def _send_daily_menu_broadcast(
-    bot: Bot, user_repository: UserRepository, daily_menu: DailyMenuModel, user_ids: list[int]
+    bot: Bot,
+    user_repository: UserRepository,
+    schedule_service: ScheduleService,
+    daily_menu: DailyMenuModel,
+    user_ids: list[int],
+    *,
+    check_lunch_conflict: bool,
 ) -> None:
+    weekday = daily_menu.date.isoweekday()
     for user_id in user_ids:
         try:
             locale = await _get_user_locale(user_repository, user_id)
+            has_lunch_conflict = check_lunch_conflict and await schedule_service.has_lesson_during_lunch(
+                user_id, weekday
+            )
             with i18n.context(), i18n.use_locale(locale.value):
+                if has_lunch_conflict:
+                    await bot.send_message(chat_id=user_id, text=format_lunch_lesson_conflict())
+                    continue
                 caption = format_daily_menu(daily_menu)
                 media = build_photos(caption, daily_menu)
                 keyboard = build_open_food_menu_notifications_keyboard()
@@ -68,6 +82,7 @@ async def broadcast_lunch_menu_job(container: AsyncContainer, bot: Bot) -> None:
         async with container() as request_container:
             daily_menu_service = await request_container.get(DailyMenuService)
             user_repository = await request_container.get(UserRepository)
+            schedule_service = await request_container.get(ScheduleService)
             food_menu_notification_settings_repository = await request_container.get(
                 FoodMenuNotificationSettingsRepository
             )
@@ -80,7 +95,9 @@ async def broadcast_lunch_menu_job(container: AsyncContainer, bot: Bot) -> None:
             user_ids = await food_menu_notification_settings_repository.get_user_ids_with_lunch_enabled_for_weekday(
                 weekday
             )
-            await _send_daily_menu_broadcast(bot, user_repository, daily_menu, user_ids)
+            await _send_daily_menu_broadcast(
+                bot, user_repository, schedule_service, daily_menu, user_ids, check_lunch_conflict=True
+            )
     except Exception:
         logger.exception("Failed to broadcast lunch menu")
 
@@ -90,6 +107,7 @@ async def broadcast_dinner_menu_job(container: AsyncContainer, bot: Bot) -> None
         async with container() as request_container:
             daily_menu_service = await request_container.get(DailyMenuService)
             user_repository = await request_container.get(UserRepository)
+            schedule_service = await request_container.get(ScheduleService)
             food_menu_notification_settings_repository = await request_container.get(
                 FoodMenuNotificationSettingsRepository
             )
@@ -102,7 +120,9 @@ async def broadcast_dinner_menu_job(container: AsyncContainer, bot: Bot) -> None
             user_ids = await food_menu_notification_settings_repository.get_user_ids_with_dinner_enabled_for_weekday(
                 weekday
             )
-            await _send_daily_menu_broadcast(bot, user_repository, daily_menu, user_ids)
+            await _send_daily_menu_broadcast(
+                bot, user_repository, schedule_service, daily_menu, user_ids, check_lunch_conflict=False
+            )
     except Exception:
         logger.exception("Failed to broadcast dinner menu")
 
