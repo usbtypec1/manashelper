@@ -5,7 +5,9 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from manashelper.bot.callback_data import (
     FoodMenuNotificationBulkCallback,
     FoodMenuNotificationDayCallback,
+    FoodMenuNotificationMealCallback,
     FoodMenuNotificationNoopCallback,
+    FoodMenuNotificationWeekdayCallback,
     SettingsAction,
     SettingsCallback,
 )
@@ -24,12 +26,15 @@ def build_food_menu_notifications_keyboard(summary: FoodMenuNotificationSettings
     builder = InlineKeyboardBuilder()
 
     builder.button(text=".", callback_data=FoodMenuNotificationNoopCallback())
-    builder.button(text=_("Lunch"), callback_data=FoodMenuNotificationNoopCallback())
-    builder.button(text=_("Dinner"), callback_data=FoodMenuNotificationNoopCallback())
+    builder.button(text=_("Lunch"), callback_data=FoodMenuNotificationMealCallback(meal=FoodMenuMeal.LUNCH))
+    builder.button(text=_("Dinner"), callback_data=FoodMenuNotificationMealCallback(meal=FoodMenuMeal.DINNER))
 
     for day in summary.days:
         iso_weekday = day.weekday + 1
-        builder.button(text=weekday_abbr(iso_weekday), callback_data=FoodMenuNotificationNoopCallback())
+        builder.button(
+            text=weekday_abbr(iso_weekday),
+            callback_data=FoodMenuNotificationWeekdayCallback(weekday=day.weekday),
+        )
         builder.button(
             text=_mark(day.lunch_enabled),
             callback_data=FoodMenuNotificationDayCallback(weekday=day.weekday, meal=FoodMenuMeal.LUNCH),

@@ -68,6 +68,14 @@ class FoodMenuNotificationBulkCallback(CallbackData, prefix="food_menu_notificat
     enable: bool
 
 
+class FoodMenuNotificationWeekdayCallback(CallbackData, prefix="food_menu_notification_weekday"):
+    weekday: int
+
+
+class FoodMenuNotificationMealCallback(CallbackData, prefix="food_menu_notification_meal"):
+    meal: FoodMenuMeal
+
+
 class FoodMenuNotificationNoopCallback(CallbackData, prefix="food_menu_notification_noop"):
     pass
 

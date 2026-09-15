@@ -6,7 +6,9 @@ from dishka import FromDishka
 from manashelper.bot.callback_data import (
     FoodMenuNotificationBulkCallback,
     FoodMenuNotificationDayCallback,
+    FoodMenuNotificationMealCallback,
     FoodMenuNotificationNoopCallback,
+    FoodMenuNotificationWeekdayCallback,
     SettingsAction,
     SettingsCallback,
 )
@@ -54,6 +56,42 @@ async def on_toggle_food_menu_notification_day(
     try:
         summary = await food_menu_notification_settings_service.toggle(
             callback_query.from_user.id, callback_data.weekday, callback_data.meal
+        )
+    except UserNotFoundError:
+        await callback_query.answer(_("Please start with the /start command"), show_alert=True)
+        return
+    await _show_food_menu_notifications(callback_query, summary)
+    await callback_query.answer()
+
+
+@router.callback_query(FoodMenuNotificationWeekdayCallback.filter())
+@flags.private_chat_only
+async def on_toggle_food_menu_notification_weekday(
+    callback_query: CallbackQuery,
+    callback_data: FoodMenuNotificationWeekdayCallback,
+    food_menu_notification_settings_service: FromDishka[FoodMenuNotificationSettingsService],
+) -> None:
+    try:
+        summary = await food_menu_notification_settings_service.toggle_weekday(
+            callback_query.from_user.id, callback_data.weekday
+        )
+    except UserNotFoundError:
+        await callback_query.answer(_("Please start with the /start command"), show_alert=True)
+        return
+    await _show_food_menu_notifications(callback_query, summary)
+    await callback_query.answer()
+
+
+@router.callback_query(FoodMenuNotificationMealCallback.filter())
+@flags.private_chat_only
+async def on_toggle_food_menu_notification_meal(
+    callback_query: CallbackQuery,
+    callback_data: FoodMenuNotificationMealCallback,
+    food_menu_notification_settings_service: FromDishka[FoodMenuNotificationSettingsService],
+) -> None:
+    try:
+        summary = await food_menu_notification_settings_service.toggle_meal(
+            callback_query.from_user.id, callback_data.meal
         )
     except UserNotFoundError:
         await callback_query.answer(_("Please start with the /start command"), show_alert=True)
