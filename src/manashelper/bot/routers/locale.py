@@ -15,6 +15,7 @@ router = Router(name="locale")
 router.message.filter(F.chat.type == ChatType.PRIVATE)
 router.callback_query.filter(F.message.chat.type == ChatType.PRIVATE)
 
+
 @router.message(Command("language"))
 async def on_language_command(message: Message) -> None:
     await message.answer(LOCALE_PROMPT_TEXT, reply_markup=build_locale_keyboard())

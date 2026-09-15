@@ -22,6 +22,7 @@ router = Router(name="food_menu_notifications")
 router.message.filter(F.chat.type == ChatType.PRIVATE)
 router.callback_query.filter(F.message.chat.type == ChatType.PRIVATE)
 
+
 async def _show_food_menu_notifications(
     callback_query: CallbackQuery, summary: FoodMenuNotificationSettingsSummary
 ) -> None:
