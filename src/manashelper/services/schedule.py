@@ -58,15 +58,3 @@ class ScheduleService:
             ),
             key=lambda lesson: (lesson.weekday, parse_time_range_start_minutes(lesson.time_range)),
         )
-
-    async def has_lesson_during_lunch(self, user_id: int, weekday: int) -> bool:
-        try:
-            lessons = await self.get_user_schedule(user_id)
-        except NoTrackedCoursesError:
-            return False
-        return any(
-            lesson.weekday == weekday
-            and parse_time_range_start_minutes(lesson.time_range) < LUNCH_END_MINUTES
-            and parse_time_range_end_minutes(lesson.time_range) > LUNCH_START_MINUTES
-            for lesson in lessons
-        )
