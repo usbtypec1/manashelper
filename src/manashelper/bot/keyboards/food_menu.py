@@ -1,23 +1,28 @@
 import uuid
 
 from aiogram.types import InlineKeyboardMarkup
+from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from manashelper.bot.callback_data import FoodMenuCallback, FoodMenuDay, FoodMenuRatingCallback
 
-_DAY_LABELS = {
-    FoodMenuDay.TODAY: "📅 Сегодня",
-    FoodMenuDay.TOMORROW: "📆 Завтра",
-    FoodMenuDay.AFTER_TOMORROW: "🗓 Послезавтра",
-}
-
 _RATING_LABELS = {1: "1️⃣", 2: "2️⃣", 3: "3️⃣", 4: "4️⃣", 5: "5️⃣"}
+
+
+def _day_label(day: FoodMenuDay) -> str:
+    match day:
+        case FoodMenuDay.TODAY:
+            return _("📅 Today")
+        case FoodMenuDay.TOMORROW:
+            return _("📆 Tomorrow")
+        case _:
+            return _("🗓 Day after tomorrow")
 
 
 def build_day_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    for day, label in _DAY_LABELS.items():
-        builder.button(text=label, callback_data=FoodMenuCallback(day=day))
+    for day in FoodMenuDay:
+        builder.button(text=_day_label(day), callback_data=FoodMenuCallback(day=day))
     builder.adjust(1)
     return builder.as_markup()
 

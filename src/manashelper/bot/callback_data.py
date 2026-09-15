@@ -3,6 +3,7 @@ from enum import StrEnum
 
 from aiogram.filters.callback_data import CallbackData
 
+from manashelper.localization.locale import Locale
 from manashelper.services.food_menu_notification_settings import FoodMenuMeal
 from manashelper.services.notification_settings import NotificationSetting
 
@@ -89,6 +90,7 @@ class SettingsAction(StrEnum):
     BACK_TO_NOTIFICATIONS = "back_to_notifications"
     OPEN_COURSE_TRACKING = "open_course_tracking"
     OPEN_OBIS = "open_obis"
+    OPEN_LANGUAGE = "open_language"
     BACK_TO_SETTINGS = "back_to_settings"
 
 
@@ -98,3 +100,7 @@ class SettingsCallback(CallbackData, prefix="settings"):
 
 class NotificationSettingCallback(CallbackData, prefix="notification_setting"):
     setting: NotificationSetting
+
+
+class LocaleCallback(CallbackData, prefix="locale"):
+    locale: Locale

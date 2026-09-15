@@ -33,6 +33,7 @@ from manashelper.services.faculty import FacultyService
 from manashelper.services.food_menu_notification_settings import FoodMenuNotificationSettingsService
 from manashelper.services.food_menu_sync import FoodMenuSyncService
 from manashelper.services.lesson_search import LessonSearchService
+from manashelper.services.locale import LocaleService
 from manashelper.services.notification_settings import NotificationSettingsService
 from manashelper.services.obis import ObisService
 from manashelper.services.obis_notification import ObisNotificationService
@@ -108,3 +109,4 @@ class RequestProvider(Provider):
     timetable_sync_service = provide(TimetableSyncService)
     schedule_service = provide(ScheduleService)
     lesson_search_service = provide(LessonSearchService)
+    locale_service = provide(LocaleService)

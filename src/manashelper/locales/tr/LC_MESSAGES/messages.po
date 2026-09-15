@@ -1,0 +1,413 @@
+# Turkish translations for Manashelper.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the Manashelper
+# project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Manashelper VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-09-15 11:14+0600\n"
+"PO-Revision-Date: 2026-09-15 11:14+0600\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: tr\n"
+"Language-Team: tr <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+msgid "Start the bot"
+msgstr "Botu başlat"
+
+msgid "View the cafeteria menu"
+msgstr "Yemekhane menüsünü görüntüle"
+
+msgid "Change language"
+msgstr "Dili değiştir"
+
+msgid "Enjoy your meal! 🍽"
+msgstr "Afiyet olsun! 🍽"
+
+msgid "📅 Today"
+msgstr "📅 Bugün"
+
+msgid "📆 Tomorrow"
+msgstr "📆 Yarın"
+
+msgid "🗓 Day after tomorrow"
+msgstr "🗓 Öbür gün"
+
+msgid "Lunch"
+msgstr "Öğle"
+
+msgid "Dinner"
+msgstr "Akşam"
+
+msgid "✅ All"
+msgstr "✅ Hepsi"
+
+msgid "❌ All"
+msgstr "❌ Hepsi"
+
+msgid "◀️ Back"
+msgstr "◀️ Geri"
+
+msgid "⚙️ Configure notifications"
+msgstr "⚙️ Bildirimleri ayarla"
+
+msgid "🔄 Update credentials"
+msgstr "🔄 Bilgileri güncelle"
+
+msgid "🔑 Enter credentials"
+msgstr "🔑 Bilgileri gir"
+
+msgid "🗑 Clear credentials"
+msgstr "🗑 Bilgileri sil"
+
+msgid "✅ Yes, clear"
+msgstr "✅ Evet, sil"
+
+msgid "❌ Cancel"
+msgstr "❌ İptal"
+
+msgid "📃 Terms of use"
+msgstr "📃 Kullanım koşulları"
+
+msgid "✅ Accept terms"
+msgstr "✅ Koşulları kabul et"
+
+msgid "🔔 Notifications"
+msgstr "🔔 Bildirimler"
+
+msgid "📚 My lessons"
+msgstr "📚 Derslerim"
+
+msgid "🔑 OBIS credentials"
+msgstr "🔑 OBIS bilgileri"
+
+msgid "🌐 Language"
+msgstr "🌐 Dil"
+
+msgid "Schedule changes"
+msgstr "Ders programı değişiklikleri"
+
+msgid "🍉 Food"
+msgstr "🍉 Yemek"
+
+msgid "Exam grades"
+msgstr "Sınav notları"
+
+msgid "Lesson skips"
+msgstr "Devamsızlıklar"
+
+msgid "📅 My schedule"
+msgstr "📅 Ders programım"
+
+msgid "🔎 Search for a subject"
+msgstr "🔎 Ders ara"
+
+msgid "📚 Choose courses"
+msgstr "📚 Ders seç"
+
+#, python-brace-format
+msgid "Year {number}"
+msgstr "{number}. sınıf"
+
+msgid ""
+"🍉 <b>Cafeteria menu</b>\n"
+"\n"
+"Choose a day below or send a command:\n"
+"• <code>/yemek today</code> — today\n"
+"• <code>/yemek tomorrow</code> — tomorrow\n"
+"• <code>/yemek 2</code> — in N days"
+msgstr ""
+"🍉 <b>Yemekhane menüsü</b>\n"
+"\n"
+"Aşağıdan bir gün seçin veya komut gönderin:\n"
+"• <code>/yemek today</code> — bugün\n"
+"• <code>/yemek tomorrow</code> — yarın\n"
+"• <code>/yemek 2</code> — N gün sonra"
+
+msgid "⭐ Rate the menu:"
+msgstr "⭐ Menüyü değerlendirin:"
+
+msgid "ℹ️ Usage: <code>/yemek today</code>, <code>/yemek tomorrow</code>, or <code>/yemek 2</code>"
+msgstr "ℹ️ Kullanım: <code>/yemek today</code>, <code>/yemek tomorrow</code> veya <code>/yemek 2</code>"
+
+msgid "Thanks for your rating!"
+msgstr "Değerlendirmeniz için teşekkürler!"
+
+msgid "🍽 Fine-tune menu notifications"
+msgstr "🍽 Menü bildirimlerini özelleştir"
+
+msgid "Please start with the /start command"
+msgstr "Lütfen /start komutuyla başlayın"
+
+msgid "this isn't a button"
+msgstr "buna basma"
+
+msgid "Enter the subject name. You can type Turkish letters using regular Latin ones (e.g. s instead of ş, or i instead of ı)."
+msgstr "Ders adını girin. Türkçe harfleri normal Latin harfleriyle de yazabilirsiniz (örneğin ş yerine s, ı yerine i)."
+
+msgid "The query is too short. Open «🔎 Search for a subject» again and try once more."
+msgstr "Sorgu çok kısa. «🔎 Ders ara»yı tekrar açıp yeniden deneyin."
+
+msgid "Nothing found."
+msgstr "Hiçbir şey bulunamadı."
+
+msgid "The search results have expired. Please search again."
+msgstr "Arama sonuçlarının süresi doldu. Lütfen tekrar arayın."
+
+#, python-brace-format
+msgid "✅ Language: {language}"
+msgstr "✅ Dil: {language}"
+
+msgid "You haven't saved your OBIS credentials. Enter them using the button below."
+msgstr "OBIS bilgileriniz kayıtlı değil. Aşağıdaki butonla girin."
+
+msgid "Your OBIS credentials are invalid. Enter them again using the button below."
+msgstr "OBIS bilgileriniz hatalı. Aşağıdaki butonla yeniden girin."
+
+msgid "Couldn't fetch data from OBIS. Please try again later."
+msgstr "OBIS'ten veri alınamadı. Lütfen daha sonra tekrar deneyin."
+
+msgid "Please accept the bot's terms of use to continue."
+msgstr "Devam etmek için lütfen botun kullanım koşullarını kabul edin."
+
+msgid "Enter your student number:"
+msgstr "Öğrenci numaranızı girin:"
+
+msgid "Cancelled"
+msgstr "İptal edildi"
+
+msgid "Are you sure you want to clear your saved OBIS credentials?"
+msgstr "Kayıtlı OBIS bilgilerinizi silmek istediğinizden emin misiniz?"
+
+msgid "OBIS credentials removed ✅"
+msgstr "OBIS bilgileri silindi ✅"
+
+msgid "The student number can't be empty. Please try again:"
+msgstr "Öğrenci numarası boş olamaz. Lütfen tekrar deneyin:"
+
+msgid "Enter your OBIS password:"
+msgstr "OBIS şifrenizi girin:"
+
+msgid "Something went wrong. Please try again."
+msgstr "Bir şeyler ters gitti. Lütfen tekrar deneyin."
+
+msgid "Invalid OBIS credentials. Enter your student number again:"
+msgstr "OBIS bilgileri hatalı. Öğrenci numaranızı tekrar girin:"
+
+msgid "Credentials saved successfully ✅"
+msgstr "Bilgiler başarıyla kaydedildi ✅"
+
+msgid "Bot notification settings"
+msgstr "Bot bildirim ayarları"
+
+msgid "Settings"
+msgstr "Ayarlar"
+
+msgid "List of faculties"
+msgstr "Fakülteler listesi"
+
+msgid "OBIS settings"
+msgstr "OBIS ayarları"
+
+msgid "📅 Schedule"
+msgstr "📅 Ders programı"
+
+msgid "📋 Attendance"
+msgstr "📋 Yoklama"
+
+msgid "💯 Grades"
+msgstr "💯 Notlar"
+
+msgid "⚙️ Settings"
+msgstr "⚙️ Ayarlar"
+
+msgid "Welcome to Manashelper!"
+msgstr "Manashelper'a hoş geldiniz!"
+
+msgid "You have no tracked courses yet. Pick your courses with the button below to see your schedule."
+msgstr "Henüz takip ettiğiniz bir ders yok. Ders programınızı görmek için aşağıdaki butondan derslerinizi seçin."
+
+msgid "The schedule for your courses hasn't been loaded yet. It updates once an hour — please check back a bit later."
+msgstr "Derslerinizin ders programı henüz yüklenmedi. Saatte bir güncelleniyor — lütfen biraz sonra tekrar deneyin."
+
+msgid "You no longer have any tracked courses"
+msgstr "Artık takip ettiğiniz bir ders kalmadı"
+
+msgid "List of departments"
+msgstr "Bölümler listesi"
+
+msgid "List of courses"
+msgstr "Ders listesi"
+
+msgid "Course not found"
+msgstr "Ders bulunamadı"
+
+#, python-brace-format
+msgid "🍽 <b>Menu for {weekday}, {date}</b>"
+msgstr "🍽 <b>{weekday}, {date} menüsü</b>"
+
+#, python-brace-format
+msgid "{index}. {name} — <b>{calories}</b> kcal"
+msgstr "{index}. {name} — <b>{calories}</b> kcal"
+
+#, python-brace-format
+msgid "🔥 Total: <b>{calories}</b> kcal"
+msgstr "🔥 Toplam: <b>{calories}</b> kcal"
+
+#, python-brace-format
+msgid "⭐ Rating: <b>{average}</b> ({count})"
+msgstr "⭐ Puan: <b>{average}</b> ({count})"
+
+msgid "⭐ No ratings yet"
+msgstr "⭐ Henüz puan yok"
+
+#, python-brace-format
+msgid "👁 Views: {count}"
+msgstr "👁 Görüntülenme: {count}"
+
+msgid "😔 Today's menu hasn't been published yet."
+msgstr "😔 Bugünün menüsü henüz yayınlanmadı."
+
+msgid "😔 The menu for that day hasn't been published yet."
+msgstr "😔 Seçilen günün menüsü henüz yayınlanmadı."
+
+#, python-brace-format
+msgid "🏫 {faculty} — {department}, {course_year}"
+msgstr "🏫 {faculty} — {department}, {course_year}"
+
+#, python-brace-format
+msgid "📅 {weekday}"
+msgstr "📅 {weekday}"
+
+#, python-brace-format
+msgid "🔎 Found: {total} (page {page}/{total_pages})"
+msgstr "🔎 Bulunan: {total} (sayfa {page}/{total_pages})"
+
+#, python-brace-format
+msgid "🔎 Found: {total}"
+msgstr "🔎 Bulunan: {total}"
+
+msgid "You don't have any exam grades."
+msgstr "Sınav notunuz bulunmuyor."
+
+msgid "You don't have any subjects."
+msgstr "Herhangi bir dersiniz yok."
+
+msgid "Theory"
+msgstr "Teori"
+
+msgid "Practice"
+msgstr "Uygulama"
+
+#, python-brace-format
+msgid "{count} skip left"
+msgid_plural "{count} skips left"
+msgstr[0] "{count} hak kaldı"
+
+msgid "Subject"
+msgstr "Ders"
+
+msgid "Exam"
+msgstr "Sınav"
+
+#, python-brace-format
+msgid ""
+"🔔 New grade for the subject «{lesson}»\n"
+"{exam}: {score}"
+msgstr ""
+"🔔 «{lesson}» dersi için yeni not\n"
+"{exam}: {score}"
+
+msgid "theory"
+msgstr "teori"
+
+msgid "practice"
+msgstr "uygulama"
+
+#, python-brace-format
+msgid "⚠️ A skip was recorded for the subject «{lesson}» ({skip_type})"
+msgstr "⚠️ «{lesson}» dersinde devamsızlık kaydedildi ({skip_type})"
+
+#, python-brace-format
+msgid "Missed: {percent}%"
+msgstr "Devamsızlık: %{percent}"
+
+#, python-brace-format
+msgid "You have {count} skip left"
+msgid_plural "You have {count} skips left"
+msgstr[0] "{count} hak kaldı"
+
+msgid "Mon"
+msgstr "Pzt"
+
+msgid "Tue"
+msgstr "Sal"
+
+msgid "Wed"
+msgstr "Çar"
+
+msgid "Thu"
+msgstr "Per"
+
+msgid "Fri"
+msgstr "Cum"
+
+msgid "Sat"
+msgstr "Cmt"
+
+msgid "Sun"
+msgstr "Paz"
+
+msgid "Monday"
+msgstr "Pazartesi"
+
+msgid "Tuesday"
+msgstr "Salı"
+
+msgid "Wednesday"
+msgstr "Çarşamba"
+
+msgid "Thursday"
+msgstr "Perşembe"
+
+msgid "Friday"
+msgstr "Cuma"
+
+msgid "Saturday"
+msgstr "Cumartesi"
+
+msgid "Sunday"
+msgstr "Pazar"
+
+#, python-brace-format
+msgid "📅 <b>{day}</b>"
+msgstr "📅 <b>{day}</b>"
+
+msgid "No classes."
+msgstr "Ders yok."
+
+msgid "😋 Lunch break. Find out what's for lunch - /yemek"
+msgstr "😋 Öğle arası. Yemekte ne var öğrenmek için - /yemek"
+
+msgid "🔔 Schedule changes:"
+msgstr "🔔 Ders programı değişiklikleri:"
+
+#, python-brace-format
+msgid "➕ {weekday} {time_range}: {content}"
+msgstr "➕ {weekday} {time_range}: {content}"
+
+#, python-brace-format
+msgid "➖ {weekday} {time_range}: {content} (cancelled)"
+msgstr "➖ {weekday} {time_range}: {content} (iptal edildi)"
+
+#, python-brace-format
+msgid "✏️ {weekday} {time_range}: {previous} → {new}"
+msgstr "✏️ {weekday} {time_range}: {previous} → {new}"
+

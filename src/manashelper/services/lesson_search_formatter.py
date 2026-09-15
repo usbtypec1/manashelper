@@ -1,7 +1,9 @@
 import math
 
+from aiogram.utils.i18n import gettext as _
+
 from manashelper.services.lesson_search import LessonSearchResult
-from manashelper.services.timetable_formatter import WEEKDAY_LABELS
+from manashelper.services.timetable_formatter import weekday_abbr
 
 GROUPS_PER_PAGE = 7
 
@@ -11,10 +13,12 @@ def total_page_count(results: list[LessonSearchResult]) -> int:
 
 
 def _format_result(result: LessonSearchResult) -> list[str]:
-    weekday_label = WEEKDAY_LABELS.get(result.weekday, "?")
+    course_year = _("Year {number}").format(number=result.course_number)
     lines = [
-        f"🏫 {result.faculty_name} — {result.department_name}, {result.course_number} курс",
-        f"📅 {weekday_label}",
+        _("🏫 {faculty} — {department}, {course_year}").format(
+            faculty=result.faculty_name, department=result.department_name, course_year=course_year
+        ),
+        _("📅 {weekday}").format(weekday=weekday_abbr(result.weekday)),
         result.content,
     ]
     lines.extend(f"- {time_range}" for time_range in result.time_ranges)
@@ -27,9 +31,12 @@ def format_lesson_search_page(results: list[LessonSearchResult], page: int) -> s
     start = page * GROUPS_PER_PAGE
     chunk = results[start : start + GROUPS_PER_PAGE]
 
-    header = f"🔎 Найдено: {total}"
     if total_pages > 1:
-        header += f" (страница {page + 1}/{total_pages})"
+        header = _("🔎 Found: {total} (page {page}/{total_pages})").format(
+            total=total, page=page + 1, total_pages=total_pages
+        )
+    else:
+        header = _("🔎 Found: {total}").format(total=total)
     lines = [header, ""]
 
     for result in chunk:

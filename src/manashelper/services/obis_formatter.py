@@ -1,10 +1,13 @@
+from aiogram.utils.i18n import gettext as _
+from aiogram.utils.i18n import ngettext
+
 from manashelper.services.obis import LessonAttendanceModel, LessonExamsModel
 from manashelper.services.obis_notification import ExamGradeChange, LessonSkipChange, SkipType
 
 
 def format_exam_grades(lessons: list[LessonExamsModel]) -> str:
     if not lessons:
-        return "У вас нет оценок за экзамены."
+        return _("You don't have any exam grades.")
 
     blocks = []
     for lesson in lessons:
@@ -19,7 +22,7 @@ def format_exam_grades(lessons: list[LessonExamsModel]) -> str:
 
 def format_attendance(lessons: list[LessonAttendanceModel]) -> str:
     if not lessons:
-        return "У вас нет предметов."
+        return _("You don't have any subjects.")
 
     blocks = []
     for lesson in lessons:
@@ -35,8 +38,8 @@ def format_attendance(lessons: list[LessonAttendanceModel]) -> str:
         block = "\n".join(
             [
                 name,
-                _format_skips_line("Теория", lesson.theory_skips_percentage, theory_skips),
-                _format_skips_line("Практика", lesson.practice_skips_percentage, practice_skips),
+                _format_skips_line(_("Theory"), lesson.theory_skips_percentage, theory_skips),
+                _format_skips_line(_("Practice"), lesson.practice_skips_percentage, practice_skips),
             ]
         )
         blocks.append(block)
@@ -48,7 +51,8 @@ def _format_skips_line(label: str, percentage: float | None, skippable: int | No
     line = f"{label}: {_format_float(percentage)}%"
     if skippable is None:
         return line
-    return f"{line} (осталось {skippable} {_inflect_skips(skippable)})"
+    left = ngettext("{count} skip left", "{count} skips left", skippable).format(count=skippable)
+    return f"{line} ({left})"
 
 
 def _format_float(value: float | None) -> str:
@@ -58,27 +62,26 @@ def _format_float(value: float | None) -> str:
     return text or "0"
 
 
-def _inflect_skips(count: int) -> str:
-    count = abs(count)
-    if count % 10 == 1 and count % 100 != 11:
-        return "пропуск"
-    if count % 10 in (2, 3, 4) and not (12 <= count % 100 <= 14):
-        return "пропуска"
-    return "пропусков"
-
-
 def format_exam_grade_change(change: ExamGradeChange) -> str:
-    lesson = change.lesson_name or "Предмет"
-    exam = change.exam_name or "Экзамен"
-    return f"🔔 Новая оценка по предмету «{lesson}»\n{exam}: {change.score}"
+    lesson = change.lesson_name or _("Subject")
+    exam = change.exam_name or _("Exam")
+    return _("🔔 New grade for the subject «{lesson}»\n{exam}: {score}").format(
+        lesson=lesson, exam=exam, score=change.score
+    )
 
 
 def format_lesson_skip_change(change: LessonSkipChange) -> str:
-    skip_type_label = "теория" if change.skip_type is SkipType.THEORY else "практика"
+    skip_type_label = _("theory") if change.skip_type is SkipType.THEORY else _("practice")
     lines = [
-        f"⚠️ Зафиксирован пропуск по предмету «{change.lesson_name}» ({skip_type_label})",
-        f"Пропущено: {_format_float(change.skips_percentage)}%",
+        _("⚠️ A skip was recorded for the subject «{lesson}» ({skip_type})").format(
+            lesson=change.lesson_name, skip_type=skip_type_label
+        ),
+        _("Missed: {percent}%").format(percent=_format_float(change.skips_percentage)),
     ]
     if change.skippable is not None:
-        lines.append(f"Осталось {change.skippable} {_inflect_skips(change.skippable)}")
+        lines.append(
+            ngettext("You have {count} skip left", "You have {count} skips left", change.skippable).format(
+                count=change.skippable
+            )
+        )
     return "\n".join(lines)

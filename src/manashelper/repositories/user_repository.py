@@ -27,3 +27,8 @@ class UserRepository:
             user.full_name = full_name
             user.username = username
         return user
+
+    async def set_locale(self, user_id: int, locale: str) -> None:
+        user = await self._session.get(User, user_id)
+        if user is not None:
+            user.locale = locale

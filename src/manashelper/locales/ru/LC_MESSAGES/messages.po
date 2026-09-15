@@ -1,0 +1,417 @@
+# Russian translations for Manashelper.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the Manashelper
+# project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Manashelper VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-09-15 11:14+0600\n"
+"PO-Revision-Date: 2026-09-15 11:14+0600\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ru\n"
+"Language-Team: ru <LL@li.org>\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+msgid "Start the bot"
+msgstr "Запуск бота"
+
+msgid "View the cafeteria menu"
+msgstr "Просмотр меню столовой"
+
+msgid "Change language"
+msgstr "Сменить язык"
+
+msgid "Enjoy your meal! 🍽"
+msgstr "Приятного аппетита! 🍽"
+
+msgid "📅 Today"
+msgstr "📅 Сегодня"
+
+msgid "📆 Tomorrow"
+msgstr "📆 Завтра"
+
+msgid "🗓 Day after tomorrow"
+msgstr "🗓 Послезавтра"
+
+msgid "Lunch"
+msgstr "Обед"
+
+msgid "Dinner"
+msgstr "Ужин"
+
+msgid "✅ All"
+msgstr "✅ Все"
+
+msgid "❌ All"
+msgstr "❌ Все"
+
+msgid "◀️ Back"
+msgstr "◀️ Назад"
+
+msgid "⚙️ Configure notifications"
+msgstr "⚙️ Настроить уведомления"
+
+msgid "🔄 Update credentials"
+msgstr "🔄 Обновить данные"
+
+msgid "🔑 Enter credentials"
+msgstr "🔑 Ввести данные"
+
+msgid "🗑 Clear credentials"
+msgstr "🗑 Очистить данные"
+
+msgid "✅ Yes, clear"
+msgstr "✅ Да, очистить"
+
+msgid "❌ Cancel"
+msgstr "❌ Отмена"
+
+msgid "📃 Terms of use"
+msgstr "📃 Условия использования"
+
+msgid "✅ Accept terms"
+msgstr "✅ Принять условия"
+
+msgid "🔔 Notifications"
+msgstr "🔔 Уведомления"
+
+msgid "📚 My lessons"
+msgstr "📚 Мои уроки"
+
+msgid "🔑 OBIS credentials"
+msgstr "🔑 Данные OBIS"
+
+msgid "🌐 Language"
+msgstr "🌐 Язык"
+
+msgid "Schedule changes"
+msgstr "Изменения расписания"
+
+msgid "🍉 Food"
+msgstr "🍉 Йемек"
+
+msgid "Exam grades"
+msgstr "Оценки за экзамены"
+
+msgid "Lesson skips"
+msgstr "Пропуски уроков"
+
+msgid "📅 My schedule"
+msgstr "📅 Моё расписание"
+
+msgid "🔎 Search for a subject"
+msgstr "🔎 Поиск предмета"
+
+msgid "📚 Choose courses"
+msgstr "📚 Выбрать курсы"
+
+#, python-brace-format
+msgid "Year {number}"
+msgstr "{number} курс"
+
+msgid ""
+"🍉 <b>Cafeteria menu</b>\n"
+"\n"
+"Choose a day below or send a command:\n"
+"• <code>/yemek today</code> — today\n"
+"• <code>/yemek tomorrow</code> — tomorrow\n"
+"• <code>/yemek 2</code> — in N days"
+msgstr ""
+"🍉 <b>Меню столовой</b>\n"
+"\n"
+"Выберите день ниже или отправьте команду:\n"
+"• <code>/yemek today</code> — сегодня\n"
+"• <code>/yemek tomorrow</code> — завтра\n"
+"• <code>/yemek 2</code> — через N дней"
+
+msgid "⭐ Rate the menu:"
+msgstr "⭐ Оцените меню:"
+
+msgid "ℹ️ Usage: <code>/yemek today</code>, <code>/yemek tomorrow</code>, or <code>/yemek 2</code>"
+msgstr "ℹ️ Использование: <code>/yemek today</code>, <code>/yemek tomorrow</code> или <code>/yemek 2</code>"
+
+msgid "Thanks for your rating!"
+msgstr "Спасибо за оценку!"
+
+msgid "🍽 Fine-tune menu notifications"
+msgstr "🍽 Точечная настройка уведомлений о меню"
+
+msgid "Please start with the /start command"
+msgstr "Пожалуйста, начните с команды /start"
+
+msgid "this isn't a button"
+msgstr "не жмакай сюды"
+
+msgid "Enter the subject name. You can type Turkish letters using regular Latin ones (e.g. s instead of ş, or i instead of ı)."
+msgstr "Введите название предмета. Турецкие буквы можно набирать обычными латинскими (например, s вместо ş или i вместо ı)."
+
+msgid "The query is too short. Open «🔎 Search for a subject» again and try once more."
+msgstr "Слишком короткий запрос. Откройте «🔎 Поиск предмета» ещё раз и попробуйте снова."
+
+msgid "Nothing found."
+msgstr "Ничего не найдено."
+
+msgid "The search results have expired. Please search again."
+msgstr "Результаты поиска устарели. Повторите поиск ещё раз."
+
+#, python-brace-format
+msgid "✅ Language: {language}"
+msgstr "✅ Язык: {language}"
+
+msgid "You haven't saved your OBIS credentials. Enter them using the button below."
+msgstr "У вас не сохранены данные от OBIS. Введите их кнопкой ниже."
+
+msgid "Your OBIS credentials are invalid. Enter them again using the button below."
+msgstr "Неверные данные от OBIS. Введите их заново кнопкой ниже."
+
+msgid "Couldn't fetch data from OBIS. Please try again later."
+msgstr "Не удалось получить данные с OBIS. Попробуйте позже."
+
+msgid "Please accept the bot's terms of use to continue."
+msgstr "Пожалуйста, примите условия использования бота, чтобы продолжить."
+
+msgid "Enter your student number:"
+msgstr "Введите ваш студенческий номер:"
+
+msgid "Cancelled"
+msgstr "Отменено"
+
+msgid "Are you sure you want to clear your saved OBIS credentials?"
+msgstr "Вы уверены, что хотите очистить сохранённые данные от OBIS?"
+
+msgid "OBIS credentials removed ✅"
+msgstr "Данные от OBIS удалены ✅"
+
+msgid "The student number can't be empty. Please try again:"
+msgstr "Студенческий номер не может быть пустым. Попробуйте снова:"
+
+msgid "Enter your OBIS password:"
+msgstr "Введите ваш пароль от OBIS:"
+
+msgid "Something went wrong. Please try again."
+msgstr "Что-то пошло не так. Попробуйте снова."
+
+msgid "Invalid OBIS credentials. Enter your student number again:"
+msgstr "Неверные данные от OBIS. Введите студенческий номер заново:"
+
+msgid "Credentials saved successfully ✅"
+msgstr "Данные успешно сохранены ✅"
+
+msgid "Bot notification settings"
+msgstr "Настройки уведомлений бота"
+
+msgid "Settings"
+msgstr "Настройки"
+
+msgid "List of faculties"
+msgstr "Список факультетов"
+
+msgid "OBIS settings"
+msgstr "Настройки OBIS"
+
+msgid "📅 Schedule"
+msgstr "📅 Расписание"
+
+msgid "📋 Attendance"
+msgstr "📋 Йоклама"
+
+msgid "💯 Grades"
+msgstr "💯 Оценки"
+
+msgid "⚙️ Settings"
+msgstr "⚙️ Настройки"
+
+msgid "Welcome to Manashelper!"
+msgstr "Добро пожаловать в Manashelper!"
+
+msgid "You have no tracked courses yet. Pick your courses with the button below to see your schedule."
+msgstr "У вас нет отслеживаемых курсов. Выберите курсы кнопкой ниже, чтобы видеть расписание."
+
+msgid "The schedule for your courses hasn't been loaded yet. It updates once an hour — please check back a bit later."
+msgstr "Расписание для ваших курсов ещё не загружено. Оно обновляется раз в час — попробуйте зайти чуть позже."
+
+msgid "You no longer have any tracked courses"
+msgstr "У вас больше нет отслеживаемых курсов"
+
+msgid "List of departments"
+msgstr "Список направлений"
+
+msgid "List of courses"
+msgstr "Список курсов"
+
+msgid "Course not found"
+msgstr "Курс не найден"
+
+#, python-brace-format
+msgid "🍽 <b>Menu for {weekday}, {date}</b>"
+msgstr "🍽 <b>Меню на {weekday}, {date}</b>"
+
+#, python-brace-format
+msgid "{index}. {name} — <b>{calories}</b> kcal"
+msgstr "{index}. {name} — <b>{calories}</b> ккал"
+
+#, python-brace-format
+msgid "🔥 Total: <b>{calories}</b> kcal"
+msgstr "🔥 Итого: <b>{calories}</b> ккал"
+
+#, python-brace-format
+msgid "⭐ Rating: <b>{average}</b> ({count})"
+msgstr "⭐ Оценка: <b>{average}</b> ({count})"
+
+msgid "⭐ No ratings yet"
+msgstr "⭐ Оценок пока нет"
+
+#, python-brace-format
+msgid "👁 Views: {count}"
+msgstr "👁 Просмотров: {count}"
+
+msgid "😔 Today's menu hasn't been published yet."
+msgstr "😔 Меню на сегодня ещё не опубликовано."
+
+msgid "😔 The menu for that day hasn't been published yet."
+msgstr "😔 Меню на выбранный день ещё не опубликовано."
+
+#, python-brace-format
+msgid "🏫 {faculty} — {department}, {course_year}"
+msgstr "🏫 {faculty} — {department}, {course_year}"
+
+#, python-brace-format
+msgid "📅 {weekday}"
+msgstr "📅 {weekday}"
+
+#, python-brace-format
+msgid "🔎 Found: {total} (page {page}/{total_pages})"
+msgstr "🔎 Найдено: {total} (страница {page}/{total_pages})"
+
+#, python-brace-format
+msgid "🔎 Found: {total}"
+msgstr "🔎 Найдено: {total}"
+
+msgid "You don't have any exam grades."
+msgstr "У вас нет оценок за экзамены."
+
+msgid "You don't have any subjects."
+msgstr "У вас нет предметов."
+
+msgid "Theory"
+msgstr "Теория"
+
+msgid "Practice"
+msgstr "Практика"
+
+#, python-brace-format
+msgid "{count} skip left"
+msgid_plural "{count} skips left"
+msgstr[0] "осталось {count} пропуск"
+msgstr[1] "осталось {count} пропуска"
+msgstr[2] "осталось {count} пропусков"
+
+msgid "Subject"
+msgstr "Предмет"
+
+msgid "Exam"
+msgstr "Экзамен"
+
+#, python-brace-format
+msgid ""
+"🔔 New grade for the subject «{lesson}»\n"
+"{exam}: {score}"
+msgstr ""
+"🔔 Новая оценка по предмету «{lesson}»\n"
+"{exam}: {score}"
+
+msgid "theory"
+msgstr "теория"
+
+msgid "practice"
+msgstr "практика"
+
+#, python-brace-format
+msgid "⚠️ A skip was recorded for the subject «{lesson}» ({skip_type})"
+msgstr "⚠️ Зафиксирован пропуск по предмету «{lesson}» ({skip_type})"
+
+#, python-brace-format
+msgid "Missed: {percent}%"
+msgstr "Пропущено: {percent}%"
+
+#, python-brace-format
+msgid "You have {count} skip left"
+msgid_plural "You have {count} skips left"
+msgstr[0] "Осталось {count} пропуск"
+msgstr[1] "Осталось {count} пропуска"
+msgstr[2] "Осталось {count} пропусков"
+
+msgid "Mon"
+msgstr "Пн"
+
+msgid "Tue"
+msgstr "Вт"
+
+msgid "Wed"
+msgstr "Ср"
+
+msgid "Thu"
+msgstr "Чт"
+
+msgid "Fri"
+msgstr "Пт"
+
+msgid "Sat"
+msgstr "Сб"
+
+msgid "Sun"
+msgstr "Вс"
+
+msgid "Monday"
+msgstr "Понедельник"
+
+msgid "Tuesday"
+msgstr "Вторник"
+
+msgid "Wednesday"
+msgstr "Среда"
+
+msgid "Thursday"
+msgstr "Четверг"
+
+msgid "Friday"
+msgstr "Пятница"
+
+msgid "Saturday"
+msgstr "Суббота"
+
+msgid "Sunday"
+msgstr "Воскресенье"
+
+#, python-brace-format
+msgid "📅 <b>{day}</b>"
+msgstr "📅 <b>{day}</b>"
+
+msgid "No classes."
+msgstr "Пар нет."
+
+msgid "😋 Lunch break. Find out what's for lunch - /yemek"
+msgstr "😋 Обед. Узнать что на йемек - /yemek"
+
+msgid "🔔 Schedule changes:"
+msgstr "🔔 Изменения в расписании:"
+
+#, python-brace-format
+msgid "➕ {weekday} {time_range}: {content}"
+msgstr "➕ {weekday} {time_range}: {content}"
+
+#, python-brace-format
+msgid "➖ {weekday} {time_range}: {content} (cancelled)"
+msgstr "➖ {weekday} {time_range}: {content} (отменено)"
+
+#, python-brace-format
+msgid "✏️ {weekday} {time_range}: {previous} → {new}"
+msgstr "✏️ {weekday} {time_range}: {previous} → {new}"
+

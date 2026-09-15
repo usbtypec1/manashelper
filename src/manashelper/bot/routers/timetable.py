@@ -2,6 +2,7 @@ from datetime import datetime
 
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
+from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
 from manashelper.bot.callback_data import (
@@ -12,6 +13,7 @@ from manashelper.bot.callback_data import (
     TimetableMenuAction,
     TimetableMenuCallback,
 )
+from manashelper.bot.filters.translated_text import TranslatedText
 from manashelper.bot.keyboards.timetable import (
     build_course_keyboard,
     build_department_keyboard,
@@ -27,12 +29,6 @@ from manashelper.services.timetable_formatter import format_day_schedule
 
 router = Router(name="timetable")
 
-TIMETABLE_MENU_TEXT = "📅 Расписание"
-NO_TRACKED_COURSES_TEXT = "У вас нет отслеживаемых курсов. Выберите курсы кнопкой ниже, чтобы видеть расписание."
-SCHEDULE_NOT_SYNCED_TEXT = (
-    "Расписание для ваших курсов ещё не загружено. Оно обновляется раз в час — попробуйте зайти чуть позже."
-)
-
 _WORKDAYS = (1, 2, 3, 4, 5)
 
 
@@ -41,9 +37,9 @@ def _current_weekday(now: datetime) -> int:
     return weekday if weekday in _WORKDAYS else _WORKDAYS[0]
 
 
-@router.message(F.text == "📅 Расписание")
+@router.message(TranslatedText("📅 Schedule"))
 async def on_timetable_menu_button(message: Message) -> None:
-    await message.answer(TIMETABLE_MENU_TEXT, reply_markup=build_timetable_menu_keyboard())
+    await message.answer(_("📅 Schedule"), reply_markup=build_timetable_menu_keyboard())
 
 
 @router.callback_query(TimetableMenuCallback.filter(F.action == TimetableMenuAction.OPEN_MY_SCHEDULE))
@@ -54,18 +50,25 @@ async def on_my_schedule_selected(
     try:
         lessons = await schedule_service.get_user_schedule(callback_query.from_user.id)
     except UserNotFoundError:
-        await callback_query.answer("Пожалуйста, начните с команды /start", show_alert=True)
+        await callback_query.answer(_("Please start with the /start command"), show_alert=True)
         return
     except NoTrackedCoursesError:
         if isinstance(callback_query.message, Message):
             await callback_query.message.edit_text(
-                NO_TRACKED_COURSES_TEXT, reply_markup=build_no_tracked_courses_keyboard()
+                _("You have no tracked courses yet. Pick your courses with the button below to see your schedule."),
+                reply_markup=build_no_tracked_courses_keyboard(),
             )
         await callback_query.answer()
         return
 
     if not lessons:
-        await callback_query.answer(SCHEDULE_NOT_SYNCED_TEXT, show_alert=True)
+        await callback_query.answer(
+            _(
+                "The schedule for your courses hasn't been loaded yet. It updates once an hour "
+                "— please check back a bit later."
+            ),
+            show_alert=True,
+        )
         return
 
     weekday = _current_weekday(datetime.now(BISHKEK_TZ))
@@ -86,10 +89,10 @@ async def on_schedule_day_selected(
     try:
         lessons = await schedule_service.get_user_schedule(callback_query.from_user.id)
     except UserNotFoundError:
-        await callback_query.answer("Пожалуйста, начните с команды /start", show_alert=True)
+        await callback_query.answer(_("Please start with the /start command"), show_alert=True)
         return
     except NoTrackedCoursesError:
-        await callback_query.answer("У вас больше нет отслеживаемых курсов", show_alert=True)
+        await callback_query.answer(_("You no longer have any tracked courses"), show_alert=True)
         return
 
     if isinstance(callback_query.message, Message):
@@ -109,7 +112,7 @@ async def list_departments(
     departments = await department_service.get_departments_by_faculty(callback_data.id)
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(
-            "Список направлений", reply_markup=build_department_keyboard(departments)
+            _("List of departments"), reply_markup=build_department_keyboard(departments)
         )
     await callback_query.answer()
 
@@ -122,7 +125,7 @@ async def list_courses(
 ) -> None:
     courses = await course_service.get_courses_by_department(callback_data.id, callback_query.from_user.id)
     if isinstance(callback_query.message, Message):
-        await callback_query.message.edit_text("Список курсов", reply_markup=build_course_keyboard(courses))
+        await callback_query.message.edit_text(_("List of courses"), reply_markup=build_course_keyboard(courses))
     await callback_query.answer()
 
 
@@ -135,12 +138,12 @@ async def toggle_course_tracking(
     try:
         courses = await course_service.toggle_tracked_course(callback_data.id, callback_query.from_user.id)
     except CourseNotFoundError:
-        await callback_query.answer("Курс не найден", show_alert=True)
+        await callback_query.answer(_("Course not found"), show_alert=True)
         return
     except UserNotFoundError:
-        await callback_query.answer("Пожалуйста, начните с команды /start", show_alert=True)
+        await callback_query.answer(_("Please start with the /start command"), show_alert=True)
         return
 
     if isinstance(callback_query.message, Message):
-        await callback_query.message.edit_text("Список курсов", reply_markup=build_course_keyboard(courses))
+        await callback_query.message.edit_text(_("List of courses"), reply_markup=build_course_keyboard(courses))
     await callback_query.answer()

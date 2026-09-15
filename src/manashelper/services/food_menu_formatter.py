@@ -1,44 +1,47 @@
 from aiogram.enums import ParseMode
 from aiogram.types import InputMediaAudio, InputMediaDocument, InputMediaLivePhoto, InputMediaPhoto, InputMediaVideo
+from aiogram.utils.i18n import gettext as _
 
 from manashelper.services.daily_menu import DailyMenuModel
+from manashelper.services.timetable_formatter import weekday_full
 
 MediaGroupItem = InputMediaAudio | InputMediaDocument | InputMediaLivePhoto | InputMediaPhoto | InputMediaVideo
 
-_WEEKDAY_NAMES = {
-    0: "понедельник",
-    1: "вторник",
-    2: "среда",
-    3: "четверг",
-    4: "пятница",
-    5: "суббота",
-    6: "воскресенье",
-}
-
 
 def format_daily_menu(daily_menu: DailyMenuModel) -> str:
-    weekday_name = _WEEKDAY_NAMES[daily_menu.date.weekday()]
-    lines = [f"🍽 <b>Меню на {weekday_name}, {daily_menu.date.strftime('%d.%m.%Y')}</b>", ""]
+    weekday_name = weekday_full(daily_menu.date.isoweekday())
+    lines = [
+        _("🍽 <b>Menu for {weekday}, {date}</b>").format(
+            weekday=weekday_name, date=daily_menu.date.strftime("%d.%m.%Y")
+        ),
+        "",
+    ]
 
     total_calories = 0
     for index, dish in enumerate(daily_menu.dishes, start=1):
-        lines.append(f"{index}. {dish.name} — <b>{dish.calories}</b> ккал")
+        lines.append(
+            _("{index}. {name} — <b>{calories}</b> kcal").format(index=index, name=dish.name, calories=dish.calories)
+        )
         total_calories += dish.calories
 
     lines.append("")
-    lines.append(f"🔥 Итого: <b>{total_calories}</b> ккал")
+    lines.append(_("🔥 Total: <b>{calories}</b> kcal").format(calories=total_calories))
     if daily_menu.ratings_count:
-        lines.append(f"⭐ Оценка: <b>{daily_menu.average_rating:.1f}</b> ({daily_menu.ratings_count})")
+        lines.append(
+            _("⭐ Rating: <b>{average}</b> ({count})").format(
+                average=f"{daily_menu.average_rating:.1f}", count=daily_menu.ratings_count
+            )
+        )
     else:
-        lines.append("⭐ Оценок пока нет")
-    lines.append(f"👁 Просмотров: {daily_menu.views_count}")
+        lines.append(_("⭐ No ratings yet"))
+    lines.append(_("👁 Views: {count}").format(count=daily_menu.views_count))
     return "\n".join(lines)
 
 
 def format_not_found(skip_days: int) -> str:
     if skip_days == 0:
-        return "😔 Меню на сегодня ещё не опубликовано."
-    return "😔 Меню на выбранный день ещё не опубликовано."
+        return _("😔 Today's menu hasn't been published yet.")
+    return _("😔 The menu for that day hasn't been published yet.")
 
 
 def build_photos(caption: str, daily_menu: DailyMenuModel) -> list[MediaGroupItem]:
