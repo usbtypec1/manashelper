@@ -4,6 +4,8 @@ from datetime import datetime
 from aiogram.utils.i18n import gettext as _
 
 from manashelper.services.schedule import (
+    LUNCH_END_MINUTES,
+    LUNCH_START_MINUTES,
     MAX_GAP_MINUTES_TO_GROUP,
     ScheduleLessonModel,
     parse_time_range_end_minutes,
@@ -11,8 +13,6 @@ from manashelper.services.schedule import (
 )
 from manashelper.services.timetable_sync import LessonChange
 
-LUNCH_START_MINUTES = 12 * 60 + 25
-LUNCH_END_MINUTES = 14 * 60 + 25
 LATE_MORNING_THRESHOLD_MINUTES = 11 * 60 + 30
 
 CURRENT_LESSON_EMOJI = "🔥"
