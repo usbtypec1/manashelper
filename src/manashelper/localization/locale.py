@@ -18,13 +18,13 @@ _LANGUAGE_CODE_PREFIX_TO_LOCALE = {
 }
 
 
-def resolve_from_language_code(language_code: str | None) -> Locale | None:
+def resolve_from_language_code(language_code: str | None) -> Locale:
     """Map a Telegram client IETF language tag (e.g. "en", "ru-RU") to a supported locale.
 
-    Returns None when the language can't be mapped to one of the supported locales, so the
-    caller can fall back to asking the user to pick one explicitly.
+    Falls back to `DEFAULT_LOCALE` when there's no language code, or it doesn't match one of
+    the supported locales.
     """
     if not language_code:
-        return None
+        return DEFAULT_LOCALE
     primary_subtag = language_code.split("-", 1)[0].lower()
-    return _LANGUAGE_CODE_PREFIX_TO_LOCALE.get(primary_subtag)
+    return _LANGUAGE_CODE_PREFIX_TO_LOCALE.get(primary_subtag, DEFAULT_LOCALE)

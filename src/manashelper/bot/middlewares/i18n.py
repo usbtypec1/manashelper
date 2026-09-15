@@ -2,16 +2,12 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from aiogram import BaseMiddleware
-from aiogram.types import CallbackQuery, Message, TelegramObject
+from aiogram.types import TelegramObject
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import CONTAINER_NAME
 
-from manashelper.bot.callback_data import LocaleCallback
-from manashelper.bot.keyboards.locale import LOCALE_PROMPT_TEXT, build_locale_keyboard
 from manashelper.localization.i18n import i18n
 from manashelper.services.locale import LocaleService
-
-_LOCALE_CALLBACK_PREFIX = f"{LocaleCallback.__prefix__}:"
 
 
 class LocaleMiddleware(BaseMiddleware):
@@ -20,10 +16,10 @@ class LocaleMiddleware(BaseMiddleware):
     while handling this update — in filters, handlers, and formatters alike — resolves
     against that locale without needing it threaded through as a parameter.
 
-    If the locale can't be determined (a new user whose Telegram client language isn't one of
-    the supported ones), it shows a language picker and stops propagation instead of calling
-    the handler — except for a tap on that very picker (a `LocaleCallback`), which must reach
-    `bot/routers/locale.py::on_locale_selected` or the user could never get past it.
+    The locale is always resolved: a saved locale wins, otherwise it's auto-detected from the
+    Telegram client's language, falling back to `DEFAULT_LOCALE` (see
+    `localization/locale.py::resolve_from_language_code`) — there's no picker shown here, only
+    via the explicit `/language` command/setting (`bot/routers/locale.py`).
 
     Must be registered *after* `setup_dishka` on the same observers, so `data[CONTAINER_NAME]`
     is already a request-scoped container by the time this runs — see main.py.
@@ -48,23 +44,6 @@ class LocaleMiddleware(BaseMiddleware):
             language_code=telegram_user.language_code,
         )
 
-        if locale is None:
-            if isinstance(event, CallbackQuery) and (event.data or "").startswith(_LOCALE_CALLBACK_PREFIX):
-                return await handler(event, data)
-            await _prompt_locale_selection(event)
-            return None
-
         data["locale"] = locale
         with i18n.context(), i18n.use_locale(locale.value):
             return await handler(event, data)
-
-
-async def _prompt_locale_selection(event: TelegramObject) -> None:
-    if isinstance(event, Message):
-        await event.answer(LOCALE_PROMPT_TEXT, reply_markup=build_locale_keyboard())
-        return
-
-    if isinstance(event, CallbackQuery):
-        await event.answer()
-        if isinstance(event.message, Message):
-            await event.message.answer(LOCALE_PROMPT_TEXT, reply_markup=build_locale_keyboard())

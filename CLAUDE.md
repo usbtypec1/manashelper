@@ -30,7 +30,7 @@ Core capabilities (current):
   scraped hourly and diffed to notify trackers of schedule changes — see "Scheduled jobs & change detection"
   below.
 - **Localization**: every user-facing string is served through aiogram's built-in gettext-based i18n, with the
-  user's locale auto-detected from Telegram, falling back to a language picker — see "Localization (i18n)" below.
+  user's locale auto-detected from Telegram, falling back to Russian — see "Localization (i18n)" below.
 - `/start` resolves the user's locale, upserts the Telegram user, and shows the main reply keyboard.
 
 ## Commands
@@ -199,11 +199,10 @@ the single process-wide `I18n` instance. `User.locale` (nullable `String(2)`) pe
 `bot/middlewares/i18n.py::LocaleMiddleware` (registered *after* `setup_dishka` in `main.py`, so it can use the
 request-scoped container) runs on every update: it upserts the user via `services/locale.py::LocaleService`,
 which returns the saved locale if there is one, otherwise auto-detects one from
-`message.from_user.language_code`, otherwise returns `None`. A `None` result shows a 4-language picker
-(`bot/keyboards/locale.py`) and stops propagation *except* for a tap on that very picker (a `LocaleCallback`,
-detected by its packed prefix) — that one is let through unconditionally, or a user who can't be auto-detected
-could never get past the picker. On success, the middleware enters `i18n.context()` / `i18n.use_locale(...)` and
-calls the handler inside it, so every `_()`/`ngettext()` call made anywhere during that update — filters,
+`message.from_user.language_code` (`localization/locale.py::resolve_from_language_code`), falling back to
+`DEFAULT_LOCALE` (Russian) when that language code is missing or unsupported — the resolution always succeeds,
+so there is no picker shown on this path. The middleware then enters `i18n.context()` / `i18n.use_locale(...)`
+and calls the handler inside it, so every `_()`/`ngettext()` call made anywhere during that update — filters,
 handlers, keyboards, formatters — resolves against the right locale via the contextvar aiogram's `I18n` keeps,
 with no `Translator`/locale parameter threaded through call signatures. `bot/filters/translated_text.py`
 (`TranslatedText`) exists because a reply-keyboard button's label is only known once translated, so matching the
@@ -211,8 +210,10 @@ incoming message text against a hardcoded string (`F.text == "..."`) can't work 
 
 `scheduler_jobs.py` runs outside any Telegram update, so there's no ambient middleware to set the gettext context;
 each per-recipient send there looks up that user's `Locale` and wraps its own `format_...(...)` call in
-`with i18n.context(), i18n.use_locale(locale.value): ...` explicitly. A user can change their locale later via
-`/language` or the "🌐 Language" row in Settings (`bot/routers/locale.py`), which reuses the same picker.
+`with i18n.context(), i18n.use_locale(locale.value): ...` explicitly. A user can still change their locale
+explicitly at any time via `/language` or the "🌐 Language" row in Settings (`bot/routers/locale.py`), which
+shows the 4-language picker (`bot/keyboards/locale.py`) — the only place that picker is shown, now that
+auto-detection never falls through to it.
 
 ### Scheduled jobs & change detection
 
