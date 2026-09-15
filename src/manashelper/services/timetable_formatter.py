@@ -128,14 +128,6 @@ def _should_show_lunch(day_lessons: list[ScheduleLessonModel]) -> bool:
     return bool(afternoon and min(start for start, _ in afternoon) == LUNCH_END_MINUTES)
 
 
-def _has_lunch_conflict(day_lessons: list[ScheduleLessonModel]) -> bool:
-    return any(
-        parse_time_range_start_minutes(lesson.time_range) < LUNCH_END_MINUTES
-        and parse_time_range_end_minutes(lesson.time_range) > LUNCH_START_MINUTES
-        for lesson in day_lessons
-    )
-
-
 def format_day_schedule(weekday: int, lessons: list[ScheduleLessonModel], now: datetime) -> str:
     day_name = weekday_full(weekday)
     day_lessons = sorted(
@@ -149,15 +141,13 @@ def format_day_schedule(weekday: int, lessons: list[ScheduleLessonModel], now: d
     is_today = weekday == now.isoweekday()
     now_minutes = now.hour * 60 + now.minute
     blocks = _group_into_blocks(day_lessons, now_minutes, is_today)
-    lunch_conflict = _has_lunch_conflict(day_lessons)
-    show_lunch = not lunch_conflict and _should_show_lunch(day_lessons)
+    show_lunch = _should_show_lunch(day_lessons)
     lunch_label = _("😋 Lunch break. Find out what's for lunch - /yemek")
-    lunch_conflict_label = _("😱 There should have been lunch here, but you have a lesson instead.")
 
     lines = [day_header, ""]
-    lunch_inserted = not (show_lunch or lunch_conflict)
+    lunch_inserted = not show_lunch
     for block in blocks:
-        if not lunch_inserted and not lunch_conflict and block.start_minutes >= LUNCH_END_MINUTES:
+        if not lunch_inserted and block.start_minutes >= LUNCH_END_MINUTES:
             lines.append(lunch_label)
             lines.append("")
             lunch_inserted = True
@@ -169,18 +159,8 @@ def format_day_schedule(weekday: int, lessons: list[ScheduleLessonModel], now: d
         lines.extend(block.periods)
         lines.append("")
 
-        if (
-            not lunch_inserted
-            and lunch_conflict
-            and block.start_minutes < LUNCH_END_MINUTES
-            and block.end_minutes > LUNCH_START_MINUTES
-        ):
-            lines.append(lunch_conflict_label)
-            lines.append("")
-            lunch_inserted = True
-
     if not lunch_inserted:
-        lines.append(lunch_conflict_label if lunch_conflict else lunch_label)
+        lines.append(lunch_label)
 
     while lines and lines[-1] == "":
         lines.pop()

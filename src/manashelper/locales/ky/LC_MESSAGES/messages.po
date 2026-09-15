@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Manashelper VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-15 19:05+0600\n"
+"POT-Creation-Date: 2026-09-15 22:02+0600\n"
 "PO-Revision-Date: 2026-09-15 11:14+0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ky\n"
@@ -309,9 +309,6 @@ msgstr "😔 Бүгүнкү меню азырынча жарыяланган ж�
 msgid "😔 The menu for that day hasn't been published yet."
 msgstr "😔 Тандалган күндүн менюсу азырынча жарыяланган жок."
 
-msgid "😱 There should have been lunch here, but you have a lesson instead."
-msgstr "😱 Бул жерде түшкү тамак болушу керек эле, бирок сизде сабак бар."
-
 #, python-brace-format
 msgid "🏫 {faculty} — {department}, {course_year}"
 msgstr "🏫 {faculty} — {department}, {course_year}"
@@ -446,4 +443,7 @@ msgstr "➖ {weekday} {time_range}: {content} (жокко чыгарылды)"
 #, python-brace-format
 msgid "✏️ {weekday} {time_range}: {previous} → {new}"
 msgstr "✏️ {weekday} {time_range}: {previous} → {new}"
+
+#~ msgid "😱 There should have been lunch here, but you have a lesson instead."
+#~ msgstr "😱 Бул жерде түшкү тамак болушу керек эле, бирок сизде сабак бар."
 
