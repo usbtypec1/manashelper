@@ -1,7 +1,6 @@
 from contextlib import suppress
 
-from aiogram import F, Router
-from aiogram.enums import ChatType
+from aiogram import F, Router, flags
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
@@ -25,8 +24,6 @@ from manashelper.services.obis import ObisService, UserHasNoCredentialsError, Us
 from manashelper.services.obis_formatter import format_attendance, format_exam_grades
 
 router = Router(name="obis")
-router.message.filter(F.chat.type == ChatType.PRIVATE)
-router.callback_query.filter(F.message.chat.type == ChatType.PRIVATE)
 
 
 class ObisCredentialsForm(StatesGroup):
@@ -35,6 +32,7 @@ class ObisCredentialsForm(StatesGroup):
 
 
 @router.message(TranslatedText("📋 Attendance"))
+@flags.private_chat_only
 async def on_attendance_button(message: Message, obis_service: FromDishka[ObisService]) -> None:
     if message.from_user is None:
         return
@@ -64,6 +62,7 @@ async def on_attendance_button(message: Message, obis_service: FromDishka[ObisSe
 
 
 @router.message(TranslatedText("💯 Grades"))
+@flags.private_chat_only
 async def on_exams_button(message: Message, obis_service: FromDishka[ObisService]) -> None:
     if message.from_user is None:
         return
@@ -93,6 +92,7 @@ async def on_exams_button(message: Message, obis_service: FromDishka[ObisService
 
 
 @router.callback_query(ObisCallback.filter(F.action == ObisAction.START_CREDENTIALS))
+@flags.private_chat_only
 async def on_start_credentials(callback_query: CallbackQuery) -> None:
     if isinstance(callback_query.message, Message):
         await callback_query.message.answer(
@@ -102,6 +102,7 @@ async def on_start_credentials(callback_query: CallbackQuery) -> None:
 
 
 @router.callback_query(ObisCallback.filter(F.action == ObisAction.ACCEPT_TERMS))
+@flags.private_chat_only
 async def on_accept_terms(callback_query: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(ObisCredentialsForm.student_number)
     if isinstance(callback_query.message, Message):
@@ -110,6 +111,7 @@ async def on_accept_terms(callback_query: CallbackQuery, state: FSMContext) -> N
 
 
 @router.callback_query(ObisCallback.filter(F.action == ObisAction.CANCEL_CREDENTIALS))
+@flags.private_chat_only
 async def on_cancel_credentials(callback_query: CallbackQuery, state: FSMContext) -> None:
     await state.clear()
     if isinstance(callback_query.message, Message):
@@ -118,6 +120,7 @@ async def on_cancel_credentials(callback_query: CallbackQuery, state: FSMContext
 
 
 @router.callback_query(ObisCallback.filter(F.action == ObisAction.CLEAR_CREDENTIALS))
+@flags.private_chat_only
 async def on_clear_credentials_requested(callback_query: CallbackQuery) -> None:
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(
@@ -128,6 +131,7 @@ async def on_clear_credentials_requested(callback_query: CallbackQuery) -> None:
 
 
 @router.callback_query(ObisCallback.filter(F.action == ObisAction.CONFIRM_CLEAR_CREDENTIALS))
+@flags.private_chat_only
 async def on_confirm_clear_credentials(
     callback_query: CallbackQuery,
     obis_service: FromDishka[ObisService],
@@ -146,6 +150,7 @@ async def on_confirm_clear_credentials(
 
 
 @router.message(StateFilter(ObisCredentialsForm.student_number))
+@flags.private_chat_only
 async def on_student_number_entered(message: Message, state: FSMContext) -> None:
     student_number = message.text.strip() if message.text else ""
     if not student_number:
@@ -160,6 +165,7 @@ async def on_student_number_entered(message: Message, state: FSMContext) -> None
 
 
 @router.message(StateFilter(ObisCredentialsForm.password))
+@flags.private_chat_only
 async def on_password_entered(
     message: Message,
     state: FSMContext,

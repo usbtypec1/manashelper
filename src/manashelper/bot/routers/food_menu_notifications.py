@@ -1,5 +1,4 @@
-from aiogram import F, Router
-from aiogram.enums import ChatType
+from aiogram import F, Router, flags
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
@@ -19,8 +18,6 @@ from manashelper.services.food_menu_notification_settings import (
 )
 
 router = Router(name="food_menu_notifications")
-router.message.filter(F.chat.type == ChatType.PRIVATE)
-router.callback_query.filter(F.message.chat.type == ChatType.PRIVATE)
 
 
 async def _show_food_menu_notifications(
@@ -33,6 +30,7 @@ async def _show_food_menu_notifications(
 
 
 @router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_FOOD_MENU_NOTIFICATIONS))
+@flags.private_chat_only
 async def on_open_food_menu_notifications(
     callback_query: CallbackQuery,
     food_menu_notification_settings_service: FromDishka[FoodMenuNotificationSettingsService],
@@ -47,6 +45,7 @@ async def on_open_food_menu_notifications(
 
 
 @router.callback_query(FoodMenuNotificationDayCallback.filter())
+@flags.private_chat_only
 async def on_toggle_food_menu_notification_day(
     callback_query: CallbackQuery,
     callback_data: FoodMenuNotificationDayCallback,
@@ -64,6 +63,7 @@ async def on_toggle_food_menu_notification_day(
 
 
 @router.callback_query(FoodMenuNotificationBulkCallback.filter())
+@flags.private_chat_only
 async def on_bulk_toggle_food_menu_notifications(
     callback_query: CallbackQuery,
     callback_data: FoodMenuNotificationBulkCallback,
@@ -82,5 +82,6 @@ async def on_bulk_toggle_food_menu_notifications(
 
 
 @router.callback_query(FoodMenuNotificationNoopCallback.filter())
+@flags.private_chat_only
 async def on_food_menu_notification_noop(callback_query: CallbackQuery) -> None:
     await callback_query.answer(_("this isn't a button"))

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Manashelper VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-15 11:14+0600\n"
+"POT-Creation-Date: 2026-09-15 13:23+0600\n"
 "PO-Revision-Date: 2026-09-15 11:14+0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ky\n"
@@ -115,6 +115,9 @@ msgstr "📚 Курстарды тандоо"
 #, python-brace-format
 msgid "Year {number}"
 msgstr "{number}-курс"
+
+msgid "This feature is only available in a private chat with the bot."
+msgstr "Бул функция бот менен жеке чатта гана жеткиликтүү."
 
 msgid ""
 "🍉 <b>Cafeteria menu</b>\n"

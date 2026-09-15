@@ -1,7 +1,6 @@
 from datetime import datetime
 
-from aiogram import F, Router
-from aiogram.enums import ChatType
+from aiogram import F, Router, flags
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
@@ -29,8 +28,6 @@ from manashelper.services.schedule import NoTrackedCoursesError, ScheduleService
 from manashelper.services.timetable_formatter import format_day_schedule
 
 router = Router(name="timetable")
-router.message.filter(F.chat.type == ChatType.PRIVATE)
-router.callback_query.filter(F.message.chat.type == ChatType.PRIVATE)
 
 
 _WORKDAYS = (1, 2, 3, 4, 5)
@@ -42,11 +39,13 @@ def _current_weekday(now: datetime) -> int:
 
 
 @router.message(TranslatedText("📅 Schedule"))
+@flags.private_chat_only
 async def on_timetable_menu_button(message: Message) -> None:
     await message.answer(_("📅 Schedule"), reply_markup=build_timetable_menu_keyboard())
 
 
 @router.callback_query(TimetableMenuCallback.filter(F.action == TimetableMenuAction.OPEN_MY_SCHEDULE))
+@flags.private_chat_only
 async def on_my_schedule_selected(
     callback_query: CallbackQuery,
     schedule_service: FromDishka[ScheduleService],
@@ -85,6 +84,7 @@ async def on_my_schedule_selected(
 
 
 @router.callback_query(ScheduleDayCallback.filter())
+@flags.private_chat_only
 async def on_schedule_day_selected(
     callback_query: CallbackQuery,
     callback_data: ScheduleDayCallback,
@@ -108,6 +108,7 @@ async def on_schedule_day_selected(
 
 
 @router.callback_query(FacultyCallback.filter())
+@flags.private_chat_only
 async def list_departments(
     callback_query: CallbackQuery,
     callback_data: FacultyCallback,
@@ -122,6 +123,7 @@ async def list_departments(
 
 
 @router.callback_query(DepartmentCallback.filter())
+@flags.private_chat_only
 async def list_courses(
     callback_query: CallbackQuery,
     callback_data: DepartmentCallback,
@@ -134,6 +136,7 @@ async def list_courses(
 
 
 @router.callback_query(CourseCallback.filter())
+@flags.private_chat_only
 async def toggle_course_tracking(
     callback_query: CallbackQuery,
     callback_data: CourseCallback,
