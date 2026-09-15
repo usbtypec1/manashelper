@@ -15,6 +15,10 @@ COPY alembic ./alembic
 COPY src ./src
 RUN uv sync --frozen --no-dev
 
+# Compile gettext catalogs (locales/**/LC_MESSAGES/*.po -> *.mo) — .mo files are gitignored
+# build artifacts, so this must happen before the image can serve translated strings.
+RUN uv run pybabel compile -d src/manashelper/locales
+
 # ----------- Stage 2: Minimal Run -----------
 FROM python:3.13-slim-bookworm AS runtime
 

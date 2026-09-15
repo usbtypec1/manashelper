@@ -1,28 +1,30 @@
-from aiogram import F, Router
+from aiogram import Router
 from aiogram.filters import Command, CommandObject
 from aiogram.types import CallbackQuery, Message
+from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
 from manashelper.bot.callback_data import FOOD_MENU_DAY_TO_SKIP_DAYS, FoodMenuCallback, FoodMenuRatingCallback
+from manashelper.bot.filters.translated_text import TranslatedText
 from manashelper.bot.keyboards.food_menu import build_day_keyboard, build_rating_keyboard
 from manashelper.services.daily_menu import DailyMenuNotFoundError, DailyMenuService
 from manashelper.services.food_menu_formatter import build_photos, format_daily_menu, format_not_found
 
 router = Router(name="food_menu")
 
-FOOD_MENU_INTRO_TEXT = (
-    "🍉 <b>Меню столовой</b>\n\n"
-    "Выберите день ниже или отправьте команду:\n"
-    "• <code>/yemek today</code> — сегодня\n"
-    "• <code>/yemek tomorrow</code> — завтра\n"
-    "• <code>/yemek 2</code> — через N дней"
-)
-USAGE_TEXT = "ℹ️ Использование: <code>/yemek today</code>, <code>/yemek tomorrow</code> или <code>/yemek 2</code>"
 
-
-@router.message(F.text == "🍉 Йемек")
+@router.message(TranslatedText("🍉 Food"))
 async def on_food_menu_button(message: Message) -> None:
-    await message.answer(FOOD_MENU_INTRO_TEXT, reply_markup=build_day_keyboard())
+    await message.answer(
+        _(
+            "🍉 <b>Cafeteria menu</b>\n\n"
+            "Choose a day below or send a command:\n"
+            "• <code>/yemek today</code> — today\n"
+            "• <code>/yemek tomorrow</code> — tomorrow\n"
+            "• <code>/yemek 2</code> — in N days"
+        ),
+        reply_markup=build_day_keyboard(),
+    )
 
 
 async def _send_daily_menu(message: Message, skip_days: int, daily_menu_service: DailyMenuService) -> None:
@@ -34,7 +36,7 @@ async def _send_daily_menu(message: Message, skip_days: int, daily_menu_service:
 
     caption = format_daily_menu(daily_menu)
     await message.answer_media_group(media=build_photos(caption, daily_menu))
-    await message.answer("⭐ Оцените меню:", reply_markup=build_rating_keyboard(daily_menu.id))
+    await message.answer(_("⭐ Rate the menu:"), reply_markup=build_rating_keyboard(daily_menu.id))
 
 
 def _parse_skip_days(args: str | None) -> int | None:
@@ -58,7 +60,10 @@ async def cmd_yemek(
 ) -> None:
     skip_days = _parse_skip_days(command.args)
     if skip_days is None:
-        await message.answer(USAGE_TEXT, reply_markup=build_day_keyboard())
+        await message.answer(
+            _("ℹ️ Usage: <code>/yemek today</code>, <code>/yemek tomorrow</code>, or <code>/yemek 2</code>"),
+            reply_markup=build_day_keyboard(),
+        )
         return
     await _send_daily_menu(message, skip_days, daily_menu_service)
 
@@ -82,4 +87,4 @@ async def on_food_menu_rating_callback(
     daily_menu_service: FromDishka[DailyMenuService],
 ) -> None:
     await daily_menu_service.set_rating(callback_query.from_user.id, callback_data.daily_menu_id, callback_data.rating)
-    await callback_query.answer("Спасибо за оценку!", show_alert=True)
+    await callback_query.answer(_("Thanks for your rating!"), show_alert=True)

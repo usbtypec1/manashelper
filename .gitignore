@@ -20,6 +20,12 @@ venv/
 .coverage
 htmlcov/
 
+### gettext catalogs (see CLAUDE.md for the extract/update/compile workflow) ###
+# messages.pot is a regenerable extraction template; messages.po (per locale) is the
+# hand-translated source of truth and IS committed; messages.mo is a compiled build artifact.
+*.pot
+*.mo
+
 ### IDE ###
 .idea/
 .vscode/

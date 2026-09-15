@@ -20,7 +20,7 @@ Core capabilities (current):
   the real OBIS login before saving (AES-GCM encrypted at rest), and lets the user fetch their current exam
   grades and lesson-attendance/skip-budget summary on demand — see `services/obis.py`,
   `scraping/obis_client.py`, `scraping/obis_parser.py`, `bot/routers/obis.py`.
-- **Notification settings**: a `⚙️ Настройки` menu (`bot/routers/settings.py`) lets each user toggle five
+- **Notification settings**: a `⚙️ Settings` menu (`bot/routers/settings.py`) lets each user toggle five
   notification kinds (schedule changes, before-lunch/before-dinner menu pings, exam-grade changes, lesson skips),
   backed by a lazily-created `NotificationSettings` row per user that defaults every toggle to enabled — see
   `services/notification_settings.py`.
@@ -29,7 +29,9 @@ Core capabilities (current):
   and diffed against previously-seen state to notify only on actual changes; each tracked course's timetable is
   scraped hourly and diffed to notify trackers of schedule changes — see "Scheduled jobs & change detection"
   below.
-- `/start` upserts the Telegram user and shows the main reply keyboard.
+- **Localization**: every user-facing string is served through aiogram's built-in gettext-based i18n, with the
+  user's locale auto-detected from Telegram, falling back to a language picker — see "Localization (i18n)" below.
+- `/start` resolves the user's locale, upserts the Telegram user, and shows the main reply keyboard.
 
 ## Commands
 
@@ -40,10 +42,22 @@ uv sync                                                # install dependencies + 
 uv run alembic upgrade head                            # apply migrations (also runs automatically on app boot)
 uv run alembic revision --autogenerate -m "message"    # generate a new migration from model changes
 uv run python -m manashelper.main                      # run the bot locally (needs env vars below + Postgres)
-uv run pytest                                          # run tests (needs the dev Postgres running)
+uv run pytest                                          # run tests (needs the dev Postgres running, and compiled
+                                                        # gettext catalogs — see below)
 uv run ruff check .                                    # lint
 uv run ruff format .                                   # format
 uv run mypy src/manashelper                            # type check
+```
+
+Gettext catalog workflow (see "Localization (i18n)" below for the full picture):
+
+```
+uv run pybabel extract -F babel.cfg -o src/manashelper/locales/messages.pot --no-location src
+                                                        # scan source for _()/ngettext() calls -> .pot template
+uv run pybabel update -i src/manashelper/locales/messages.pot -d src/manashelper/locales
+                                                        # merge new/changed source strings into every locale's .po
+uv run pybabel compile -d src/manashelper/locales      # .po -> .mo (must be re-run after editing any .po by hand;
+                                                        # required before running the app or the test suite)
 ```
 
 Checkstyle-equivalent strictness: `ruff` enforces a 120-char line length, import ordering, no unused/wildcard
@@ -165,6 +179,40 @@ anyway (see `ObisService`), so there is no session reuse to preserve, and this a
 `RedisStorage` if the bot ever runs multi-worker) rather than the Java version's external Telegram WebApp form,
 and are verified against a real OBIS login before being persisted. Passwords are encrypted at rest with AES-GCM
 (`CryptoService`) instead of the Java version's raw AES-ECB.
+
+### Localization (i18n)
+
+All user-facing text is translated via aiogram's built-in `aiogram.utils.i18n` (a thin wrapper over GNU gettext,
+requiring the `Babel` package — see the `aiogram[i18n]` extra in `pyproject.toml`). Source strings are written in
+English directly at each call site as `_("...")` (`from aiogram.utils.i18n import gettext as _`) or, for
+count-dependent text, `ngettext(singular, plural, n)` — never behind a lookup table or an f-string-interpolated
+variable, because Babel's extractor only records a literal string argument, not whatever a variable happens to
+hold. Compiled catalogs live at `src/manashelper/locales/<locale>/LC_MESSAGES/messages.{po,mo}` for `ru`/`ky`/`tr`;
+English has **no catalog at all** — `I18n.gettext` already falls back to the raw (English) msgid when a locale or
+a specific message isn't found, so shipping a redundant identity catalog would just be more to keep in sync.
+`*.po` files are the hand-translated source of truth and are committed; `*.mo` files are compiled build artifacts
+and are gitignored (compiled by `docker/Dockerfile` and by CI — see Commands above — anyone running the bot or
+test suite locally must run `pybabel compile` after cloning or after editing a `.po` file).
+
+`localization/locale.py::Locale` is the supported-locale enum (`ky`/`ru`/`en`/`tr`); `localization/i18n.py` holds
+the single process-wide `I18n` instance. `User.locale` (nullable `String(2)`) persists a user's resolved locale.
+`bot/middlewares/i18n.py::LocaleMiddleware` (registered *after* `setup_dishka` in `main.py`, so it can use the
+request-scoped container) runs on every update: it upserts the user via `services/locale.py::LocaleService`,
+which returns the saved locale if there is one, otherwise auto-detects one from
+`message.from_user.language_code`, otherwise returns `None`. A `None` result shows a 4-language picker
+(`bot/keyboards/locale.py`) and stops propagation *except* for a tap on that very picker (a `LocaleCallback`,
+detected by its packed prefix) — that one is let through unconditionally, or a user who can't be auto-detected
+could never get past the picker. On success, the middleware enters `i18n.context()` / `i18n.use_locale(...)` and
+calls the handler inside it, so every `_()`/`ngettext()` call made anywhere during that update — filters,
+handlers, keyboards, formatters — resolves against the right locale via the contextvar aiogram's `I18n` keeps,
+with no `Translator`/locale parameter threaded through call signatures. `bot/filters/translated_text.py`
+(`TranslatedText`) exists because a reply-keyboard button's label is only known once translated, so matching the
+incoming message text against a hardcoded string (`F.text == "..."`) can't work across locales.
+
+`scheduler_jobs.py` runs outside any Telegram update, so there's no ambient middleware to set the gettext context;
+each per-recipient send there looks up that user's `Locale` and wraps its own `format_...(...)` call in
+`with i18n.context(), i18n.use_locale(locale.value): ...` explicitly. A user can change their locale later via
+`/language` or the "🌐 Language" row in Settings (`bot/routers/locale.py`), which reuses the same picker.
 
 ### Scheduled jobs & change detection
 

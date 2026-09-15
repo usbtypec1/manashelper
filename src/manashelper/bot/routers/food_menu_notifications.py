@@ -1,5 +1,6 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
+from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
 from manashelper.bot.callback_data import (
@@ -18,16 +19,13 @@ from manashelper.services.food_menu_notification_settings import (
 
 router = Router(name="food_menu_notifications")
 
-FOOD_MENU_NOTIFICATIONS_TEXT = "🍽 Точечная настройка уведомлений о меню"
-NOOP_HINT_TEXT = "не жмакай сюды"
-
 
 async def _show_food_menu_notifications(
     callback_query: CallbackQuery, summary: FoodMenuNotificationSettingsSummary
 ) -> None:
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(
-            FOOD_MENU_NOTIFICATIONS_TEXT, reply_markup=build_food_menu_notifications_keyboard(summary)
+            _("🍽 Fine-tune menu notifications"), reply_markup=build_food_menu_notifications_keyboard(summary)
         )
 
 
@@ -39,7 +37,7 @@ async def on_open_food_menu_notifications(
     try:
         summary = await food_menu_notification_settings_service.get_settings(callback_query.from_user.id)
     except UserNotFoundError:
-        await callback_query.answer("Пожалуйста, начните с команды /start", show_alert=True)
+        await callback_query.answer(_("Please start with the /start command"), show_alert=True)
         return
     await _show_food_menu_notifications(callback_query, summary)
     await callback_query.answer()
@@ -56,7 +54,7 @@ async def on_toggle_food_menu_notification_day(
             callback_query.from_user.id, callback_data.weekday, callback_data.meal
         )
     except UserNotFoundError:
-        await callback_query.answer("Пожалуйста, начните с команды /start", show_alert=True)
+        await callback_query.answer(_("Please start with the /start command"), show_alert=True)
         return
     await _show_food_menu_notifications(callback_query, summary)
     await callback_query.answer()
@@ -74,7 +72,7 @@ async def on_bulk_toggle_food_menu_notifications(
         else:
             summary = await food_menu_notification_settings_service.disable_all(callback_query.from_user.id)
     except UserNotFoundError:
-        await callback_query.answer("Пожалуйста, начните с команды /start", show_alert=True)
+        await callback_query.answer(_("Please start with the /start command"), show_alert=True)
         return
     await _show_food_menu_notifications(callback_query, summary)
     await callback_query.answer()
@@ -82,4 +80,4 @@ async def on_bulk_toggle_food_menu_notifications(
 
 @router.callback_query(FoodMenuNotificationNoopCallback.filter())
 async def on_food_menu_notification_noop(callback_query: CallbackQuery) -> None:
-    await callback_query.answer(NOOP_HINT_TEXT)
+    await callback_query.answer(_("this isn't a button"))

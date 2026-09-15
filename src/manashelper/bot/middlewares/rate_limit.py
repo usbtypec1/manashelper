@@ -36,9 +36,7 @@ class RateLimitMiddleware(BaseMiddleware):
         if chat is None:
             return await handler(event, data)
 
-        bucket = self._buckets.setdefault(
-            chat.id, TokenBucket(self._capacity, self._refill_rate)
-        )
+        bucket = self._buckets.setdefault(chat.id, TokenBucket(self._capacity, self._refill_rate))
         if bucket.try_consume():
             return await handler(event, data)
 
