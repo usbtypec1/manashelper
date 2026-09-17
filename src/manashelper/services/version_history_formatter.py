@@ -1,6 +1,6 @@
 from aiogram.utils.i18n import gettext as _
 
-from manashelper.services.version_history import VersionEntry
+from manashelper.services.version_history import VersionDetail
 
 
 def format_versions_list_header(page: int, total_pages: int) -> str:
@@ -9,7 +9,7 @@ def format_versions_list_header(page: int, total_pages: int) -> str:
     return _("📦 Version history")
 
 
-def format_version_detail(entry: VersionEntry) -> str:
+def format_version_detail(entry: VersionDetail) -> str:
     return "\n".join(
         [
             _("📦 <b>Version {version}</b>").format(version=entry.version),

@@ -1,38 +1,70 @@
 import math
 from dataclasses import dataclass
 from datetime import date
+from pathlib import Path
 
-from manashelper.db.models import BotVersion
-from manashelper.repositories.bot_version_repository import BotVersionRepository
-
+# .../src/manashelper/services/version_history.py -> repo root is 3 parents up.
+VERSIONS_DIR = Path(__file__).resolve().parents[3] / "docs" / "versions"
 VERSIONS_PER_PAGE = 10
 
 
 @dataclass(frozen=True, slots=True)
-class VersionEntry:
+class VersionSummary:
+    version: str
+    released_at: date
+
+
+@dataclass(frozen=True, slots=True)
+class VersionDetail:
     version: str
     released_at: date
     description: str
 
 
-def _to_entry(bot_version: BotVersion) -> VersionEntry:
-    return VersionEntry(
-        version=bot_version.version, released_at=bot_version.released_at, description=bot_version.description
-    )
+def _parse_summary(path: Path) -> VersionSummary | None:
+    version, separator, iso_date = path.stem.partition("-")
+    if not separator:
+        return None
+    try:
+        released_at = date.fromisoformat(iso_date)
+    except ValueError:
+        return None
+    return VersionSummary(version=version, released_at=released_at)
 
 
-class VersionHistoryService:
-    def __init__(self, bot_version_repository: BotVersionRepository) -> None:
-        self._bot_version_repository = bot_version_repository
+def _sort_key(summary: VersionSummary) -> tuple[int, ...]:
+    return tuple(int(part) for part in summary.version.split("."))
 
-    async def get_page(self, page: int) -> list[VersionEntry]:
-        bot_versions = await self._bot_version_repository.get_page(page * VERSIONS_PER_PAGE, VERSIONS_PER_PAGE)
-        return [_to_entry(bot_version) for bot_version in bot_versions]
 
-    async def total_pages(self) -> int:
-        total = await self._bot_version_repository.count()
-        return max(1, math.ceil(total / VERSIONS_PER_PAGE))
+def _list_all() -> list[VersionSummary]:
+    """Scans `docs/versions/` fresh on every call — the changelog lives entirely on disk, never
+    cached in memory, so a version file can be added/edited without restarting the bot."""
+    if not VERSIONS_DIR.is_dir():
+        return []
+    summaries = (_parse_summary(path) for path in VERSIONS_DIR.glob("*.md"))
+    return sorted((summary for summary in summaries if summary is not None), key=_sort_key, reverse=True)
 
-    async def find_version(self, version: str) -> VersionEntry | None:
-        bot_version = await self._bot_version_repository.get_by_version(version)
-        return _to_entry(bot_version) if bot_version is not None else None
+
+def total_pages() -> int:
+    return max(1, math.ceil(len(_list_all()) / VERSIONS_PER_PAGE))
+
+
+def get_page(page: int) -> list[VersionSummary]:
+    start = page * VERSIONS_PER_PAGE
+    return _list_all()[start : start + VERSIONS_PER_PAGE]
+
+
+def get_version(version: str) -> VersionDetail | None:
+    """Reads a single version file's content on demand — called only when the user opens that
+    specific version's detail screen, not when listing versions."""
+    if not VERSIONS_DIR.is_dir():
+        return None
+    for path in VERSIONS_DIR.glob("*.md"):
+        summary = _parse_summary(path)
+        if summary is not None and summary.version == version:
+            return VersionDetail(
+                version=summary.version,
+                released_at=summary.released_at,
+                description=path.read_text(encoding="utf-8").strip(),
+            )
+    return None
