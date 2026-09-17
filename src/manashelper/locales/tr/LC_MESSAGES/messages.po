@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Manashelper VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-15 22:02+0600\n"
+"POT-Creation-Date: 2026-09-17 17:11+0600\n"
 "PO-Revision-Date: 2026-09-15 11:14+0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: tr\n"
@@ -28,6 +28,9 @@ msgstr "Yemekhane menüsünü görüntüle"
 msgid "Change language"
 msgstr "Dili değiştir"
 
+msgid "View the bot's version history"
+msgstr "Botun sürüm geçmişini görüntüle"
+
 msgid "Enjoy your meal! 🍽"
 msgstr "Afiyet olsun! 🍽"
 
@@ -39,6 +42,24 @@ msgstr "📆 Yarın"
 
 msgid "🗓 Day after tomorrow"
 msgstr "🗓 Öbür gün"
+
+msgid "🧹 Auto-delete settings"
+msgstr "🧹 Otomatik silme ayarları"
+
+msgid "15 minutes"
+msgstr "15 dakika"
+
+msgid "45 minutes"
+msgstr "45 dakika"
+
+msgid "3 hours"
+msgstr "3 saat"
+
+msgid "1 day"
+msgstr "1 gün"
+
+msgid "Off"
+msgstr "Kapalı"
 
 msgid "Lunch"
 msgstr "Öğle"
@@ -146,6 +167,12 @@ msgstr ""
 
 msgid "Thanks for your rating!"
 msgstr "Değerlendirmeniz için teşekkürler!"
+
+msgid "🧹 Auto-delete food menu messages in this chat after:"
+msgstr "🧹 Bu sohbette yemek menüsü mesajlarını şu süre sonra otomatik sil:"
+
+msgid "Saved"
+msgstr "Kaydedildi"
 
 msgid "🍽 Fine-tune menu notifications"
 msgstr "🍽 Menü bildirimlerini özelleştir"
@@ -436,6 +463,24 @@ msgstr "➖ {weekday} {time_range}: {content} (iptal edildi)"
 msgid "✏️ {weekday} {time_range}: {previous} → {new}"
 msgstr "✏️ {weekday} {time_range}: {previous} → {new}"
 
+#, python-brace-format
+msgid "📦 Version history (page {page}/{total_pages})"
+msgstr "📦 Sürüm geçmişi (sayfa {page}/{total_pages})"
+
+msgid "📦 Version history"
+msgstr "📦 Sürüm geçmişi"
+
+#, python-brace-format
+msgid "📦 <b>Version {version}</b>"
+msgstr "📦 <b>Sürüm {version}</b>"
+
+#, python-brace-format
+msgid "📅 Released: {date}"
+msgstr "📅 Yayın tarihi: {date}"
+
 #~ msgid "😱 There should have been lunch here, but you have a lesson instead."
 #~ msgstr "😱 Burada öğle yemeği olması gerekiyordu ama dersin var."
+
+#~ msgid "No notable changes recorded."
+#~ msgstr "Önemli bir değişiklik kaydedilmedi."
 
