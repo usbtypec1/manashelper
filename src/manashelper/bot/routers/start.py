@@ -1,6 +1,7 @@
 from aiogram import Router
+from aiogram.enums import ChatType
 from aiogram.filters import CommandStart
-from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup
+from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from aiogram.utils.i18n import gettext as _
 
 router = Router(name="start")
@@ -18,7 +19,8 @@ def build_main_keyboard() -> ReplyKeyboardMarkup:
 
 
 async def send_welcome(message: Message) -> None:
-    await message.answer(_("Welcome to Manashelper!"), reply_markup=build_main_keyboard())
+    reply_markup = build_main_keyboard() if message.chat.type == ChatType.PRIVATE else ReplyKeyboardRemove()
+    await message.answer(_("Welcome to Manashelper!"), reply_markup=reply_markup)
 
 
 @router.message(CommandStart())
