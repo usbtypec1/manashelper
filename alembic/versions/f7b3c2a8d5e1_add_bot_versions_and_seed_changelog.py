@@ -5,6 +5,7 @@ Revises: d4e8a1f2c9b6
 Create Date: 2026-09-18 00:00:00.000000
 
 """
+from datetime import date
 from typing import Sequence, Union
 
 from alembic import op
@@ -24,7 +25,17 @@ def upgrade() -> None:
     `sort_order` is assigned by semantic-version order (not by tag creation time, which for a couple
     of tags — e.g. v2.0.0/v2.0.1 — doesn't match semver order), so the `/versions` command always
     lists the newest release first.
+
+    Also drops `food_menu_cleanup_settings.delay_minutes`'s server-side default, folded in here since
+    this hasn't shipped yet: with a `server_default` present, the ORM can't tell "explicitly set to
+    NULL (disable auto-delete)" apart from "not set, use the default" — it omits the column from the
+    INSERT and lets the server default (180) win either way, so a chat could never actually be saved
+    as "disabled". `FoodMenuCleanupSettingsRepository.get_or_create` already supplies the default
+    (`DEFAULT_FOOD_MENU_CLEANUP_DELAY_MINUTES`) explicitly for brand-new rows, so the server default
+    was never needed for correctness.
     """
+    op.alter_column('food_menu_cleanup_settings', 'delay_minutes', server_default=None)
+
     op.create_table(
         'bot_versions',
         sa.Column('id', sa.Uuid(), nullable=False),
@@ -47,9 +58,7 @@ def upgrade() -> None:
         sa.column('description', sa.Text()),
     )
 
-    op.bulk_insert(
-        bot_versions_table,
-        [
+    rows = [
             {'id': '2f0a1b6e-1a3d-4a3d-9c1b-000000000001', 'version': '1.0.0', 'sort_order': 1, 'released_at': '2026-04-20', 'description': 'Первая версия бота: можно смотреть расписание занятий и меню столовой.'},
             {'id': '2f0a1b6e-1a3d-4a3d-9c1b-000000000002', 'version': '1.0.1', 'sort_order': 2, 'released_at': '2026-04-20', 'description': 'Технические доработки процесса сборки и развёртывания бота. На работу бота не влияет.'},
             {'id': '2f0a1b6e-1a3d-4a3d-9c1b-000000000003', 'version': '1.0.2', 'sort_order': 3, 'released_at': '2026-04-20', 'description': 'Исправлена внутренняя ошибка при работе с базой данных.'},
@@ -90,10 +99,13 @@ def upgrade() -> None:
             {'id': '2f0a1b6e-1a3d-4a3d-9c1b-000000000038', 'version': '2.6.9', 'sort_order': 38, 'released_at': '2026-09-15', 'description': 'Предупреждение об обеденном перерыве отключено.'},
             {'id': '2f0a1b6e-1a3d-4a3d-9c1b-000000000039', 'version': '2.6.10', 'sort_order': 39, 'released_at': '2026-09-15', 'description': 'Полностью убрано сообщение об обеденном перерыве.'},
             {'id': '2f0a1b6e-1a3d-4a3d-9c1b-000000000040', 'version': '2.6.11', 'sort_order': 40, 'released_at': '2026-09-17', 'description': 'В групповых чатах бот больше не показывает основную клавиатуру с кнопками.'},
-        ],
-    )
+    ]
+    for row in rows:
+        row['released_at'] = date.fromisoformat(row['released_at'])
+    op.bulk_insert(bot_versions_table, rows)
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     op.drop_table('bot_versions')
+    op.alter_column('food_menu_cleanup_settings', 'delay_minutes', server_default='180')
