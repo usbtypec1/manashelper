@@ -1,5 +1,7 @@
 import logging
-from datetime import datetime
+import uuid
+from collections.abc import Iterable
+from datetime import UTC, datetime
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
@@ -14,10 +16,12 @@ from manashelper.repositories.food_menu_notification_settings_repository import 
     FoodMenuNotificationSettingsRepository,
 )
 from manashelper.repositories.notification_settings_repository import NotificationSettingsRepository
+from manashelper.repositories.scheduled_message_deletion_repository import ScheduledMessageDeletionRepository
 from manashelper.repositories.user_repository import UserRepository
 from manashelper.scraping.obis_client import ObisLoginError
 from manashelper.scraping.obis_parser import ObisParseError
 from manashelper.services.daily_menu import BISHKEK_TZ, DailyMenuModel, DailyMenuNotFoundError, DailyMenuService
+from manashelper.services.food_menu_cleanup_settings import FoodMenuCleanupSettingsService
 from manashelper.services.food_menu_formatter import build_photos, format_daily_menu
 from manashelper.services.food_menu_sync import FoodMenuSyncService
 from manashelper.services.obis import UserHasNoCredentialsError
@@ -28,6 +32,8 @@ from manashelper.services.timetable_formatter import format_lesson_changes
 from manashelper.services.timetable_sync import TimetableSyncService
 
 logger = logging.getLogger(__name__)
+
+TELEGRAM_DELETE_MESSAGES_BATCH_SIZE = 100
 
 
 async def _get_user_locale(user_repository: UserRepository, user_id: int) -> Locale:
@@ -47,7 +53,11 @@ async def sync_daily_menus_job(container: AsyncContainer) -> None:
 
 
 async def _send_daily_menu_broadcast(
-    bot: Bot, user_repository: UserRepository, daily_menu: DailyMenuModel, user_ids: list[int]
+    bot: Bot,
+    user_repository: UserRepository,
+    food_menu_cleanup_settings_service: FoodMenuCleanupSettingsService,
+    daily_menu: DailyMenuModel,
+    user_ids: list[int],
 ) -> None:
     for user_id in user_ids:
         try:
@@ -57,8 +67,10 @@ async def _send_daily_menu_broadcast(
                 media = build_photos(caption, daily_menu)
                 keyboard = build_open_food_menu_notifications_keyboard()
                 text = _("Enjoy your meal! 🍽")
-            await bot.send_media_group(chat_id=user_id, media=media)
-            await bot.send_message(chat_id=user_id, text=text, reply_markup=keyboard)
+            photo_messages = await bot.send_media_group(chat_id=user_id, media=media)
+            enjoy_message = await bot.send_message(chat_id=user_id, text=text, reply_markup=keyboard)
+            message_ids = [sent.message_id for sent in photo_messages] + [enjoy_message.message_id]
+            await food_menu_cleanup_settings_service.schedule_cleanup(user_id, message_ids)
         except TelegramAPIError:
             logger.warning("Failed to send food menu broadcast to user %s", user_id, exc_info=True)
 
@@ -71,6 +83,7 @@ async def broadcast_lunch_menu_job(container: AsyncContainer, bot: Bot) -> None:
             food_menu_notification_settings_repository = await request_container.get(
                 FoodMenuNotificationSettingsRepository
             )
+            food_menu_cleanup_settings_service = await request_container.get(FoodMenuCleanupSettingsService)
             try:
                 daily_menu = await daily_menu_service.get_daily_menu_by_skipping_days(0)
             except DailyMenuNotFoundError:
@@ -80,7 +93,9 @@ async def broadcast_lunch_menu_job(container: AsyncContainer, bot: Bot) -> None:
             user_ids = await food_menu_notification_settings_repository.get_user_ids_with_lunch_enabled_for_weekday(
                 weekday
             )
-            await _send_daily_menu_broadcast(bot, user_repository, daily_menu, user_ids)
+            await _send_daily_menu_broadcast(
+                bot, user_repository, food_menu_cleanup_settings_service, daily_menu, user_ids
+            )
     except Exception:
         logger.exception("Failed to broadcast lunch menu")
 
@@ -93,6 +108,7 @@ async def broadcast_dinner_menu_job(container: AsyncContainer, bot: Bot) -> None
             food_menu_notification_settings_repository = await request_container.get(
                 FoodMenuNotificationSettingsRepository
             )
+            food_menu_cleanup_settings_service = await request_container.get(FoodMenuCleanupSettingsService)
             try:
                 daily_menu = await daily_menu_service.get_daily_menu_by_skipping_days(0)
             except DailyMenuNotFoundError:
@@ -102,7 +118,9 @@ async def broadcast_dinner_menu_job(container: AsyncContainer, bot: Bot) -> None
             user_ids = await food_menu_notification_settings_repository.get_user_ids_with_dinner_enabled_for_weekday(
                 weekday
             )
-            await _send_daily_menu_broadcast(bot, user_repository, daily_menu, user_ids)
+            await _send_daily_menu_broadcast(
+                bot, user_repository, food_menu_cleanup_settings_service, daily_menu, user_ids
+            )
     except Exception:
         logger.exception("Failed to broadcast dinner menu")
 
@@ -215,3 +233,39 @@ async def _sync_course_timetable(container: AsyncContainer, bot: Bot, course_id:
                 await _send_notification(bot, user_id, message)
     except Exception:
         logger.exception("Failed to sync timetable for course %s", course_id)
+
+
+def _chunk(items: list[int], size: int) -> Iterable[list[int]]:
+    for start in range(0, len(items), size):
+        yield items[start : start + size]
+
+
+async def _delete_message_batch(bot: Bot, chat_id: int, message_ids: list[int]) -> None:
+    try:
+        await bot.delete_messages(chat_id=chat_id, message_ids=message_ids)
+    except TelegramAPIError:
+        logger.warning("Failed to delete %s scheduled message(s) in chat %s", len(message_ids), chat_id, exc_info=True)
+
+
+async def cleanup_scheduled_message_deletions_job(container: AsyncContainer, bot: Bot) -> None:
+    """The outbox sweep: deletes every due message, batched per chat (Bot API allows up to 100 message ids per
+    `deleteMessages` call), then drops the processed rows regardless of whether the Telegram call succeeded —
+    a message that's already gone (deleted by hand, too old, chat left) is not something to keep retrying."""
+    try:
+        async with container() as request_container:
+            scheduled_message_deletion_repository = await request_container.get(ScheduledMessageDeletionRepository)
+            now = datetime.now(UTC).replace(tzinfo=None)
+            due_by_chat = await scheduled_message_deletion_repository.get_due_grouped_by_chat(now)
+            if not due_by_chat:
+                return
+
+            processed_ids: list[uuid.UUID] = []
+            for chat_id, tasks in due_by_chat.items():
+                message_ids = [message_id for _, message_id in tasks]
+                for batch in _chunk(message_ids, TELEGRAM_DELETE_MESSAGES_BATCH_SIZE):
+                    await _delete_message_batch(bot, chat_id, batch)
+                processed_ids.extend(task_id for task_id, _ in tasks)
+
+            await scheduled_message_deletion_repository.delete_by_ids(processed_ids)
+    except Exception:
+        logger.exception("Failed to clean up scheduled message deletions")

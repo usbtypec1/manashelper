@@ -8,6 +8,7 @@ from manashelper.bot.callback_data import FOOD_MENU_DAY_TO_SKIP_DAYS, FoodMenuCa
 from manashelper.bot.filters.translated_text import TranslatedText
 from manashelper.bot.keyboards.food_menu import build_day_keyboard, build_rating_keyboard
 from manashelper.services.daily_menu import DailyMenuNotFoundError, DailyMenuService
+from manashelper.services.food_menu_cleanup_settings import FoodMenuCleanupSettingsService
 from manashelper.services.food_menu_formatter import build_photos, format_daily_menu, format_not_found
 
 router = Router(name="food_menu")
@@ -27,7 +28,12 @@ async def on_food_menu_button(message: Message) -> None:
     )
 
 
-async def _send_daily_menu(message: Message, skip_days: int, daily_menu_service: DailyMenuService) -> None:
+async def _send_daily_menu(
+    message: Message,
+    skip_days: int,
+    daily_menu_service: DailyMenuService,
+    food_menu_cleanup_settings_service: FoodMenuCleanupSettingsService,
+) -> None:
     try:
         daily_menu = await daily_menu_service.get_daily_menu_by_skipping_days(skip_days)
     except DailyMenuNotFoundError:
@@ -35,8 +41,11 @@ async def _send_daily_menu(message: Message, skip_days: int, daily_menu_service:
         return
 
     caption = format_daily_menu(daily_menu)
-    await message.answer_media_group(media=build_photos(caption, daily_menu))
-    await message.answer(_("⭐ Rate the menu:"), reply_markup=build_rating_keyboard(daily_menu.id))
+    photo_messages = await message.answer_media_group(media=build_photos(caption, daily_menu))
+    rating_message = await message.answer(_("⭐ Rate the menu:"), reply_markup=build_rating_keyboard(daily_menu.id))
+
+    message_ids = [sent.message_id for sent in photo_messages] + [rating_message.message_id]
+    await food_menu_cleanup_settings_service.schedule_cleanup(message.chat.id, message_ids)
 
 
 def _parse_skip_days(args: str | None) -> int | None:
@@ -57,6 +66,7 @@ async def cmd_yemek(
     message: Message,
     command: CommandObject,
     daily_menu_service: FromDishka[DailyMenuService],
+    food_menu_cleanup_settings_service: FromDishka[FoodMenuCleanupSettingsService],
 ) -> None:
     skip_days = _parse_skip_days(command.args)
     if skip_days is None:
@@ -65,7 +75,7 @@ async def cmd_yemek(
             reply_markup=build_day_keyboard(),
         )
         return
-    await _send_daily_menu(message, skip_days, daily_menu_service)
+    await _send_daily_menu(message, skip_days, daily_menu_service, food_menu_cleanup_settings_service)
 
 
 @router.callback_query(FoodMenuCallback.filter())
@@ -73,10 +83,13 @@ async def on_food_menu_day_callback(
     callback_query: CallbackQuery,
     callback_data: FoodMenuCallback,
     daily_menu_service: FromDishka[DailyMenuService],
+    food_menu_cleanup_settings_service: FromDishka[FoodMenuCleanupSettingsService],
 ) -> None:
     skip_days = FOOD_MENU_DAY_TO_SKIP_DAYS[callback_data.day]
     if isinstance(callback_query.message, Message):
-        await _send_daily_menu(callback_query.message, skip_days, daily_menu_service)
+        await _send_daily_menu(
+            callback_query.message, skip_days, daily_menu_service, food_menu_cleanup_settings_service
+        )
     await callback_query.answer()
 
 

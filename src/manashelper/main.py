@@ -18,6 +18,7 @@ from manashelper.bot.middlewares.per_chat_ordering import PerChatOrderingMiddlew
 from manashelper.bot.middlewares.private_chat_only import PrivateChatOnlyMiddleware
 from manashelper.bot.middlewares.rate_limit import RateLimitMiddleware
 from manashelper.bot.routers.food_menu import router as food_menu_router
+from manashelper.bot.routers.food_menu_cleanup import router as food_menu_cleanup_router
 from manashelper.bot.routers.food_menu_notifications import router as food_menu_notifications_router
 from manashelper.bot.routers.lesson_search import router as lesson_search_router
 from manashelper.bot.routers.locale import router as locale_router
@@ -32,6 +33,7 @@ from manashelper.localization.locale import DEFAULT_LOCALE, Locale
 from manashelper.scheduler_jobs import (
     broadcast_dinner_menu_job,
     broadcast_lunch_menu_job,
+    cleanup_scheduled_message_deletions_job,
     poll_obis_notifications_job,
     sync_daily_menus_job,
     sync_timetable_job,
@@ -104,6 +106,7 @@ async def main() -> None:
     dispatcher.include_router(lesson_search_router)
     dispatcher.include_router(food_menu_router)
     dispatcher.include_router(food_menu_notifications_router)
+    dispatcher.include_router(food_menu_cleanup_router)
     dispatcher.include_router(obis_router)
     dispatcher.include_router(settings_router)
 
@@ -127,6 +130,9 @@ async def main() -> None:
     scheduler.add_job(broadcast_dinner_menu_job, "cron", hour=17, minute=0, timezone=BISHKEK_TZ, args=[container, bot])
     scheduler.add_job(poll_obis_notifications_job, "interval", hours=1, args=[container, bot], next_run_time=now)
     scheduler.add_job(sync_timetable_job, "interval", hours=1, args=[container, bot], next_run_time=now)
+    scheduler.add_job(
+        cleanup_scheduled_message_deletions_job, "interval", minutes=5, args=[container, bot], next_run_time=now
+    )
     scheduler.start()
 
     await setup_commands(bot)

@@ -4,6 +4,7 @@ from enum import StrEnum
 from aiogram.filters.callback_data import CallbackData
 
 from manashelper.localization.locale import Locale
+from manashelper.services.food_menu_cleanup_settings import FoodMenuCleanupOption
 from manashelper.services.food_menu_notification_settings import FoodMenuMeal
 from manashelper.services.notification_settings import NotificationSetting
 
@@ -78,6 +79,14 @@ class FoodMenuNotificationMealCallback(CallbackData, prefix="food_menu_notificat
 
 class FoodMenuNotificationNoopCallback(CallbackData, prefix="food_menu_notification_noop"):
     pass
+
+
+class FoodMenuCleanupOpenCallback(CallbackData, prefix="food_menu_cleanup_open"):
+    pass
+
+
+class FoodMenuCleanupSetCallback(CallbackData, prefix="food_menu_cleanup_set"):
+    option: FoodMenuCleanupOption
 
 
 class ObisAction(StrEnum):

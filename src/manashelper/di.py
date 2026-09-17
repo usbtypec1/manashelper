@@ -12,12 +12,14 @@ from manashelper.repositories.daily_menu_repository import DailyMenuRepository
 from manashelper.repositories.department_repository import DepartmentRepository
 from manashelper.repositories.dish_repository import DishRepository
 from manashelper.repositories.faculty_repository import FacultyRepository
+from manashelper.repositories.food_menu_cleanup_settings_repository import FoodMenuCleanupSettingsRepository
 from manashelper.repositories.food_menu_notification_settings_repository import (
     FoodMenuNotificationSettingsRepository,
 )
 from manashelper.repositories.lesson_history_repository import LessonHistoryRepository
 from manashelper.repositories.lesson_repository import LessonRepository
 from manashelper.repositories.notification_settings_repository import NotificationSettingsRepository
+from manashelper.repositories.scheduled_message_deletion_repository import ScheduledMessageDeletionRepository
 from manashelper.repositories.user_exam_grade_repository import UserExamGradeRepository
 from manashelper.repositories.user_lesson_attendance_repository import UserLessonAttendanceRepository
 from manashelper.repositories.user_repository import UserRepository
@@ -30,10 +32,12 @@ from manashelper.services.crypto import CryptoService
 from manashelper.services.daily_menu import DailyMenuService
 from manashelper.services.department import DepartmentService
 from manashelper.services.faculty import FacultyService
+from manashelper.services.food_menu_cleanup_settings import FoodMenuCleanupSettingsService
 from manashelper.services.food_menu_notification_settings import FoodMenuNotificationSettingsService
 from manashelper.services.food_menu_sync import FoodMenuSyncService
 from manashelper.services.lesson_search import LessonSearchService
 from manashelper.services.locale import LocaleService
+from manashelper.services.message_deletion import MessageDeletionService
 from manashelper.services.notification_settings import NotificationSettingsService
 from manashelper.services.obis import ObisService
 from manashelper.services.obis_notification import ObisNotificationService
@@ -96,6 +100,8 @@ class RequestProvider(Provider):
     lesson_history_repository = provide(LessonHistoryRepository)
     user_exam_grade_repository = provide(UserExamGradeRepository)
     user_lesson_attendance_repository = provide(UserLessonAttendanceRepository)
+    scheduled_message_deletion_repository = provide(ScheduledMessageDeletionRepository)
+    food_menu_cleanup_settings_repository = provide(FoodMenuCleanupSettingsRepository)
 
     faculty_service = provide(FacultyService)
     department_service = provide(DepartmentService)
@@ -110,3 +116,5 @@ class RequestProvider(Provider):
     schedule_service = provide(ScheduleService)
     lesson_search_service = provide(LessonSearchService)
     locale_service = provide(LocaleService)
+    message_deletion_service = provide(MessageDeletionService)
+    food_menu_cleanup_settings_service = provide(FoodMenuCleanupSettingsService)

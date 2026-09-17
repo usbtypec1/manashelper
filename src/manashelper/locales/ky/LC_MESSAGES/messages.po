@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Manashelper VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-15 22:02+0600\n"
+"POT-Creation-Date: 2026-09-17 16:47+0600\n"
 "PO-Revision-Date: 2026-09-15 11:14+0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ky\n"
@@ -39,6 +39,24 @@ msgstr "📆 Эртең"
 
 msgid "🗓 Day after tomorrow"
 msgstr "🗓 Эртеңден кийинки күн"
+
+msgid "🧹 Auto-delete settings"
+msgstr "🧹 Автоматтык өчүрүү жөндөөлөрү"
+
+msgid "15 minutes"
+msgstr "15 мүнөт"
+
+msgid "45 minutes"
+msgstr "45 мүнөт"
+
+msgid "3 hours"
+msgstr "3 саат"
+
+msgid "1 day"
+msgstr "1 суткада"
+
+msgid "Off"
+msgstr "Өчүрүлгөн"
 
 msgid "Lunch"
 msgstr "Түшкү"
@@ -146,6 +164,12 @@ msgstr ""
 
 msgid "Thanks for your rating!"
 msgstr "Баалаганыңыз үчүн рахмат!"
+
+msgid "🧹 Auto-delete food menu messages in this chat after:"
+msgstr "🧹 Бул чатта меню жөнүндө билдирүүлөрдү автоматтык түрдө өчүрүү:"
+
+msgid "Saved"
+msgstr "Сакталды"
 
 msgid "🍽 Fine-tune menu notifications"
 msgstr "🍽 Меню билдирүүлөрүн ыңгайлаштыруу"
