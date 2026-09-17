@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Manashelper VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-17 16:47+0600\n"
+"POT-Creation-Date: 2026-09-17 17:11+0600\n"
 "PO-Revision-Date: 2026-09-15 11:14+0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ky\n"
@@ -27,6 +27,9 @@ msgstr "Ашкана менюсун көрүү"
 
 msgid "Change language"
 msgstr "Тилди өзгөртүү"
+
+msgid "View the bot's version history"
+msgstr "Боттун версиялар тарыхын көрүү"
 
 msgid "Enjoy your meal! 🍽"
 msgstr "Ашыңыз таттуу болсун! 🍽"
@@ -468,6 +471,24 @@ msgstr "➖ {weekday} {time_range}: {content} (жокко чыгарылды)"
 msgid "✏️ {weekday} {time_range}: {previous} → {new}"
 msgstr "✏️ {weekday} {time_range}: {previous} → {new}"
 
+#, python-brace-format
+msgid "📦 Version history (page {page}/{total_pages})"
+msgstr "📦 Версиялар тарыхы ({page}/{total_pages}-бет)"
+
+msgid "📦 Version history"
+msgstr "📦 Версиялар тарыхы"
+
+#, python-brace-format
+msgid "📦 <b>Version {version}</b>"
+msgstr "📦 <b>{version}-версия</b>"
+
+#, python-brace-format
+msgid "📅 Released: {date}"
+msgstr "📅 Чыгарылган күнү: {date}"
+
 #~ msgid "😱 There should have been lunch here, but you have a lesson instead."
 #~ msgstr "😱 Бул жерде түшкү тамак болушу керек эле, бирок сизде сабак бар."
+
+#~ msgid "No notable changes recorded."
+#~ msgstr "Олуттуу өзгөрүүлөр катталган жок."
 

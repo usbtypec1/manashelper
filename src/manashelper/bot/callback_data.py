@@ -121,3 +121,12 @@ class NotificationSettingCallback(CallbackData, prefix="notification_setting"):
 
 class LocaleCallback(CallbackData, prefix="locale"):
     locale: Locale
+
+
+class VersionsPageCallback(CallbackData, prefix="versions_page"):
+    page: int
+
+
+class VersionCallback(CallbackData, prefix="version"):
+    version: str
+    page: int

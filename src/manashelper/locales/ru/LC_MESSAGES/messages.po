@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Manashelper VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-17 16:47+0600\n"
+"POT-Creation-Date: 2026-09-17 17:11+0600\n"
 "PO-Revision-Date: 2026-09-15 11:14+0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
@@ -28,6 +28,9 @@ msgstr "Просмотр меню столовой"
 
 msgid "Change language"
 msgstr "Сменить язык"
+
+msgid "View the bot's version history"
+msgstr "Посмотреть историю версий бота"
 
 msgid "Enjoy your meal! 🍽"
 msgstr "Приятного аппетита! 🍽"
@@ -467,6 +470,24 @@ msgstr "➖ {weekday} {time_range}: {content} (отменено)"
 msgid "✏️ {weekday} {time_range}: {previous} → {new}"
 msgstr "✏️ {weekday} {time_range}: {previous} → {new}"
 
+#, python-brace-format
+msgid "📦 Version history (page {page}/{total_pages})"
+msgstr "📦 История версий (страница {page}/{total_pages})"
+
+msgid "📦 Version history"
+msgstr "📦 История версий"
+
+#, python-brace-format
+msgid "📦 <b>Version {version}</b>"
+msgstr "📦 <b>Версия {version}</b>"
+
+#, python-brace-format
+msgid "📅 Released: {date}"
+msgstr "📅 Дата выхода: {date}"
+
 #~ msgid "😱 There should have been lunch here, but you have a lesson instead."
 #~ msgstr "😱 Тут должен был быть обед, но у вас урок."
+
+#~ msgid "No notable changes recorded."
+#~ msgstr "Значимых изменений не зафиксировано."
 

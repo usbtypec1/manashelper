@@ -26,6 +26,7 @@ from manashelper.bot.routers.obis import router as obis_router
 from manashelper.bot.routers.settings import router as settings_router
 from manashelper.bot.routers.start import router as start_router
 from manashelper.bot.routers.timetable import router as timetable_router
+from manashelper.bot.routers.versions import router as versions_router
 from manashelper.config import get_settings
 from manashelper.di import AppProvider, RequestProvider
 from manashelper.localization.i18n import i18n
@@ -48,8 +49,12 @@ def _build_commands() -> tuple[list[BotCommand], list[BotCommand]]:
         BotCommand(command="start", description=_("Start the bot")),
         BotCommand(command="yemek", description=_("View the cafeteria menu")),
         BotCommand(command="language", description=_("Change language")),
+        BotCommand(command="versions", description=_("View the bot's version history")),
     ]
-    group_commands = [BotCommand(command="yemek", description=_("View the cafeteria menu"))]
+    group_commands = [
+        BotCommand(command="yemek", description=_("View the cafeteria menu")),
+        BotCommand(command="versions", description=_("View the bot's version history")),
+    ]
     return private_commands, group_commands
 
 
@@ -109,6 +114,7 @@ async def main() -> None:
     dispatcher.include_router(food_menu_cleanup_router)
     dispatcher.include_router(obis_router)
     dispatcher.include_router(settings_router)
+    dispatcher.include_router(versions_router)
 
     container = make_async_container(AppProvider(), RequestProvider())
     setup_dishka(container, dispatcher)
