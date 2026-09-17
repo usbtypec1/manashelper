@@ -13,6 +13,9 @@ RUN uv sync --frozen --no-install-project --no-dev
 COPY alembic.ini ./
 COPY alembic ./alembic
 COPY src ./src
+# The /versions command reads these on demand at runtime (services/version_history.py resolves the
+# path relative to the repo root) — never baked into a Python module or the database.
+COPY docs/versions ./docs/versions
 RUN uv sync --frozen --no-dev
 
 # Compile gettext catalogs (locales/**/LC_MESSAGES/*.po -> *.mo) — .mo files are gitignored

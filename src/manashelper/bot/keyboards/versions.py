@@ -3,12 +3,12 @@ from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from manashelper.bot.callback_data import VersionCallback, VersionsPageCallback
-from manashelper.services.version_history import VersionEntry
+from manashelper.services.version_history import VersionSummary
 
 VERSIONS_PER_ROW = 4
 
 
-def build_versions_list_keyboard(versions: list[VersionEntry], page: int, total_pages: int) -> InlineKeyboardMarkup:
+def build_versions_list_keyboard(versions: list[VersionSummary], page: int, total_pages: int) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     for entry in versions:
         builder.button(text=f"v{entry.version}", callback_data=VersionCallback(version=entry.version, page=page))
