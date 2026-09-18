@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Manashelper VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-17 17:11+0600\n"
+"POT-Creation-Date: 2026-09-18 11:08+0600\n"
 "PO-Revision-Date: 2026-09-15 11:14+0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
@@ -277,6 +277,9 @@ msgstr "⚙️ Настройки"
 
 msgid "Welcome to Manashelper!"
 msgstr "Добро пожаловать в Manashelper!"
+
+msgid "Keyboard is hidden"
+msgstr "Клавиатура скрыта"
 
 msgid ""
 "You have no tracked courses yet. Pick your courses with the button below "
