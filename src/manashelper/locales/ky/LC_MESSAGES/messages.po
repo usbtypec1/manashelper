@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Manashelper VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-18 11:08+0600\n"
+"POT-Creation-Date: 2026-09-18 15:05+0600\n"
 "PO-Revision-Date: 2026-09-15 11:14+0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ky\n"
@@ -18,18 +18,6 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
-
-msgid "Start the bot"
-msgstr "Ботту иштетүү"
-
-msgid "View the cafeteria menu"
-msgstr "Ашкана менюсун көрүү"
-
-msgid "Change language"
-msgstr "Тилди өзгөртүү"
-
-msgid "View the bot's version history"
-msgstr "Боттун версиялар тарыхын көрүү"
 
 msgid "Enjoy your meal! 🍽"
 msgstr "Ашыңыз таттуу болсун! 🍽"
@@ -494,4 +482,19 @@ msgstr "📅 Чыгарылган күнү: {date}"
 
 #~ msgid "No notable changes recorded."
 #~ msgstr "Олуттуу өзгөрүүлөр катталган жок."
+
+#~ msgid "Start the bot"
+#~ msgstr "Ботту иштетүү"
+
+#~ msgid "View the cafeteria menu"
+#~ msgstr "Ашкана менюсун көрүү"
+
+#~ msgid "Change language"
+#~ msgstr "Тилди өзгөртүү"
+
+#~ msgid "View the bot's version history"
+#~ msgstr "Боттун версиялар тарыхын көрүү"
+
+#~ msgid "Hide the keyboard"
+#~ msgstr "Баскычтопту жашыруу"
 
