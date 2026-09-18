@@ -1,6 +1,6 @@
 from aiogram import Router
 from aiogram.enums import ChatType
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import Command, CommandStart
 from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from aiogram.utils.i18n import gettext as _
 
