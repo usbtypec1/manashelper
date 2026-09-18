@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Manashelper VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-18 15:05+0600\n"
+"POT-Creation-Date: 2026-09-18 16:20+0600\n"
 "PO-Revision-Date: 2026-09-15 11:14+0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ky\n"
@@ -447,20 +447,36 @@ msgstr "Сабак жок."
 msgid "😋 Lunch break. Find out what's for lunch - /yemek"
 msgstr "😋 Түшкү тыныгуу. Йемекте эмне бар билүү - /yemek"
 
-msgid "🔔 Schedule changes:"
-msgstr "🔔 Расписаниедеги өзгөрүүлөр:"
+#, python-brace-format
+msgid ""
+"➕ {time_range}\n"
+"{content}"
+msgstr ""
+"➕ {time_range}\n"
+"{content}"
 
 #, python-brace-format
-msgid "➕ {weekday} {time_range}: {content}"
-msgstr "➕ {weekday} {time_range}: {content}"
+msgid ""
+"➖ {time_range} (cancelled)\n"
+"{content}"
+msgstr ""
+"➖ {time_range} (жокко чыгарылды)\n"
+"{content}"
 
 #, python-brace-format
-msgid "➖ {weekday} {time_range}: {content} (cancelled)"
-msgstr "➖ {weekday} {time_range}: {content} (жокко чыгарылды)"
+msgid ""
+"✏️ {time_range}\n"
+"{previous}\n"
+"→\n"
+"{new}"
+msgstr ""
+"✏️ {time_range}\n"
+"{previous}\n"
+"→\n"
+"{new}"
 
-#, python-brace-format
-msgid "✏️ {weekday} {time_range}: {previous} → {new}"
-msgstr "✏️ {weekday} {time_range}: {previous} → {new}"
+msgid "🔔 <b>Schedule changes</b>"
+msgstr "🔔 <b>Расписаниедеги өзгөрүүлөр</b>"
 
 #, python-brace-format
 msgid "📦 Version history (page {page}/{total_pages})"
@@ -497,4 +513,7 @@ msgstr "📅 Чыгарылган күнү: {date}"
 
 #~ msgid "Hide the keyboard"
 #~ msgstr "Баскычтопту жашыруу"
+
+#~ msgid "➖ {weekday} {time_range}: {content} (cancelled)"
+#~ msgstr "➖ {weekday} {time_range}: {content} (жокко чыгарылды)"
 
