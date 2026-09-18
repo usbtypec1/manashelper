@@ -5,8 +5,7 @@ from datetime import datetime
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.types import BotCommand, BotCommandScopeAllGroupChats, BotCommandScopeAllPrivateChats, ErrorEvent
-from aiogram.utils.i18n import gettext as _
+from aiogram.types import BotCommandScopeAllGroupChats, BotCommandScopeAllPrivateChats, ErrorEvent
 from alembic.config import Config
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dishka import make_async_container
@@ -29,7 +28,6 @@ from manashelper.bot.routers.timetable import router as timetable_router
 from manashelper.bot.routers.versions import router as versions_router
 from manashelper.config import get_settings
 from manashelper.di import AppProvider, RequestProvider
-from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale
 from manashelper.scheduler_jobs import (
     broadcast_dinner_menu_job,
@@ -39,41 +37,24 @@ from manashelper.scheduler_jobs import (
     sync_daily_menus_job,
     sync_timetable_job,
 )
+from manashelper.services.bot_commands import build_group_commands, build_private_commands
 from manashelper.services.daily_menu import BISHKEK_TZ
 
 logger = logging.getLogger(__name__)
 
 
-def _build_commands() -> tuple[list[BotCommand], list[BotCommand]]:
-    private_commands = [
-        BotCommand(command="start", description=_("Start the bot")),
-        BotCommand(command="yemek", description=_("View the cafeteria menu")),
-        BotCommand(command="language", description=_("Change language")),
-        BotCommand(command="versions", description=_("View the bot's version history")),
-    ]
-    group_commands = [
-        BotCommand(command="yemek", description=_("View the cafeteria menu")),
-        BotCommand(command="versions", description=_("View the bot's version history")),
-    ]
-    return private_commands, group_commands
-
-
 async def setup_commands(bot: Bot) -> None:
     for locale in Locale:
-        with i18n.context(), i18n.use_locale(locale.value):
-            private_commands, group_commands = _build_commands()
         await bot.set_my_commands(
-            commands=private_commands, scope=BotCommandScopeAllPrivateChats(), language_code=locale.value
+            commands=build_private_commands(locale), scope=BotCommandScopeAllPrivateChats(), language_code=locale.value
         )
         await bot.set_my_commands(
-            commands=group_commands, scope=BotCommandScopeAllGroupChats(), language_code=locale.value
+            commands=build_group_commands(locale), scope=BotCommandScopeAllGroupChats(), language_code=locale.value
         )
 
     # Fallback for clients whose language isn't one of the supported locales.
-    with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):
-        private_commands, group_commands = _build_commands()
-    await bot.set_my_commands(commands=private_commands, scope=BotCommandScopeAllPrivateChats())
-    await bot.set_my_commands(commands=group_commands, scope=BotCommandScopeAllGroupChats())
+    await bot.set_my_commands(commands=build_private_commands(DEFAULT_LOCALE), scope=BotCommandScopeAllPrivateChats())
+    await bot.set_my_commands(commands=build_group_commands(DEFAULT_LOCALE), scope=BotCommandScopeAllGroupChats())
 
 
 def run_migrations() -> None:

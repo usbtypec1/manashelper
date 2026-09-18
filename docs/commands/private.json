@@ -1,0 +1,47 @@
+[
+  {
+    "command": "start",
+    "description": {
+      "en": "Start the bot",
+      "ru": "Запуск бота",
+      "ky": "Ботту иштетүү",
+      "tr": "Botu başlat"
+    }
+  },
+  {
+    "command": "yemek",
+    "description": {
+      "en": "View the cafeteria menu",
+      "ru": "Просмотр меню столовой",
+      "ky": "Ашкана менюсун көрүү",
+      "tr": "Yemekhane menüsünü görüntüle"
+    }
+  },
+  {
+    "command": "language",
+    "description": {
+      "en": "Change language",
+      "ru": "Сменить язык",
+      "ky": "Тилди өзгөртүү",
+      "tr": "Dili değiştir"
+    }
+  },
+  {
+    "command": "versions",
+    "description": {
+      "en": "View the bot's version history",
+      "ru": "Посмотреть историю версий бота",
+      "ky": "Боттун версиялар тарыхын көрүү",
+      "tr": "Botun sürüm geçmişini görüntüle"
+    }
+  },
+  {
+    "command": "hide_keyboard",
+    "description": {
+      "en": "Hide the keyboard",
+      "ru": "Скрыть клавиатуру",
+      "ky": "Баскычтопту жашыруу",
+      "tr": "Klavyeyi gizle"
+    }
+  }
+]
