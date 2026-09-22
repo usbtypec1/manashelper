@@ -8,7 +8,7 @@ from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message, ReplyKeyboardRemove
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
@@ -20,8 +20,6 @@ from manashelper.bot.callback_data import (
     AdvertisementExpiryOption,
     AdvertisementFormAction,
     AdvertisementFormCallback,
-    AdvertisementMenuAction,
-    AdvertisementMenuCallback,
     AdvertisementsPageCallback,
 )
 from manashelper.bot.filters.translated_text import TranslatedText
@@ -118,52 +116,62 @@ async def _start_ad_details(message: Message, state: FSMContext) -> None:
     )
 
 
+async def send_marketplace_menu(message: Message, settings: Settings) -> None:
+    text = _(
+        "🛒 <b>Marketplace</b>\n\n"
+        "Post an ad for other students to see, or manage the ads you've already posted.\n\n"
+        '🔗 <a href="{link}">Browse the marketplace channel</a>'
+    ).format(link=settings.advertisement_channel_link)
+    await message.answer(text, reply_markup=build_advertisement_menu_keyboard())
+
+
 @router.message(TranslatedText("🛒 Marketplace"))
 @flags.private_chat_only
-async def on_marketplace_button(message: Message) -> None:
-    await message.answer(
-        _("🛒 <b>Marketplace</b>\n\nPost an ad for other students to see, or manage the ads you've already posted."),
-        reply_markup=build_advertisement_menu_keyboard(),
-    )
+async def on_marketplace_button(message: Message, settings: FromDishka[Settings]) -> None:
+    await send_marketplace_menu(message, settings)
 
 
-@router.callback_query(AdvertisementMenuCallback.filter(F.action == AdvertisementMenuAction.CREATE))
+@router.message(TranslatedText("◀️ Back to menu"))
+@flags.private_chat_only
+async def on_back_to_main_menu(message: Message) -> None:
+    await message.answer(_("🏠 Main menu"), reply_markup=build_main_keyboard())
+
+
+@router.message(TranslatedText("➕ Post an ad"))
 @flags.private_chat_only
 async def on_create_requested(
-    callback_query: CallbackQuery,
+    message: Message,
     state: FSMContext,
     advertisement_service: FromDishka[AdvertisementService],
     user_contact_service: FromDishka[UserContactService],
 ) -> None:
-    user_id = callback_query.from_user.id
+    if message.from_user is None:
+        return
+    user_id = message.from_user.id
     try:
         await advertisement_service.assert_can_post(user_id)
     except TooManyAdvertisementsError:
-        await callback_query.answer(
-            _("You've posted the maximum of 5 ads for this hour. Please try again a bit later."), show_alert=True
-        )
+        await message.answer(_("You've posted the maximum of 5 ads for this hour. Please try again a bit later."))
         return
 
     try:
         contact = await user_contact_service.get_contact_status(user_id)
     except UserNotFoundError:
-        await callback_query.answer(_("Please start with the /start command"), show_alert=True)
+        await message.answer(_("Please start with the /start command"))
         return
 
-    if isinstance(callback_query.message, Message):
-        if contact.has_contact:
-            await _start_ad_details(callback_query.message, state)
-        else:
-            await state.set_state(AdvertisementForm.phone_number)
-            await callback_query.message.answer(
-                _(
-                    "📞 Before you can post an ad, buyers need a way to reach you.\n\n"
-                    "You don't currently have a public Telegram username, so please share a phone number "
-                    "using the button below, or type one in manually (e.g. +996700123456):"
-                ),
-                reply_markup=build_contact_request_keyboard(),
-            )
-    await callback_query.answer()
+    if contact.has_contact:
+        await _start_ad_details(message, state)
+    else:
+        await state.set_state(AdvertisementForm.phone_number)
+        await message.answer(
+            _(
+                "📞 Before you can post an ad, buyers need a way to reach you.\n\n"
+                "You don't currently have a public Telegram username, so please share a phone number "
+                "using the button below, or type one in manually (e.g. +996700123456):"
+            ),
+            reply_markup=build_contact_request_keyboard(),
+        )
 
 
 @router.message(F.contact, StateFilter(AdvertisementForm.phone_number))
@@ -448,7 +456,7 @@ async def on_form_submitted(
         await callback_query.message.edit_text(
             _("✅ Your ad has been sent for moderator review. You'll be notified once it's approved or rejected.")
         )
-        await callback_query.message.answer(_("🛒 <b>Marketplace</b>"), reply_markup=build_main_keyboard())
+        await send_marketplace_menu(callback_query.message, settings)
 
     contact = await user_contact_service.get_contact_status(user_id)
     await _notify_moderation_chat(bot, settings, summary, contact)
@@ -476,12 +484,13 @@ async def _notify_moderation_chat(
         logger.warning("Failed to notify the moderation chat about a new ad", exc_info=True)
 
 
-@router.callback_query(AdvertisementMenuCallback.filter(F.action == AdvertisementMenuAction.MY_ADS))
+@router.message(TranslatedText("📋 My ads"))
 @flags.private_chat_only
-async def on_my_ads_requested(
-    callback_query: CallbackQuery, advertisement_service: FromDishka[AdvertisementService]
-) -> None:
-    await _render_my_ads(callback_query, advertisement_service, 0)
+async def on_my_ads_requested(message: Message, advertisement_service: FromDishka[AdvertisementService]) -> None:
+    if message.from_user is None:
+        return
+    text, keyboard = await _build_my_ads_view(advertisement_service, message.from_user.id, 0)
+    await message.answer(text, reply_markup=keyboard)
 
 
 @router.callback_query(AdvertisementsPageCallback.filter())
@@ -491,18 +500,21 @@ async def on_my_ads_page(
     callback_data: AdvertisementsPageCallback,
     advertisement_service: FromDishka[AdvertisementService],
 ) -> None:
-    await _render_my_ads(callback_query, advertisement_service, callback_data.page)
+    text, keyboard = await _build_my_ads_view(advertisement_service, callback_query.from_user.id, callback_data.page)
+    if isinstance(callback_query.message, Message):
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
+    await callback_query.answer()
 
 
-async def _render_my_ads(callback_query: CallbackQuery, advertisement_service: AdvertisementService, page: int) -> None:
-    ad_page = await advertisement_service.get_page_by_user_id(callback_query.from_user.id, page)
+async def _build_my_ads_view(
+    advertisement_service: AdvertisementService, user_id: int, page: int
+) -> tuple[str, InlineKeyboardMarkup]:
+    ad_page = await advertisement_service.get_page_by_user_id(user_id, page)
     text = _("📋 <b>My ads</b> (page {page}/{total})").format(page=ad_page.page + 1, total=ad_page.total_pages)
     if not ad_page.items:
         text = _("📋 <b>My ads</b>\n\nYou haven't posted any ads yet.")
     keyboard = build_my_ads_keyboard(ad_page.items, ad_page.page, ad_page.total_pages)
-    if isinstance(callback_query.message, Message):
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-    await callback_query.answer()
+    return text, keyboard
 
 
 @router.callback_query(AdvertisementCallback.filter())

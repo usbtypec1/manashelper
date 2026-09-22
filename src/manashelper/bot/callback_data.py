@@ -133,15 +133,6 @@ class VersionCallback(CallbackData, prefix="version"):
     page: int
 
 
-class AdvertisementMenuAction(StrEnum):
-    CREATE = "create"
-    MY_ADS = "my_ads"
-
-
-class AdvertisementMenuCallback(CallbackData, prefix="ad_menu"):
-    action: AdvertisementMenuAction
-
-
 class AdvertisementFormAction(StrEnum):
     SKIP_PRICE = "skip_price"
     DONE_MEDIA = "done_media"
