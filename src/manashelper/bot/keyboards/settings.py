@@ -15,6 +15,9 @@ def build_settings_keyboard() -> InlineKeyboardMarkup:
     builder.button(text=_("🔔 Notifications"), callback_data=SettingsCallback(action=SettingsAction.OPEN_NOTIFICATIONS))
     builder.button(text=_("📚 My lessons"), callback_data=SettingsCallback(action=SettingsAction.OPEN_COURSE_TRACKING))
     builder.button(text=_("🔑 OBIS credentials"), callback_data=SettingsCallback(action=SettingsAction.OPEN_OBIS))
+    builder.button(
+        text=_("📱 My phone numbers"), callback_data=SettingsCallback(action=SettingsAction.OPEN_PHONE_NUMBERS)
+    )
     builder.button(text=_("🌐 Language"), callback_data=SettingsCallback(action=SettingsAction.OPEN_LANGUAGE))
     builder.adjust(1)
     return builder.as_markup()

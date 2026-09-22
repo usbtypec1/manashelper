@@ -108,6 +108,7 @@ class SettingsAction(StrEnum):
     OPEN_COURSE_TRACKING = "open_course_tracking"
     OPEN_OBIS = "open_obis"
     OPEN_LANGUAGE = "open_language"
+    OPEN_PHONE_NUMBERS = "open_phone_numbers"
     BACK_TO_SETTINGS = "back_to_settings"
 
 
@@ -144,13 +145,24 @@ class AdvertisementMenuCallback(CallbackData, prefix="ad_menu"):
 class AdvertisementFormAction(StrEnum):
     SKIP_PRICE = "skip_price"
     DONE_MEDIA = "done_media"
-    SKIP_EXPIRES_AT = "skip_expires_at"
     CONFIRM_SUBMIT = "confirm_submit"
     CANCEL = "cancel"
 
 
 class AdvertisementFormCallback(CallbackData, prefix="ad_form"):
     action: AdvertisementFormAction
+
+
+class AdvertisementExpiryOption(StrEnum):
+    MIN_45 = "min_45"
+    HOURS_6 = "hours_6"
+    HOURS_24 = "hours_24"
+    DAYS_7 = "days_7"
+    NONE = "none"
+
+
+class AdvertisementExpiryCallback(CallbackData, prefix="ad_expiry"):
+    option: AdvertisementExpiryOption
 
 
 class AdvertisementsPageCallback(CallbackData, prefix="ads_page"):
@@ -184,3 +196,15 @@ class AdvertisementModerationAction(StrEnum):
 class AdvertisementModerationCallback(CallbackData, prefix="ad_moderation"):
     id: uuid.UUID
     action: AdvertisementModerationAction
+
+
+class PhoneNumberAction(StrEnum):
+    ADD = "add"
+
+
+class PhoneNumberActionCallback(CallbackData, prefix="phone_number_action"):
+    action: PhoneNumberAction
+
+
+class PhoneNumberDeleteCallback(CallbackData, prefix="phone_number_delete"):
+    id: uuid.UUID

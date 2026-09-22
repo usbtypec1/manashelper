@@ -1,5 +1,6 @@
 import logging
 import uuid
+from collections.abc import Callable
 
 from aiogram import Bot, F, Router, flags
 from aiogram.exceptions import TelegramAPIError
@@ -22,22 +23,26 @@ from manashelper.services.advertisement_moderation import (
     AdvertisementNotPendingError,
     ModeratorForbiddenError,
 )
+from manashelper.services.html_sanitization import escape_html
 from manashelper.services.locale import LocaleService
-from manashelper.services.user_contact import UserContactService, UserNotFoundError
 
 logger = logging.getLogger(__name__)
 
 router = Router(name="advertisement_moderation")
+
+AD_DEEPLINK_PAYLOAD_PREFIX = "ad_"
 
 
 class AdvertisementModerationForm(StatesGroup):
     comment = State()
 
 
-async def _notify_owner(bot: Bot, locale_service: LocaleService, owner_id: int, text: str) -> None:
+async def _notify_owner(bot: Bot, locale_service: LocaleService, owner_id: int, build_text: Callable[[], str]) -> None:
+    """`build_text` is called *inside* the owner's own locale context, not the caller's - a plain
+    pre-built string would be resolved under whichever moderator's locale triggered the action."""
     locale = await locale_service.get_locale(owner_id)
     with i18n.context(), i18n.use_locale(locale.value):
-        message = text
+        message = build_text()
     try:
         await bot.send_message(chat_id=owner_id, text=message)
     except TelegramAPIError:
@@ -53,7 +58,6 @@ async def on_approve(
     settings: FromDishka[Settings],
     advertisement_service: FromDishka[AdvertisementService],
     moderation_service: FromDishka[AdvertisementModerationService],
-    user_contact_service: FromDishka[UserContactService],
     locale_service: FromDishka[LocaleService],
 ) -> None:
     try:
@@ -68,16 +72,16 @@ async def on_approve(
         await callback_query.answer(_("This ad has already been reviewed"), show_alert=True)
         return
 
-    try:
-        contact = await user_contact_service.get_contact_status(summary.user_id)
-    except UserNotFoundError:
-        contact = None
+    # Contacts aren't shown directly on the (public) channel post - only via this deep link, which
+    # routes through `on_advertisement_deep_link` and gets logged in `AdvertisementContactView`.
+    me = await bot.get_me()
+    deep_link = f"https://t.me/{me.username}?start={AD_DEEPLINK_PAYLOAD_PREFIX}{summary.id}"
 
     # The channel is a single shared, public place - its posts always render in `DEFAULT_LOCALE`,
     # regardless of which moderator's own locale approved the ad (unlike every other message this
     # handler sends, which is scoped to a specific recipient's locale).
     with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):
-        caption = format_advertisement(summary, contact=contact)
+        caption = format_advertisement(summary, contact_deep_link=deep_link)
     try:
         if summary.media:
             sent_media = await bot.send_media_group(
@@ -102,7 +106,7 @@ async def on_approve(
         bot,
         locale_service,
         summary.user_id,
-        _('Your ad "{title}" has been approved and published! 🎉').format(title=summary.title),
+        lambda: _('Your ad "{title}" has been approved and published! 🎉').format(title=escape_html(summary.title)),
     )
 
 
@@ -117,10 +121,10 @@ async def on_reject_requested(callback_query: CallbackQuery, callback_data: Adve
     await callback_query.answer()
 
 
-def _owner_rejection_text(summary: AdvertisementSummary, comment: str | None) -> str:
-    text = _('Your ad "{title}" was not approved.').format(title=summary.title)
+def _build_owner_rejection_text(summary: AdvertisementSummary, comment: str | None) -> str:
+    text = _('Your ad "{title}" was not approved.').format(title=escape_html(summary.title))
     if comment:
-        text += "\n" + _("Reason: {comment}").format(comment=comment)
+        text += "\n" + _("Reason: {comment}").format(comment=escape_html(comment))
     return text
 
 
@@ -149,7 +153,7 @@ async def on_reject_without_comment(
         await callback_query.message.edit_text(_("Rejected ❌"))
     await callback_query.answer()
 
-    await _notify_owner(bot, locale_service, summary.user_id, _owner_rejection_text(summary, None))
+    await _notify_owner(bot, locale_service, summary.user_id, lambda: _build_owner_rejection_text(summary, None))
 
 
 @router.callback_query(AdvertisementModerationCallback.filter(F.action == AdvertisementModerationAction.ADD_COMMENT))
@@ -221,4 +225,4 @@ async def on_reject_comment_entered(
         logger.warning("Failed to edit moderation message for advertisement %s", advertisement_id, exc_info=True)
 
     await message.answer(_("Rejection sent ✅"))
-    await _notify_owner(bot, locale_service, summary.user_id, _owner_rejection_text(summary, comment))
+    await _notify_owner(bot, locale_service, summary.user_id, lambda: _build_owner_rejection_text(summary, comment))

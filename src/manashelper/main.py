@@ -19,6 +19,7 @@ from manashelper.bot.middlewares.per_chat_ordering import PerChatOrderingMiddlew
 from manashelper.bot.middlewares.private_chat_only import PrivateChatOnlyMiddleware
 from manashelper.bot.middlewares.rate_limit import RateLimitMiddleware
 from manashelper.bot.routers.advertisement import router as advertisement_router
+from manashelper.bot.routers.advertisement_contact import router as advertisement_contact_router
 from manashelper.bot.routers.advertisement_moderation import router as advertisement_moderation_router
 from manashelper.bot.routers.food_menu import router as food_menu_router
 from manashelper.bot.routers.food_menu_cleanup import router as food_menu_cleanup_router
@@ -26,6 +27,7 @@ from manashelper.bot.routers.food_menu_notifications import router as food_menu_
 from manashelper.bot.routers.lesson_search import router as lesson_search_router
 from manashelper.bot.routers.locale import router as locale_router
 from manashelper.bot.routers.obis import router as obis_router
+from manashelper.bot.routers.phone_numbers import router as phone_numbers_router
 from manashelper.bot.routers.settings import router as settings_router
 from manashelper.bot.routers.start import router as start_router
 from manashelper.bot.routers.timetable import router as timetable_router
@@ -104,6 +106,10 @@ async def main() -> None:
     async def on_error(event: ErrorEvent) -> None:
         logger.error("Unhandled exception while processing an update", exc_info=event.exception)
 
+    # Deep-link `/start ad_<id>` opens must be claimed here, before `start_router`'s plain
+    # `CommandStart()` (which would otherwise match first and swallow every `/start`, deep-link or
+    # not) — see bot/routers/advertisement_contact.py.
+    dispatcher.include_router(advertisement_contact_router)
     dispatcher.include_router(start_router)
     dispatcher.include_router(locale_router)
     dispatcher.include_router(timetable_router)
@@ -113,6 +119,7 @@ async def main() -> None:
     dispatcher.include_router(food_menu_cleanup_router)
     dispatcher.include_router(obis_router)
     dispatcher.include_router(settings_router)
+    dispatcher.include_router(phone_numbers_router)
     dispatcher.include_router(versions_router)
     dispatcher.include_router(advertisement_router)
     dispatcher.include_router(advertisement_moderation_router)

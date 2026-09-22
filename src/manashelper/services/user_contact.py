@@ -1,12 +1,39 @@
+import re
+import uuid
 from dataclasses import dataclass
 
 from manashelper.repositories.user_phone_number_repository import UserPhoneNumberRepository
 from manashelper.repositories.user_repository import UserRepository
 
+PHONE_NUMBER_PATTERN = re.compile(r"^\+?\d[\d\s\-()]{5,19}$")
+
+
+def is_valid_phone_number(value: str) -> bool:
+    return bool(PHONE_NUMBER_PATTERN.match(value))
+
 
 class UserNotFoundError(Exception):
     def __init__(self, user_id: int) -> None:
         super().__init__(f"User {user_id} not found")
+        self.user_id = user_id
+
+
+class InvalidPhoneNumberError(Exception):
+    def __init__(self, phone_number: str) -> None:
+        super().__init__(f"'{phone_number}' doesn't look like a valid phone number")
+        self.phone_number = phone_number
+
+
+class PhoneNumberNotFoundError(Exception):
+    def __init__(self, phone_number_id: uuid.UUID) -> None:
+        super().__init__(f"Phone number {phone_number_id} not found")
+        self.phone_number_id = phone_number_id
+
+
+class PhoneNumberForbiddenError(Exception):
+    def __init__(self, phone_number_id: uuid.UUID, user_id: int) -> None:
+        super().__init__(f"User {user_id} doesn't own phone number {phone_number_id}")
+        self.phone_number_id = phone_number_id
         self.user_id = user_id
 
 
@@ -18,6 +45,12 @@ class ContactStatus:
     @property
     def has_contact(self) -> bool:
         return self.username is not None or bool(self.phone_numbers)
+
+
+@dataclass(frozen=True, slots=True)
+class PhoneNumberSummary:
+    id: uuid.UUID
+    phone_number: str
 
 
 class UserContactService:
@@ -34,9 +67,23 @@ class UserContactService:
         phone_numbers = await self._user_phone_number_repository.get_all_by_user_id(user_id)
         return ContactStatus(username=user.username, phone_numbers=[p.phone_number for p in phone_numbers])
 
+    async def get_phone_numbers(self, user_id: int) -> list[PhoneNumberSummary]:
+        phone_numbers = await self._user_phone_number_repository.get_all_by_user_id(user_id)
+        return [PhoneNumberSummary(id=p.id, phone_number=p.phone_number) for p in phone_numbers]
+
     async def add_phone_number(self, user_id: int, phone_number: str) -> ContactStatus:
         user = await self._user_repository.get_by_id(user_id)
         if user is None:
             raise UserNotFoundError(user_id)
+        if not is_valid_phone_number(phone_number):
+            raise InvalidPhoneNumberError(phone_number)
         await self._user_phone_number_repository.add_if_missing(user_id, phone_number)
         return await self.get_contact_status(user_id)
+
+    async def delete_phone_number(self, user_id: int, phone_number_id: uuid.UUID) -> None:
+        phone_number = await self._user_phone_number_repository.get_by_id(phone_number_id)
+        if phone_number is None:
+            raise PhoneNumberNotFoundError(phone_number_id)
+        if phone_number.user_id != user_id:
+            raise PhoneNumberForbiddenError(phone_number_id, user_id)
+        await self._user_phone_number_repository.delete(phone_number)

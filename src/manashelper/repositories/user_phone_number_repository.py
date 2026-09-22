@@ -17,6 +17,9 @@ class UserPhoneNumberRepository:
         )
         return result.scalars().all()
 
+    async def get_by_id(self, phone_number_id: uuid.UUID) -> UserPhoneNumber | None:
+        return await self._session.get(UserPhoneNumber, phone_number_id)
+
     async def add_if_missing(self, user_id: int, phone_number: str) -> None:
         result = await self._session.execute(
             select(UserPhoneNumber).where(
@@ -26,3 +29,6 @@ class UserPhoneNumberRepository:
         if result.scalar_one_or_none() is not None:
             return
         self._session.add(UserPhoneNumber(id=uuid.uuid4(), user_id=user_id, phone_number=phone_number))
+
+    async def delete(self, phone_number: UserPhoneNumber) -> None:
+        await self._session.delete(phone_number)
