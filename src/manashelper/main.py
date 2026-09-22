@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from datetime import datetime
+from typing import Any
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -30,6 +31,7 @@ from manashelper.bot.routers.versions import router as versions_router
 from manashelper.config import get_settings
 from manashelper.di import AppProvider, RequestProvider
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale
+from manashelper.logging_config import configure_logging
 from manashelper.scheduler_jobs import (
     broadcast_dinner_menu_job,
     broadcast_lunch_menu_job,
@@ -62,8 +64,18 @@ def run_migrations() -> None:
     command.upgrade(Config("alembic.ini"), "head")
 
 
+def _handle_asyncio_exception(loop: asyncio.AbstractEventLoop, context: dict[str, Any]) -> None:
+    # Last-resort net for exceptions that escape both aiogram's per-update `@dispatcher.errors()`
+    # handler below and each scheduled job's own broad `except Exception` (see scheduler_jobs.py)
+    # - e.g. a bug in a fire-and-forget callback. Without this, asyncio would only print it to
+    # stderr via its default handler, bypassing our file logging entirely.
+    logger.error(
+        "Unhandled exception in the asyncio event loop: %s", context.get("message"), exc_info=context.get("exception")
+    )
+
+
 async def main() -> None:
-    logging.basicConfig(level=logging.INFO)
+    asyncio.get_running_loop().set_exception_handler(_handle_asyncio_exception)
 
     settings = get_settings()
     bot = Bot(token=settings.telegram_bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -140,4 +152,9 @@ async def main() -> None:
 
 if __name__ == "__main__":
     run_migrations()
-    asyncio.run(main())
+    configure_logging()
+    try:
+        asyncio.run(main())
+    except Exception:
+        logger.critical("Fatal error, shutting down", exc_info=True)
+        raise
