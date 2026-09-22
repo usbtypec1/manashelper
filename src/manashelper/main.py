@@ -12,6 +12,7 @@ from dishka import make_async_container
 from dishka.integrations.aiogram import inject_router, setup_dishka
 
 from alembic import command
+from manashelper.bot.middlewares.action_log import ActionLogMiddleware
 from manashelper.bot.middlewares.i18n import LocaleMiddleware
 from manashelper.bot.middlewares.per_chat_ordering import PerChatOrderingMiddleware
 from manashelper.bot.middlewares.private_chat_only import PrivateChatOnlyMiddleware
@@ -81,6 +82,12 @@ async def main() -> None:
     # already picked it, so this can't run any earlier than that.
     dispatcher.message.middleware(PrivateChatOnlyMiddleware())
     dispatcher.callback_query.middleware(PrivateChatOnlyMiddleware())
+
+    # Also inner, and registered after `PrivateChatOnlyMiddleware` so it nests inside it: only
+    # logs updates that actually reached a handler, not every message/callback_query sent to the
+    # bot — see bot/middlewares/action_log.py.
+    dispatcher.message.middleware(ActionLogMiddleware())
+    dispatcher.callback_query.middleware(ActionLogMiddleware())
 
     @dispatcher.errors()
     async def on_error(event: ErrorEvent) -> None:
