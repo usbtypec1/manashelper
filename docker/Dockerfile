@@ -33,6 +33,11 @@ RUN useradd --create-home --shell /bin/bash appuser
 
 COPY --from=build --chown=appuser:appuser /app /app
 
+# Pre-create the log directory owned by appuser: it doesn't exist anywhere else in the image, so
+# without this, mounting the `app_logs` volume over it (see docker-compose.yml) would make Docker
+# create the mount point as root, and appuser (below) couldn't write into it.
+RUN mkdir -p /app/logs && chown appuser:appuser /app/logs
+
 ENV PATH="/app/.venv/bin:${PATH}"
 
 USER appuser
