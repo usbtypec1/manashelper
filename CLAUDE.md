@@ -34,13 +34,17 @@ Core capabilities (current):
 - `/start` resolves the user's locale, upserts the Telegram user, and shows the main reply keyboard.
 - **Advertising platform (барахолка)**: an aiogram FSM (`bot/routers/advertisement.py`) collects a title,
   description, optional price/media/expiry, gated by a mandatory-contact check (Telegram username or a saved
-  phone number), then submits the ad for moderation. Every user with role `marketplace_admin`/`superadmin`
-  (`User.role`, assigned by hand directly in Postgres — there is no in-bot role-management UI) gets notified with
-  Approve/Reject buttons (`bot/routers/advertisement_moderation.py`); approving publishes the ad to a configured
-  Telegram channel (`Settings.advertisement_channel_id`) rather than an in-bot browse feed, and rejecting can
-  carry an optional comment shown to the ad's owner. Users manage their own ads (paginated list, detail, delete)
-  under "📋 My ads"; an hourly job (`jobs/advertisement.py::cleanup_expired_advertisements_job`) deletes ads past
-  their `expires_at`, removing their channel post(s) first — see "Advertising platform" below.
+  phone number), then submits the ad for moderation to a single shared moderation chat
+  (`Settings.moderation_chat_id`) with Approve/Reject buttons (`bot/routers/advertisement_moderation.py`) — there
+  is no per-user moderator role; anyone acting from that configured chat is authorized. Approving publishes the
+  ad to a configured Telegram channel (`Settings.advertisement_channel_id`) rather than an in-bot browse feed,
+  with contact details hidden behind a `/start ad_<id>` deep link (opens the bot, reveals the seller's contacts,
+  and is logged), and rejecting can carry an optional comment shown to the ad's owner. Users manage their own ads
+  (paginated list, detail, delete) under "📋 My ads" and their saved phone numbers under "⚙️ Settings → 📱 My
+  phone numbers"; an hourly job (`jobs/advertisement.py::cleanup_expired_advertisements_job`) deletes ads past
+  their `expires_at` (chosen from fixed presets, not free text), removing their channel post(s) first — see
+  "Advertising platform"
+  below.
 
 ## Commands
 
@@ -81,18 +85,23 @@ The app needs Postgres and these environment variables (see `src/manashelper/con
 AES-256 key used by `CryptoService` to encrypt stored OBIS passwords — generate one with
 `python3 -c "import base64,os;print(base64.b64encode(os.urandom(32)).decode())"`), `ADVERTISEMENT_CHANNEL_ID`
 (the chat id of the Telegram channel approved ads are published to — the bot must be an admin of that channel
-with post rights), and optionally `DATASOURCE_HOST` (defaults to `db`, the docker-compose service name — set to
-`localhost` for local dev outside Docker). `docker-compose.dev.yml` starts only Postgres, exposed on host port
-`5432`. A local `.env` file (gitignored) is read automatically via `pydantic-settings`.
+with post rights), `MODERATION_CHAT_ID` (the chat id of the group/chat that receives new ads to
+Approve/Reject — the bot must be a member with permission to send messages there; anyone acting from this chat
+is treated as authorized, see "Advertising platform" below), and optionally `DATASOURCE_HOST` (defaults to `db`,
+the docker-compose service name — set to `localhost` for local dev outside Docker). `docker-compose.dev.yml`
+starts only Postgres, exposed on host port `5432`. A local `.env` file (gitignored) is read automatically via
+`pydantic-settings`.
 
 CI/CD (`.github/workflows/ci-cd.yml`): the `test` job (lint + type-check + tests against a Postgres service
-container) runs on every push to every branch, as well as on PRs targeting `main` and on `v*` tag pushes. The
-`build-and-deploy` job only runs after `test` passes on a push directly to `main` or a `v*` tag — it builds the
-Docker image (`docker/Dockerfile`), pushes `usbtypec1/manashelper:<version>` / `:latest` to Docker Hub, then SSHes
-into the deploy host to pull and restart via `docker compose up -d`, followed by `docker image prune -af` to drop
-old, no-longer-referenced versioned app images (`docker-compose.yml` pins the `app` service to a specific
-`:<version>` tag each deploy, so without `-a` only dangling/untagged images would be cleaned and old version tags
-would keep accumulating on disk).
+container) runs on every push to every branch, as well as on PRs targeting `main` and on `v*` tag pushes. Two more
+jobs only run after `test` passes on a push directly to `main` or a `v*` tag: `build` builds the Docker image
+(`docker/Dockerfile`) and pushes `usbtypec1/manashelper:<version>` / `:latest` to Docker Hub, exposing the version
+as a job output (`steps.version.outputs.version`, from `$GITHUB_OUTPUT` — job outputs, not env vars, are how a
+later job reads a value computed in an earlier one); `deploy` (`needs: build`, so it's skipped whenever `build` is)
+then SSHes into the deploy host to pull `usbtypec1/manashelper:${{ needs.build.outputs.version }}` and restart via
+`docker compose up -d`, followed by `docker image prune -af` to drop old, no-longer-referenced versioned app images
+(`docker-compose.yml` pins the `app` service to a specific `:<version>` tag each deploy, so without `-a` only
+dangling/untagged images would be cleaned and old version tags would keep accumulating on disk).
 
 ## Architecture
 
@@ -272,11 +281,12 @@ opt a user out.
 A from-scratch subsystem (no Java precedent) ported from `features/ADVERTISING_PLATFORM.md`. Notable design
 choices, since none of these had an existing pattern to copy:
 
-- **Roles**: `User.role` (a plain `String(20)` column backed by the service-layer `UserRole` StrEnum in
-  `db/models/user.py`, following the codebase's usual "no native Postgres enum" convention) is assigned by hand
-  directly in Postgres — there is no env-var bootstrap and no in-bot promote/demote command. Both
-  `marketplace_admin` and `superadmin` are treated as moderators today (`MODERATOR_ROLES` in
-  `services/advertisement_moderation.py`); there's no behavioral difference between the two roles yet.
+- **No per-user moderator role.** An earlier revision had a `User.role` column
+  (`marketplace_admin`/`superadmin`, assigned by hand in Postgres); that was removed in favor of a single shared
+  `Settings.moderation_chat_id`. Authorization for every moderation action is enforced by
+  `bot/routers/advertisement_moderation.py::_is_moderation_chat` checking that the callback/message's
+  `chat.id` matches that configured chat — not by anything stored per-user — so adding/removing moderators is
+  purely a matter of who's a member of that Telegram chat.
 - **No in-bot browse feed**: approved ads are published to a Telegram channel
   (`Settings.advertisement_channel_id`) instead of a bot-side listing screen a user could browse. Every
   `AdvertisementChannelMessage` row records a published message id so the channel post(s) can be removed again
@@ -286,19 +296,49 @@ choices, since none of these had an existing pattern to copy:
   already-fully-fetched in-memory list — a persistent management list needs to reflect deletes immediately.
 - **User-uploaded media**: `bot/routers/advertisement.py`'s `AdvertisementForm.media` state is the only place in
   the bot that receives (rather than sends) Telegram photos/videos, storing each `file_id` in
-  `AdvertisementMedia` (capped at 10 per ad, tracked in FSM state until submission).
+  `AdvertisementMedia` (capped at 10 per ad, tracked in FSM state until submission). Sending a 10-item album
+  delivers 10 separate updates, one per photo/video — rather than replying to each one, `_render_media_prompt`
+  edits a single tracked message in place for the running count, relying on `PerChatOrderingMiddleware` already
+  serializing every update for that chat (so there's no debounce/race handling to get wrong).
 - **Contact gate**: posting is blocked until the user has at least one contact method. A Telegram username is
   read live off `User.username` (already kept fresh by `LocaleMiddleware`'s per-update upsert, so no extra Bot
   API call is needed); phone numbers are collected inline at the start of the posting flow (reply-keyboard
-  `request_contact` button or manual entry) and persisted in `UserPhoneNumber` — see `services/user_contact.py`.
+  `request_contact` button or manual entry, validated by `UserContactService.is_valid_phone_number`) and
+  persisted in `UserPhoneNumber` — see `services/user_contact.py`. Users manage their saved numbers (add/delete)
+  from `⚙️ Settings → 📱 My phone numbers` (`bot/routers/phone_numbers.py`), which reuses the same
+  contact-request keyboard (`bot/keyboards/phone_numbers.py`) as the posting flow.
+- **Contacts are hidden on the public channel post**, unlike the poster's own confirm preview and the
+  moderation chat's review message (both closed audiences, which see raw contact details via
+  `format_advertisement(..., contact=...)`). The channel post instead embeds a bot deep link
+  (`format_advertisement(..., contact_deep_link=...)`, built from `bot.get_me()` in
+  `advertisement_moderation.py::on_approve` as `https://t.me/<bot>?start=ad_<id>`). Opening it is handled by
+  `bot/routers/advertisement_contact.py` (`CommandStart(deep_link=True)`, registered in `main.py` *before*
+  `start_router` so a bare `/start` still falls through to the normal welcome flow) via
+  `AdvertisementContactService.reveal_contact`, which also logs the open as an `AdvertisementContactView` row
+  (never deduplicated — every open is its own row, for counting interest).
+- **Expiration is chosen from fixed presets** (45 minutes / 6 hours / 24 hours / 7 days / no expiration —
+  `AdvertisementExpiryCallback`), not free-text date entry.
+- **HTML escaping**: `services/html_sanitization.py::escape_html` (a thin wrapper over aiogram's
+  `html_decoration.quote`) is applied to every user-supplied field — title, description, rejection comment,
+  contact username/phone — wherever it's interpolated into a message sent with the bot's default
+  `ParseMode.HTML`. This is a correctness fix as much as a safety one: an unescaped bare `&`/`<`/`>` makes
+  Telegram reject the whole `sendMessage`/`sendMediaGroup` call with "can't parse entities", so without this an
+  ad titled e.g. "Fish & Chips" could never be published or even forwarded to moderators.
+- **Locale correctness**: every message sent to a chat *other* than the one handling the current update (an
+  owner notification, e.g.) must resolve its `_()` calls inside `i18n.use_locale(that_recipient's_locale)`, not
+  the acting user's ambient locale — a builder function/closure evaluated *inside* the `with` block, not a
+  pre-built string passed into it (a pre-built string is just inert data by the time
+  `with i18n.use_locale(...):` wraps it — see `advertisement_moderation.py::_notify_owner`'s
+  `build_text: Callable[[], str]` parameter). The moderation chat and the channel are both single shared
+  destinations rather than a specific recipient, so both always render in `DEFAULT_LOCALE` instead
+  (`advertisement.py::_notify_moderation_chat`, `advertisement_moderation.py::on_approve`).
 - **Rate limiting**: `AdvertisementService.assert_can_post` caps a user at 5 ads/hour
   (`AdvertisementRepository.count_created_since`) — a data-driven business rule, distinct from the generic
   per-chat token-bucket throttle in `bot/middlewares/rate_limit.py`.
-- **Moderation**: every moderator is notified with Approve/Reject buttons
+- **Moderation**: a new ad is sent once to `Settings.moderation_chat_id` with Approve/Reject buttons
   (`bot/routers/advertisement_moderation.py`); both actions re-check the ad is still `pending` before acting
-  (`AdvertisementNotPendingError`) so two moderators tapping at once can't double-process the same ad — only the
-  acting moderator's own message gets edited to reflect the outcome, a known limitation.
-- **Expiration**: `jobs/advertisement.py::cleanup_expired_advertisements_job` (hourly) deletes ads past
+  (`AdvertisementNotPendingError`) so two people tapping at once in that chat can't double-process the same ad.
+- **Expiration cleanup**: `jobs/advertisement.py::cleanup_expired_advertisements_job` (hourly) deletes ads past
   `expires_at`, removing their channel post(s) first — same outbox-sweep shape as
   `jobs/scheduled_message_deletion.py::cleanup_scheduled_message_deletions_job`.
 

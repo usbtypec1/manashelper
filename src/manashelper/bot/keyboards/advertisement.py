@@ -1,6 +1,6 @@
 import uuid
 
-from aiogram.types import InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
+from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -8,6 +8,8 @@ from manashelper.bot.callback_data import (
     AdvertisementCallback,
     AdvertisementDeleteAction,
     AdvertisementDeleteCallback,
+    AdvertisementExpiryCallback,
+    AdvertisementExpiryOption,
     AdvertisementFormAction,
     AdvertisementFormCallback,
     AdvertisementMenuAction,
@@ -36,14 +38,6 @@ def build_cancel_form_keyboard() -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
-def build_contact_request_keyboard() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text=_("📱 Share phone number"), request_contact=True)]],
-        resize_keyboard=True,
-        one_time_keyboard=True,
-    )
-
-
 def build_skip_price_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text=_("Skip"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.SKIP_PRICE))
@@ -62,14 +56,23 @@ def build_media_keyboard() -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
-def build_skip_expires_at_keyboard() -> InlineKeyboardMarkup:
+def build_expiry_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
-        text=_("No expiration date"),
-        callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.SKIP_EXPIRES_AT),
+        text=_("45 minutes"), callback_data=AdvertisementExpiryCallback(option=AdvertisementExpiryOption.MIN_45)
+    )
+    builder.button(
+        text=_("6 hours"), callback_data=AdvertisementExpiryCallback(option=AdvertisementExpiryOption.HOURS_6)
+    )
+    builder.button(
+        text=_("24 hours"), callback_data=AdvertisementExpiryCallback(option=AdvertisementExpiryOption.HOURS_24)
+    )
+    builder.button(text=_("7 days"), callback_data=AdvertisementExpiryCallback(option=AdvertisementExpiryOption.DAYS_7))
+    builder.button(
+        text=_("♾️ No expiration"), callback_data=AdvertisementExpiryCallback(option=AdvertisementExpiryOption.NONE)
     )
     builder.button(text=_("❌ Cancel"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.CANCEL))
-    builder.adjust(1)
+    builder.adjust(2, 2, 1, 1)
     return builder.as_markup()
 
 

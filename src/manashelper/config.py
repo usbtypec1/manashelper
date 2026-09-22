@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     datasource_password: str = Field(alias="DATASOURCE_PASSWORD")
     obis_encryption_key: str = Field(alias="OBIS_ENCRYPTION_KEY")
     advertisement_channel_id: int = Field(alias="ADVERTISEMENT_CHANNEL_ID")
+    moderation_chat_id: int = Field(alias="MODERATION_CHAT_ID")
 
     @property
     def database_url(self) -> str:

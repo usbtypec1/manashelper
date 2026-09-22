@@ -1,5 +1,3 @@
-from collections.abc import Sequence
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -13,10 +11,6 @@ class UserRepository:
 
     async def get_by_id(self, user_id: int) -> User | None:
         return await self._session.get(User, user_id)
-
-    async def get_ids_with_roles(self, roles: Sequence[str]) -> list[int]:
-        result = await self._session.execute(select(User.id).where(User.role.in_(roles)))
-        return list(result.scalars().all())
 
     async def get_with_tracked_courses(self, user_id: int) -> User | None:
         result = await self._session.execute(

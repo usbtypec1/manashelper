@@ -1,6 +1,7 @@
 from manashelper.db.models.action_log import ActionLog
 from manashelper.db.models.advertisement import Advertisement
 from manashelper.db.models.advertisement_channel_message import AdvertisementChannelMessage
+from manashelper.db.models.advertisement_contact_view import AdvertisementContactView
 from manashelper.db.models.advertisement_media import AdvertisementMedia
 from manashelper.db.models.associations import user_courses
 from manashelper.db.models.course import Course
@@ -24,6 +25,7 @@ __all__ = [
     "ActionLog",
     "Advertisement",
     "AdvertisementChannelMessage",
+    "AdvertisementContactView",
     "AdvertisementMedia",
     "Course",
     "DailyMenu",

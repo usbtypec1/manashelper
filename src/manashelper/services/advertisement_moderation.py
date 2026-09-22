@@ -2,18 +2,8 @@ import uuid
 
 from manashelper.db.models.advertisement import Advertisement, AdvertisementStatus
 from manashelper.db.models.advertisement_media import AdvertisementMediaType
-from manashelper.db.models.user import UserRole
 from manashelper.repositories.advertisement_repository import AdvertisementRepository
-from manashelper.repositories.user_repository import UserRepository
 from manashelper.services.advertisement import AdvertisementMediaItem, AdvertisementNotFoundError, AdvertisementSummary
-
-MODERATOR_ROLES = [UserRole.MARKETPLACE_ADMIN.value, UserRole.SUPERADMIN.value]
-
-
-class ModeratorForbiddenError(Exception):
-    def __init__(self, user_id: int) -> None:
-        super().__init__(f"User {user_id} is not a moderator")
-        self.user_id = user_id
 
 
 class AdvertisementNotPendingError(Exception):
@@ -41,28 +31,20 @@ def _to_summary(advertisement: Advertisement) -> AdvertisementSummary:
 
 
 class AdvertisementModerationService:
-    def __init__(self, advertisement_repository: AdvertisementRepository, user_repository: UserRepository) -> None:
+    """Authorization for these actions isn't checked here: it's enforced by the router only
+    accepting moderation callbacks/messages that originate from `Settings.moderation_chat_id` - see
+    `bot/routers/advertisement_moderation.py`. There is no per-user moderator role anymore."""
+
+    def __init__(self, advertisement_repository: AdvertisementRepository) -> None:
         self._advertisement_repository = advertisement_repository
-        self._user_repository = user_repository
 
-    async def is_moderator(self, user_id: int) -> bool:
-        user = await self._user_repository.get_by_id(user_id)
-        return user is not None and user.role in MODERATOR_ROLES
-
-    async def get_moderator_ids(self) -> list[int]:
-        return await self._user_repository.get_ids_with_roles(MODERATOR_ROLES)
-
-    async def approve(self, advertisement_id: uuid.UUID, moderator_id: int) -> AdvertisementSummary:
-        if not await self.is_moderator(moderator_id):
-            raise ModeratorForbiddenError(moderator_id)
+    async def approve(self, advertisement_id: uuid.UUID) -> AdvertisementSummary:
         advertisement = await self._get_pending(advertisement_id)
         advertisement.status = AdvertisementStatus.PUBLISHED.value
         advertisement.rejection_comment = None
         return _to_summary(advertisement)
 
-    async def reject(self, advertisement_id: uuid.UUID, moderator_id: int, comment: str | None) -> AdvertisementSummary:
-        if not await self.is_moderator(moderator_id):
-            raise ModeratorForbiddenError(moderator_id)
+    async def reject(self, advertisement_id: uuid.UUID, comment: str | None) -> AdvertisementSummary:
         advertisement = await self._get_pending(advertisement_id)
         advertisement.status = AdvertisementStatus.REJECTED.value
         advertisement.rejection_comment = comment

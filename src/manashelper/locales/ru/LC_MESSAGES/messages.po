@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Manashelper VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-22 14:23+0600\n"
+"POT-Creation-Date: 2026-09-22 16:03+0600\n"
 "PO-Revision-Date: 2026-09-15 11:14+0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
@@ -20,9 +20,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-msgid "Enjoy your meal! 🍽"
-msgstr "Приятного аппетита! 🍽"
-
 msgid "➕ Post an ad"
 msgstr "➕ Подать объявление"
 
@@ -32,17 +29,26 @@ msgstr "📋 Мои объявления"
 msgid "❌ Cancel"
 msgstr "❌ Отмена"
 
-msgid "📱 Share phone number"
-msgstr "📱 Поделиться номером телефона"
-
 msgid "Skip"
 msgstr "Пропустить"
 
 msgid "✅ Done"
 msgstr "✅ Готово"
 
-msgid "No expiration date"
-msgstr "Без срока действия"
+msgid "45 minutes"
+msgstr "45 минут"
+
+msgid "6 hours"
+msgstr "6 часов"
+
+msgid "24 hours"
+msgstr "24 часа"
+
+msgid "7 days"
+msgstr "7 дней"
+
+msgid "♾️ No expiration"
+msgstr "♾️ Без срока действия"
 
 msgid "✅ Submit for review"
 msgstr "✅ Отправить на проверку"
@@ -53,9 +59,8 @@ msgstr "🗑 Удалить"
 msgid "◀️ Back"
 msgstr "◀️ Назад"
 
-#, fuzzy
 msgid "✅ Yes, delete"
-msgstr "✅ Да, очистить"
+msgstr "✅ Да, удалить"
 
 msgid "✅ Approve"
 msgstr "✅ Одобрить"
@@ -83,9 +88,6 @@ msgstr "🧹 Настройки автоудаления"
 
 msgid "15 minutes"
 msgstr "15 минут"
-
-msgid "45 minutes"
-msgstr "45 минут"
 
 msgid "3 hours"
 msgstr "3 часа"
@@ -129,6 +131,12 @@ msgstr "📃 Условия использования"
 msgid "✅ Accept terms"
 msgstr "✅ Принять условия"
 
+msgid "📱 Share phone number"
+msgstr "📱 Поделиться номером телефона"
+
+msgid "➕ Add a phone number"
+msgstr "➕ Добавить номер телефона"
+
 msgid "🔔 Notifications"
 msgstr "🔔 Уведомления"
 
@@ -137,6 +145,9 @@ msgstr "📚 Мои уроки"
 
 msgid "🔑 OBIS credentials"
 msgstr "🔑 Данные OBIS"
+
+msgid "📱 My phone numbers"
+msgstr "📱 Мои номера телефонов"
 
 msgid "🌐 Language"
 msgstr "🌐 Язык"
@@ -170,82 +181,142 @@ msgid "This feature is only available in a private chat with the bot."
 msgstr "Эта функция доступна только в личном чате с ботом."
 
 #, python-brace-format
-msgid "Let's create your ad. Enter a title (up to {max} characters):"
-msgstr "Создадим ваше объявление. Введите заголовок (до {max} символов):"
+msgid ""
+"📝 Let's create your ad.\n"
+"\n"
+"First, send a <b>title</b> (up to {max} characters) - this is the first "
+"thing buyers will see."
+msgstr ""
+"📝 Создадим ваше объявление.\n"
+"\n"
+"Сначала отправьте <b>заголовок</b> (до {max} символов) — это первое, что "
+"увидят покупатели."
 
-msgid "🛒 <b>Marketplace</b>"
-msgstr "🛒 <b>Барахолка</b>"
+msgid ""
+"🛒 <b>Marketplace</b>\n"
+"\n"
+"Post an ad for other students to see, or manage the ads you've already "
+"posted."
+msgstr ""
+"🛒 <b>Барахолка</b>\n"
+"\n"
+"Разместите объявление для других студентов или управляйте уже "
+"размещёнными."
 
-msgid "You've posted too many ads in the last hour. Please try again later."
-msgstr "Вы разместили слишком много объявлений за последний час. Попробуйте позже."
+msgid ""
+"You've posted the maximum of 5 ads for this hour. Please try again a bit "
+"later."
+msgstr "Вы разместили максимум 5 объявлений за этот час. Попробуйте немного позже."
 
 msgid "Please start with the /start command"
 msgstr "Пожалуйста, начните с команды /start"
 
 msgid ""
-"To post an ad you need at least one contact method (a Telegram username "
-"or a phone number). You don't have a public username, so please share a "
-"phone number using the button below, or type it manually:"
+"📞 Before you can post an ad, buyers need a way to reach you.\n"
+"\n"
+"You don't currently have a public Telegram username, so please share a "
+"phone number using the button below, or type one in manually (e.g. "
+"+996700123456):"
 msgstr ""
+"📞 Прежде чем разместить объявление, покупателям нужен способ с вами "
+"связаться.\n"
+"\n"
+"У вас сейчас нет публичного имени пользователя Telegram, поэтому, "
+"пожалуйста, поделитесь номером телефона с помощью кнопки ниже или введите"
+" его вручную (например, +996700123456):"
 
-msgid "Phone number saved ✅"
-msgstr "Номер телефона сохранён ✅"
-
-msgid "That doesn't look like a valid phone number. Please try again:"
-msgstr "Это не похоже на корректный номер телефона. Попробуйте ещё раз:"
-
-#, fuzzy, python-brace-format
 msgid ""
-"The title can't be empty and must be at most {max} characters. Please try"
-" again:"
-msgstr "Студенческий номер не может быть пустым. Попробуйте снова:"
+"Something went wrong saving that number. Please type your phone number "
+"manually:"
+msgstr ""
+"Не удалось сохранить этот номер. Пожалуйста, введите номер телефона "
+"вручную:"
+
+msgid "✅ Phone number saved."
+msgstr "✅ Номер телефона сохранён."
+
+msgid ""
+"That doesn't look like a valid phone number (e.g. +996700123456). Please "
+"try again:"
+msgstr ""
+"Это не похоже на корректный номер телефона (например, +996700123456). "
+"Попробуйте ещё раз:"
 
 #, python-brace-format
-msgid "Enter a description (up to {max} characters):"
-msgstr "Введите описание (до {max} символов):"
-
-#, python-brace-format
 msgid ""
-"The description can't be empty and must be at most {max} characters. "
+"The title can't be empty and must be at most {max} characters long. "
 "Please try again:"
 msgstr ""
+"Заголовок не может быть пустым и должен быть не длиннее {max} символов. "
+"Попробуйте снова:"
 
-msgid "Enter a price in som, or tap Skip:"
-msgstr "Введите цену в сомах или нажмите «Пропустить»:"
+#, python-brace-format
+msgid ""
+"🧾 Now send a <b>description</b> (up to {max} characters) - condition, "
+"size, reason for selling, anything a buyer should know."
+msgstr ""
+"🧾 Теперь отправьте <b>описание</b> (до {max} символов) — состояние, "
+"размер, причина продажи, всё, что должен знать покупатель."
+
+#, python-brace-format
+msgid ""
+"The description can't be empty and must be at most {max} characters long."
+" Please try again:"
+msgstr ""
+"Описание не может быть пустым и должно быть не длиннее {max} символов. "
+"Попробуйте снова:"
 
 msgid ""
-"Send up to 10 photos or videos, then tap Done. Or tap Done right away to "
-"skip."
+"💵 Send the price in som (digits only), or tap Skip if it's negotiable or "
+"not applicable:"
 msgstr ""
+"💵 Отправьте цену в сомах (только цифры) или нажмите «Пропустить», если "
+"цена договорная или не указана:"
 
-msgid "Please enter a whole number, or tap Skip:"
-msgstr "Введите целое число или нажмите «Пропустить»:"
+msgid ""
+"🖼 Send up to 10 photos or videos of the item, one at a time.\n"
+"\n"
+"Tap Done when you're finished - or tap it right away to post without "
+"media."
+msgstr ""
+"🖼 Отправьте до 10 фото или видео товара, по одному за раз.\n"
+"\n"
+"Нажмите «Готово», когда закончите, — или сразу, чтобы опубликовать без "
+"медиа."
+
+msgid "Please send a whole number (digits only), or tap Skip:"
+msgstr "Отправьте целое число (только цифры) или нажмите «Пропустить»:"
 
 #, python-brace-format
 msgid "You've reached the limit of {max} photos/videos. Tap Done to continue."
 msgstr "Вы достигли лимита в {max} фото/видео. Нажмите «Готово», чтобы продолжить."
 
 #, python-brace-format
-msgid "Added ({count}/{max}). Send more, or tap Done."
-msgstr "Добавлено ({count}/{max}). Отправьте ещё или нажмите «Готово»."
+msgid "✅ Added: {count}/{max}. Send more, or tap Done when you're finished."
+msgstr ""
+"✅ Добавлено: {count}/{max}. Отправьте ещё или нажмите «Готово», когда "
+"закончите."
 
-msgid "Enter an expiration date as DD.MM.YYYY, or tap Skip for no expiration:"
-msgstr "Введите дату истечения в формате ДД.ММ.ГГГГ или нажмите «Пропустить», если срок не ограничен:"
+msgid "⏳ How long should this ad stay visible before it's automatically removed?"
+msgstr ""
+"⏳ Как долго это объявление должно оставаться видимым, прежде чем оно "
+"будет автоматически удалено?"
 
-msgid "That doesn't look like a valid date. Please use DD.MM.YYYY, or tap Skip:"
-msgstr "Это не похоже на корректную дату. Используйте формат ДД.ММ.ГГГГ или нажмите «Пропустить»:"
+msgid "👀 Here's how your ad will look:"
+msgstr "👀 Вот как будет выглядеть ваше объявление:"
 
-msgid "The expiration date must be in the future. Please try again, or tap Skip:"
-msgstr "Дата истечения должна быть в будущем. Попробуйте ещё раз или нажмите «Пропустить»:"
+msgid "❌ Cancelled."
+msgstr "❌ Отменено."
 
-msgid "Please review your ad:"
-msgstr "Проверьте ваше объявление:"
+msgid ""
+"✅ Your ad has been sent for moderator review. You'll be notified once "
+"it's approved or rejected."
+msgstr ""
+"✅ Ваше объявление отправлено на проверку модератору. Вы получите "
+"уведомление после одобрения или отклонения."
 
-msgid "Cancelled"
-msgstr "Отменено"
-
-msgid "Your ad has been submitted for review ✅"
-msgstr "Ваше объявление отправлено на проверку ✅"
+msgid "🛒 <b>Marketplace</b>"
+msgstr "🛒 <b>Барахолка</b>"
 
 msgid "🆕 <b>New ad for review</b>"
 msgstr "🆕 <b>Новое объявление на проверку</b>"
@@ -262,13 +333,15 @@ msgid ""
 "\n"
 "You haven't posted any ads yet."
 msgstr ""
+"📋 <b>Мои объявления</b>\n"
+"\n"
+"Вы ещё не разместили ни одного объявления."
 
 msgid "This ad no longer exists"
 msgstr "Это объявление больше не существует"
 
-#, fuzzy
-msgid "Are you sure you want to delete this ad?"
-msgstr "Вы уверены, что хотите очистить сохранённые данные от OBIS?"
+msgid "Are you sure you want to delete this ad? This can't be undone."
+msgstr "Вы уверены, что хотите удалить это объявление? Это действие необратимо."
 
 msgid "Ad deleted ✅"
 msgstr "Объявление удалено ✅"
@@ -279,9 +352,8 @@ msgstr "У вас нет прав для этого действия"
 msgid "This ad has already been reviewed"
 msgstr "Это объявление уже было рассмотрено"
 
-#, fuzzy
 msgid "Failed to publish this ad. Please try again later."
-msgstr "Не удалось получить данные с OBIS. Попробуйте позже."
+msgstr "Не удалось опубликовать это объявление. Попробуйте позже."
 
 msgid "Approved and published ✅"
 msgstr "Одобрено и опубликовано ✅"
@@ -297,9 +369,9 @@ msgstr "Отклонить объявление. Хотите добавить �
 msgid "Your ad \"{title}\" was not approved."
 msgstr "Ваше объявление «{title}» не было одобрено."
 
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Reason: {comment}"
-msgstr "👁 Просмотров: {count}"
+msgstr "Причина: {comment}"
 
 msgid "Rejected ❌"
 msgstr "Отклонено ❌"
@@ -307,9 +379,8 @@ msgstr "Отклонено ❌"
 msgid "Please send the rejection comment as a text message:"
 msgstr "Отправьте комментарий с причиной отклонения текстовым сообщением:"
 
-#, fuzzy
 msgid "The comment can't be empty. Please try again:"
-msgstr "Студенческий номер не может быть пустым. Попробуйте снова:"
+msgstr "Комментарий не может быть пустым. Попробуйте снова:"
 
 msgid "Something went wrong. Please try again."
 msgstr "Что-то пошло не так. Попробуйте снова."
@@ -400,6 +471,9 @@ msgstr "Пожалуйста, примите условия использова
 msgid "Enter your student number:"
 msgstr "Введите ваш студенческий номер:"
 
+msgid "Cancelled"
+msgstr "Отменено"
+
 msgid "Are you sure you want to clear your saved OBIS credentials?"
 msgstr "Вы уверены, что хотите очистить сохранённые данные от OBIS?"
 
@@ -417,6 +491,25 @@ msgstr "Неверные данные от OBIS. Введите студенче
 
 msgid "Credentials saved successfully ✅"
 msgstr "Данные успешно сохранены ✅"
+
+msgid ""
+"📱 <b>My phone numbers</b>\n"
+"\n"
+"These are shown to buyers on the ads you post."
+msgstr ""
+"📱 <b>Мои номера телефонов</b>\n"
+"\n"
+"Они показываются покупателям в ваших объявлениях."
+
+msgid ""
+"Share a phone number using the button below, or type one in manually "
+"(e.g. +996700123456):"
+msgstr ""
+"Поделитесь номером телефона с помощью кнопки ниже или введите его вручную"
+" (например, +996700123456):"
+
+msgid "This phone number is no longer saved"
+msgstr "Этот номер телефона больше не сохранён"
 
 msgid "Bot notification settings"
 msgstr "Настройки уведомлений бота"
@@ -477,6 +570,9 @@ msgstr "Список курсов"
 msgid "Course not found"
 msgstr "Курс не найден"
 
+msgid "Enjoy your meal! 🍽"
+msgstr "Приятного аппетита! 🍽"
+
 msgid "Awaiting review"
 msgstr "Ожидает проверки"
 
@@ -494,12 +590,23 @@ msgstr "💵 Цена: <b>{price}</b> сом"
 msgid "⏰ Valid until: {date}"
 msgstr "⏰ Действительно до: {date}"
 
+#, python-brace-format
+msgid "📞 <a href=\"{link}\">Tap here to see the seller's contacts</a>"
+msgstr "📞 <a href=\"{link}\">Нажмите здесь, чтобы увидеть контакты продавца</a>"
+
 msgid "📞 Contacts:"
 msgstr "📞 Контакты:"
 
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "💬 Reason: {comment}"
-msgstr "👁 Просмотров: {count}"
+msgstr "💬 Причина: {comment}"
+
+#, python-brace-format
+msgid "📞 <b>Contacts for \"{title}\"</b>"
+msgstr "📞 <b>Контакты для «{title}»</b>"
+
+msgid "The seller hasn't listed any contact details."
+msgstr "Продавец не указал контактные данные."
 
 #, python-brace-format
 msgid "🍽 <b>Menu for {weekday}, {date}</b>"
@@ -721,4 +828,62 @@ msgstr "📅 Дата выхода: {date}"
 
 #~ msgid "➖ {weekday} {time_range}: {content} (cancelled)"
 #~ msgstr "➖ {weekday} {time_range}: {content} (отменено)"
+
+#~ msgid ""
+#~ "To post an ad you need at "
+#~ "least one contact method (a Telegram "
+#~ "username or a phone number). You "
+#~ "don't have a public username, so "
+#~ "please share a phone number using "
+#~ "the button below, or type it "
+#~ "manually:"
+#~ msgstr ""
+
+#~ msgid "Enter a description (up to {max} characters):"
+#~ msgstr "Введите описание (до {max} символов):"
+
+#~ msgid ""
+#~ "The description can't be empty and "
+#~ "must be at most {max} characters. "
+#~ "Please try again:"
+#~ msgstr ""
+
+#~ msgid "Enter a price in som, or tap Skip:"
+#~ msgstr "Введите цену в сомах или нажмите «Пропустить»:"
+
+#~ msgid ""
+#~ "Send up to 10 photos or videos,"
+#~ " then tap Done. Or tap Done "
+#~ "right away to skip."
+#~ msgstr ""
+
+#~ msgid "Enter an expiration date as DD.MM.YYYY, or tap Skip for no expiration:"
+#~ msgstr ""
+#~ "Введите дату истечения в формате "
+#~ "ДД.ММ.ГГГГ или нажмите «Пропустить», если "
+#~ "срок не ограничен:"
+
+#~ msgid ""
+#~ "That doesn't look like a valid "
+#~ "date. Please use DD.MM.YYYY, or tap "
+#~ "Skip:"
+#~ msgstr ""
+#~ "Это не похоже на корректную дату. "
+#~ "Используйте формат ДД.ММ.ГГГГ или нажмите "
+#~ "«Пропустить»:"
+
+#~ msgid ""
+#~ "The expiration date must be in the"
+#~ " future. Please try again, or tap "
+#~ "Skip:"
+#~ msgstr ""
+#~ "Дата истечения должна быть в будущем."
+#~ " Попробуйте ещё раз или нажмите "
+#~ "«Пропустить»:"
+
+#~ msgid "Please review your ad:"
+#~ msgstr "Проверьте ваше объявление:"
+
+#~ msgid "Your ad has been submitted for review ✅"
+#~ msgstr "Ваше объявление отправлено на проверку ✅"
 
