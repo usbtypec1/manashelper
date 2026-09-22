@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Manashelper VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-18 16:20+0600\n"
+"POT-Creation-Date: 2026-09-22 14:23+0600\n"
 "PO-Revision-Date: 2026-09-15 11:14+0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: tr\n"
@@ -21,6 +21,52 @@ msgstr ""
 
 msgid "Enjoy your meal! 🍽"
 msgstr "Afiyet olsun! 🍽"
+
+msgid "➕ Post an ad"
+msgstr "➕ İlan ver"
+
+msgid "📋 My ads"
+msgstr "📋 İlanlarım"
+
+msgid "❌ Cancel"
+msgstr "❌ İptal"
+
+msgid "📱 Share phone number"
+msgstr "📱 Telefon numarasını paylaş"
+
+msgid "Skip"
+msgstr "Atla"
+
+msgid "✅ Done"
+msgstr "✅ Tamam"
+
+msgid "No expiration date"
+msgstr "Son kullanma tarihi yok"
+
+msgid "✅ Submit for review"
+msgstr "✅ İncelemeye gönder"
+
+msgid "🗑 Delete"
+msgstr "🗑 Sil"
+
+msgid "◀️ Back"
+msgstr "◀️ Geri"
+
+#, fuzzy
+msgid "✅ Yes, delete"
+msgstr "✅ Evet, sil"
+
+msgid "✅ Approve"
+msgstr "✅ Onayla"
+
+msgid "❌ Reject"
+msgstr "❌ Reddet"
+
+msgid "✏️ Add a comment"
+msgstr "✏️ Yorum ekle"
+
+msgid "🚫 No comment"
+msgstr "🚫 Yorum yok"
 
 msgid "📅 Today"
 msgstr "📅 Bugün"
@@ -61,9 +107,6 @@ msgstr "✅ Hepsi"
 msgid "❌ All"
 msgstr "❌ Hepsi"
 
-msgid "◀️ Back"
-msgstr "◀️ Geri"
-
 msgid "⚙️ Configure notifications"
 msgstr "⚙️ Bildirimleri ayarla"
 
@@ -78,9 +121,6 @@ msgstr "🗑 Bilgileri sil"
 
 msgid "✅ Yes, clear"
 msgstr "✅ Evet, sil"
-
-msgid "❌ Cancel"
-msgstr "❌ İptal"
 
 msgid "📃 Terms of use"
 msgstr "📃 Kullanım koşulları"
@@ -128,6 +168,154 @@ msgstr "{number}. sınıf"
 msgid "This feature is only available in a private chat with the bot."
 msgstr "Bu özellik yalnızca bot ile özel sohbette kullanılabilir."
 
+#, python-brace-format
+msgid "Let's create your ad. Enter a title (up to {max} characters):"
+msgstr "İlanınızı oluşturalım. Bir başlık girin (en fazla {max} karakter):"
+
+msgid "🛒 <b>Marketplace</b>"
+msgstr "🛒 <b>Pazar Yeri</b>"
+
+msgid "You've posted too many ads in the last hour. Please try again later."
+msgstr "Son bir saatte çok fazla ilan verdiniz. Lütfen daha sonra tekrar deneyin."
+
+msgid "Please start with the /start command"
+msgstr "Lütfen /start komutuyla başlayın"
+
+msgid ""
+"To post an ad you need at least one contact method (a Telegram username "
+"or a phone number). You don't have a public username, so please share a "
+"phone number using the button below, or type it manually:"
+msgstr ""
+
+msgid "Phone number saved ✅"
+msgstr "Telefon numarası kaydedildi ✅"
+
+msgid "That doesn't look like a valid phone number. Please try again:"
+msgstr "Bu geçerli bir telefon numarasına benzemiyor. Lütfen tekrar deneyin:"
+
+#, fuzzy, python-brace-format
+msgid ""
+"The title can't be empty and must be at most {max} characters. Please try"
+" again:"
+msgstr "Öğrenci numarası boş olamaz. Lütfen tekrar deneyin:"
+
+#, python-brace-format
+msgid "Enter a description (up to {max} characters):"
+msgstr "Bir açıklama girin (en fazla {max} karakter):"
+
+#, python-brace-format
+msgid ""
+"The description can't be empty and must be at most {max} characters. "
+"Please try again:"
+msgstr ""
+
+msgid "Enter a price in som, or tap Skip:"
+msgstr "Fiyatı som cinsinden girin veya Atla'ya dokunun:"
+
+msgid ""
+"Send up to 10 photos or videos, then tap Done. Or tap Done right away to "
+"skip."
+msgstr ""
+
+msgid "Please enter a whole number, or tap Skip:"
+msgstr "Lütfen bir tam sayı girin veya Atla'ya dokunun:"
+
+#, python-brace-format
+msgid "You've reached the limit of {max} photos/videos. Tap Done to continue."
+msgstr "{max} foto/video sınırına ulaştınız. Devam etmek için Tamam'a dokunun."
+
+#, python-brace-format
+msgid "Added ({count}/{max}). Send more, or tap Done."
+msgstr "Eklendi ({count}/{max}). Daha fazla gönderin veya Tamam'a dokunun."
+
+msgid "Enter an expiration date as DD.MM.YYYY, or tap Skip for no expiration:"
+msgstr "Son kullanma tarihini GG.AA.YYYY olarak girin veya süresiz için Atla'ya dokunun:"
+
+msgid "That doesn't look like a valid date. Please use DD.MM.YYYY, or tap Skip:"
+msgstr "Bu geçerli bir tarihe benzemiyor. Lütfen GG.AA.YYYY biçimini kullanın veya Atla'ya dokunun:"
+
+msgid "The expiration date must be in the future. Please try again, or tap Skip:"
+msgstr "Son kullanma tarihi gelecekte olmalıdır. Lütfen tekrar deneyin veya Atla'ya dokunun:"
+
+msgid "Please review your ad:"
+msgstr "İlanınızı gözden geçirin:"
+
+msgid "Cancelled"
+msgstr "İptal edildi"
+
+msgid "Your ad has been submitted for review ✅"
+msgstr "İlanınız incelemeye gönderildi ✅"
+
+msgid "🆕 <b>New ad for review</b>"
+msgstr "🆕 <b>İncelenecek yeni ilan</b>"
+
+msgid "Review it:"
+msgstr "İnceleyin:"
+
+#, python-brace-format
+msgid "📋 <b>My ads</b> (page {page}/{total})"
+msgstr "📋 <b>İlanlarım</b> (sayfa {page}/{total})"
+
+msgid ""
+"📋 <b>My ads</b>\n"
+"\n"
+"You haven't posted any ads yet."
+msgstr ""
+
+msgid "This ad no longer exists"
+msgstr "Bu ilan artık mevcut değil"
+
+#, fuzzy
+msgid "Are you sure you want to delete this ad?"
+msgstr "Kayıtlı OBIS bilgilerinizi silmek istediğinizden emin misiniz?"
+
+msgid "Ad deleted ✅"
+msgstr "İlan silindi ✅"
+
+msgid "You don't have permission to do this"
+msgstr "Bunu yapmaya yetkiniz yok"
+
+msgid "This ad has already been reviewed"
+msgstr "Bu ilan zaten incelendi"
+
+#, fuzzy
+msgid "Failed to publish this ad. Please try again later."
+msgstr "OBIS'ten veri alınamadı. Lütfen daha sonra tekrar deneyin."
+
+msgid "Approved and published ✅"
+msgstr "Onaylandı ve yayınlandı ✅"
+
+#, python-brace-format
+msgid "Your ad \"{title}\" has been approved and published! 🎉"
+msgstr "\"{title}\" ilanınız onaylandı ve yayınlandı! 🎉"
+
+msgid "Reject this ad. Would you like to add a comment explaining why?"
+msgstr "Bu ilanı reddet. Nedenini açıklayan bir yorum eklemek ister misiniz?"
+
+#, python-brace-format
+msgid "Your ad \"{title}\" was not approved."
+msgstr "\"{title}\" ilanınız onaylanmadı."
+
+#, fuzzy, python-brace-format
+msgid "Reason: {comment}"
+msgstr "👁 Görüntülenme: {count}"
+
+msgid "Rejected ❌"
+msgstr "Reddedildi ❌"
+
+msgid "Please send the rejection comment as a text message:"
+msgstr "Lütfen ret nedenini bir metin mesajı olarak gönderin:"
+
+#, fuzzy
+msgid "The comment can't be empty. Please try again:"
+msgstr "Öğrenci numarası boş olamaz. Lütfen tekrar deneyin:"
+
+msgid "Something went wrong. Please try again."
+msgstr "Bir şeyler ters gitti. Lütfen tekrar deneyin."
+
+msgid "Rejection sent ✅"
+msgstr "Ret gönderildi ✅"
+
 msgid ""
 "🍉 <b>Cafeteria menu</b>\n"
 "\n"
@@ -164,9 +352,6 @@ msgstr "Kaydedildi"
 
 msgid "🍽 Fine-tune menu notifications"
 msgstr "🍽 Menü bildirimlerini özelleştir"
-
-msgid "Please start with the /start command"
-msgstr "Lütfen /start komutuyla başlayın"
 
 msgid "this isn't a button"
 msgstr "buna basma"
@@ -212,9 +397,6 @@ msgstr "Devam etmek için lütfen botun kullanım koşullarını kabul edin."
 msgid "Enter your student number:"
 msgstr "Öğrenci numaranızı girin:"
 
-msgid "Cancelled"
-msgstr "İptal edildi"
-
 msgid "Are you sure you want to clear your saved OBIS credentials?"
 msgstr "Kayıtlı OBIS bilgilerinizi silmek istediğinizden emin misiniz?"
 
@@ -226,9 +408,6 @@ msgstr "Öğrenci numarası boş olamaz. Lütfen tekrar deneyin:"
 
 msgid "Enter your OBIS password:"
 msgstr "OBIS şifrenizi girin:"
-
-msgid "Something went wrong. Please try again."
-msgstr "Bir şeyler ters gitti. Lütfen tekrar deneyin."
 
 msgid "Invalid OBIS credentials. Enter your student number again:"
 msgstr "OBIS bilgileri hatalı. Öğrenci numaranızı tekrar girin:"
@@ -256,6 +435,9 @@ msgstr "📋 Yoklama"
 
 msgid "💯 Grades"
 msgstr "💯 Notlar"
+
+msgid "🛒 Marketplace"
+msgstr "🛒 Pazar Yeri"
 
 msgid "⚙️ Settings"
 msgstr "⚙️ Ayarlar"
@@ -291,6 +473,30 @@ msgstr "Ders listesi"
 
 msgid "Course not found"
 msgstr "Ders bulunamadı"
+
+msgid "Awaiting review"
+msgstr "İnceleme bekleniyor"
+
+msgid "Published"
+msgstr "Yayınlandı"
+
+msgid "Rejected"
+msgstr "Reddedildi"
+
+#, python-brace-format
+msgid "💵 Price: <b>{price}</b> som"
+msgstr "💵 Fiyat: <b>{price}</b> som"
+
+#, python-brace-format
+msgid "⏰ Valid until: {date}"
+msgstr "⏰ Geçerlilik tarihi: {date}"
+
+msgid "📞 Contacts:"
+msgstr "📞 İletişim:"
+
+#, fuzzy, python-brace-format
+msgid "💬 Reason: {comment}"
+msgstr "👁 Görüntülenme: {count}"
 
 #, python-brace-format
 msgid "🍽 <b>Menu for {weekday}, {date}</b>"

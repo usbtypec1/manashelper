@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Manashelper VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-18 16:20+0600\n"
+"POT-Creation-Date: 2026-09-22 14:23+0600\n"
 "PO-Revision-Date: 2026-09-15 11:14+0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
@@ -22,6 +22,52 @@ msgstr ""
 
 msgid "Enjoy your meal! 🍽"
 msgstr "Приятного аппетита! 🍽"
+
+msgid "➕ Post an ad"
+msgstr "➕ Подать объявление"
+
+msgid "📋 My ads"
+msgstr "📋 Мои объявления"
+
+msgid "❌ Cancel"
+msgstr "❌ Отмена"
+
+msgid "📱 Share phone number"
+msgstr "📱 Поделиться номером телефона"
+
+msgid "Skip"
+msgstr "Пропустить"
+
+msgid "✅ Done"
+msgstr "✅ Готово"
+
+msgid "No expiration date"
+msgstr "Без срока действия"
+
+msgid "✅ Submit for review"
+msgstr "✅ Отправить на проверку"
+
+msgid "🗑 Delete"
+msgstr "🗑 Удалить"
+
+msgid "◀️ Back"
+msgstr "◀️ Назад"
+
+#, fuzzy
+msgid "✅ Yes, delete"
+msgstr "✅ Да, очистить"
+
+msgid "✅ Approve"
+msgstr "✅ Одобрить"
+
+msgid "❌ Reject"
+msgstr "❌ Отклонить"
+
+msgid "✏️ Add a comment"
+msgstr "✏️ Добавить комментарий"
+
+msgid "🚫 No comment"
+msgstr "🚫 Без комментария"
 
 msgid "📅 Today"
 msgstr "📅 Сегодня"
@@ -62,9 +108,6 @@ msgstr "✅ Все"
 msgid "❌ All"
 msgstr "❌ Все"
 
-msgid "◀️ Back"
-msgstr "◀️ Назад"
-
 msgid "⚙️ Configure notifications"
 msgstr "⚙️ Настроить уведомления"
 
@@ -79,9 +122,6 @@ msgstr "🗑 Очистить данные"
 
 msgid "✅ Yes, clear"
 msgstr "✅ Да, очистить"
-
-msgid "❌ Cancel"
-msgstr "❌ Отмена"
 
 msgid "📃 Terms of use"
 msgstr "📃 Условия использования"
@@ -129,6 +169,154 @@ msgstr "{number} курс"
 msgid "This feature is only available in a private chat with the bot."
 msgstr "Эта функция доступна только в личном чате с ботом."
 
+#, python-brace-format
+msgid "Let's create your ad. Enter a title (up to {max} characters):"
+msgstr "Создадим ваше объявление. Введите заголовок (до {max} символов):"
+
+msgid "🛒 <b>Marketplace</b>"
+msgstr "🛒 <b>Барахолка</b>"
+
+msgid "You've posted too many ads in the last hour. Please try again later."
+msgstr "Вы разместили слишком много объявлений за последний час. Попробуйте позже."
+
+msgid "Please start with the /start command"
+msgstr "Пожалуйста, начните с команды /start"
+
+msgid ""
+"To post an ad you need at least one contact method (a Telegram username "
+"or a phone number). You don't have a public username, so please share a "
+"phone number using the button below, or type it manually:"
+msgstr ""
+
+msgid "Phone number saved ✅"
+msgstr "Номер телефона сохранён ✅"
+
+msgid "That doesn't look like a valid phone number. Please try again:"
+msgstr "Это не похоже на корректный номер телефона. Попробуйте ещё раз:"
+
+#, fuzzy, python-brace-format
+msgid ""
+"The title can't be empty and must be at most {max} characters. Please try"
+" again:"
+msgstr "Студенческий номер не может быть пустым. Попробуйте снова:"
+
+#, python-brace-format
+msgid "Enter a description (up to {max} characters):"
+msgstr "Введите описание (до {max} символов):"
+
+#, python-brace-format
+msgid ""
+"The description can't be empty and must be at most {max} characters. "
+"Please try again:"
+msgstr ""
+
+msgid "Enter a price in som, or tap Skip:"
+msgstr "Введите цену в сомах или нажмите «Пропустить»:"
+
+msgid ""
+"Send up to 10 photos or videos, then tap Done. Or tap Done right away to "
+"skip."
+msgstr ""
+
+msgid "Please enter a whole number, or tap Skip:"
+msgstr "Введите целое число или нажмите «Пропустить»:"
+
+#, python-brace-format
+msgid "You've reached the limit of {max} photos/videos. Tap Done to continue."
+msgstr "Вы достигли лимита в {max} фото/видео. Нажмите «Готово», чтобы продолжить."
+
+#, python-brace-format
+msgid "Added ({count}/{max}). Send more, or tap Done."
+msgstr "Добавлено ({count}/{max}). Отправьте ещё или нажмите «Готово»."
+
+msgid "Enter an expiration date as DD.MM.YYYY, or tap Skip for no expiration:"
+msgstr "Введите дату истечения в формате ДД.ММ.ГГГГ или нажмите «Пропустить», если срок не ограничен:"
+
+msgid "That doesn't look like a valid date. Please use DD.MM.YYYY, or tap Skip:"
+msgstr "Это не похоже на корректную дату. Используйте формат ДД.ММ.ГГГГ или нажмите «Пропустить»:"
+
+msgid "The expiration date must be in the future. Please try again, or tap Skip:"
+msgstr "Дата истечения должна быть в будущем. Попробуйте ещё раз или нажмите «Пропустить»:"
+
+msgid "Please review your ad:"
+msgstr "Проверьте ваше объявление:"
+
+msgid "Cancelled"
+msgstr "Отменено"
+
+msgid "Your ad has been submitted for review ✅"
+msgstr "Ваше объявление отправлено на проверку ✅"
+
+msgid "🆕 <b>New ad for review</b>"
+msgstr "🆕 <b>Новое объявление на проверку</b>"
+
+msgid "Review it:"
+msgstr "Проверьте:"
+
+#, python-brace-format
+msgid "📋 <b>My ads</b> (page {page}/{total})"
+msgstr "📋 <b>Мои объявления</b> (страница {page}/{total})"
+
+msgid ""
+"📋 <b>My ads</b>\n"
+"\n"
+"You haven't posted any ads yet."
+msgstr ""
+
+msgid "This ad no longer exists"
+msgstr "Это объявление больше не существует"
+
+#, fuzzy
+msgid "Are you sure you want to delete this ad?"
+msgstr "Вы уверены, что хотите очистить сохранённые данные от OBIS?"
+
+msgid "Ad deleted ✅"
+msgstr "Объявление удалено ✅"
+
+msgid "You don't have permission to do this"
+msgstr "У вас нет прав для этого действия"
+
+msgid "This ad has already been reviewed"
+msgstr "Это объявление уже было рассмотрено"
+
+#, fuzzy
+msgid "Failed to publish this ad. Please try again later."
+msgstr "Не удалось получить данные с OBIS. Попробуйте позже."
+
+msgid "Approved and published ✅"
+msgstr "Одобрено и опубликовано ✅"
+
+#, python-brace-format
+msgid "Your ad \"{title}\" has been approved and published! 🎉"
+msgstr "Ваше объявление «{title}» одобрено и опубликовано! 🎉"
+
+msgid "Reject this ad. Would you like to add a comment explaining why?"
+msgstr "Отклонить объявление. Хотите добавить комментарий с причиной?"
+
+#, python-brace-format
+msgid "Your ad \"{title}\" was not approved."
+msgstr "Ваше объявление «{title}» не было одобрено."
+
+#, fuzzy, python-brace-format
+msgid "Reason: {comment}"
+msgstr "👁 Просмотров: {count}"
+
+msgid "Rejected ❌"
+msgstr "Отклонено ❌"
+
+msgid "Please send the rejection comment as a text message:"
+msgstr "Отправьте комментарий с причиной отклонения текстовым сообщением:"
+
+#, fuzzy
+msgid "The comment can't be empty. Please try again:"
+msgstr "Студенческий номер не может быть пустым. Попробуйте снова:"
+
+msgid "Something went wrong. Please try again."
+msgstr "Что-то пошло не так. Попробуйте снова."
+
+msgid "Rejection sent ✅"
+msgstr "Отклонение отправлено ✅"
+
 msgid ""
 "🍉 <b>Cafeteria menu</b>\n"
 "\n"
@@ -165,9 +353,6 @@ msgstr "Сохранено"
 
 msgid "🍽 Fine-tune menu notifications"
 msgstr "🍽 Точечная настройка уведомлений о меню"
-
-msgid "Please start with the /start command"
-msgstr "Пожалуйста, начните с команды /start"
 
 msgid "this isn't a button"
 msgstr "не жмакай сюды"
@@ -215,9 +400,6 @@ msgstr "Пожалуйста, примите условия использова
 msgid "Enter your student number:"
 msgstr "Введите ваш студенческий номер:"
 
-msgid "Cancelled"
-msgstr "Отменено"
-
 msgid "Are you sure you want to clear your saved OBIS credentials?"
 msgstr "Вы уверены, что хотите очистить сохранённые данные от OBIS?"
 
@@ -229,9 +411,6 @@ msgstr "Студенческий номер не может быть пусты�
 
 msgid "Enter your OBIS password:"
 msgstr "Введите ваш пароль от OBIS:"
-
-msgid "Something went wrong. Please try again."
-msgstr "Что-то пошло не так. Попробуйте снова."
 
 msgid "Invalid OBIS credentials. Enter your student number again:"
 msgstr "Неверные данные от OBIS. Введите студенческий номер заново:"
@@ -259,6 +438,9 @@ msgstr "📋 Йоклама"
 
 msgid "💯 Grades"
 msgstr "💯 Оценки"
+
+msgid "🛒 Marketplace"
+msgstr "🛒 Барахолка"
 
 msgid "⚙️ Settings"
 msgstr "⚙️ Настройки"
@@ -294,6 +476,30 @@ msgstr "Список курсов"
 
 msgid "Course not found"
 msgstr "Курс не найден"
+
+msgid "Awaiting review"
+msgstr "Ожидает проверки"
+
+msgid "Published"
+msgstr "Опубликовано"
+
+msgid "Rejected"
+msgstr "Отклонено"
+
+#, python-brace-format
+msgid "💵 Price: <b>{price}</b> som"
+msgstr "💵 Цена: <b>{price}</b> сом"
+
+#, python-brace-format
+msgid "⏰ Valid until: {date}"
+msgstr "⏰ Действительно до: {date}"
+
+msgid "📞 Contacts:"
+msgstr "📞 Контакты:"
+
+#, fuzzy, python-brace-format
+msgid "💬 Reason: {comment}"
+msgstr "👁 Просмотров: {count}"
 
 #, python-brace-format
 msgid "🍽 <b>Menu for {weekday}, {date}</b>"

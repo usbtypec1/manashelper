@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Manashelper VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-18 16:20+0600\n"
+"POT-Creation-Date: 2026-09-22 14:23+0600\n"
 "PO-Revision-Date: 2026-09-15 11:14+0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ky\n"
@@ -21,6 +21,52 @@ msgstr ""
 
 msgid "Enjoy your meal! 🍽"
 msgstr "Ашыңыз таттуу болсун! 🍽"
+
+msgid "➕ Post an ad"
+msgstr "➕ Жарнама берүү"
+
+msgid "📋 My ads"
+msgstr "📋 Менин жарнамаларым"
+
+msgid "❌ Cancel"
+msgstr "❌ Жокко чыгаруу"
+
+msgid "📱 Share phone number"
+msgstr "📱 Телефон номерин бөлүшүү"
+
+msgid "Skip"
+msgstr "Өткөрүп жиберүү"
+
+msgid "✅ Done"
+msgstr "✅ Бүттү"
+
+msgid "No expiration date"
+msgstr "Мөөнөтү жок"
+
+msgid "✅ Submit for review"
+msgstr "✅ Текшерүүгө жөнөтүү"
+
+msgid "🗑 Delete"
+msgstr "🗑 Өчүрүү"
+
+msgid "◀️ Back"
+msgstr "◀️ Артка"
+
+#, fuzzy
+msgid "✅ Yes, delete"
+msgstr "✅ Ооба, тазалоо"
+
+msgid "✅ Approve"
+msgstr "✅ Ырастоо"
+
+msgid "❌ Reject"
+msgstr "❌ Четке кагуу"
+
+msgid "✏️ Add a comment"
+msgstr "✏️ Комментарий кошуу"
+
+msgid "🚫 No comment"
+msgstr "🚫 Комментарийсиз"
 
 msgid "📅 Today"
 msgstr "📅 Бүгүн"
@@ -61,9 +107,6 @@ msgstr "✅ Баары"
 msgid "❌ All"
 msgstr "❌ Баары"
 
-msgid "◀️ Back"
-msgstr "◀️ Артка"
-
 msgid "⚙️ Configure notifications"
 msgstr "⚙️ Билдирүүлөрдү тууралоо"
 
@@ -78,9 +121,6 @@ msgstr "🗑 Маалыматтарды тазалоо"
 
 msgid "✅ Yes, clear"
 msgstr "✅ Ооба, тазалоо"
-
-msgid "❌ Cancel"
-msgstr "❌ Жокко чыгаруу"
 
 msgid "📃 Terms of use"
 msgstr "📃 Колдонуу шарттары"
@@ -128,6 +168,154 @@ msgstr "{number}-курс"
 msgid "This feature is only available in a private chat with the bot."
 msgstr "Бул функция бот менен жеке чатта гана жеткиликтүү."
 
+#, python-brace-format
+msgid "Let's create your ad. Enter a title (up to {max} characters):"
+msgstr "Жарнамаңызды түзөлү. Аталышын киргизиңиз (эң көп {max} белги):"
+
+msgid "🛒 <b>Marketplace</b>"
+msgstr "🛒 <b>Базар</b>"
+
+msgid "You've posted too many ads in the last hour. Please try again later."
+msgstr "Сиз акыркы бир сааттын ичинде өтө көп жарнама жайгаштырдыңыз. Кийинчерээк аракет кылыңыз."
+
+msgid "Please start with the /start command"
+msgstr "Сураныч, /start командасынан баштаңыз"
+
+msgid ""
+"To post an ad you need at least one contact method (a Telegram username "
+"or a phone number). You don't have a public username, so please share a "
+"phone number using the button below, or type it manually:"
+msgstr ""
+
+msgid "Phone number saved ✅"
+msgstr "Телефон номери сакталды ✅"
+
+msgid "That doesn't look like a valid phone number. Please try again:"
+msgstr "Бул туура телефон номерине окшобойт. Кайра аракет кылыңыз:"
+
+#, fuzzy, python-brace-format
+msgid ""
+"The title can't be empty and must be at most {max} characters. Please try"
+" again:"
+msgstr "Студенттик номер бош болбошу керек. Кайра аракет кылыңыз:"
+
+#, python-brace-format
+msgid "Enter a description (up to {max} characters):"
+msgstr "Сүрөттөмөсүн киргизиңиз (эң көп {max} белги):"
+
+#, python-brace-format
+msgid ""
+"The description can't be empty and must be at most {max} characters. "
+"Please try again:"
+msgstr ""
+
+msgid "Enter a price in som, or tap Skip:"
+msgstr "Баасын сомдо киргизиңиз же басыңиз «Өткөрүп жиберүү» баскычын басыңыз:"
+
+msgid ""
+"Send up to 10 photos or videos, then tap Done. Or tap Done right away to "
+"skip."
+msgstr ""
+
+msgid "Please enter a whole number, or tap Skip:"
+msgstr "Бүтүн сан киргизиңиз же басыңиз «Өткөрүп жиберүү» баскычын басыңыз:"
+
+#, python-brace-format
+msgid "You've reached the limit of {max} photos/videos. Tap Done to continue."
+msgstr "Сиз {max} фото/видео чегине жеттиңиз. Улантуу үчүн «Бүттү» баскычын басыңыз."
+
+#, python-brace-format
+msgid "Added ({count}/{max}). Send more, or tap Done."
+msgstr "Кошулду ({count}/{max}). Дагы жөнөтүңүз же «Бүттү» баскычын басыңыз."
+
+msgid "Enter an expiration date as DD.MM.YYYY, or tap Skip for no expiration:"
+msgstr "Мөөнүн КК.АА.ЖЖЖЖ форматында киргизиңиз же мөөнүтү жок болсо «Өткөрүп жиберүү» баскычын басыңыз:"
+
+msgid "That doesn't look like a valid date. Please use DD.MM.YYYY, or tap Skip:"
+msgstr "Бул туура датага окшобойт. КК.АА.ЖЖЖЖ форматын колдонуңуз же «Өткөрүп жиберүү» баскычын басыңыз:"
+
+msgid "The expiration date must be in the future. Please try again, or tap Skip:"
+msgstr "Мөөнү бүтүү датасы келечекте болушу керек. Кайра аракет кылыңыз же «Өткөрүп жиберүү» баскычын басыңыз:"
+
+msgid "Please review your ad:"
+msgstr "Жарнамаңызды текшериңиз:"
+
+msgid "Cancelled"
+msgstr "Жокко чыгарылды"
+
+msgid "Your ad has been submitted for review ✅"
+msgstr "Жарнамаңыз текшерүүгө жөнөтүлдү ✅"
+
+msgid "🆕 <b>New ad for review</b>"
+msgstr "🆕 <b>Текшерүүгө жаңы жарнама</b>"
+
+msgid "Review it:"
+msgstr "Текшериңиз:"
+
+#, python-brace-format
+msgid "📋 <b>My ads</b> (page {page}/{total})"
+msgstr "📋 <b>Менин жарнамаларым</b> ({page}/{total}-бет)"
+
+msgid ""
+"📋 <b>My ads</b>\n"
+"\n"
+"You haven't posted any ads yet."
+msgstr ""
+
+msgid "This ad no longer exists"
+msgstr "Бул жарнама миндан ары жок"
+
+#, fuzzy
+msgid "Are you sure you want to delete this ad?"
+msgstr "Сакталган OBIS маалыматтарын тазалагыңыз келеби?"
+
+msgid "Ad deleted ✅"
+msgstr "Жарнама өчүрүлдү ✅"
+
+msgid "You don't have permission to do this"
+msgstr "Бул аракет үчүн укугуңуз жок"
+
+msgid "This ad has already been reviewed"
+msgstr "Бул жарнама мурунтан эле каралган"
+
+#, fuzzy
+msgid "Failed to publish this ad. Please try again later."
+msgstr "OBIS'тен маалымат алынган жок. Кийинчерээк кайра аракет кылыңыз."
+
+msgid "Approved and published ✅"
+msgstr "Ырасталды жана жарыяланды ✅"
+
+#, python-brace-format
+msgid "Your ad \"{title}\" has been approved and published! 🎉"
+msgstr "«{title}» жарнамаңыз ырасталып, жарыялды! 🎉"
+
+msgid "Reject this ad. Would you like to add a comment explaining why?"
+msgstr "Жарнаманы четке кагуу. Себебин түшүндүргөн комментарий кошкуңуз келеби?"
+
+#, python-brace-format
+msgid "Your ad \"{title}\" was not approved."
+msgstr "«{title}» жарнамаңыз ырасталган жок."
+
+#, fuzzy, python-brace-format
+msgid "Reason: {comment}"
+msgstr "👁 Көрүүлөр: {count}"
+
+msgid "Rejected ❌"
+msgstr "Четке кагылды ❌"
+
+msgid "Please send the rejection comment as a text message:"
+msgstr "Четке кагуу себебин текст билдирүү катары жөнөтүңүз:"
+
+#, fuzzy
+msgid "The comment can't be empty. Please try again:"
+msgstr "Студенттик номер бош болбошу керек. Кайра аракет кылыңыз:"
+
+msgid "Something went wrong. Please try again."
+msgstr "Бир нерсе туура болбоду. Кайра аракет кылыңыз."
+
+msgid "Rejection sent ✅"
+msgstr "Четке кагуу жөнөтүлдү ✅"
+
 msgid ""
 "🍉 <b>Cafeteria menu</b>\n"
 "\n"
@@ -164,9 +352,6 @@ msgstr "Сакталды"
 
 msgid "🍽 Fine-tune menu notifications"
 msgstr "🍽 Меню билдирүүлөрүн ыңгайлаштыруу"
-
-msgid "Please start with the /start command"
-msgstr "Сураныч, /start командасынан баштаңыз"
 
 msgid "this isn't a button"
 msgstr "бул жерди баспаңыз"
@@ -218,9 +403,6 @@ msgstr "Улантуу үчүн, сураныч, боттун колдонуу �
 msgid "Enter your student number:"
 msgstr "Студенттик номериңизди киргизиңиз:"
 
-msgid "Cancelled"
-msgstr "Жокко чыгарылды"
-
 msgid "Are you sure you want to clear your saved OBIS credentials?"
 msgstr "Сакталган OBIS маалыматтарын тазалагыңыз келеби?"
 
@@ -232,9 +414,6 @@ msgstr "Студенттик номер бош болбошу керек. Кай
 
 msgid "Enter your OBIS password:"
 msgstr "OBIS сырсөзүңүздү киргизиңиз:"
-
-msgid "Something went wrong. Please try again."
-msgstr "Бир нерсе туура болбоду. Кайра аракет кылыңыз."
 
 msgid "Invalid OBIS credentials. Enter your student number again:"
 msgstr "OBIS маалыматтары туура эмес. Студенттик номериңизди кайра киргизиңиз:"
@@ -262,6 +441,9 @@ msgstr "📋 Йоклама"
 
 msgid "💯 Grades"
 msgstr "💯 Баалар"
+
+msgid "🛒 Marketplace"
+msgstr "🛒 Базар"
 
 msgid "⚙️ Settings"
 msgstr "⚙️ Тууралоолор"
@@ -297,6 +479,30 @@ msgstr "Курстардын тизмеси"
 
 msgid "Course not found"
 msgstr "Курс табылган жок"
+
+msgid "Awaiting review"
+msgstr "Текшерүүнү күтүүдө"
+
+msgid "Published"
+msgstr "Жарыялды"
+
+msgid "Rejected"
+msgstr "Четке кагылды"
+
+#, python-brace-format
+msgid "💵 Price: <b>{price}</b> som"
+msgstr "💵 Баасы: <b>{price}</b> сом"
+
+#, python-brace-format
+msgid "⏰ Valid until: {date}"
+msgstr "⏰ Мөөнөтү: {date}"
+
+msgid "📞 Contacts:"
+msgstr "📞 Байланыш:"
+
+#, fuzzy, python-brace-format
+msgid "💬 Reason: {comment}"
+msgstr "👁 Көрүүлөр: {count}"
 
 #, python-brace-format
 msgid "🍽 <b>Menu for {weekday}, {date}</b>"

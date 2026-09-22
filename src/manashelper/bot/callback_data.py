@@ -130,3 +130,57 @@ class VersionsPageCallback(CallbackData, prefix="versions_page"):
 class VersionCallback(CallbackData, prefix="version"):
     version: str
     page: int
+
+
+class AdvertisementMenuAction(StrEnum):
+    CREATE = "create"
+    MY_ADS = "my_ads"
+
+
+class AdvertisementMenuCallback(CallbackData, prefix="ad_menu"):
+    action: AdvertisementMenuAction
+
+
+class AdvertisementFormAction(StrEnum):
+    SKIP_PRICE = "skip_price"
+    DONE_MEDIA = "done_media"
+    SKIP_EXPIRES_AT = "skip_expires_at"
+    CONFIRM_SUBMIT = "confirm_submit"
+    CANCEL = "cancel"
+
+
+class AdvertisementFormCallback(CallbackData, prefix="ad_form"):
+    action: AdvertisementFormAction
+
+
+class AdvertisementsPageCallback(CallbackData, prefix="ads_page"):
+    page: int
+
+
+class AdvertisementCallback(CallbackData, prefix="ad"):
+    id: uuid.UUID
+    page: int
+
+
+class AdvertisementDeleteAction(StrEnum):
+    REQUEST = "request"
+    CONFIRM = "confirm"
+    CANCEL = "cancel"
+
+
+class AdvertisementDeleteCallback(CallbackData, prefix="ad_delete"):
+    id: uuid.UUID
+    action: AdvertisementDeleteAction
+    page: int
+
+
+class AdvertisementModerationAction(StrEnum):
+    APPROVE = "approve"
+    REJECT = "reject"
+    ADD_COMMENT = "add_comment"
+    SKIP_COMMENT = "skip_comment"
+
+
+class AdvertisementModerationCallback(CallbackData, prefix="ad_moderation"):
+    id: uuid.UUID
+    action: AdvertisementModerationAction

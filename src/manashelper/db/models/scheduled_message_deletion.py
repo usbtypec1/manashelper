@@ -10,7 +10,7 @@ from manashelper.db.base import Base
 
 class ScheduledMessageDeletion(Base):
     """An outbox row: "delete this message at this time". Cleaned up by `cleanup_scheduled_message_deletions_job`
-    regardless of whether the Telegram delete call actually succeeds — see scheduler_jobs.py."""
+    regardless of whether the Telegram delete call actually succeeds — see jobs/scheduled_message_deletion.py."""
 
     __tablename__ = "scheduled_message_deletions"
     __table_args__ = (Index("ix_scheduled_message_deletions_delete_at", "delete_at"),)

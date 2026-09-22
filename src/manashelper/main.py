@@ -18,6 +18,8 @@ from manashelper.bot.middlewares.i18n import LocaleMiddleware
 from manashelper.bot.middlewares.per_chat_ordering import PerChatOrderingMiddleware
 from manashelper.bot.middlewares.private_chat_only import PrivateChatOnlyMiddleware
 from manashelper.bot.middlewares.rate_limit import RateLimitMiddleware
+from manashelper.bot.routers.advertisement import router as advertisement_router
+from manashelper.bot.routers.advertisement_moderation import router as advertisement_moderation_router
 from manashelper.bot.routers.food_menu import router as food_menu_router
 from manashelper.bot.routers.food_menu_cleanup import router as food_menu_cleanup_router
 from manashelper.bot.routers.food_menu_notifications import router as food_menu_notifications_router
@@ -30,16 +32,13 @@ from manashelper.bot.routers.timetable import router as timetable_router
 from manashelper.bot.routers.versions import router as versions_router
 from manashelper.config import get_settings
 from manashelper.di import AppProvider, RequestProvider
+from manashelper.jobs.advertisement import cleanup_expired_advertisements_job
+from manashelper.jobs.food_menu import broadcast_dinner_menu_job, broadcast_lunch_menu_job, sync_daily_menus_job
+from manashelper.jobs.obis_notification import poll_obis_notifications_job
+from manashelper.jobs.scheduled_message_deletion import cleanup_scheduled_message_deletions_job
+from manashelper.jobs.timetable_sync import sync_timetable_job
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale
 from manashelper.logging_config import configure_logging
-from manashelper.scheduler_jobs import (
-    broadcast_dinner_menu_job,
-    broadcast_lunch_menu_job,
-    cleanup_scheduled_message_deletions_job,
-    poll_obis_notifications_job,
-    sync_daily_menus_job,
-    sync_timetable_job,
-)
 from manashelper.services.bot_commands import build_group_commands, build_private_commands
 from manashelper.services.daily_menu import BISHKEK_TZ
 
@@ -66,7 +65,7 @@ def run_migrations() -> None:
 
 def _handle_asyncio_exception(loop: asyncio.AbstractEventLoop, context: dict[str, Any]) -> None:
     # Last-resort net for exceptions that escape both aiogram's per-update `@dispatcher.errors()`
-    # handler below and each scheduled job's own broad `except Exception` (see scheduler_jobs.py)
+    # handler below and each scheduled job's own broad `except Exception` (see the `jobs` package)
     # - e.g. a bug in a fire-and-forget callback. Without this, asyncio would only print it to
     # stderr via its default handler, bypassing our file logging entirely.
     logger.error(
@@ -115,6 +114,8 @@ async def main() -> None:
     dispatcher.include_router(obis_router)
     dispatcher.include_router(settings_router)
     dispatcher.include_router(versions_router)
+    dispatcher.include_router(advertisement_router)
+    dispatcher.include_router(advertisement_moderation_router)
 
     container = make_async_container(AppProvider(), RequestProvider())
     setup_dishka(container, dispatcher)
@@ -139,6 +140,7 @@ async def main() -> None:
     scheduler.add_job(
         cleanup_scheduled_message_deletions_job, "interval", minutes=5, args=[container, bot], next_run_time=now
     )
+    scheduler.add_job(cleanup_expired_advertisements_job, "interval", hours=1, args=[container, bot], next_run_time=now)
     scheduler.start()
 
     await setup_commands(bot)

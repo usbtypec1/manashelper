@@ -32,6 +32,7 @@ jobs:
       DATASOURCE_USERNAME: user123
       DATASOURCE_PASSWORD: pass123
       OBIS_ENCRYPTION_KEY: WN99UeaUfixAdP24uN3yBG8Gbbo9hTPf6jlsYrp9KOA=
+      ADVERTISEMENT_CHANNEL_ID: "-1001234567890"
 
     steps:
       - name: Checkout

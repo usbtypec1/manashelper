@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from manashelper.config import Settings, get_settings
 from manashelper.db.base import create_engine, create_session_pool
 from manashelper.repositories.action_log_repository import ActionLogRepository
+from manashelper.repositories.advertisement_repository import AdvertisementRepository
 from manashelper.repositories.course_repository import CourseRepository
 from manashelper.repositories.daily_menu_rating_repository import DailyMenuRatingRepository
 from manashelper.repositories.daily_menu_repository import DailyMenuRepository
@@ -23,12 +24,15 @@ from manashelper.repositories.notification_settings_repository import Notificati
 from manashelper.repositories.scheduled_message_deletion_repository import ScheduledMessageDeletionRepository
 from manashelper.repositories.user_exam_grade_repository import UserExamGradeRepository
 from manashelper.repositories.user_lesson_attendance_repository import UserLessonAttendanceRepository
+from manashelper.repositories.user_phone_number_repository import UserPhoneNumberRepository
 from manashelper.repositories.user_repository import UserRepository
 from manashelper.scraping.food_menu_client import FoodMenuClient
 from manashelper.scraping.food_menu_parser import FoodMenuParser
 from manashelper.scraping.obis_client import ObisClient
 from manashelper.scraping.timetable_client import TimetableClient
 from manashelper.services.action_log import ActionLogService
+from manashelper.services.advertisement import AdvertisementService
+from manashelper.services.advertisement_moderation import AdvertisementModerationService
 from manashelper.services.course import CourseService
 from manashelper.services.crypto import CryptoService
 from manashelper.services.daily_menu import DailyMenuService
@@ -45,6 +49,7 @@ from manashelper.services.obis import ObisService
 from manashelper.services.obis_notification import ObisNotificationService
 from manashelper.services.schedule import ScheduleService
 from manashelper.services.timetable_sync import TimetableSyncService
+from manashelper.services.user_contact import UserContactService
 
 
 class AppProvider(Provider):
@@ -105,6 +110,8 @@ class RequestProvider(Provider):
     scheduled_message_deletion_repository = provide(ScheduledMessageDeletionRepository)
     food_menu_cleanup_settings_repository = provide(FoodMenuCleanupSettingsRepository)
     action_log_repository = provide(ActionLogRepository)
+    user_phone_number_repository = provide(UserPhoneNumberRepository)
+    advertisement_repository = provide(AdvertisementRepository)
 
     faculty_service = provide(FacultyService)
     department_service = provide(DepartmentService)
@@ -122,3 +129,6 @@ class RequestProvider(Provider):
     message_deletion_service = provide(MessageDeletionService)
     food_menu_cleanup_settings_service = provide(FoodMenuCleanupSettingsService)
     action_log_service = provide(ActionLogService)
+    user_contact_service = provide(UserContactService)
+    advertisement_service = provide(AdvertisementService)
+    advertisement_moderation_service = provide(AdvertisementModerationService)

@@ -1,10 +1,23 @@
-from manashelper.localization.locale import Locale, resolve_from_language_code
+from manashelper.localization.locale import DEFAULT_LOCALE, Locale, resolve_from_language_code
 from manashelper.repositories.user_repository import UserRepository
 
 
 class LocaleService:
     def __init__(self, user_repository: UserRepository) -> None:
         self._user_repository = user_repository
+
+    async def get_locale(self, user_id: int) -> Locale:
+        """Read a user's saved locale without upserting them, falling back to `DEFAULT_LOCALE`.
+
+        For notifying a *different* chat than the one handling the current update (e.g. an
+        advertisement's owner, from inside a moderator's callback handler) — mirrors
+        `jobs/common.py`'s `get_user_locale` helper, but exposed as a service method since
+        routers must go through a service rather than a repository directly.
+        """
+        user = await self._user_repository.get_by_id(user_id)
+        if user is not None and user.locale is not None:
+            return Locale(user.locale)
+        return DEFAULT_LOCALE
 
     async def resolve(
         self,

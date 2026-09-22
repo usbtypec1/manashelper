@@ -12,6 +12,7 @@ def build_main_keyboard() -> ReplyKeyboardMarkup:
         keyboard=[
             [KeyboardButton(text=_("🍉 Food")), KeyboardButton(text=_("📅 Schedule"))],
             [KeyboardButton(text=_("📋 Attendance")), KeyboardButton(text=_("💯 Grades"))],
+            [KeyboardButton(text=_("🛒 Marketplace"))],
             [KeyboardButton(text=_("⚙️ Settings"))],
         ],
         resize_keyboard=True,

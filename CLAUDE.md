@@ -24,7 +24,7 @@ Core capabilities (current):
   notification kinds (schedule changes, before-lunch/before-dinner menu pings, exam-grade changes, lesson skips),
   backed by a lazily-created `NotificationSettings` row per user that defaults every toggle to enabled — see
   `services/notification_settings.py`.
-- **Scheduled notifications** (`scheduler_jobs.py`, wired up in `main.py`): the daily menu is broadcast to
+- **Scheduled notifications** (the `jobs/` package, wired up in `main.py`): the daily menu is broadcast to
   opted-in users at 11:00/17:00 Bishkek time; OBIS exam grades and lesson attendance are polled hourly per user
   and diffed against previously-seen state to notify only on actual changes; each tracked course's timetable is
   scraped hourly and diffed to notify trackers of schedule changes — see "Scheduled jobs & change detection"
@@ -32,6 +32,15 @@ Core capabilities (current):
 - **Localization**: every user-facing string is served through aiogram's built-in gettext-based i18n, with the
   user's locale auto-detected from Telegram, falling back to Russian — see "Localization (i18n)" below.
 - `/start` resolves the user's locale, upserts the Telegram user, and shows the main reply keyboard.
+- **Advertising platform (барахолка)**: an aiogram FSM (`bot/routers/advertisement.py`) collects a title,
+  description, optional price/media/expiry, gated by a mandatory-contact check (Telegram username or a saved
+  phone number), then submits the ad for moderation. Every user with role `marketplace_admin`/`superadmin`
+  (`User.role`, assigned by hand directly in Postgres — there is no in-bot role-management UI) gets notified with
+  Approve/Reject buttons (`bot/routers/advertisement_moderation.py`); approving publishes the ad to a configured
+  Telegram channel (`Settings.advertisement_channel_id`) rather than an in-bot browse feed, and rejecting can
+  carry an optional comment shown to the ad's owner. Users manage their own ads (paginated list, detail, delete)
+  under "📋 My ads"; an hourly job (`jobs/advertisement.py::cleanup_expired_advertisements_job`) deletes ads past
+  their `expires_at`, removing their channel post(s) first — see "Advertising platform" below.
 
 ## Commands
 
@@ -70,10 +79,11 @@ respectively — see `pyproject.toml`/`[tool.ruff] extend-exclude`).
 The app needs Postgres and these environment variables (see `src/manashelper/config.py`): `TELEGRAM_BOT_TOKEN`,
 `DATASOURCE_NAME`, `DATASOURCE_USERNAME`, `DATASOURCE_PASSWORD`, `OBIS_ENCRYPTION_KEY` (a base64-encoded 32-byte
 AES-256 key used by `CryptoService` to encrypt stored OBIS passwords — generate one with
-`python3 -c "import base64,os;print(base64.b64encode(os.urandom(32)).decode())"`), and optionally
-`DATASOURCE_HOST` (defaults to `db`, the docker-compose service name — set to `localhost` for local dev outside
-Docker). `docker-compose.dev.yml` starts only Postgres, exposed on host port `5432`. A local `.env` file
-(gitignored) is read automatically via `pydantic-settings`.
+`python3 -c "import base64,os;print(base64.b64encode(os.urandom(32)).decode())"`), `ADVERTISEMENT_CHANNEL_ID`
+(the chat id of the Telegram channel approved ads are published to — the bot must be an admin of that channel
+with post rights), and optionally `DATASOURCE_HOST` (defaults to `db`, the docker-compose service name — set to
+`localhost` for local dev outside Docker). `docker-compose.dev.yml` starts only Postgres, exposed on host port
+`5432`. A local `.env` file (gitignored) is read automatically via `pydantic-settings`.
 
 CI/CD (`.github/workflows/ci-cd.yml`): the `test` job (lint + type-check + tests against a Postgres service
 container) runs on every push to every branch, as well as on PRs targeting `main` and on `v*` tag pushes. The
@@ -90,7 +100,8 @@ would keep accumulating on disk).
 
 Under `src/manashelper/`, code is organized by technical layer, mirroring the original Java structure:
 `bot/routers` (aiogram handlers), `bot/keyboards` (inline keyboard builders), `bot/middlewares`, `bot/callback_data.py`,
-`services` (business logic), `repositories` (SQLAlchemy queries), `db/models` (ORM models), `config.py`, `di.py`,
+`services` (business logic), `repositories` (SQLAlchemy queries), `db/models` (ORM models), `jobs` (`AsyncIOScheduler`
+job functions, one module per feature area — see "Scheduled jobs & change detection" below), `config.py`, `di.py`,
 `main.py`. As with the Java version, expect this to stay flat-by-layer rather than gaining per-feature
 subpackages as more of the roadmap gets ported.
 
@@ -101,7 +112,7 @@ module-level helper next to the service class (see `course._to_summaries`, used 
 
 **`services/` classes exist to hold DI-injected collaborators, not as Java-style ceremony.** A `*Service` class's
 `__init__` takes the repositories (and other collaborators, e.g. `CryptoService`, `ObisClient`) it needs and
-stores them as attributes; its methods are the only thing a router or `scheduler_jobs.py` depends on via
+stores them as attributes; its methods are the only thing a router or a `jobs/` module depends on via
 `FromDishka[...]`/`request_container.get(...)` — the presentation layer never sees a repository, an `AsyncSession`,
 or `Settings` directly, only the service. Pure helper logic that doesn't touch `self` (formatting, mapping a
 scraped/ORM object to a dataclass) is a private module-level function, not a `@staticmethod` — see
@@ -212,8 +223,8 @@ with no `Translator`/locale parameter threaded through call signatures. `bot/fil
 (`TranslatedText`) exists because a reply-keyboard button's label is only known once translated, so matching the
 incoming message text against a hardcoded string (`F.text == "..."`) can't work across locales.
 
-`scheduler_jobs.py` runs outside any Telegram update, so there's no ambient middleware to set the gettext context;
-each per-recipient send there looks up that user's `Locale` and wraps its own `format_...(...)` call in
+Jobs (the `jobs/` package) run outside any Telegram update, so there's no ambient middleware to set the gettext
+context; each per-recipient send there looks up that user's `Locale` and wraps its own `format_...(...)` call in
 `with i18n.context(), i18n.use_locale(locale.value): ...` explicitly. A user can still change their locale
 explicitly at any time via `/language` or the "🌐 Language" row in Settings (`bot/routers/locale.py`), which
 shows the 4-language picker (`bot/keyboards/locale.py`) — the only place that picker is shown, now that
@@ -221,12 +232,16 @@ auto-detection never falls through to it.
 
 ### Scheduled jobs & change detection
 
-`scheduler_jobs.py` holds every `AsyncIOScheduler` job function registered in `main.py::main`; each job opens its
-own short-lived Dishka request scope(s) (`async with container() as request_container`) rather than reusing one
-across the whole run, and wraps its body in a broad `except Exception: logger.exception(...)` so one failure
-(a bad HTML page, a dead OBIS login, a user who blocked the bot) never aborts the rest of the batch — the same
-resilience shape as the pre-existing `sync_daily_menus_job`. Per-recipient Telegram sends are wrapped individually
-in `except TelegramAPIError` for the same reason.
+`src/manashelper/jobs/` holds every `AsyncIOScheduler` job function registered in `main.py::main`, one module per
+feature area (`jobs/food_menu.py`, `jobs/obis_notification.py`, `jobs/timetable_sync.py`,
+`jobs/scheduled_message_deletion.py`, `jobs/advertisement.py`), plus `jobs/common.py` for cross-cutting helpers
+shared by more than one job (`get_user_locale`, `send_notification`, `chunk`/`delete_message_batch` for batched
+`deleteMessages` calls). Each job opens its own short-lived Dishka request scope(s)
+(`async with container() as request_container`) rather than reusing one across the whole run, and wraps its body
+in a broad `except Exception: logger.exception(...)` so one failure (a bad HTML page, a dead OBIS login, a user
+who blocked the bot) never aborts the rest of the batch — the same resilience shape as the pre-existing
+`sync_daily_menus_job`. Per-recipient Telegram sends are wrapped individually in `except TelegramAPIError` for
+the same reason.
 
 Three notification-producing jobs all follow one pattern: keep a Postgres table of the *last known state* per
 (user or course, item), diff a freshly scraped/fetched snapshot against it, persist the new state, and only
@@ -243,7 +258,7 @@ entire history at them):
   diffing against `UserExamGrade` (per user+lesson_code+exam_name) and `UserLessonAttendance` (per
   user+lesson_code) rows; a user with no saved OBIS credentials is skipped cheaply (a local DB check) before any
   network call, so polling every user hourly is safe.
-- **Daily menu broadcast** (`scheduler_jobs.py::broadcast_lunch_menu_job`/`broadcast_dinner_menu_job`, cron
+- **Daily menu broadcast** (`jobs/food_menu.py::broadcast_lunch_menu_job`/`broadcast_dinner_menu_job`, cron
   11:00/17:00 `Asia/Bishkek`): re-sends the same media-group format used for an on-demand `/yemek` request to
   every user with `before_lunch_enabled`/`before_dinner_enabled`.
 
@@ -251,6 +266,41 @@ entire history at them):
 yet (never opened the settings menu) counts as every toggle being enabled — the repository queries use
 `LEFT JOIN ... WHERE column IS DISTINCT FROM FALSE`, not `= TRUE`, specifically so an absent row doesn't silently
 opt a user out.
+
+### Advertising platform
+
+A from-scratch subsystem (no Java precedent) ported from `features/ADVERTISING_PLATFORM.md`. Notable design
+choices, since none of these had an existing pattern to copy:
+
+- **Roles**: `User.role` (a plain `String(20)` column backed by the service-layer `UserRole` StrEnum in
+  `db/models/user.py`, following the codebase's usual "no native Postgres enum" convention) is assigned by hand
+  directly in Postgres — there is no env-var bootstrap and no in-bot promote/demote command. Both
+  `marketplace_admin` and `superadmin` are treated as moderators today (`MODERATOR_ROLES` in
+  `services/advertisement_moderation.py`); there's no behavioral difference between the two roles yet.
+- **No in-bot browse feed**: approved ads are published to a Telegram channel
+  (`Settings.advertisement_channel_id`) instead of a bot-side listing screen a user could browse. Every
+  `AdvertisementChannelMessage` row records a published message id so the channel post(s) can be removed again
+  when the ad is deleted or expires (a media-group publish yields one message per photo/video).
+- **SQL-side pagination**: `AdvertisementRepository.get_page_by_user_id` does real `LIMIT`/`OFFSET` pagination for
+  "📋 My ads", unlike every other paginated screen in the bot (`versions.py`, `lesson_search.py`), which slices an
+  already-fully-fetched in-memory list — a persistent management list needs to reflect deletes immediately.
+- **User-uploaded media**: `bot/routers/advertisement.py`'s `AdvertisementForm.media` state is the only place in
+  the bot that receives (rather than sends) Telegram photos/videos, storing each `file_id` in
+  `AdvertisementMedia` (capped at 10 per ad, tracked in FSM state until submission).
+- **Contact gate**: posting is blocked until the user has at least one contact method. A Telegram username is
+  read live off `User.username` (already kept fresh by `LocaleMiddleware`'s per-update upsert, so no extra Bot
+  API call is needed); phone numbers are collected inline at the start of the posting flow (reply-keyboard
+  `request_contact` button or manual entry) and persisted in `UserPhoneNumber` — see `services/user_contact.py`.
+- **Rate limiting**: `AdvertisementService.assert_can_post` caps a user at 5 ads/hour
+  (`AdvertisementRepository.count_created_since`) — a data-driven business rule, distinct from the generic
+  per-chat token-bucket throttle in `bot/middlewares/rate_limit.py`.
+- **Moderation**: every moderator is notified with Approve/Reject buttons
+  (`bot/routers/advertisement_moderation.py`); both actions re-check the ad is still `pending` before acting
+  (`AdvertisementNotPendingError`) so two moderators tapping at once can't double-process the same ad — only the
+  acting moderator's own message gets edited to reflect the outcome, a known limitation.
+- **Expiration**: `jobs/advertisement.py::cleanup_expired_advertisements_job` (hourly) deletes ads past
+  `expires_at`, removing their channel post(s) first — same outbox-sweep shape as
+  `jobs/scheduled_message_deletion.py::cleanup_scheduled_message_deletions_job`.
 
 ## Roadmap (not yet ported from the Java version)
 

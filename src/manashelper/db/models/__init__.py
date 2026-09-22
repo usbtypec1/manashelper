@@ -1,4 +1,7 @@
 from manashelper.db.models.action_log import ActionLog
+from manashelper.db.models.advertisement import Advertisement
+from manashelper.db.models.advertisement_channel_message import AdvertisementChannelMessage
+from manashelper.db.models.advertisement_media import AdvertisementMedia
 from manashelper.db.models.associations import user_courses
 from manashelper.db.models.course import Course
 from manashelper.db.models.daily_menu import DailyMenu, daily_menu_dishes
@@ -15,9 +18,13 @@ from manashelper.db.models.scheduled_message_deletion import ScheduledMessageDel
 from manashelper.db.models.user import User
 from manashelper.db.models.user_exam_grade import UserExamGrade
 from manashelper.db.models.user_lesson_attendance import UserLessonAttendance
+from manashelper.db.models.user_phone_number import UserPhoneNumber
 
 __all__ = [
     "ActionLog",
+    "Advertisement",
+    "AdvertisementChannelMessage",
+    "AdvertisementMedia",
     "Course",
     "DailyMenu",
     "DailyMenuRating",
@@ -33,6 +40,7 @@ __all__ = [
     "User",
     "UserExamGrade",
     "UserLessonAttendance",
+    "UserPhoneNumber",
     "daily_menu_dishes",
     "user_courses",
 ]
