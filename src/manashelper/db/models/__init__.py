@@ -1,3 +1,4 @@
+from manashelper.db.models.action_log import ActionLog
 from manashelper.db.models.associations import user_courses
 from manashelper.db.models.course import Course
 from manashelper.db.models.daily_menu import DailyMenu, daily_menu_dishes
@@ -16,6 +17,7 @@ from manashelper.db.models.user_exam_grade import UserExamGrade
 from manashelper.db.models.user_lesson_attendance import UserLessonAttendance
 
 __all__ = [
+    "ActionLog",
     "Course",
     "DailyMenu",
     "DailyMenuRating",

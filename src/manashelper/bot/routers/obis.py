@@ -166,6 +166,7 @@ async def on_student_number_entered(message: Message, state: FSMContext) -> None
 
 @router.message(StateFilter(ObisCredentialsForm.password))
 @flags.private_chat_only
+@flags.mask_logged_message
 async def on_password_entered(
     message: Message,
     state: FSMContext,

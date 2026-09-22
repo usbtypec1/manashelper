@@ -167,29 +167,47 @@ def format_day_schedule(weekday: int, lessons: list[ScheduleLessonModel], now: d
     return "\n".join(lines)
 
 
-def format_lesson_changes(changes: list[LessonChange]) -> str:
-    lines = [_("🔔 Schedule changes:")]
-    for change in changes:
-        day = weekday_abbr(change.weekday)
-        if change.previous_content is None:
-            lines.append(
-                _("➕ {weekday} {time_range}: {content}").format(
-                    weekday=day, time_range=change.time_range, content=change.new_content
-                )
-            )
-        elif change.new_content is None:
-            lines.append(
-                _("➖ {weekday} {time_range}: {content} (cancelled)").format(
-                    weekday=day, time_range=change.time_range, content=change.previous_content
-                )
-            )
-        else:
-            lines.append(
-                _("✏️ {weekday} {time_range}: {previous} → {new}").format(
-                    weekday=day,
-                    time_range=change.time_range,
-                    previous=change.previous_content,
-                    new=change.new_content,
-                )
-            )
+def _format_change_lesson_content(content: str) -> str:
+    lines = []
+    for part in content.split(" | "):
+        lesson_name, teacher_and_room = _split_lesson_content(part)
+        lines.append(f"<b>{lesson_name}</b>")
+        if teacher_and_room:
+            lines.append(teacher_and_room)
     return "\n".join(lines)
+
+
+def _format_change_block(change: LessonChange) -> str:
+    previous_content, new_content = change.previous_content, change.new_content
+    if previous_content is None and new_content is not None:
+        return _("➕ {time_range}\n{content}").format(
+            time_range=change.time_range, content=_format_change_lesson_content(new_content)
+        )
+    if new_content is None and previous_content is not None:
+        return _("➖ {time_range} (cancelled)\n{content}").format(
+            time_range=change.time_range, content=_format_change_lesson_content(previous_content)
+        )
+    assert previous_content is not None
+    assert new_content is not None
+    return _("✏️ {time_range}\n{previous}\n→\n{new}").format(
+        time_range=change.time_range,
+        previous=_format_change_lesson_content(previous_content),
+        new=_format_change_lesson_content(new_content),
+    )
+
+
+def format_lesson_changes(changes: list[LessonChange]) -> str:
+    by_weekday: dict[int, list[LessonChange]] = {}
+    for change in changes:
+        by_weekday.setdefault(change.weekday, []).append(change)
+
+    sections = [_("🔔 <b>Schedule changes</b>")]
+    for weekday in sorted(by_weekday):
+        day_changes = sorted(by_weekday[weekday], key=lambda change: change.time_range)
+        day_lines = [_("📅 <b>{day}</b>").format(day=weekday_full(weekday))]
+        for change in day_changes:
+            day_lines.append("")
+            day_lines.append(_format_change_block(change))
+        sections.append("\n".join(day_lines))
+
+    return "\n\n".join(sections)

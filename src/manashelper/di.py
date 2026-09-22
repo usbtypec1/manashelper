@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from manashelper.config import Settings, get_settings
 from manashelper.db.base import create_engine, create_session_pool
+from manashelper.repositories.action_log_repository import ActionLogRepository
 from manashelper.repositories.course_repository import CourseRepository
 from manashelper.repositories.daily_menu_rating_repository import DailyMenuRatingRepository
 from manashelper.repositories.daily_menu_repository import DailyMenuRepository
@@ -27,6 +28,7 @@ from manashelper.scraping.food_menu_client import FoodMenuClient
 from manashelper.scraping.food_menu_parser import FoodMenuParser
 from manashelper.scraping.obis_client import ObisClient
 from manashelper.scraping.timetable_client import TimetableClient
+from manashelper.services.action_log import ActionLogService
 from manashelper.services.course import CourseService
 from manashelper.services.crypto import CryptoService
 from manashelper.services.daily_menu import DailyMenuService
@@ -102,6 +104,7 @@ class RequestProvider(Provider):
     user_lesson_attendance_repository = provide(UserLessonAttendanceRepository)
     scheduled_message_deletion_repository = provide(ScheduledMessageDeletionRepository)
     food_menu_cleanup_settings_repository = provide(FoodMenuCleanupSettingsRepository)
+    action_log_repository = provide(ActionLogRepository)
 
     faculty_service = provide(FacultyService)
     department_service = provide(DepartmentService)
@@ -118,3 +121,4 @@ class RequestProvider(Provider):
     locale_service = provide(LocaleService)
     message_deletion_service = provide(MessageDeletionService)
     food_menu_cleanup_settings_service = provide(FoodMenuCleanupSettingsService)
+    action_log_service = provide(ActionLogService)
