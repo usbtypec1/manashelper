@@ -32,16 +32,19 @@ Core capabilities (current):
 - **Localization**: every user-facing string is served through aiogram's built-in gettext-based i18n, with the
   user's locale auto-detected from Telegram, falling back to Russian — see "Localization (i18n)" below.
 - `/start` resolves the user's locale, upserts the Telegram user, and shows the main reply keyboard.
-- **Advertising platform (барахолка)**: an aiogram FSM (`bot/routers/advertisement.py`) collects a title,
-  description, optional price/media/expiry, gated by a mandatory-contact check (Telegram username or a saved
-  phone number), then submits the ad for moderation to a single shared moderation chat
-  (`Settings.moderation_chat_id`) with Approve/Reject buttons (`bot/routers/advertisement_moderation.py`) — there
-  is no per-user moderator role; anyone acting from that configured chat is authorized. Approving publishes the
-  ad to a configured Telegram channel (`Settings.advertisement_channel_id`) rather than an in-bot browse feed,
-  with contact details hidden behind a `/start ad_<id>` deep link (opens the bot, reveals the seller's contacts,
-  and is logged), and rejecting can carry an optional comment shown to the ad's owner. Users manage their own ads
-  (paginated list, detail, delete) under "📋 My ads" and their saved phone numbers under "⚙️ Settings → 📱 My
-  phone numbers"; an hourly job (`jobs/advertisement.py::cleanup_expired_advertisements_job`) deletes ads past
+- **Advertising platform (барахолка)**: reached via the "🛒 Marketplace" main-menu button or a `/start market`
+  deep link, both of which show a reply-keyboard sub-menu ("➕ Post an ad" / "📋 My ads" / "◀️ Back to menu",
+  `bot/routers/advertisement.py::send_marketplace_menu`) with a link to the public channel
+  (`Settings.advertisement_channel_link`) in the message text. An aiogram FSM collects a title, description,
+  optional price/media/expiry, gated by a mandatory-contact check (Telegram username or a saved phone number),
+  then submits the ad for moderation to a single shared moderation chat (`Settings.moderation_chat_id`) with
+  Approve/Reject buttons (`bot/routers/advertisement_moderation.py`) — there is no per-user moderator role;
+  anyone acting from that configured chat is authorized. Approving publishes the ad to a configured Telegram
+  channel (`Settings.advertisement_channel_id`) rather than an in-bot browse feed, with contact details hidden
+  behind a `/start ad_<id>` deep link (opens the bot, reveals the seller's contacts, and is logged), and
+  rejecting can carry an optional comment shown to the ad's owner. Users manage their own ads (paginated list,
+  detail, delete) under "📋 My ads" and their saved phone numbers under "⚙️ Settings → 📱 My phone numbers"; an
+  hourly job (`jobs/advertisement.py::cleanup_expired_advertisements_job`) deletes ads past
   their `expires_at` (chosen from fixed presets, not free text), removing their channel post(s) first — see
   "Advertising platform"
   below.
@@ -85,11 +88,13 @@ The app needs Postgres and these environment variables (see `src/manashelper/con
 AES-256 key used by `CryptoService` to encrypt stored OBIS passwords — generate one with
 `python3 -c "import base64,os;print(base64.b64encode(os.urandom(32)).decode())"`), `ADVERTISEMENT_CHANNEL_ID`
 (the chat id of the Telegram channel approved ads are published to — the bot must be an admin of that channel
-with post rights), `MODERATION_CHAT_ID` (the chat id of the group/chat that receives new ads to
-Approve/Reject — the bot must be a member with permission to send messages there; anyone acting from this chat
-is treated as authorized, see "Advertising platform" below), and optionally `DATASOURCE_HOST` (defaults to `db`,
-the docker-compose service name — set to `localhost` for local dev outside Docker). `docker-compose.dev.yml`
-starts only Postgres, exposed on host port `5432`. A local `.env` file (gitignored) is read automatically via
+with post rights), `ADVERTISEMENT_CHANNEL_LINK` (the channel's public `https://t.me/...` URL, shown as a link in
+the in-bot marketplace menu — not derived from `ADVERTISEMENT_CHANNEL_ID`, since a numeric chat id alone isn't a
+usable link), `MODERATION_CHAT_ID` (the chat id of the group/chat that receives new ads to Approve/Reject — the
+bot must be a member with permission to send messages there; anyone acting from this chat is treated as
+authorized, see "Advertising platform" below), and optionally `DATASOURCE_HOST` (defaults to `db`, the
+docker-compose service name — set to `localhost` for local dev outside Docker). `docker-compose.dev.yml` starts
+only Postgres, exposed on host port `5432`. A local `.env` file (gitignored) is read automatically via
 `pydantic-settings`.
 
 CI/CD (`.github/workflows/ci-cd.yml`): the `test` job (lint + type-check + tests against a Postgres service
@@ -307,6 +312,16 @@ choices, since none of these had an existing pattern to copy:
   persisted in `UserPhoneNumber` — see `services/user_contact.py`. Users manage their saved numbers (add/delete)
   from `⚙️ Settings → 📱 My phone numbers` (`bot/routers/phone_numbers.py`), which reuses the same
   contact-request keyboard (`bot/keyboards/phone_numbers.py`) as the posting flow.
+- **The marketplace menu is a reply keyboard, not an inline one** (`bot/keyboards/advertisement.py::
+  build_advertisement_menu_keyboard`), unlike almost every other sub-menu in the bot — it needs to stay on
+  screen across the whole "post an ad" / "my ads" sub-flow the way the main reply keyboard does, and it's
+  reachable two ways: the "🛒 Marketplace" main-menu button, and a `/start market` deep link
+  (`bot/routers/advertisement_contact.py::MARKET_DEEPLINK_PAYLOAD`, handled by the same
+  `CommandStart(deep_link=True)` handler as the `ad_<id>` contact-reveal payload) — both call the shared
+  `send_marketplace_menu` in `bot/routers/advertisement.py` so the menu text/keyboard can't drift between the
+  two entry points. "◀️ Back to menu" restores the main reply keyboard. A reply-keyboard button's label can't
+  carry a URL (unlike an inline button), so the link to the public channel (`Settings.advertisement_channel_link`)
+  is instead an `<a href="...">` in the menu message's own text.
 - **Contacts are hidden on the public channel post**, unlike the poster's own confirm preview and the
   moderation chat's review message (both closed audiences, which see raw contact details via
   `format_advertisement(..., contact=...)`). The channel post instead embeds a bot deep link

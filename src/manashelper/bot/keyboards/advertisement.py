@@ -1,6 +1,6 @@
 import uuid
 
-from aiogram.types import InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -12,8 +12,6 @@ from manashelper.bot.callback_data import (
     AdvertisementExpiryOption,
     AdvertisementFormAction,
     AdvertisementFormCallback,
-    AdvertisementMenuAction,
-    AdvertisementMenuCallback,
     AdvertisementsPageCallback,
 )
 from manashelper.services.advertisement import AdvertisementSummary
@@ -22,14 +20,14 @@ from manashelper.services.advertisement_formatter import status_emoji
 ADS_PER_ROW = 1
 
 
-def build_advertisement_menu_keyboard() -> InlineKeyboardMarkup:
-    builder = InlineKeyboardBuilder()
-    builder.button(
-        text=_("➕ Post an ad"), callback_data=AdvertisementMenuCallback(action=AdvertisementMenuAction.CREATE)
+def build_advertisement_menu_keyboard() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=_("➕ Post an ad")), KeyboardButton(text=_("📋 My ads"))],
+            [KeyboardButton(text=_("◀️ Back to menu"))],
+        ],
+        resize_keyboard=True,
     )
-    builder.button(text=_("📋 My ads"), callback_data=AdvertisementMenuCallback(action=AdvertisementMenuAction.MY_ADS))
-    builder.adjust(1)
-    return builder.as_markup()
 
 
 def build_cancel_form_keyboard() -> InlineKeyboardMarkup:
