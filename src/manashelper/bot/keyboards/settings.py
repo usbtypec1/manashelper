@@ -19,6 +19,7 @@ def build_settings_keyboard() -> InlineKeyboardMarkup:
         text=_("📱 My phone numbers"), callback_data=SettingsCallback(action=SettingsAction.OPEN_PHONE_NUMBERS)
     )
     builder.button(text=_("🌐 Language"), callback_data=SettingsCallback(action=SettingsAction.OPEN_LANGUAGE))
+    builder.button(text=_("💬 Send feedback"), callback_data=SettingsCallback(action=SettingsAction.OPEN_FEEDBACK))
     builder.adjust(1)
     return builder.as_markup()
 

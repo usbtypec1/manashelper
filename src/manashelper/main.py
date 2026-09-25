@@ -6,7 +6,7 @@ from typing import Any
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.types import BotCommandScopeAllGroupChats, BotCommandScopeAllPrivateChats, ErrorEvent
+from aiogram.types import BotCommandScopeAllGroupChats, BotCommandScopeAllPrivateChats, BotCommandScopeChat, ErrorEvent
 from alembic.config import Config
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dishka import make_async_container
@@ -21,6 +21,8 @@ from manashelper.bot.middlewares.rate_limit import RateLimitMiddleware
 from manashelper.bot.routers.advertisement import router as advertisement_router
 from manashelper.bot.routers.advertisement_contact import router as advertisement_contact_router
 from manashelper.bot.routers.advertisement_moderation import router as advertisement_moderation_router
+from manashelper.bot.routers.broadcast import router as broadcast_router
+from manashelper.bot.routers.feedback import router as feedback_router
 from manashelper.bot.routers.food_menu import router as food_menu_router
 from manashelper.bot.routers.food_menu_cleanup import router as food_menu_cleanup_router
 from manashelper.bot.routers.food_menu_notifications import router as food_menu_notifications_router
@@ -32,7 +34,7 @@ from manashelper.bot.routers.settings import router as settings_router
 from manashelper.bot.routers.start import router as start_router
 from manashelper.bot.routers.timetable import router as timetable_router
 from manashelper.bot.routers.versions import router as versions_router
-from manashelper.config import get_settings
+from manashelper.config import Settings, get_settings
 from manashelper.di import AppProvider, RequestProvider
 from manashelper.jobs.advertisement import cleanup_expired_advertisements_job
 from manashelper.jobs.food_menu import broadcast_dinner_menu_job, broadcast_lunch_menu_job, sync_daily_menus_job
@@ -41,13 +43,13 @@ from manashelper.jobs.scheduled_message_deletion import cleanup_scheduled_messag
 from manashelper.jobs.timetable_sync import sync_timetable_job
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale
 from manashelper.logging_config import configure_logging
-from manashelper.services.bot_commands import build_group_commands, build_private_commands
+from manashelper.services.bot_commands import build_admin_commands, build_group_commands, build_private_commands
 from manashelper.services.daily_menu import BISHKEK_TZ
 
 logger = logging.getLogger(__name__)
 
 
-async def setup_commands(bot: Bot) -> None:
+async def setup_commands(bot: Bot, settings: Settings) -> None:
     for locale in Locale:
         await bot.set_my_commands(
             commands=build_private_commands(locale), scope=BotCommandScopeAllPrivateChats(), language_code=locale.value
@@ -59,6 +61,12 @@ async def setup_commands(bot: Bot) -> None:
     # Fallback for clients whose language isn't one of the supported locales.
     await bot.set_my_commands(commands=build_private_commands(DEFAULT_LOCALE), scope=BotCommandScopeAllPrivateChats())
     await bot.set_my_commands(commands=build_group_commands(DEFAULT_LOCALE), scope=BotCommandScopeAllGroupChats())
+
+    # `/broadcast` is scoped to just the admin chat, not any of the "all chats" scopes above - see
+    # `services/bot_commands.py::build_admin_commands`.
+    await bot.set_my_commands(
+        commands=build_admin_commands(DEFAULT_LOCALE), scope=BotCommandScopeChat(chat_id=settings.admin_chat_id)
+    )
 
 
 def run_migrations() -> None:
@@ -123,6 +131,8 @@ async def main() -> None:
     dispatcher.include_router(versions_router)
     dispatcher.include_router(advertisement_router)
     dispatcher.include_router(advertisement_moderation_router)
+    dispatcher.include_router(broadcast_router)
+    dispatcher.include_router(feedback_router)
 
     container = make_async_container(AppProvider(), RequestProvider())
     setup_dishka(container, dispatcher)
@@ -150,7 +160,7 @@ async def main() -> None:
     scheduler.add_job(cleanup_expired_advertisements_job, "interval", hours=1, args=[container, bot], next_run_time=now)
     scheduler.start()
 
-    await setup_commands(bot)
+    await setup_commands(bot, settings)
 
     try:
         await dispatcher.start_polling(bot)

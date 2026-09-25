@@ -48,6 +48,14 @@ Core capabilities (current):
   their `expires_at` (chosen from fixed presets, not free text), removing their channel post(s) first — see
   "Advertising platform"
   below.
+- **User feedback**: a "💬 Send feedback" row in the `⚙️ Settings` menu (`bot/routers/feedback.py`) starts an
+  aiogram FSM that collects a free-text message and forwards it to a single shared `Settings.admin_chat_id` chat;
+  an admin answers by using Telegram's native "reply" on that forwarded message, and the bot relays the reply
+  text back to the original user in *their* locale — see "Feedback & broadcast" below.
+- **Broadcast**: an admin sends `/broadcast` in `Settings.admin_chat_id` (a command scoped to just that chat, not
+  suggested in any other chat), then the next message they send is offered back as a preview with a
+  Confirm/Cancel keyboard; confirming fans it out to every registered user, wrapped in a locale-appropriate
+  "message from the administration" label resolved per recipient — see "Feedback & broadcast" below.
 
 ## Commands
 
@@ -92,7 +100,9 @@ with post rights), `ADVERTISEMENT_CHANNEL_LINK` (the channel's public `https://t
 the in-bot marketplace menu — not derived from `ADVERTISEMENT_CHANNEL_ID`, since a numeric chat id alone isn't a
 usable link), `MODERATION_CHAT_ID` (the chat id of the group/chat that receives new ads to Approve/Reject — the
 bot must be a member with permission to send messages there; anyone acting from this chat is treated as
-authorized, see "Advertising platform" below), and optionally `DATASOURCE_HOST` (defaults to `db`, the
+authorized, see "Advertising platform" below), `ADMIN_CHAT_ID` (the chat id of the group/chat used for user
+feedback and for triggering broadcasts — the bot must be a member there; anyone acting from this chat is treated
+as authorized, see "Feedback & broadcast" below), and optionally `DATASOURCE_HOST` (defaults to `db`, the
 docker-compose service name — set to `localhost` for local dev outside Docker). `docker-compose.dev.yml` starts
 only Postgres, exposed on host port `5432`. A local `.env` file (gitignored) is read automatically via
 `pydantic-settings`.
@@ -356,6 +366,42 @@ choices, since none of these had an existing pattern to copy:
 - **Expiration cleanup**: `jobs/advertisement.py::cleanup_expired_advertisements_job` (hourly) deletes ads past
   `expires_at`, removing their channel post(s) first — same outbox-sweep shape as
   `jobs/scheduled_message_deletion.py::cleanup_scheduled_message_deletions_job`.
+
+### Feedback & broadcast
+
+Another from-scratch subsystem (no Java precedent), both built around the same single shared
+`Settings.admin_chat_id` and, like the advertising platform, with no per-user admin role — authorization is
+purely "did this update originate from that chat" (`bot/routers/feedback.py::_is_admin_chat`,
+`bot/routers/broadcast.py::_is_admin_chat`).
+
+- **Reply-based correlation, not an in-bot reply UI**: `FeedbackMessage` (`db/models/feedback_message.py`) stores
+  the id of the message a feedback submission was forwarded as in the admin chat
+  (`admin_chat_message_id`). An admin answers with Telegram's native "reply" feature on that forwarded message;
+  `bot/routers/feedback.py::on_admin_reply` matches on `message.reply_to_message.message_id` against that column
+  (`FeedbackRepository.get_by_admin_chat_message_id`) to find which user to relay the answer to — there's no
+  in-bot "answer" button or form. Every feedback submission is independent: there's no back-and-forth threading
+  beyond one submit/one reply, so a user who wants to say more just submits feedback again.
+- **Locale correctness**: the admin's reply text is rendered in the *recipient's* locale
+  (`LocaleService.get_locale`), not the replying admin's own — the same
+  `i18n.use_locale(...)`-wraps-a-builder shape as `advertisement_moderation.py::_notify_owner`. The admin chat
+  itself (the feedback-forwarding message, confirmations, the broadcast composition flow) always renders in
+  `DEFAULT_LOCALE`, being a single shared destination rather than a specific recipient — same reasoning as
+  `advertisement.py::_notify_moderation_chat`.
+- **Broadcast is a plain fan-out to every registered user**, not gated by any per-feature `NotificationSettings`
+  toggle (those are for the bot's own recurring notifications, not one-off admin announcements) — see
+  `bot/routers/broadcast.py::on_broadcast_confirmed`, looping `BroadcastService.get_recipient_ids()`
+  (`UserRepository.get_all_ids`) and wrapping the admin's raw text in a locale-appropriate "message from the
+  administration" label per recipient, same per-recipient `i18n.context()`/`i18n.use_locale()` shape as
+  `jobs/food_menu.py`'s broadcasts (this one just runs from a bot command handler instead of a scheduled job,
+  since it's an ad-hoc admin action rather than a recurring one).
+- **`/broadcast` is registered against `BotCommandScopeChat(chat_id=settings.admin_chat_id)`**
+  (`services/bot_commands.py::build_admin_commands`, wired up in `main.py::setup_commands`), not any of the
+  "all chats" scopes every other command uses — it shouldn't show up as a suggestion in random group chats the
+  bot happens to be added to, only in the one chat where it's actually authorized.
+- **HTML escaping**: both the admin's broadcast text and feedback bodies/replies go through
+  `services/html_sanitization.py::escape_html` before being interpolated into an HTML-parse-mode message, same
+  correctness reasoning as the advertising platform (an unescaped bare `&`/`<`/`>` makes Telegram reject the
+  whole `sendMessage` call).
 
 ## Roadmap (not yet ported from the Java version)
 

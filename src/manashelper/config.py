@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     advertisement_channel_id: int = Field(alias="ADVERTISEMENT_CHANNEL_ID")
     advertisement_channel_link: str = Field(alias="ADVERTISEMENT_CHANNEL_LINK")
     moderation_chat_id: int = Field(alias="MODERATION_CHAT_ID")
+    admin_chat_id: int = Field(alias="ADMIN_CHAT_ID")
 
     @property
     def database_url(self) -> str:

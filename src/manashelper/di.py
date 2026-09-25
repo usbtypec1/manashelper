@@ -15,6 +15,7 @@ from manashelper.repositories.daily_menu_repository import DailyMenuRepository
 from manashelper.repositories.department_repository import DepartmentRepository
 from manashelper.repositories.dish_repository import DishRepository
 from manashelper.repositories.faculty_repository import FacultyRepository
+from manashelper.repositories.feedback_repository import FeedbackRepository
 from manashelper.repositories.food_menu_cleanup_settings_repository import FoodMenuCleanupSettingsRepository
 from manashelper.repositories.food_menu_notification_settings_repository import (
     FoodMenuNotificationSettingsRepository,
@@ -35,11 +36,13 @@ from manashelper.services.action_log import ActionLogService
 from manashelper.services.advertisement import AdvertisementService
 from manashelper.services.advertisement_contact import AdvertisementContactService
 from manashelper.services.advertisement_moderation import AdvertisementModerationService
+from manashelper.services.broadcast import BroadcastService
 from manashelper.services.course import CourseService
 from manashelper.services.crypto import CryptoService
 from manashelper.services.daily_menu import DailyMenuService
 from manashelper.services.department import DepartmentService
 from manashelper.services.faculty import FacultyService
+from manashelper.services.feedback import FeedbackService
 from manashelper.services.food_menu_cleanup_settings import FoodMenuCleanupSettingsService
 from manashelper.services.food_menu_notification_settings import FoodMenuNotificationSettingsService
 from manashelper.services.food_menu_sync import FoodMenuSyncService
@@ -115,6 +118,7 @@ class RequestProvider(Provider):
     user_phone_number_repository = provide(UserPhoneNumberRepository)
     advertisement_repository = provide(AdvertisementRepository)
     advertisement_contact_view_repository = provide(AdvertisementContactViewRepository)
+    feedback_repository = provide(FeedbackRepository)
 
     faculty_service = provide(FacultyService)
     department_service = provide(DepartmentService)
@@ -136,3 +140,5 @@ class RequestProvider(Provider):
     advertisement_service = provide(AdvertisementService)
     advertisement_moderation_service = provide(AdvertisementModerationService)
     advertisement_contact_service = provide(AdvertisementContactService)
+    feedback_service = provide(FeedbackService)
+    broadcast_service = provide(BroadcastService)

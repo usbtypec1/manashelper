@@ -109,6 +109,7 @@ class SettingsAction(StrEnum):
     OPEN_OBIS = "open_obis"
     OPEN_LANGUAGE = "open_language"
     OPEN_PHONE_NUMBERS = "open_phone_numbers"
+    OPEN_FEEDBACK = "open_feedback"
     BACK_TO_SETTINGS = "back_to_settings"
 
 
@@ -199,3 +200,20 @@ class PhoneNumberActionCallback(CallbackData, prefix="phone_number_action"):
 
 class PhoneNumberDeleteCallback(CallbackData, prefix="phone_number_delete"):
     id: uuid.UUID
+
+
+class FeedbackAction(StrEnum):
+    CANCEL = "cancel"
+
+
+class FeedbackCallback(CallbackData, prefix="feedback"):
+    action: FeedbackAction
+
+
+class BroadcastAction(StrEnum):
+    CONFIRM = "confirm"
+    CANCEL = "cancel"
+
+
+class BroadcastCallback(CallbackData, prefix="broadcast"):
+    action: BroadcastAction
