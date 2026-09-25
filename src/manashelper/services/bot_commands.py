@@ -34,3 +34,11 @@ def build_private_commands(locale: Locale) -> list[BotCommand]:
 
 def build_group_commands(locale: Locale) -> list[BotCommand]:
     return _build_commands("group.json", locale)
+
+
+def build_admin_commands(locale: Locale) -> list[BotCommand]:
+    """Only ever registered against `BotCommandScopeChat(chat_id=Settings.admin_chat_id)`, not any
+    of the "all chats" scopes - `/broadcast` shouldn't show up as a suggestion in every group the
+    bot happens to be in, only in the one chat where it's actually authorized (see
+    `bot/routers/broadcast.py::_is_admin_chat`)."""
+    return _build_commands("admin.json", locale)

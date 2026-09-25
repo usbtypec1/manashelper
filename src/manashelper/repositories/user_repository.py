@@ -32,3 +32,7 @@ class UserRepository:
         user = await self._session.get(User, user_id)
         if user is not None:
             user.locale = locale
+
+    async def get_all_ids(self) -> list[int]:
+        result = await self._session.execute(select(User.id))
+        return list(result.scalars().all())

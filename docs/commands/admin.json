@@ -1,0 +1,11 @@
+[
+  {
+    "command": "broadcast",
+    "description": {
+      "en": "Broadcast a message to every user",
+      "ru": "Разослать сообщение всем пользователям",
+      "ky": "Бардык колдонуучуларга билдирүү жиберүү",
+      "tr": "Tüm kullanıcılara mesaj gönder"
+    }
+  }
+]
