@@ -110,11 +110,16 @@ class SettingsAction(StrEnum):
     OPEN_LANGUAGE = "open_language"
     OPEN_PHONE_NUMBERS = "open_phone_numbers"
     OPEN_FEEDBACK = "open_feedback"
+    OPEN_DONATIONS = "open_donations"
     BACK_TO_SETTINGS = "back_to_settings"
 
 
 class SettingsCallback(CallbackData, prefix="settings"):
     action: SettingsAction
+
+
+class DonationBankCallback(CallbackData, prefix="donate"):
+    bank_id: str
 
 
 class NotificationSettingCallback(CallbackData, prefix="notification_setting"):

@@ -22,7 +22,7 @@ class LocaleMiddleware(BaseMiddleware):
     via the explicit `/language` command/setting (`bot/routers/locale.py`).
 
     Must be registered *after* `setup_dishka` on the same observers, so `data[CONTAINER_NAME]`
-    is already a request-scoped container by the time this runs — see main.py.
+    is already a request-scoped container by the time this runs — see bot/dispatcher.py.
     """
 
     async def __call__(

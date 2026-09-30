@@ -986,4 +986,20 @@ msgstr "📅 Yayın tarihi: {date}"
 
 #~ msgid "🛒 <b>Marketplace</b>"
 #~ msgstr "🛒 <b>Pazar Yeri</b>"
+msgid "❤️ Support the bot"
+msgstr "❤️ Botu destekle"
 
+msgid "◀️ Back to settings"
+msgstr "◀️ Ayarlara dön"
+
+msgid "❤️ <b>Help keep Manashelper running</b>\n\nOn September 28, the bot stopped working after restrictions on its free AWS account. I moved it to a paid server so you can keep checking your schedule, cafeteria menu, grades and attendance.\n\nYour contribution helps cover the server for you and {others} other bot users. Any amount helps, and every donation goes toward server rent. Thank you for supporting the bot!"
+msgstr "❤️ <b>Manashelper'ın çalışmaya devam etmesine destek olun</b>\n\n28 Eylül'de ücretsiz AWS hesabına getirilen kısıtlamalar nedeniyle bot durdu. Ders programınızı, yemekhane menüsünü, notlarınızı ve devamsızlık bilgilerinizi görmeye devam edebilmeniz için botu ücretli bir sunucuya taşıdım.\n\nKatkınız, sizin ve botu kullanan diğer {others} kişinin erişimi için sunucu masrafını karşılamaya yardımcı olur. Her miktar değerlidir; bağışların tamamı sunucu kirasına harcanacaktır. Desteğiniz için teşekkürler!"
+
+msgid "Choose a bank below to see its payment QR code:"
+msgstr "Ödeme QR kodunu görmek için bir banka seçin:"
+
+msgid "Payment QR codes will appear here soon."
+msgstr "Ödeme QR kodları yakında burada görünecek."
+
+msgid "This bank's QR code is no longer available."
+msgstr "Bu bankanın QR kodu artık kullanılamıyor."

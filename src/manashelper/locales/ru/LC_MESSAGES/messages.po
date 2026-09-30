@@ -992,4 +992,20 @@ msgstr "📅 Дата выхода: {date}"
 
 #~ msgid "🛒 <b>Marketplace</b>"
 #~ msgstr "🛒 <b>Барахолка</b>"
+msgid "❤️ Support the bot"
+msgstr "❤️ Поддержать бота"
 
+msgid "◀️ Back to settings"
+msgstr "◀️ Назад в настройки"
+
+msgid "❤️ <b>Help keep Manashelper running</b>\n\nOn September 28, the bot stopped working after restrictions on its free AWS account. I moved it to a paid server so you can keep checking your schedule, cafeteria menu, grades and attendance.\n\nYour contribution helps cover the server for you and {others} other bot users. Any amount helps, and every donation goes toward server rent. Thank you for supporting the bot!"
+msgstr "❤️ <b>Помогите Manashelper работать дальше</b>\n\n28 сентября бот перестал работать из-за ограничений бесплатного аккаунта AWS. Чтобы вы по-прежнему могли смотреть расписание, меню столовой, оценки и посещаемость, мне пришлось перенести его на платный сервер.\n\nВаш вклад поможет оплачивать сервер для вас и ещё {others} пользователей бота. Поможет любая сумма: все донаты пойдут на аренду сервера. Спасибо за поддержку!"
+
+msgid "Choose a bank below to see its payment QR code:"
+msgstr "Выберите банк, чтобы открыть QR-код для перевода:"
+
+msgid "Payment QR codes will appear here soon."
+msgstr "QR-коды для перевода скоро появятся здесь."
+
+msgid "This bank's QR code is no longer available."
+msgstr "QR-код этого банка больше недоступен."
