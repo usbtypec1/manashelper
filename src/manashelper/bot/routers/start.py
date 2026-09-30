@@ -10,10 +10,10 @@ router = Router(name="start")
 def build_main_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=_("🍉 Food")), KeyboardButton(text=_("📅 Schedule"))],
-            [KeyboardButton(text=_("📋 Attendance")), KeyboardButton(text=_("💯 Grades"))],
-            [KeyboardButton(text=_("🛒 Marketplace"))],
-            [KeyboardButton(text=_("⚙️ Settings"))],
+            [KeyboardButton(text=_("menu.food")), KeyboardButton(text=_("menu.schedule"))],
+            [KeyboardButton(text=_("menu.attendance")), KeyboardButton(text=_("menu.grades"))],
+            [KeyboardButton(text=_("menu.marketplace"))],
+            [KeyboardButton(text=_("menu.settings"))],
         ],
         resize_keyboard=True,
     )
@@ -21,12 +21,12 @@ def build_main_keyboard() -> ReplyKeyboardMarkup:
 
 async def send_welcome(message: Message) -> None:
     reply_markup = build_main_keyboard() if message.chat.type == ChatType.PRIVATE else ReplyKeyboardRemove()
-    await message.answer(_("Welcome to Manashelper!"), reply_markup=reply_markup)
+    await message.answer(_("common.welcome"), reply_markup=reply_markup)
 
 
 @router.message(Command("hide_keyboard"))
 async def hide_keyboard(message: Message) -> None:
-    await message.reply(text=_("Keyboard is hidden"), reply_markup=ReplyKeyboardRemove())
+    await message.reply(text=_("menu.keyboard_hidden"), reply_markup=ReplyKeyboardRemove())
 
 
 @router.message(CommandStart())

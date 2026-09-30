@@ -11,37 +11,31 @@ MediaGroupItem = InputMediaAudio | InputMediaDocument | InputMediaLivePhoto | In
 def format_daily_menu(daily_menu: DailyMenuModel) -> str:
     weekday_name = weekday_full(daily_menu.date.isoweekday())
     lines = [
-        _("🍽 <b>Menu for {weekday}, {date}</b>").format(
-            weekday=weekday_name, date=daily_menu.date.strftime("%d.%m.%Y")
-        ),
+        _("food.menu_header").format(weekday=weekday_name, date=daily_menu.date.strftime("%d.%m.%Y")),
         "",
     ]
 
     total_calories = 0
     for index, dish in enumerate(daily_menu.dishes, start=1):
-        lines.append(
-            _("{index}. {name} — <b>{calories}</b> kcal").format(index=index, name=dish.name, calories=dish.calories)
-        )
+        lines.append(_("food.dish").format(index=index, name=dish.name, calories=dish.calories))
         total_calories += dish.calories
 
     lines.append("")
-    lines.append(_("🔥 Total: <b>{calories}</b> kcal").format(calories=total_calories))
+    lines.append(_("food.total_calories").format(calories=total_calories))
     if daily_menu.ratings_count:
         lines.append(
-            _("⭐ Rating: <b>{average}</b> ({count})").format(
-                average=f"{daily_menu.average_rating:.1f}", count=daily_menu.ratings_count
-            )
+            _("food.rating").format(average=f"{daily_menu.average_rating:.1f}", count=daily_menu.ratings_count)
         )
     else:
-        lines.append(_("⭐ No ratings yet"))
-    lines.append(_("👁 Views: {count}").format(count=daily_menu.views_count))
+        lines.append(_("food.no_ratings"))
+    lines.append(_("food.views").format(count=daily_menu.views_count))
     return "\n".join(lines)
 
 
 def format_not_found(skip_days: int) -> str:
     if skip_days == 0:
-        return _("😔 Today's menu hasn't been published yet.")
-    return _("😔 The menu for that day hasn't been published yet.")
+        return _("food.today_unpublished")
+    return _("food.menu_unpublished")
 
 
 def build_photos(caption: str, daily_menu: DailyMenuModel) -> list[MediaGroupItem]:

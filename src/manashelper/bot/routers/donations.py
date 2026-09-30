@@ -13,16 +13,10 @@ router = Router(name="donations")
 
 async def _donation_text(donation_service: DonationService, has_banks: bool) -> str:
     others = await donation_service.other_users_count()
-    text = _(
-        "❤️ <b>Help keep Manashelper running</b>\n\n"
-        "On September 28, the bot stopped working after restrictions on its free AWS account. "
-        "I moved it to a paid server so you can keep checking your schedule, cafeteria menu, grades and attendance.\n\n"
-        "Your contribution helps cover the server for you and {others} other bot users. "
-        "Any amount helps, and every donation goes toward server rent. Thank you for supporting the bot!"
-    ).format(others=others)
+    text = _("donations.intro").format(others=others)
     if has_banks:
-        return text + "\n\n" + _("Choose a bank below to see its payment QR code:")
-    return text + "\n\n" + _("Payment QR codes will appear here soon.")
+        return text + "\n\n" + _("donations.choose_bank")
+    return text + "\n\n" + _("donations.qr_coming_soon")
 
 
 @router.message(Command("donate"))
@@ -55,12 +49,12 @@ async def on_donation_bank(
 ) -> None:
     bank = next((bank for bank in list_donation_banks() if bank.id == callback_data.bank_id), None)
     if bank is None:
-        await callback_query.answer(_("This bank's QR code is no longer available."), show_alert=True)
+        await callback_query.answer(_("donations.qr_unavailable"), show_alert=True)
         return
     if isinstance(callback_query.message, Message):
         try:
             await donation_qr_service.send_bank_qr(bot, callback_query.message.chat.id, bank)
         except FileNotFoundError:
-            await callback_query.answer(_("This bank's QR code is no longer available."), show_alert=True)
+            await callback_query.answer(_("donations.qr_unavailable"), show_alert=True)
             return
     await callback_query.answer()

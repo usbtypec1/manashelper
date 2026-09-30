@@ -23,9 +23,9 @@ def status_emoji(status_value: str) -> str:
 
 def _status_label(status_value: str) -> str:
     labels = {
-        "pending": _("Awaiting review"),
-        "published": _("Published"),
-        "rejected": _("Rejected"),
+        "pending": _("ads.status_pending"),
+        "published": _("ads.status_published"),
+        "rejected": _("ads.status_rejected"),
     }
     return labels.get(status_value, status_value)
 
@@ -48,14 +48,14 @@ def format_advertisement(
 
     if advertisement.price is not None:
         lines.append("")
-        lines.append(_("💵 Price: <b>{price}</b> som").format(price=advertisement.price))
+        lines.append(_("ads.price").format(price=advertisement.price))
 
     if advertisement.expires_at is not None:
-        lines.append(_("⏰ Valid until: {date}").format(date=advertisement.expires_at.strftime("%d.%m.%Y %H:%M")))
+        lines.append(_("ads.valid_until").format(date=advertisement.expires_at.strftime("%d.%m.%Y %H:%M")))
 
     if contact_deep_link is not None:
         lines.append("")
-        lines.append(_('📞 <a href="{link}">Tap here to see the seller\'s contacts</a>').format(link=contact_deep_link))
+        lines.append(_("ads.contact_link").format(link=contact_deep_link))
     elif contact is not None:
         contact_lines = []
         if contact.username:
@@ -63,25 +63,25 @@ def format_advertisement(
         contact_lines.extend(escape_html(phone) for phone in contact.phone_numbers)
         if contact_lines:
             lines.append("")
-            lines.append(_("📞 Contacts:"))
+            lines.append(_("ads.contacts"))
             lines.extend(contact_lines)
 
     if show_status:
         lines.append("")
         lines.append(f"{status_emoji(advertisement.status.value)} {_status_label(advertisement.status.value)}")
         if advertisement.status.value == "rejected" and advertisement.rejection_comment:
-            lines.append(_("💬 Reason: {comment}").format(comment=escape_html(advertisement.rejection_comment)))
+            lines.append(_("ads.reason").format(comment=escape_html(advertisement.rejection_comment)))
 
     return "\n".join(lines)
 
 
 def format_contact_reveal(reveal: ContactReveal) -> str:
-    lines = [_('📞 <b>Contacts for "{title}"</b>').format(title=escape_html(reveal.advertisement_title))]
+    lines = [_("ads.contact_title").format(title=escape_html(reveal.advertisement_title))]
     if reveal.contact.username:
         lines.append(f"@{escape_html(reveal.contact.username)}")
     lines.extend(escape_html(phone) for phone in reveal.contact.phone_numbers)
     if len(lines) == 1:
-        lines.append(_("The seller hasn't listed any contact details."))
+        lines.append(_("ads.no_contacts"))
     return "\n".join(lines)
 
 

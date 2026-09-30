@@ -13,12 +13,12 @@ def total_page_count(results: list[LessonSearchResult]) -> int:
 
 
 def _format_result(result: LessonSearchResult) -> list[str]:
-    course_year = _("Year {number}").format(number=result.course_number)
+    course_year = _("schedule.course_year").format(number=result.course_number)
     lines = [
-        _("🏫 {faculty} — {department}, {course_year}").format(
+        _("schedule.search_course").format(
             faculty=result.faculty_name, department=result.department_name, course_year=course_year
         ),
-        _("📅 {weekday}").format(weekday=weekday_abbr(result.weekday)),
+        _("schedule.search_weekday").format(weekday=weekday_abbr(result.weekday)),
         result.content,
     ]
     lines.extend(f"- {time_range}" for time_range in result.time_ranges)
@@ -32,11 +32,9 @@ def format_lesson_search_page(results: list[LessonSearchResult], page: int) -> s
     chunk = results[start : start + GROUPS_PER_PAGE]
 
     if total_pages > 1:
-        header = _("🔎 Found: {total} (page {page}/{total_pages})").format(
-            total=total, page=page + 1, total_pages=total_pages
-        )
+        header = _("schedule.results_page").format(total=total, page=page + 1, total_pages=total_pages)
     else:
-        header = _("🔎 Found: {total}").format(total=total)
+        header = _("schedule.results").format(total=total)
     lines = [header, ""]
 
     for result in chunk:

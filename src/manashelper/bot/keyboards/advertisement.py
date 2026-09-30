@@ -23,8 +23,8 @@ ADS_PER_ROW = 1
 def build_advertisement_menu_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=_("➕ Post an ad")), KeyboardButton(text=_("📋 My ads"))],
-            [KeyboardButton(text=_("◀️ Back to menu"))],
+            [KeyboardButton(text=_("ads.post")), KeyboardButton(text=_("ads.my_ads"))],
+            [KeyboardButton(text=_("common.back_to_menu"))],
         ],
         resize_keyboard=True,
     )
@@ -32,14 +32,20 @@ def build_advertisement_menu_keyboard() -> ReplyKeyboardMarkup:
 
 def build_cancel_form_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text=_("❌ Cancel"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.CANCEL))
+    builder.button(
+        text=_("common.cancel"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.CANCEL)
+    )
     return builder.as_markup()
 
 
 def build_skip_price_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text=_("Skip"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.SKIP_PRICE))
-    builder.button(text=_("❌ Cancel"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.CANCEL))
+    builder.button(
+        text=_("common.skip"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.SKIP_PRICE)
+    )
+    builder.button(
+        text=_("common.cancel"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.CANCEL)
+    )
     builder.adjust(1)
     return builder.as_markup()
 
@@ -47,9 +53,11 @@ def build_skip_price_keyboard() -> InlineKeyboardMarkup:
 def build_media_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
-        text=_("✅ Done"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.DONE_MEDIA)
+        text=_("common.done"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.DONE_MEDIA)
     )
-    builder.button(text=_("❌ Cancel"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.CANCEL))
+    builder.button(
+        text=_("common.cancel"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.CANCEL)
+    )
     builder.adjust(1)
     return builder.as_markup()
 
@@ -57,19 +65,27 @@ def build_media_keyboard() -> InlineKeyboardMarkup:
 def build_expiry_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
-        text=_("45 minutes"), callback_data=AdvertisementExpiryCallback(option=AdvertisementExpiryOption.MIN_45)
+        text=_("common.duration.minutes_45"),
+        callback_data=AdvertisementExpiryCallback(option=AdvertisementExpiryOption.MIN_45),
     )
     builder.button(
-        text=_("6 hours"), callback_data=AdvertisementExpiryCallback(option=AdvertisementExpiryOption.HOURS_6)
+        text=_("common.duration.hours_6"),
+        callback_data=AdvertisementExpiryCallback(option=AdvertisementExpiryOption.HOURS_6),
     )
     builder.button(
-        text=_("24 hours"), callback_data=AdvertisementExpiryCallback(option=AdvertisementExpiryOption.HOURS_24)
+        text=_("common.duration.hours_24"),
+        callback_data=AdvertisementExpiryCallback(option=AdvertisementExpiryOption.HOURS_24),
     )
-    builder.button(text=_("7 days"), callback_data=AdvertisementExpiryCallback(option=AdvertisementExpiryOption.DAYS_7))
     builder.button(
-        text=_("♾️ No expiration"), callback_data=AdvertisementExpiryCallback(option=AdvertisementExpiryOption.NONE)
+        text=_("common.duration.days_7"),
+        callback_data=AdvertisementExpiryCallback(option=AdvertisementExpiryOption.DAYS_7),
     )
-    builder.button(text=_("❌ Cancel"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.CANCEL))
+    builder.button(
+        text=_("ads.no_expiration"), callback_data=AdvertisementExpiryCallback(option=AdvertisementExpiryOption.NONE)
+    )
+    builder.button(
+        text=_("common.cancel"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.CANCEL)
+    )
     builder.adjust(2, 2, 1, 1)
     return builder.as_markup()
 
@@ -77,10 +93,12 @@ def build_expiry_keyboard() -> InlineKeyboardMarkup:
 def build_confirm_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
-        text=_("✅ Submit for review"),
+        text=_("ads.submit_review"),
         callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.CONFIRM_SUBMIT),
     )
-    builder.button(text=_("❌ Cancel"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.CANCEL))
+    builder.button(
+        text=_("common.cancel"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.CANCEL)
+    )
     builder.adjust(1)
     return builder.as_markup()
 
@@ -109,12 +127,12 @@ def build_my_ads_keyboard(items: list[AdvertisementSummary], page: int, total_pa
 def build_advertisement_detail_keyboard(advertisement_id: uuid.UUID, page: int) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
-        text=_("🗑 Delete"),
+        text=_("common.delete"),
         callback_data=AdvertisementDeleteCallback(
             id=advertisement_id, action=AdvertisementDeleteAction.REQUEST, page=page
         ),
     )
-    builder.button(text=_("◀️ Back"), callback_data=AdvertisementsPageCallback(page=page))
+    builder.button(text=_("common.back"), callback_data=AdvertisementsPageCallback(page=page))
     builder.adjust(1)
     return builder.as_markup()
 
@@ -122,13 +140,13 @@ def build_advertisement_detail_keyboard(advertisement_id: uuid.UUID, page: int) 
 def build_advertisement_delete_confirm_keyboard(advertisement_id: uuid.UUID, page: int) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
-        text=_("✅ Yes, delete"),
+        text=_("ads.confirm_delete"),
         callback_data=AdvertisementDeleteCallback(
             id=advertisement_id, action=AdvertisementDeleteAction.CONFIRM, page=page
         ),
     )
     builder.button(
-        text=_("❌ Cancel"),
+        text=_("common.cancel"),
         callback_data=AdvertisementDeleteCallback(
             id=advertisement_id, action=AdvertisementDeleteAction.CANCEL, page=page
         ),

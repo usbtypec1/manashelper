@@ -10,13 +10,13 @@ from manashelper.bot.callback_data import AdvertisementModerationAction, Adverti
 def build_moderation_keyboard(advertisement_id: uuid.UUID) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
-        text=_("✅ Approve"),
+        text=_("ads.approve"),
         callback_data=AdvertisementModerationCallback(
             id=advertisement_id, action=AdvertisementModerationAction.APPROVE
         ),
     )
     builder.button(
-        text=_("❌ Reject"),
+        text=_("ads.reject"),
         callback_data=AdvertisementModerationCallback(id=advertisement_id, action=AdvertisementModerationAction.REJECT),
     )
     builder.adjust(2)
@@ -26,13 +26,13 @@ def build_moderation_keyboard(advertisement_id: uuid.UUID) -> InlineKeyboardMark
 def build_reject_comment_choice_keyboard(advertisement_id: uuid.UUID) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
-        text=_("✏️ Add a comment"),
+        text=_("ads.add_comment"),
         callback_data=AdvertisementModerationCallback(
             id=advertisement_id, action=AdvertisementModerationAction.ADD_COMMENT
         ),
     )
     builder.button(
-        text=_("🚫 No comment"),
+        text=_("ads.no_comment"),
         callback_data=AdvertisementModerationCallback(
             id=advertisement_id, action=AdvertisementModerationAction.SKIP_COMMENT
         ),

@@ -1,0 +1,786 @@
+# English translations for Manashelper.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the Manashelper project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Manashelper 0.1.0\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-09-30 09:57+0600\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+msgid "common.cancel"
+msgstr "❌ Cancel"
+
+msgid "common.skip"
+msgstr "Skip"
+
+msgid "common.done"
+msgstr "✅ Done"
+
+msgid "common.duration.minutes_45"
+msgstr "45 minutes"
+
+msgid "common.duration.hours_6"
+msgstr "6 hours"
+
+msgid "common.duration.hours_24"
+msgstr "24 hours"
+
+msgid "common.duration.days_7"
+msgstr "7 days"
+
+msgid "ads.no_expiration"
+msgstr "♾️ No expiration"
+
+msgid "ads.submit_review"
+msgstr "✅ Submit for review"
+
+msgid "common.delete"
+msgstr "🗑 Delete"
+
+msgid "common.back"
+msgstr "◀️ Back"
+
+msgid "ads.confirm_delete"
+msgstr "✅ Yes, delete"
+
+msgid "ads.post"
+msgstr "➕ Post an ad"
+
+msgid "ads.my_ads"
+msgstr "📋 My ads"
+
+msgid "common.back_to_menu"
+msgstr "◀️ Back to menu"
+
+msgid "ads.approve"
+msgstr "✅ Approve"
+
+msgid "ads.reject"
+msgstr "❌ Reject"
+
+msgid "ads.add_comment"
+msgstr "✏️ Add a comment"
+
+msgid "ads.no_comment"
+msgstr "🚫 No comment"
+
+msgid "common.send"
+msgstr "✅ Send"
+
+msgid "common.back_to_settings"
+msgstr "◀️ Back to settings"
+
+msgid "food.today"
+msgstr "📅 Today"
+
+msgid "food.tomorrow"
+msgstr "📆 Tomorrow"
+
+msgid "food.day_after_tomorrow"
+msgstr "🗓 Day after tomorrow"
+
+msgid "food.auto_delete_settings"
+msgstr "🧹 Auto-delete settings"
+
+msgid "common.duration.minutes_15"
+msgstr "15 minutes"
+
+msgid "common.duration.hours_3"
+msgstr "3 hours"
+
+msgid "common.duration.days_1"
+msgstr "1 day"
+
+msgid "common.off"
+msgstr "Off"
+
+msgid "food.lunch"
+msgstr "Lunch"
+
+msgid "food.dinner"
+msgstr "Dinner"
+
+msgid "common.enable_all"
+msgstr "✅ All"
+
+msgid "common.disable_all"
+msgstr "❌ All"
+
+msgid "notifications.configure"
+msgstr "⚙️ Configure notifications"
+
+msgid "obis.update_credentials"
+msgstr "🔄 Update credentials"
+
+msgid "obis.enter_credentials"
+msgstr "🔑 Enter credentials"
+
+msgid "obis.confirm_clear"
+msgstr "✅ Yes, clear"
+
+msgid "obis.terms"
+msgstr "📃 Terms of use"
+
+msgid "obis.accept_terms"
+msgstr "✅ Accept terms"
+
+msgid "obis.clear_credentials"
+msgstr "🗑 Clear credentials"
+
+msgid "phone.add"
+msgstr "➕ Add a phone number"
+
+msgid "phone.share"
+msgstr "📱 Share phone number"
+
+msgid "settings.notifications"
+msgstr "🔔 Notifications"
+
+msgid "settings.my_lessons"
+msgstr "📚 My lessons"
+
+msgid "settings.obis_credentials"
+msgstr "🔑 OBIS credentials"
+
+msgid "settings.phone_numbers"
+msgstr "📱 My phone numbers"
+
+msgid "settings.language"
+msgstr "🌐 Language"
+
+msgid "settings.feedback"
+msgstr "💬 Send feedback"
+
+msgid "settings.donate"
+msgstr "❤️ Support the bot"
+
+msgid "menu.food"
+msgstr "🍉 Food"
+
+msgid "notifications.schedule_changes"
+msgstr "Schedule changes"
+
+msgid "notifications.exam_grades"
+msgstr "Exam grades"
+
+msgid "notifications.lesson_skips"
+msgstr "Lesson skips"
+
+msgid "schedule.my_schedule"
+msgstr "📅 My schedule"
+
+msgid "schedule.search_subject"
+msgstr "🔎 Search for a subject"
+
+msgid "schedule.choose_courses"
+msgstr "📚 Choose courses"
+
+msgid "schedule.course_year"
+msgstr "Year {number}"
+
+msgid "common.private_chat_only"
+msgstr "This feature is only available in a private chat with the bot."
+
+msgid "menu.marketplace"
+msgstr "🛒 Marketplace"
+
+msgid "ads.media_prompt"
+msgstr ""
+"🖼 Send up to 10 photos or videos of the item, one at a time.\n"
+"\n"
+"Tap Done when you're finished - or tap it right away to post without media."
+
+msgid "ads.expiration_prompt"
+msgstr "⏳ How long should this ad stay visible before it's automatically removed?"
+
+msgid "ads.deleted"
+msgstr "Ad deleted ✅"
+
+msgid "ads.review_prompt"
+msgstr "Review it:"
+
+msgid "ads.empty_list"
+msgstr ""
+"📋 <b>My ads</b>\n"
+"\n"
+"You haven't posted any ads yet."
+
+msgid "ads.marketplace_intro"
+msgstr ""
+"🛒 <b>Marketplace</b>\n"
+"\n"
+"Post an ad for other students to see, or manage the ads you've already posted.\n"
+"\n"
+"🔗 <a href=\"{link}\">Browse the marketplace channel</a>"
+
+msgid "menu.main"
+msgstr "🏠 Main menu"
+
+msgid "phone.saved"
+msgstr "✅ Phone number saved."
+
+msgid "ads.price_prompt"
+msgstr "💵 Send the price in som (digits only), or tap Skip if it's negotiable or not applicable:"
+
+msgid "ads.preview"
+msgstr "👀 Here's how your ad will look:"
+
+msgid "ads.list_page"
+msgstr "📋 <b>My ads</b> (page {page}/{total})"
+
+msgid "ads.contact_prompt"
+msgstr ""
+"📞 Before you can post an ad, buyers need a way to reach you.\n"
+"\n"
+"You don't currently have a public Telegram username, so please share a phone number using the button below, or type "
+"one in manually (e.g. +996700123456):"
+
+msgid "ads.invalid_price"
+msgstr "Please send a whole number (digits only), or tap Skip:"
+
+msgid "common.cancelled"
+msgstr "❌ Cancelled."
+
+msgid "ads.submitted"
+msgstr "✅ Your ad has been sent for moderator review. You'll be notified once it's approved or rejected."
+
+msgid "ads.new_review"
+msgstr "🆕 <b>New ad for review</b>"
+
+msgid "ads.delete_confirmation"
+msgstr "Are you sure you want to delete this ad? This can't be undone."
+
+msgid "ads.title_prompt"
+msgstr ""
+"📝 Let's create your ad.\n"
+"\n"
+"First, send a <b>title</b> (up to {max} characters) - this is the first thing buyers will see."
+
+msgid "ads.hourly_limit"
+msgstr "You've posted the maximum of 5 ads for this hour. Please try again a bit later."
+
+msgid "common.start_required"
+msgstr "Please start with the /start command"
+
+msgid "phone.save_failed"
+msgstr "Something went wrong saving that number. Please type your phone number manually:"
+
+msgid "phone.invalid"
+msgstr "That doesn't look like a valid phone number (e.g. +996700123456). Please try again:"
+
+msgid "ads.description_prompt"
+msgstr ""
+"🧾 Now send a <b>description</b> (up to {max} characters) - condition, size, reason for selling, anything a buyer "
+"should know."
+
+msgid "ads.media_added"
+msgstr "✅ Added: {count}/{max}. Send more, or tap Done when you're finished."
+
+msgid "ads.not_found"
+msgstr "This ad no longer exists"
+
+msgid "ads.invalid_title"
+msgstr "The title can't be empty and must be at most {max} characters long. Please try again:"
+
+msgid "ads.invalid_description"
+msgstr "The description can't be empty and must be at most {max} characters long. Please try again:"
+
+msgid "ads.media_limit"
+msgstr "You've reached the limit of {max} photos/videos. Tap Done to continue."
+
+msgid "ads.owner_rejected"
+msgstr "Your ad \"{title}\" was not approved."
+
+msgid "ads.rejection_comment_prompt"
+msgstr "Please send the rejection comment as a text message:"
+
+msgid "ads.rejection_sent"
+msgstr "Rejection sent ✅"
+
+msgid "common.permission_denied"
+msgstr "You don't have permission to do this"
+
+msgid "ads.approved_published"
+msgstr "Approved and published ✅"
+
+msgid "ads.rejection_prompt"
+msgstr "Reject this ad. Would you like to add a comment explaining why?"
+
+msgid "ads.rejected_notice"
+msgstr "Rejected ❌"
+
+msgid "ads.empty_comment"
+msgstr "The comment can't be empty. Please try again:"
+
+msgid "common.error_retry"
+msgstr "Something went wrong. Please try again."
+
+msgid "ads.already_reviewed"
+msgstr "This ad has already been reviewed"
+
+msgid "ads.publish_failed"
+msgstr "Failed to publish this ad. Please try again later."
+
+msgid "ads.rejection_reason"
+msgstr "Reason: {comment}"
+
+msgid "ads.owner_approved"
+msgstr "Your ad \"{title}\" has been approved and published! 🎉"
+
+msgid "broadcast.message_prompt"
+msgstr "📢 Send the message you want to broadcast to every user:"
+
+msgid "broadcast.preview"
+msgstr ""
+"📢 <b>Broadcast preview:</b>\n"
+"\n"
+"{body}\n"
+"\n"
+"Send this to every user?"
+
+msgid "broadcast.cancelled"
+msgstr "❌ Broadcast cancelled."
+
+msgid "broadcast.sending"
+msgstr "📤 Sending broadcast…"
+
+msgid "broadcast.sent"
+msgstr "✅ Broadcast sent to {sent}/{total} users."
+
+msgid "broadcast.text_required"
+msgstr "Please send the broadcast as a text message."
+
+msgid "broadcast.admin_message"
+msgstr ""
+"📢 <b>Message from the administration</b>\n"
+"\n"
+"{body}"
+
+msgid "donations.qr_coming_soon"
+msgstr "Payment QR codes will appear here soon."
+
+msgid "donations.intro"
+msgstr ""
+"❤️ <b>Help keep Manashelper running</b>\n"
+"\n"
+"On September 28, the bot stopped working after restrictions on its free AWS account. I moved it to a paid server so "
+"you can keep checking your schedule, cafeteria menu, grades and attendance.\n"
+"\n"
+"Your contribution helps cover the server for you and {others} other bot users. Any amount helps, and every donation "
+"goes toward server rent. Thank you for supporting the bot!"
+
+msgid "donations.choose_bank"
+msgstr "Choose a bank below to see its payment QR code:"
+
+msgid "donations.qr_unavailable"
+msgstr "This bank's QR code is no longer available."
+
+msgid "feedback.sent"
+msgstr "✅ Thank you! Your message has been sent to the administration."
+
+msgid "feedback.message_prompt"
+msgstr "💬 Please type the message you'd like to send to the administration. We'll reply here as soon as possible."
+
+msgid "settings.title"
+msgstr "Settings"
+
+msgid "feedback.admin_message"
+msgstr ""
+"💬 <b>New feedback</b> from {sender}:\n"
+"\n"
+"{body}\n"
+"\n"
+"<i>Reply to this message to answer.</i>"
+
+msgid "feedback.admin_reply"
+msgstr ""
+"📩 <b>Reply from the administration:</b>\n"
+"\n"
+"{text}"
+
+msgid "feedback.reply_sent"
+msgstr "Reply sent ✅"
+
+msgid "feedback.invalid_message"
+msgstr "The message can't be empty and must be at most {max} characters long. Please try again:"
+
+msgid "feedback.delivery_failed"
+msgstr "⚠️ Failed to deliver the reply to the user."
+
+msgid "food.menu_prompt"
+msgstr ""
+"🍉 <b>Cafeteria menu</b>\n"
+"\n"
+"Choose a day below or send a command:\n"
+"• <code>/yemek today</code> — today\n"
+"• <code>/yemek tomorrow</code> — tomorrow\n"
+"• <code>/yemek 2</code> — in N days"
+
+msgid "food.rate_prompt"
+msgstr "⭐ Rate the menu:"
+
+msgid "food.rating_thanks"
+msgstr "Thanks for your rating!"
+
+msgid "food.command_usage"
+msgstr "ℹ️ Usage: <code>/yemek today</code>, <code>/yemek tomorrow</code>, or <code>/yemek 2</code>"
+
+msgid "food.auto_delete_prompt"
+msgstr "🧹 Auto-delete food menu messages in this chat after:"
+
+msgid "common.saved"
+msgstr "Saved"
+
+msgid "common.not_a_button"
+msgstr "this isn't a button"
+
+msgid "food.notification_settings"
+msgstr "🍽 Fine-tune menu notifications"
+
+msgid "schedule.search_prompt"
+msgstr ""
+"Enter the subject name. You can type Turkish letters using regular Latin ones (e.g. s instead of ş, or i instead of "
+"ı)."
+
+msgid "schedule.query_too_short"
+msgstr "The query is too short. Open «🔎 Search for a subject» again and try once more."
+
+msgid "schedule.no_results"
+msgstr "Nothing found."
+
+msgid "schedule.search_expired"
+msgstr "The search results have expired. Please search again."
+
+msgid "language.selected"
+msgstr "✅ Language: {language}"
+
+msgid "menu.attendance"
+msgstr "📋 Attendance"
+
+msgid "menu.grades"
+msgstr "💯 Grades"
+
+msgid "obis.password_prompt"
+msgstr "Enter your OBIS password:"
+
+msgid "obis.credentials_saved"
+msgstr "Credentials saved successfully ✅"
+
+msgid "obis.accept_terms_prompt"
+msgstr "Please accept the bot's terms of use to continue."
+
+msgid "obis.student_number_prompt"
+msgstr "Enter your student number:"
+
+msgid "obis.cancelled"
+msgstr "Cancelled"
+
+msgid "obis.clear_confirmation"
+msgstr "Are you sure you want to clear your saved OBIS credentials?"
+
+msgid "obis.credentials_removed"
+msgstr "OBIS credentials removed ✅"
+
+msgid "obis.empty_student_number"
+msgstr "The student number can't be empty. Please try again:"
+
+msgid "obis.credentials_missing"
+msgstr "You haven't saved your OBIS credentials. Enter them using the button below."
+
+msgid "obis.credentials_invalid"
+msgstr "Your OBIS credentials are invalid. Enter them again using the button below."
+
+msgid "obis.fetch_failed"
+msgstr "Couldn't fetch data from OBIS. Please try again later."
+
+msgid "obis.login_failed"
+msgstr "Invalid OBIS credentials. Enter your student number again:"
+
+msgid "phone.list"
+msgstr ""
+"📱 <b>My phone numbers</b>\n"
+"\n"
+"These are shown to buyers on the ads you post."
+
+msgid "phone.number_prompt"
+msgstr "Share a phone number using the button below, or type one in manually (e.g. +996700123456):"
+
+msgid "phone.not_found"
+msgstr "This phone number is no longer saved"
+
+msgid "menu.settings"
+msgstr "⚙️ Settings"
+
+msgid "notifications.title"
+msgstr "Bot notification settings"
+
+msgid "schedule.faculties"
+msgstr "List of faculties"
+
+msgid "obis.settings"
+msgstr "OBIS settings"
+
+msgid "common.welcome"
+msgstr "Welcome to Manashelper!"
+
+msgid "menu.keyboard_hidden"
+msgstr "Keyboard is hidden"
+
+msgid "menu.schedule"
+msgstr "📅 Schedule"
+
+msgid "schedule.not_loaded"
+msgstr "The schedule for your courses hasn't been loaded yet. It updates once an hour — please check back a bit later."
+
+msgid "schedule.departments"
+msgstr "List of departments"
+
+msgid "schedule.courses"
+msgstr "List of courses"
+
+msgid "schedule.no_longer_tracked"
+msgstr "You no longer have any tracked courses"
+
+msgid "schedule.course_not_found"
+msgstr "Course not found"
+
+msgid "schedule.no_tracked_courses"
+msgstr "You have no tracked courses yet. Pick your courses with the button below to see your schedule."
+
+msgid "food.enjoy_meal"
+msgstr "Enjoy your meal! 🍽"
+
+msgid "ads.status_pending"
+msgstr "Awaiting review"
+
+msgid "ads.status_published"
+msgstr "Published"
+
+msgid "ads.status_rejected"
+msgstr "Rejected"
+
+msgid "ads.no_contacts"
+msgstr "The seller hasn't listed any contact details."
+
+msgid "ads.contact_title"
+msgstr "📞 <b>Contacts for \"{title}\"</b>"
+
+msgid "ads.price"
+msgstr "💵 Price: <b>{price}</b> som"
+
+msgid "ads.valid_until"
+msgstr "⏰ Valid until: {date}"
+
+msgid "ads.contact_link"
+msgstr "📞 <a href=\"{link}\">Tap here to see the seller's contacts</a>"
+
+msgid "ads.contacts"
+msgstr "📞 Contacts:"
+
+msgid "ads.reason"
+msgstr "💬 Reason: {comment}"
+
+msgid "food.menu_unpublished"
+msgstr "😔 The menu for that day hasn't been published yet."
+
+msgid "food.today_unpublished"
+msgstr "😔 Today's menu hasn't been published yet."
+
+msgid "food.no_ratings"
+msgstr "⭐ No ratings yet"
+
+msgid "food.menu_header"
+msgstr "🍽 <b>Menu for {weekday}, {date}</b>"
+
+msgid "food.total_calories"
+msgstr "🔥 Total: <b>{calories}</b> kcal"
+
+msgid "food.views"
+msgstr "👁 Views: {count}"
+
+msgid "food.dish"
+msgstr "{index}. {name} — <b>{calories}</b> kcal"
+
+msgid "food.rating"
+msgstr "⭐ Rating: <b>{average}</b> ({count})"
+
+msgid "schedule.search_course"
+msgstr "🏫 {faculty} — {department}, {course_year}"
+
+msgid "schedule.search_weekday"
+msgstr "📅 {weekday}"
+
+msgid "schedule.results_page"
+msgstr "🔎 Found: {total} (page {page}/{total_pages})"
+
+msgid "schedule.results"
+msgstr "🔎 Found: {total}"
+
+msgid "obis.no_grades"
+msgstr "You don't have any exam grades."
+
+msgid "obis.no_subjects"
+msgstr "You don't have any subjects."
+
+msgid "obis.subject"
+msgstr "Subject"
+
+msgid "obis.exam"
+msgstr "Exam"
+
+msgid "obis.theory_lower"
+msgstr "theory"
+
+msgid "obis.practice_lower"
+msgstr "practice"
+
+msgid "obis.skips_left.one"
+msgid_plural "obis.skips_left.many"
+msgstr[0] "{count} skip left"
+msgstr[1] "{count} skips left"
+
+msgid "obis.new_grade"
+msgstr ""
+"🔔 New grade for the subject «{lesson}»\n"
+"{exam}: {score}"
+
+msgid "obis.skip_recorded"
+msgstr "⚠️ A skip was recorded for the subject «{lesson}» ({skip_type})"
+
+msgid "obis.missed_percentage"
+msgstr "Missed: {percent}%"
+
+msgid "obis.theory"
+msgstr "Theory"
+
+msgid "obis.practice"
+msgstr "Practice"
+
+msgid "obis.remaining_skips.one"
+msgid_plural "obis.remaining_skips.many"
+msgstr[0] "You have {count} skip left"
+msgstr[1] "You have {count} skips left"
+
+msgid "schedule.lunch_break"
+msgstr "😋 Lunch break. Find out what's for lunch - /yemek"
+
+msgid "schedule.changes_header"
+msgstr "🔔 <b>Schedule changes</b>"
+
+msgid "weekday.mon"
+msgstr "Mon"
+
+msgid "weekday.tue"
+msgstr "Tue"
+
+msgid "weekday.wed"
+msgstr "Wed"
+
+msgid "weekday.thu"
+msgstr "Thu"
+
+msgid "weekday.fri"
+msgstr "Fri"
+
+msgid "weekday.sat"
+msgstr "Sat"
+
+msgid "weekday.sun"
+msgstr "Sun"
+
+msgid "weekday.monday"
+msgstr "Monday"
+
+msgid "weekday.tuesday"
+msgstr "Tuesday"
+
+msgid "weekday.wednesday"
+msgstr "Wednesday"
+
+msgid "weekday.thursday"
+msgstr "Thursday"
+
+msgid "weekday.friday"
+msgstr "Friday"
+
+msgid "weekday.saturday"
+msgstr "Saturday"
+
+msgid "weekday.sunday"
+msgstr "Sunday"
+
+msgid "schedule.day_header"
+msgstr "📅 <b>{day}</b>"
+
+msgid "schedule.change_updated"
+msgstr ""
+"✏️ {time_range}\n"
+"{previous}\n"
+"→\n"
+"{new}"
+
+msgid "schedule.no_classes"
+msgstr "No classes."
+
+msgid "schedule.change_added"
+msgstr ""
+"➕ {time_range}\n"
+"{content}"
+
+msgid "schedule.change_cancelled"
+msgstr ""
+"➖ {time_range} (cancelled)\n"
+"{content}"
+
+msgid "versions.title"
+msgstr "📦 Version history"
+
+msgid "versions.title_page"
+msgstr "📦 Version history (page {page}/{total_pages})"
+
+msgid "versions.version_header"
+msgstr "📦 <b>Version {version}</b>"
+
+msgid "versions.release_date"
+msgstr "📅 Released: {date}"
+
+msgid "language.native_name"
+msgstr "English"
+
+msgid "language.button"
+msgstr "🇬🇧 English"
+
+msgid "language.prompt"
+msgstr "🌐 Тилди тандаңыз / Выберите язык / Please choose your language / Lütfen dilinizi seçin / 请选择语言"
+
+msgid "commands.start"
+msgstr "Start the bot"
+
+msgid "commands.yemek"
+msgstr "View the cafeteria menu"
+
+msgid "commands.language"
+msgstr "Change language"
+
+msgid "commands.versions"
+msgstr "View the bot's version history"
+
+msgid "commands.donate"
+msgstr "Support the bot"
+
+msgid "commands.hide_keyboard"
+msgstr "Hide the keyboard"
+
+msgid "commands.broadcast"
+msgstr "Broadcast a message to every user"

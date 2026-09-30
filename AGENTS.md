@@ -63,9 +63,10 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
 
 ## Localization and Telegram text
 
-Write source strings in English with literal `_("...")` or `ngettext(...)` arguments; dynamic strings and
-f-strings are not extractable by Babel. Translate new or changed messages in the Russian, Kyrgyz and Turkish `.po`
-catalogs under `src/manashelper/locales/`. English uses the source strings and has no catalog. Use
+Use stable message keys with literal `_("menu.settings")` or `ngettext(...)` arguments; dynamic strings and
+f-strings are not extractable by Babel. Store all user-facing text in the English, Russian, Kyrgyz, Turkish and
+Chinese (`zh`, simplified Chinese) `.po` catalogs under `src/manashelper/locales/`. English is the fallback
+for missing translations; it must have a compiled catalog too. Preserve formatting placeholders in every translation. Use
 `bot/filters/translated_text.py::TranslatedText` for reply-keyboard text filters rather than matching one
 language's label directly.
 
@@ -79,12 +80,14 @@ are committed; generated `.mo` files are ignored by Git. When adding msgids, use
 appropriate:
 
 ```sh
-.venv/bin/pybabel extract -F babel.cfg -o src/manashelper/locales/messages.pot --no-location src
+.venv/bin/pybabel extract -F babel.cfg -o src/manashelper/locales/messages.pot --no-location .
 .venv/bin/pybabel update -i src/manashelper/locales/messages.pot -d src/manashelper/locales
 .venv/bin/pybabel compile -d src/manashelper/locales
 ```
 
-For a new private command, update `docs/commands/private.json` with descriptions in all four supported languages.
+For a new private command, update `docs/commands/private.json` with its description's message key and add the
+description to all five catalogs. `babel.cfg` includes a custom extractor for these JSON keys, so extraction
+must run from the repository root with `.` as its input directory.
 Check command definitions in `services/bot_commands.py` and registration in `bot/commands.py` as well as the handler.
 
 ## Run and verify
@@ -106,6 +109,29 @@ database credentials, OBIS encryption key, advertisement channel ID/link, modera
 `DATASOURCE_HOST` defaults to the Docker service name `db`; use `localhost` when running outside Docker.
 `docker-compose.dev.yml` starts the development Postgres on port 5432. A local `.env` is read automatically and
 is ignored by Git.
+
+For local verification, use a development `.env` with `TELEGRAM_BOT_TOKEN`, `OBIS_ENCRYPTION_KEY` and
+the `DATASOURCE_NAME`, `DATASOURCE_USERNAME`, `DATASOURCE_PASSWORD` values matching the development database.
+The commands below override the Docker hostname and provide placeholder Telegram chat/channel settings for tests:
+
+```sh
+docker compose -f docker-compose.dev.yml up -d --wait db
+.venv/bin/pybabel compile -d src/manashelper/locales
+env DATASOURCE_HOST=localhost \
+  ADVERTISEMENT_CHANNEL_ID=-1000000000000 ADVERTISEMENT_CHANNEL_LINK=https://t.me/example \
+  MODERATION_CHAT_ID=-1000000000001 ADMIN_CHAT_ID=-1000000000002 \
+  .venv/bin/alembic upgrade head
+.venv/bin/ruff check .
+.venv/bin/ruff format --check .
+.venv/bin/mypy src/manashelper
+env DATASOURCE_HOST=localhost \
+  ADVERTISEMENT_CHANNEL_ID=-1000000000000 ADVERTISEMENT_CHANNEL_LINK=https://t.me/example \
+  MODERATION_CHAT_ID=-1000000000001 ADMIN_CHAT_ID=-1000000000002 \
+  .venv/bin/pytest -q --tb=line
+```
+
+These commands target the local development database; do not point them at production.
+For focused tests, append a test path to the same `env ... .venv/bin/pytest` command.
 
 Tests use a real Postgres instance, not SQLite, and need compiled gettext catalogs. The `session` fixture in
 `tests/conftest.py` uses a transaction and savepoint so writes roll back after each test. Ruff uses a 120-character

@@ -64,16 +64,16 @@ async def on_approve(
     locale_service: FromDishka[LocaleService],
 ) -> None:
     if not _is_moderation_chat(callback_query, settings):
-        await callback_query.answer(_("You don't have permission to do this"), show_alert=True)
+        await callback_query.answer(_("common.permission_denied"), show_alert=True)
         return
 
     try:
         summary = await moderation_service.approve(callback_data.id)
     except AdvertisementNotFoundError:
-        await callback_query.answer(_("This ad no longer exists"), show_alert=True)
+        await callback_query.answer(_("ads.not_found"), show_alert=True)
         return
     except AdvertisementNotPendingError:
-        await callback_query.answer(_("This ad has already been reviewed"), show_alert=True)
+        await callback_query.answer(_("ads.already_reviewed"), show_alert=True)
         return
 
     # Contacts aren't shown directly on the (public) channel post - only via this deep link, which
@@ -97,20 +97,20 @@ async def on_approve(
             message_ids = [sent_message.message_id]
     except TelegramAPIError:
         logger.exception("Failed to publish advertisement %s to the channel", callback_data.id)
-        await callback_query.answer(_("Failed to publish this ad. Please try again later."), show_alert=True)
+        await callback_query.answer(_("ads.publish_failed"), show_alert=True)
         return
 
     await advertisement_service.record_channel_messages(callback_data.id, message_ids)
 
     if isinstance(callback_query.message, Message):
-        await callback_query.message.edit_text(_("Approved and published ✅"))
+        await callback_query.message.edit_text(_("ads.approved_published"))
     await callback_query.answer()
 
     await _notify_owner(
         bot,
         locale_service,
         summary.user_id,
-        lambda: _('Your ad "{title}" has been approved and published! 🎉').format(title=escape_html(summary.title)),
+        lambda: _("ads.owner_approved").format(title=escape_html(summary.title)),
     )
 
 
@@ -119,21 +119,21 @@ async def on_reject_requested(
     callback_query: CallbackQuery, callback_data: AdvertisementModerationCallback, settings: FromDishka[Settings]
 ) -> None:
     if not _is_moderation_chat(callback_query, settings):
-        await callback_query.answer(_("You don't have permission to do this"), show_alert=True)
+        await callback_query.answer(_("common.permission_denied"), show_alert=True)
         return
 
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(
-            _("Reject this ad. Would you like to add a comment explaining why?"),
+            _("ads.rejection_prompt"),
             reply_markup=build_reject_comment_choice_keyboard(callback_data.id),
         )
     await callback_query.answer()
 
 
 def _build_owner_rejection_text(summary: AdvertisementSummary, comment: str | None) -> str:
-    text = _('Your ad "{title}" was not approved.').format(title=escape_html(summary.title))
+    text = _("ads.owner_rejected").format(title=escape_html(summary.title))
     if comment:
-        text += "\n" + _("Reason: {comment}").format(comment=escape_html(comment))
+        text += "\n" + _("ads.rejection_reason").format(comment=escape_html(comment))
     return text
 
 
@@ -147,20 +147,20 @@ async def on_reject_without_comment(
     locale_service: FromDishka[LocaleService],
 ) -> None:
     if not _is_moderation_chat(callback_query, settings):
-        await callback_query.answer(_("You don't have permission to do this"), show_alert=True)
+        await callback_query.answer(_("common.permission_denied"), show_alert=True)
         return
 
     try:
         summary = await moderation_service.reject(callback_data.id, None)
     except AdvertisementNotFoundError:
-        await callback_query.answer(_("This ad no longer exists"), show_alert=True)
+        await callback_query.answer(_("ads.not_found"), show_alert=True)
         return
     except AdvertisementNotPendingError:
-        await callback_query.answer(_("This ad has already been reviewed"), show_alert=True)
+        await callback_query.answer(_("ads.already_reviewed"), show_alert=True)
         return
 
     if isinstance(callback_query.message, Message):
-        await callback_query.message.edit_text(_("Rejected ❌"))
+        await callback_query.message.edit_text(_("ads.rejected_notice"))
     await callback_query.answer()
 
     await _notify_owner(bot, locale_service, summary.user_id, lambda: _build_owner_rejection_text(summary, None))
@@ -174,7 +174,7 @@ async def on_reject_add_comment_requested(
     state: FSMContext,
 ) -> None:
     if not _is_moderation_chat(callback_query, settings):
-        await callback_query.answer(_("You don't have permission to do this"), show_alert=True)
+        await callback_query.answer(_("common.permission_denied"), show_alert=True)
         return
     if not isinstance(callback_query.message, Message):
         await callback_query.answer()
@@ -186,7 +186,7 @@ async def on_reject_add_comment_requested(
         notification_chat_id=callback_query.message.chat.id,
         notification_message_id=callback_query.message.message_id,
     )
-    await callback_query.message.edit_text(_("Please send the rejection comment as a text message:"))
+    await callback_query.message.edit_text(_("ads.rejection_comment_prompt"))
     await callback_query.answer()
 
 
@@ -200,7 +200,7 @@ async def on_reject_comment_entered(
 ) -> None:
     comment = message.text.strip() if message.text else ""
     if not comment:
-        await message.answer(_("The comment can't be empty. Please try again:"))
+        await message.answer(_("ads.empty_comment"))
         return
 
     data = await state.get_data()
@@ -210,25 +210,25 @@ async def on_reject_comment_entered(
     await state.clear()
 
     if not advertisement_id_raw or notification_chat_id is None or notification_message_id is None:
-        await message.answer(_("Something went wrong. Please try again."))
+        await message.answer(_("common.error_retry"))
         return
     advertisement_id = uuid.UUID(advertisement_id_raw)
 
     try:
         summary = await moderation_service.reject(advertisement_id, comment[:512])
     except AdvertisementNotFoundError:
-        await message.answer(_("This ad no longer exists"))
+        await message.answer(_("ads.not_found"))
         return
     except AdvertisementNotPendingError:
-        await message.answer(_("This ad has already been reviewed"))
+        await message.answer(_("ads.already_reviewed"))
         return
 
     try:
         await bot.edit_message_text(
-            chat_id=notification_chat_id, message_id=notification_message_id, text=_("Rejected ❌")
+            chat_id=notification_chat_id, message_id=notification_message_id, text=_("ads.rejected_notice")
         )
     except TelegramAPIError:
         logger.warning("Failed to edit moderation message for advertisement %s", advertisement_id, exc_info=True)
 
-    await message.answer(_("Rejection sent ✅"))
+    await message.answer(_("ads.rejection_sent"))
     await _notify_owner(bot, locale_service, summary.user_id, lambda: _build_owner_rejection_text(summary, comment))
