@@ -21,10 +21,10 @@ from manashelper.services.timetable_formatter import weekday_abbr
 def build_timetable_menu_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
-        text=_("📅 My schedule"), callback_data=TimetableMenuCallback(action=TimetableMenuAction.OPEN_MY_SCHEDULE)
+        text=_("schedule.my_schedule"), callback_data=TimetableMenuCallback(action=TimetableMenuAction.OPEN_MY_SCHEDULE)
     )
     builder.button(
-        text=_("🔎 Search for a subject"),
+        text=_("schedule.search_subject"),
         callback_data=TimetableMenuCallback(action=TimetableMenuAction.OPEN_LESSON_SEARCH),
     )
     builder.adjust(1)
@@ -50,7 +50,7 @@ def build_department_keyboard(departments: list[DepartmentSummary]) -> InlineKey
 def build_no_tracked_courses_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
-        text=_("📚 Choose courses"), callback_data=SettingsCallback(action=SettingsAction.OPEN_COURSE_TRACKING)
+        text=_("schedule.choose_courses"), callback_data=SettingsCallback(action=SettingsAction.OPEN_COURSE_TRACKING)
     )
     return builder.as_markup()
 
@@ -71,7 +71,7 @@ def build_course_keyboard(courses: list[CourseSummary]) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     for course in courses:
         check_mark = "✅ " if course.is_tracked else ""
-        course_year = _("Year {number}").format(number=course.number)
+        course_year = _("schedule.course_year").format(number=course.number)
         builder.button(text=f"{check_mark}{course_year}", callback_data=CourseCallback(id=course.id))
     builder.adjust(1)
     return builder.as_markup()

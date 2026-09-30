@@ -4,12 +4,13 @@ from typing import TypedDict, cast
 
 from aiogram.types import BotCommand
 
+from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import Locale
 
 
 class _CommandConfig(TypedDict):
     command: str
-    description: dict[str, str]
+    description: str
 
 
 # .../src/manashelper/services/bot_commands.py -> repo root is 3 parents up.
@@ -22,10 +23,12 @@ def _load_command_configs(filename: str) -> list[_CommandConfig]:
 
 
 def _build_commands(filename: str, locale: Locale) -> list[BotCommand]:
-    return [
-        BotCommand(command=config["command"], description=config["description"][locale.value])
-        for config in _load_command_configs(filename)
-    ]
+    commands = []
+    for config in _load_command_configs(filename):
+        description_key = config["description"]
+        description = i18n.gettext(description_key, locale=locale.value)
+        commands.append(BotCommand(command=config["command"], description=description))
+    return commands
 
 
 def build_private_commands(locale: Locale) -> list[BotCommand]:

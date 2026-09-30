@@ -108,36 +108,29 @@ def _draft_summary(data: dict[str, Any]) -> AdvertisementSummary:
 async def _start_ad_details(message: Message, state: FSMContext) -> None:
     await state.set_state(AdvertisementForm.title)
     await message.answer(
-        _(
-            "📝 Let's create your ad.\n\n"
-            "First, send a <b>title</b> (up to {max} characters) - this is the first thing buyers will see."
-        ).format(max=TITLE_MAX_LENGTH),
+        _("ads.title_prompt").format(max=TITLE_MAX_LENGTH),
         reply_markup=build_cancel_form_keyboard(),
     )
 
 
 async def send_marketplace_menu(message: Message, settings: Settings) -> None:
-    text = _(
-        "🛒 <b>Marketplace</b>\n\n"
-        "Post an ad for other students to see, or manage the ads you've already posted.\n\n"
-        '🔗 <a href="{link}">Browse the marketplace channel</a>'
-    ).format(link=settings.advertisement_channel_link)
+    text = _("ads.marketplace_intro").format(link=settings.advertisement_channel_link)
     await message.answer(text, reply_markup=build_advertisement_menu_keyboard())
 
 
-@router.message(TranslatedText("🛒 Marketplace"))
+@router.message(TranslatedText("menu.marketplace"))
 @flags.private_chat_only
 async def on_marketplace_button(message: Message, settings: FromDishka[Settings]) -> None:
     await send_marketplace_menu(message, settings)
 
 
-@router.message(TranslatedText("◀️ Back to menu"))
+@router.message(TranslatedText("common.back_to_menu"))
 @flags.private_chat_only
 async def on_back_to_main_menu(message: Message) -> None:
-    await message.answer(_("🏠 Main menu"), reply_markup=build_main_keyboard())
+    await message.answer(_("menu.main"), reply_markup=build_main_keyboard())
 
 
-@router.message(TranslatedText("➕ Post an ad"))
+@router.message(TranslatedText("ads.post"))
 @flags.private_chat_only
 async def on_create_requested(
     message: Message,
@@ -151,13 +144,13 @@ async def on_create_requested(
     try:
         await advertisement_service.assert_can_post(user_id)
     except TooManyAdvertisementsError:
-        await message.answer(_("You've posted the maximum of 5 ads for this hour. Please try again a bit later."))
+        await message.answer(_("ads.hourly_limit"))
         return
 
     try:
         contact = await user_contact_service.get_contact_status(user_id)
     except UserNotFoundError:
-        await message.answer(_("Please start with the /start command"))
+        await message.answer(_("common.start_required"))
         return
 
     if contact.has_contact:
@@ -165,11 +158,7 @@ async def on_create_requested(
     else:
         await state.set_state(AdvertisementForm.phone_number)
         await message.answer(
-            _(
-                "📞 Before you can post an ad, buyers need a way to reach you.\n\n"
-                "You don't currently have a public Telegram username, so please share a phone number "
-                "using the button below, or type one in manually (e.g. +996700123456):"
-            ),
+            _("ads.contact_prompt"),
             reply_markup=build_contact_request_keyboard(),
         )
 
@@ -185,17 +174,17 @@ async def on_phone_number_shared(
         await user_contact_service.add_phone_number(message.from_user.id, message.contact.phone_number)
     except UserNotFoundError:
         await state.clear()
-        await message.answer(_("Please start with the /start command"), reply_markup=ReplyKeyboardRemove())
+        await message.answer(_("common.start_required"), reply_markup=ReplyKeyboardRemove())
         return
     except InvalidPhoneNumberError:
         # A shared Telegram contact's phone number is always well-formed - this shouldn't happen,
         # but if it somehow does, fall back to asking for manual entry instead of getting stuck.
         await message.answer(
-            _("Something went wrong saving that number. Please type your phone number manually:"),
+            _("phone.save_failed"),
             reply_markup=ReplyKeyboardRemove(),
         )
         return
-    await message.answer(_("✅ Phone number saved."), reply_markup=ReplyKeyboardRemove())
+    await message.answer(_("phone.saved"), reply_markup=ReplyKeyboardRemove())
     await _start_ad_details(message, state)
 
 
@@ -211,15 +200,15 @@ async def on_phone_number_entered(
         await user_contact_service.add_phone_number(message.from_user.id, phone_number)
     except UserNotFoundError:
         await state.clear()
-        await message.answer(_("Please start with the /start command"), reply_markup=ReplyKeyboardRemove())
+        await message.answer(_("common.start_required"), reply_markup=ReplyKeyboardRemove())
         return
     except InvalidPhoneNumberError:
         await message.answer(
-            _("That doesn't look like a valid phone number (e.g. +996700123456). Please try again:"),
+            _("phone.invalid"),
             reply_markup=build_contact_request_keyboard(),
         )
         return
-    await message.answer(_("✅ Phone number saved."), reply_markup=ReplyKeyboardRemove())
+    await message.answer(_("phone.saved"), reply_markup=ReplyKeyboardRemove())
     await _start_ad_details(message, state)
 
 
@@ -229,9 +218,7 @@ async def on_title_entered(message: Message, state: FSMContext) -> None:
     title = message.text.strip() if message.text else ""
     if not title or len(title) > TITLE_MAX_LENGTH:
         await message.answer(
-            _("The title can't be empty and must be at most {max} characters long. Please try again:").format(
-                max=TITLE_MAX_LENGTH
-            ),
+            _("ads.invalid_title").format(max=TITLE_MAX_LENGTH),
             reply_markup=build_cancel_form_keyboard(),
         )
         return
@@ -239,10 +226,7 @@ async def on_title_entered(message: Message, state: FSMContext) -> None:
     await state.update_data(title=title)
     await state.set_state(AdvertisementForm.description)
     await message.answer(
-        _(
-            "🧾 Now send a <b>description</b> (up to {max} characters) - condition, size, reason for "
-            "selling, anything a buyer should know."
-        ).format(max=DESCRIPTION_MAX_LENGTH),
+        _("ads.description_prompt").format(max=DESCRIPTION_MAX_LENGTH),
         reply_markup=build_cancel_form_keyboard(),
     )
 
@@ -253,9 +237,7 @@ async def on_description_entered(message: Message, state: FSMContext) -> None:
     description = message.text.strip() if message.text else ""
     if not description or len(description) > DESCRIPTION_MAX_LENGTH:
         await message.answer(
-            _("The description can't be empty and must be at most {max} characters long. Please try again:").format(
-                max=DESCRIPTION_MAX_LENGTH
-            ),
+            _("ads.invalid_description").format(max=DESCRIPTION_MAX_LENGTH),
             reply_markup=build_cancel_form_keyboard(),
         )
         return
@@ -263,17 +245,14 @@ async def on_description_entered(message: Message, state: FSMContext) -> None:
     await state.update_data(description=description)
     await state.set_state(AdvertisementForm.price)
     await message.answer(
-        _("💵 Send the price in som (digits only), or tap Skip if it's negotiable or not applicable:"),
+        _("ads.price_prompt"),
         reply_markup=build_skip_price_keyboard(),
     )
 
 
 async def _enter_media_state(target: Message, state: FSMContext, *, edit: bool) -> None:
     await state.set_state(AdvertisementForm.media)
-    text = _(
-        "🖼 Send up to 10 photos or videos of the item, one at a time.\n\n"
-        "Tap Done when you're finished - or tap it right away to post without media."
-    )
+    text = _("ads.media_prompt")
     if edit:
         await target.edit_text(text, reply_markup=build_media_keyboard())
     else:
@@ -285,9 +264,7 @@ async def _enter_media_state(target: Message, state: FSMContext, *, edit: bool) 
 async def on_price_entered(message: Message, state: FSMContext) -> None:
     price_text = message.text.strip() if message.text else ""
     if not price_text.isdigit():
-        await message.answer(
-            _("Please send a whole number (digits only), or tap Skip:"), reply_markup=build_skip_price_keyboard()
-        )
+        await message.answer(_("ads.invalid_price"), reply_markup=build_skip_price_keyboard())
         return
 
     await state.update_data(price=int(price_text))
@@ -350,9 +327,7 @@ async def _append_media(
             message,
             state,
             bot,
-            _("You've reached the limit of {max} photos/videos. Tap Done to continue.").format(
-                max=AdvertisementService.MAX_MEDIA_ITEMS
-            ),
+            _("ads.media_limit").format(max=AdvertisementService.MAX_MEDIA_ITEMS),
         )
         return
 
@@ -362,15 +337,13 @@ async def _append_media(
         message,
         state,
         bot,
-        _("✅ Added: {count}/{max}. Send more, or tap Done when you're finished.").format(
-            count=len(media), max=AdvertisementService.MAX_MEDIA_ITEMS
-        ),
+        _("ads.media_added").format(count=len(media), max=AdvertisementService.MAX_MEDIA_ITEMS),
     )
 
 
 async def _enter_expiry_state(target: Message, state: FSMContext, *, edit: bool) -> None:
     await state.set_state(AdvertisementForm.expires_at)
-    text = _("⏳ How long should this ad stay visible before it's automatically removed?")
+    text = _("ads.expiration_prompt")
     if edit:
         await target.edit_text(text, reply_markup=build_expiry_keyboard())
     else:
@@ -402,7 +375,7 @@ async def _enter_confirm_state(target: Message, state: FSMContext, *, edit: bool
     await state.set_state(AdvertisementForm.confirm)
     data = await state.get_data()
     preview = _draft_summary(data)
-    text = _("👀 Here's how your ad will look:") + "\n\n" + format_advertisement(preview)
+    text = _("ads.preview") + "\n\n" + format_advertisement(preview)
     if edit:
         await target.edit_text(text, reply_markup=build_confirm_keyboard())
     else:
@@ -414,7 +387,7 @@ async def _enter_confirm_state(target: Message, state: FSMContext, *, edit: bool
 async def on_form_cancelled(callback_query: CallbackQuery, state: FSMContext) -> None:
     await state.clear()
     if isinstance(callback_query.message, Message):
-        await callback_query.message.edit_text(_("❌ Cancelled."))
+        await callback_query.message.edit_text(_("common.cancelled"))
     await callback_query.answer()
 
 
@@ -446,16 +419,12 @@ async def on_form_submitted(
             media_items=media_items,
         )
     except TooManyAdvertisementsError:
-        await callback_query.answer(
-            _("You've posted the maximum of 5 ads for this hour. Please try again a bit later."), show_alert=True
-        )
+        await callback_query.answer(_("ads.hourly_limit"), show_alert=True)
         return
 
     await state.clear()
     if isinstance(callback_query.message, Message):
-        await callback_query.message.edit_text(
-            _("✅ Your ad has been sent for moderator review. You'll be notified once it's approved or rejected.")
-        )
+        await callback_query.message.edit_text(_("ads.submitted"))
         await send_marketplace_menu(callback_query.message, settings)
 
     contact = await user_contact_service.get_contact_status(user_id)
@@ -469,9 +438,9 @@ async def _notify_moderation_chat(
     is no per-user moderator role, so (like the channel) this always renders in `DEFAULT_LOCALE`
     rather than any one recipient's locale."""
     with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):
-        caption = _("🆕 <b>New ad for review</b>") + "\n\n" + format_advertisement(summary, contact=contact)
+        caption = _("ads.new_review") + "\n\n" + format_advertisement(summary, contact=contact)
         keyboard = build_moderation_keyboard(summary.id)
-        review_text = _("Review it:")
+        review_text = _("ads.review_prompt")
     try:
         if summary.media:
             await bot.send_media_group(
@@ -484,7 +453,7 @@ async def _notify_moderation_chat(
         logger.warning("Failed to notify the moderation chat about a new ad", exc_info=True)
 
 
-@router.message(TranslatedText("📋 My ads"))
+@router.message(TranslatedText("ads.my_ads"))
 @flags.private_chat_only
 async def on_my_ads_requested(message: Message, advertisement_service: FromDishka[AdvertisementService]) -> None:
     if message.from_user is None:
@@ -510,9 +479,9 @@ async def _build_my_ads_view(
     advertisement_service: AdvertisementService, user_id: int, page: int
 ) -> tuple[str, InlineKeyboardMarkup]:
     ad_page = await advertisement_service.get_page_by_user_id(user_id, page)
-    text = _("📋 <b>My ads</b> (page {page}/{total})").format(page=ad_page.page + 1, total=ad_page.total_pages)
+    text = _("ads.list_page").format(page=ad_page.page + 1, total=ad_page.total_pages)
     if not ad_page.items:
-        text = _("📋 <b>My ads</b>\n\nYou haven't posted any ads yet.")
+        text = _("ads.empty_list")
     keyboard = build_my_ads_keyboard(ad_page.items, ad_page.page, ad_page.total_pages)
     return text, keyboard
 
@@ -533,7 +502,7 @@ async def _render_advertisement_detail(
     try:
         summary = await advertisement_service.get_owned_by_id(advertisement_id, callback_query.from_user.id)
     except (AdvertisementNotFoundError, AdvertisementForbiddenError):
-        await callback_query.answer(_("This ad no longer exists"), show_alert=True)
+        await callback_query.answer(_("ads.not_found"), show_alert=True)
         return
 
     text = format_advertisement(summary, show_status=True)
@@ -548,7 +517,7 @@ async def _render_advertisement_detail(
 async def on_delete_requested(callback_query: CallbackQuery, callback_data: AdvertisementDeleteCallback) -> None:
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(
-            _("Are you sure you want to delete this ad? This can't be undone."),
+            _("ads.delete_confirmation"),
             reply_markup=build_advertisement_delete_confirm_keyboard(callback_data.id, callback_data.page),
         )
     await callback_query.answer()
@@ -576,7 +545,7 @@ async def on_delete_confirmed(
     try:
         result = await advertisement_service.delete_owned(callback_data.id, callback_query.from_user.id)
     except (AdvertisementNotFoundError, AdvertisementForbiddenError):
-        await callback_query.answer(_("This ad no longer exists"), show_alert=True)
+        await callback_query.answer(_("ads.not_found"), show_alert=True)
         return
 
     if result.channel_message_ids:
@@ -586,7 +555,7 @@ async def on_delete_confirmed(
             logger.warning("Failed to delete channel messages for advertisement %s", callback_data.id, exc_info=True)
 
     ad_page = await advertisement_service.get_page_by_user_id(callback_query.from_user.id, callback_data.page)
-    text = _("Ad deleted ✅")
+    text = _("ads.deleted")
     keyboard = build_my_ads_keyboard(ad_page.items, ad_page.page, ad_page.total_pages)
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(text, reply_markup=keyboard)

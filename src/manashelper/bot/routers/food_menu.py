@@ -14,16 +14,10 @@ from manashelper.services.food_menu_formatter import build_photos, format_daily_
 router = Router(name="food_menu")
 
 
-@router.message(TranslatedText("🍉 Food"))
+@router.message(TranslatedText("menu.food"))
 async def on_food_menu_button(message: Message) -> None:
     await message.answer(
-        _(
-            "🍉 <b>Cafeteria menu</b>\n\n"
-            "Choose a day below or send a command:\n"
-            "• <code>/yemek today</code> — today\n"
-            "• <code>/yemek tomorrow</code> — tomorrow\n"
-            "• <code>/yemek 2</code> — in N days"
-        ),
+        _("food.menu_prompt"),
         reply_markup=build_day_keyboard(),
     )
 
@@ -42,7 +36,7 @@ async def _send_daily_menu(
 
     caption = format_daily_menu(daily_menu)
     photo_messages = await message.answer_media_group(media=build_photos(caption, daily_menu))
-    rating_message = await message.answer(_("⭐ Rate the menu:"), reply_markup=build_rating_keyboard(daily_menu.id))
+    rating_message = await message.answer(_("food.rate_prompt"), reply_markup=build_rating_keyboard(daily_menu.id))
 
     message_ids = [sent.message_id for sent in photo_messages] + [rating_message.message_id]
     await food_menu_cleanup_settings_service.schedule_cleanup(message.chat.id, message_ids)
@@ -71,7 +65,7 @@ async def cmd_yemek(
     skip_days = _parse_skip_days(command.args)
     if skip_days is None:
         await message.answer(
-            _("ℹ️ Usage: <code>/yemek today</code>, <code>/yemek tomorrow</code>, or <code>/yemek 2</code>"),
+            _("food.command_usage"),
             reply_markup=build_day_keyboard(),
         )
         return
@@ -100,4 +94,4 @@ async def on_food_menu_rating_callback(
     daily_menu_service: FromDishka[DailyMenuService],
 ) -> None:
     await daily_menu_service.set_rating(callback_query.from_user.id, callback_data.daily_menu_id, callback_data.rating)
-    await callback_query.answer(_("Thanks for your rating!"), show_alert=True)
+    await callback_query.answer(_("food.rating_thanks"), show_alert=True)

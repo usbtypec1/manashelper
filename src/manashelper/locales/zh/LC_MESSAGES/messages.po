@@ -1,0 +1,777 @@
+# Chinese translations for Manashelper.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the Manashelper project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Manashelper 0.1.0\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-09-30 09:57+0600\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh\n"
+"Language-Team: zh <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+msgid "common.cancel"
+msgstr "❌ 取消"
+
+msgid "common.skip"
+msgstr "跳过"
+
+msgid "common.done"
+msgstr "✅ 完成"
+
+msgid "common.duration.minutes_45"
+msgstr "45 分钟"
+
+msgid "common.duration.hours_6"
+msgstr "6 小时"
+
+msgid "common.duration.hours_24"
+msgstr "24 小时"
+
+msgid "common.duration.days_7"
+msgstr "7 天"
+
+msgid "ads.no_expiration"
+msgstr "♾️ 永不过期"
+
+msgid "ads.submit_review"
+msgstr "✅ 提交审核"
+
+msgid "common.delete"
+msgstr "🗑 删除"
+
+msgid "common.back"
+msgstr "◀️ 返回"
+
+msgid "ads.confirm_delete"
+msgstr "✅ 是的，删除"
+
+msgid "ads.post"
+msgstr "➕ 发布广告"
+
+msgid "ads.my_ads"
+msgstr "📋 我的广告"
+
+msgid "common.back_to_menu"
+msgstr "◀️ 返回主菜单"
+
+msgid "ads.approve"
+msgstr "✅ 批准"
+
+msgid "ads.reject"
+msgstr "❌ 拒绝"
+
+msgid "ads.add_comment"
+msgstr "✏️ 添加说明"
+
+msgid "ads.no_comment"
+msgstr "🚫 不添加说明"
+
+msgid "common.send"
+msgstr "✅ 发送"
+
+msgid "common.back_to_settings"
+msgstr "◀️ 返回设置"
+
+msgid "food.today"
+msgstr "📅 今天"
+
+msgid "food.tomorrow"
+msgstr "📆 明天"
+
+msgid "food.day_after_tomorrow"
+msgstr "🗓 后天"
+
+msgid "food.auto_delete_settings"
+msgstr "🧹 自动删除设置"
+
+msgid "common.duration.minutes_15"
+msgstr "15 分钟"
+
+msgid "common.duration.hours_3"
+msgstr "3 小时"
+
+msgid "common.duration.days_1"
+msgstr "1 天"
+
+msgid "common.off"
+msgstr "关闭"
+
+msgid "food.lunch"
+msgstr "午餐"
+
+msgid "food.dinner"
+msgstr "晚餐"
+
+msgid "common.enable_all"
+msgstr "✅ 全部开启"
+
+msgid "common.disable_all"
+msgstr "❌ 全部关闭"
+
+msgid "notifications.configure"
+msgstr "⚙️ 配置通知"
+
+msgid "obis.update_credentials"
+msgstr "🔄 更新登录信息"
+
+msgid "obis.enter_credentials"
+msgstr "🔑 输入登录信息"
+
+msgid "obis.confirm_clear"
+msgstr "✅ 是的，清除"
+
+msgid "obis.terms"
+msgstr "📃 使用条款"
+
+msgid "obis.accept_terms"
+msgstr "✅ 接受条款"
+
+msgid "obis.clear_credentials"
+msgstr "🗑 清除登录信息"
+
+msgid "phone.add"
+msgstr "➕ 添加电话号码"
+
+msgid "phone.share"
+msgstr "📱 分享电话号码"
+
+msgid "settings.notifications"
+msgstr "🔔 通知"
+
+msgid "settings.my_lessons"
+msgstr "📚 我的课程"
+
+msgid "settings.obis_credentials"
+msgstr "🔑 OBIS 登录信息"
+
+msgid "settings.phone_numbers"
+msgstr "📱 我的电话号码"
+
+msgid "settings.language"
+msgstr "🌐 语言"
+
+msgid "settings.feedback"
+msgstr "💬 发送反馈"
+
+msgid "settings.donate"
+msgstr "❤️ 支持机器人"
+
+msgid "menu.food"
+msgstr "🍉 食堂"
+
+msgid "notifications.schedule_changes"
+msgstr "课表变更"
+
+msgid "notifications.exam_grades"
+msgstr "考试成绩"
+
+msgid "notifications.lesson_skips"
+msgstr "缺勤记录"
+
+msgid "schedule.my_schedule"
+msgstr "📅 我的课表"
+
+msgid "schedule.search_subject"
+msgstr "🔎 搜索课程"
+
+msgid "schedule.choose_courses"
+msgstr "📚 选择课程"
+
+msgid "schedule.course_year"
+msgstr "{number} 年级"
+
+msgid "common.private_chat_only"
+msgstr "此功能仅在与机器人的私聊中可用。"
+
+msgid "menu.marketplace"
+msgstr "🛒 校园交易"
+
+msgid "ads.media_prompt"
+msgstr ""
+"🖼 请逐个发送商品的照片或视频，最多 10 个。\n"
+"\n"
+"发送完毕后点击“完成”；也可以直接点击“完成”，不添加照片或视频。"
+
+msgid "ads.expiration_prompt"
+msgstr "⏳ 此广告应展示多久后自动删除？"
+
+msgid "ads.deleted"
+msgstr "广告已删除 ✅"
+
+msgid "ads.review_prompt"
+msgstr "请审核："
+
+msgid "ads.empty_list"
+msgstr ""
+"📋 <b>我的广告</b>\n"
+"\n"
+"你还没有发布任何广告。"
+
+msgid "ads.marketplace_intro"
+msgstr ""
+"🛒 <b>校园交易</b>\n"
+"\n"
+"发布广告供其他同学查看，或管理已发布的广告。\n"
+"\n"
+"🔗 <a href=\"{link}\">浏览校园交易频道</a>"
+
+msgid "menu.main"
+msgstr "🏠 主菜单"
+
+msgid "phone.saved"
+msgstr "✅ 电话号码已保存。"
+
+msgid "ads.price_prompt"
+msgstr "💵 请发送以索姆计价的价格（仅限数字）。如果价格面议或不适用，请点击“跳过”："
+
+msgid "ads.preview"
+msgstr "👀 你的广告将显示为："
+
+msgid "ads.list_page"
+msgstr "📋 <b>我的广告</b>（第 {page}/{total} 页）"
+
+msgid "ads.contact_prompt"
+msgstr ""
+"📞 发布广告前，买家需要能够联系到你。\n"
+"\n"
+"你目前没有公开的 Telegram 用户名，请使用下方按钮分享电话号码，或手动输入（例如 +996700123456）："
+
+msgid "ads.invalid_price"
+msgstr "请发送整数（仅限数字），或点击“跳过”："
+
+msgid "common.cancelled"
+msgstr "❌ 已取消。"
+
+msgid "ads.submitted"
+msgstr "✅ 你的广告已提交给管理员审核。批准或拒绝后，我们会通知你。"
+
+msgid "ads.new_review"
+msgstr "🆕 <b>待审核的新广告</b>"
+
+msgid "ads.delete_confirmation"
+msgstr "确定要删除此广告吗？此操作无法撤销。"
+
+msgid "ads.title_prompt"
+msgstr ""
+"📝 来创建你的广告吧。\n"
+"\n"
+"首先，请发送<b>标题</b>（最多 {max} 个字符），这是买家最先看到的内容。"
+
+msgid "ads.hourly_limit"
+msgstr "你本小时已发布 5 条广告，达到上限。请稍后再试。"
+
+msgid "common.start_required"
+msgstr "请先使用 /start 命令"
+
+msgid "phone.save_failed"
+msgstr "保存号码时出错了。请手动输入电话号码："
+
+msgid "phone.invalid"
+msgstr "电话号码似乎无效（例如 +996700123456）。请重试："
+
+msgid "ads.description_prompt"
+msgstr "🧾 现在请发送<b>描述</b>（最多 {max} 个字符），例如商品状况、尺寸、出售原因，以及买家需要了解的其他信息。"
+
+msgid "ads.media_added"
+msgstr "✅ 已添加：{count}/{max}。可以继续发送，或点击“完成”。"
+
+msgid "ads.not_found"
+msgstr "此广告已不存在"
+
+msgid "ads.invalid_title"
+msgstr "标题不能为空，且不能超过 {max} 个字符。请重试："
+
+msgid "ads.invalid_description"
+msgstr "描述不能为空，且不能超过 {max} 个字符。请重试："
+
+msgid "ads.media_limit"
+msgstr "已达到 {max} 个照片或视频的上限。请点击“完成”继续。"
+
+msgid "ads.owner_rejected"
+msgstr "你的广告“{title}”未通过审核。"
+
+msgid "ads.rejection_comment_prompt"
+msgstr "请以文字消息发送拒绝原因："
+
+msgid "ads.rejection_sent"
+msgstr "拒绝通知已发送 ✅"
+
+msgid "common.permission_denied"
+msgstr "你没有执行此操作的权限"
+
+msgid "ads.approved_published"
+msgstr "已批准并发布 ✅"
+
+msgid "ads.rejection_prompt"
+msgstr "拒绝此广告。是否添加说明，解释拒绝原因？"
+
+msgid "ads.rejected_notice"
+msgstr "已拒绝 ❌"
+
+msgid "ads.empty_comment"
+msgstr "说明不能为空。请重试："
+
+msgid "common.error_retry"
+msgstr "出了点问题。请重试。"
+
+msgid "ads.already_reviewed"
+msgstr "此广告已审核"
+
+msgid "ads.publish_failed"
+msgstr "发布广告失败。请稍后再试。"
+
+msgid "ads.rejection_reason"
+msgstr "原因：{comment}"
+
+msgid "ads.owner_approved"
+msgstr "你的广告“{title}”已获批准并发布！🎉"
+
+msgid "broadcast.message_prompt"
+msgstr "📢 请发送要群发给所有用户的消息："
+
+msgid "broadcast.preview"
+msgstr ""
+"📢 <b>群发预览：</b>\n"
+"\n"
+"{body}\n"
+"\n"
+"将此消息发送给所有用户吗？"
+
+msgid "broadcast.cancelled"
+msgstr "❌ 群发已取消。"
+
+msgid "broadcast.sending"
+msgstr "📤 正在群发……"
+
+msgid "broadcast.sent"
+msgstr "✅ 已向 {sent}/{total} 位用户发送消息。"
+
+msgid "broadcast.text_required"
+msgstr "请以文字消息发送群发内容。"
+
+msgid "broadcast.admin_message"
+msgstr ""
+"📢 <b>管理团队的消息</b>\n"
+"\n"
+"{body}"
+
+msgid "donations.qr_coming_soon"
+msgstr "收款二维码将很快在这里显示。"
+
+msgid "donations.intro"
+msgstr ""
+"❤️ <b>帮助 Manashelper 持续运行</b>\n"
+"\n"
+"9 月 28 日，机器人的免费 AWS 账户受到限制，导致服务停止。我已将它迁移到付费服务器，让你可以继续查看课表、食堂菜单、成绩和出勤记录。\n"
+"\n"
+"你的支持将帮助你和其他 {others} 位用户分担服务器费用。金额多少都能提供帮助，每一笔捐款都会用于服务器租金。感谢你支持机器人！"
+
+msgid "donations.choose_bank"
+msgstr "请选择下方银行，查看其收款二维码："
+
+msgid "donations.qr_unavailable"
+msgstr "该银行的二维码已不可用。"
+
+msgid "feedback.sent"
+msgstr "✅ 谢谢！你的消息已发送给管理团队。"
+
+msgid "feedback.message_prompt"
+msgstr "💬 请输入想发送给管理团队的消息。我们会尽快在这里回复。"
+
+msgid "settings.title"
+msgstr "设置"
+
+msgid "feedback.admin_message"
+msgstr ""
+"💬 来自 {sender} 的<b>新反馈</b>：\n"
+"\n"
+"{body}\n"
+"\n"
+"<i>回复此消息即可答复。</i>"
+
+msgid "feedback.admin_reply"
+msgstr ""
+"📩 <b>管理团队的回复：</b>\n"
+"\n"
+"{text}"
+
+msgid "feedback.reply_sent"
+msgstr "回复已发送 ✅"
+
+msgid "feedback.invalid_message"
+msgstr "消息不能为空，且不能超过 {max} 个字符。请重试："
+
+msgid "feedback.delivery_failed"
+msgstr "⚠️ 无法向用户发送回复。"
+
+msgid "food.menu_prompt"
+msgstr ""
+"🍉 <b>食堂菜单</b>\n"
+"\n"
+"请选择下方日期或发送命令：\n"
+"• <code>/yemek today</code> — 今天\n"
+"• <code>/yemek tomorrow</code> — 明天\n"
+"• <code>/yemek 2</code> — N 天后"
+
+msgid "food.rate_prompt"
+msgstr "⭐ 请为菜单评分："
+
+msgid "food.rating_thanks"
+msgstr "感谢你的评分！"
+
+msgid "food.command_usage"
+msgstr "ℹ️ 用法：<code>/yemek today</code>、<code>/yemek tomorrow</code> 或 <code>/yemek 2</code>"
+
+msgid "food.auto_delete_prompt"
+msgstr "🧹 此聊天中的食堂菜单消息将在以下时间后自动删除："
+
+msgid "common.saved"
+msgstr "已保存"
+
+msgid "common.not_a_button"
+msgstr "这不是按钮"
+
+msgid "food.notification_settings"
+msgstr "🍽 自定义菜单通知"
+
+msgid "schedule.search_prompt"
+msgstr "请输入课程名称。可以用普通拉丁字母代替土耳其字母（例如用 s 代替 ş，用 i 代替 ı）。"
+
+msgid "schedule.query_too_short"
+msgstr "搜索内容太短。请重新打开“🔎 搜索课程”并重试。"
+
+msgid "schedule.no_results"
+msgstr "未找到结果。"
+
+msgid "schedule.search_expired"
+msgstr "搜索结果已过期。请重新搜索。"
+
+msgid "language.selected"
+msgstr "✅ 语言：{language}"
+
+msgid "menu.attendance"
+msgstr "📋 出勤"
+
+msgid "menu.grades"
+msgstr "💯 成绩"
+
+msgid "obis.password_prompt"
+msgstr "请输入 OBIS 密码："
+
+msgid "obis.credentials_saved"
+msgstr "登录信息已保存 ✅"
+
+msgid "obis.accept_terms_prompt"
+msgstr "请接受机器人的使用条款以继续。"
+
+msgid "obis.student_number_prompt"
+msgstr "请输入学号："
+
+msgid "obis.cancelled"
+msgstr "已取消"
+
+msgid "obis.clear_confirmation"
+msgstr "确定要清除已保存的 OBIS 登录信息吗？"
+
+msgid "obis.credentials_removed"
+msgstr "OBIS 登录信息已删除 ✅"
+
+msgid "obis.empty_student_number"
+msgstr "学号不能为空。请重试："
+
+msgid "obis.credentials_missing"
+msgstr "你尚未保存 OBIS 登录信息。请使用下方按钮输入。"
+
+msgid "obis.credentials_invalid"
+msgstr "你的 OBIS 登录信息无效。请使用下方按钮重新输入。"
+
+msgid "obis.fetch_failed"
+msgstr "无法从 OBIS 获取数据。请稍后再试。"
+
+msgid "obis.login_failed"
+msgstr "OBIS 登录信息无效。请重新输入学号："
+
+msgid "phone.list"
+msgstr ""
+"📱 <b>我的电话号码</b>\n"
+"\n"
+"这些号码将显示给你所发布广告的买家。"
+
+msgid "phone.number_prompt"
+msgstr "请使用下方按钮分享电话号码，或手动输入（例如 +996700123456）："
+
+msgid "phone.not_found"
+msgstr "此电话号码已不在保存列表中"
+
+msgid "menu.settings"
+msgstr "⚙️ 设置"
+
+msgid "notifications.title"
+msgstr "机器人通知设置"
+
+msgid "schedule.faculties"
+msgstr "学院列表"
+
+msgid "obis.settings"
+msgstr "OBIS 设置"
+
+msgid "common.welcome"
+msgstr "欢迎使用 Manashelper！"
+
+msgid "menu.keyboard_hidden"
+msgstr "键盘已隐藏"
+
+msgid "menu.schedule"
+msgstr "📅 课表"
+
+msgid "schedule.not_loaded"
+msgstr "你的课程课表尚未加载。课表每小时更新一次，请稍后再查看。"
+
+msgid "schedule.departments"
+msgstr "专业列表"
+
+msgid "schedule.courses"
+msgstr "年级列表"
+
+msgid "schedule.no_longer_tracked"
+msgstr "你已没有关注的课程"
+
+msgid "schedule.course_not_found"
+msgstr "未找到课程"
+
+msgid "schedule.no_tracked_courses"
+msgstr "你尚未关注任何课程。请使用下方按钮选择课程，查看课表。"
+
+msgid "food.enjoy_meal"
+msgstr "祝你用餐愉快！🍽"
+
+msgid "ads.status_pending"
+msgstr "待审核"
+
+msgid "ads.status_published"
+msgstr "已发布"
+
+msgid "ads.status_rejected"
+msgstr "已拒绝"
+
+msgid "ads.no_contacts"
+msgstr "卖家尚未提供联系方式。"
+
+msgid "ads.contact_title"
+msgstr "📞 <b>“{title}”的联系方式</b>"
+
+msgid "ads.price"
+msgstr "💵 价格：<b>{price}</b> 索姆"
+
+msgid "ads.valid_until"
+msgstr "⏰ 有效期至：{date}"
+
+msgid "ads.contact_link"
+msgstr "📞 <a href=\"{link}\">点击查看卖家的联系方式</a>"
+
+msgid "ads.contacts"
+msgstr "📞 联系方式："
+
+msgid "ads.reason"
+msgstr "💬 原因：{comment}"
+
+msgid "food.menu_unpublished"
+msgstr "😔 当天的菜单尚未发布。"
+
+msgid "food.today_unpublished"
+msgstr "😔 今天的菜单尚未发布。"
+
+msgid "food.no_ratings"
+msgstr "⭐ 暂无评分"
+
+msgid "food.menu_header"
+msgstr "🍽 <b>{weekday}（{date}）的菜单</b>"
+
+msgid "food.total_calories"
+msgstr "🔥 总热量：<b>{calories}</b> 千卡"
+
+msgid "food.views"
+msgstr "👁 浏览次数：{count}"
+
+msgid "food.dish"
+msgstr "{index}. {name} — <b>{calories}</b> 千卡"
+
+msgid "food.rating"
+msgstr "⭐ 评分：<b>{average}</b>（{count}）"
+
+msgid "schedule.search_course"
+msgstr "🏫 {faculty} — {department}，{course_year}"
+
+msgid "schedule.search_weekday"
+msgstr "📅 {weekday}"
+
+msgid "schedule.results_page"
+msgstr "🔎 找到：{total}（第 {page}/{total_pages} 页）"
+
+msgid "schedule.results"
+msgstr "🔎 找到：{total}"
+
+msgid "obis.no_grades"
+msgstr "你还没有考试成绩。"
+
+msgid "obis.no_subjects"
+msgstr "你还没有课程。"
+
+msgid "obis.subject"
+msgstr "课程"
+
+msgid "obis.exam"
+msgstr "考试"
+
+msgid "obis.theory_lower"
+msgstr "理论课"
+
+msgid "obis.practice_lower"
+msgstr "实践课"
+
+msgid "obis.skips_left.one"
+msgid_plural "obis.skips_left.many"
+msgstr[0] "还可缺勤 {count} 次"
+
+msgid "obis.new_grade"
+msgstr ""
+"🔔 课程“{lesson}”有新成绩\n"
+"{exam}：{score}"
+
+msgid "obis.skip_recorded"
+msgstr "⚠️ 课程“{lesson}”记录了一次缺勤（{skip_type}）"
+
+msgid "obis.missed_percentage"
+msgstr "缺勤：{percent}%"
+
+msgid "obis.theory"
+msgstr "理论课"
+
+msgid "obis.practice"
+msgstr "实践课"
+
+msgid "obis.remaining_skips.one"
+msgid_plural "obis.remaining_skips.many"
+msgstr[0] "你还可以缺勤 {count} 次"
+
+msgid "schedule.lunch_break"
+msgstr "😋 午休。查看午餐菜单 — /yemek"
+
+msgid "schedule.changes_header"
+msgstr "🔔 <b>课表变更</b>"
+
+msgid "weekday.mon"
+msgstr "周一"
+
+msgid "weekday.tue"
+msgstr "周二"
+
+msgid "weekday.wed"
+msgstr "周三"
+
+msgid "weekday.thu"
+msgstr "周四"
+
+msgid "weekday.fri"
+msgstr "周五"
+
+msgid "weekday.sat"
+msgstr "周六"
+
+msgid "weekday.sun"
+msgstr "周日"
+
+msgid "weekday.monday"
+msgstr "星期一"
+
+msgid "weekday.tuesday"
+msgstr "星期二"
+
+msgid "weekday.wednesday"
+msgstr "星期三"
+
+msgid "weekday.thursday"
+msgstr "星期四"
+
+msgid "weekday.friday"
+msgstr "星期五"
+
+msgid "weekday.saturday"
+msgstr "星期六"
+
+msgid "weekday.sunday"
+msgstr "星期日"
+
+msgid "schedule.day_header"
+msgstr "📅 <b>{day}</b>"
+
+msgid "schedule.change_updated"
+msgstr ""
+"✏️ {time_range}\n"
+"{previous}\n"
+"→\n"
+"{new}"
+
+msgid "schedule.no_classes"
+msgstr "没有课程。"
+
+msgid "schedule.change_added"
+msgstr ""
+"➕ {time_range}\n"
+"{content}"
+
+msgid "schedule.change_cancelled"
+msgstr ""
+"➖ {time_range}（已取消）\n"
+"{content}"
+
+msgid "versions.title"
+msgstr "📦 版本历史"
+
+msgid "versions.title_page"
+msgstr "📦 版本历史（第 {page}/{total_pages} 页）"
+
+msgid "versions.version_header"
+msgstr "📦 <b>版本 {version}</b>"
+
+msgid "versions.release_date"
+msgstr "📅 发布日期：{date}"
+
+msgid "language.native_name"
+msgstr "中文"
+
+msgid "language.button"
+msgstr "🇨🇳 中文"
+
+msgid "language.prompt"
+msgstr "🌐 Тилди тандаңыз / Выберите язык / Please choose your language / Lütfen dilinizi seçin / 请选择语言"
+
+msgid "commands.start"
+msgstr "启动机器人"
+
+msgid "commands.yemek"
+msgstr "查看食堂菜单"
+
+msgid "commands.language"
+msgstr "更改语言"
+
+msgid "commands.versions"
+msgstr "查看机器人版本历史"
+
+msgid "commands.donate"
+msgstr "支持机器人"
+
+msgid "commands.hide_keyboard"
+msgstr "隐藏键盘"
+
+msgid "commands.broadcast"
+msgstr "向所有用户群发消息"

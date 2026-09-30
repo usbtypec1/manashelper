@@ -28,6 +28,6 @@ def build_versions_list_keyboard(versions: list[VersionSummary], page: int, tota
 
 def build_version_detail_keyboard(page: int) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text=_("◀️ Back"), callback_data=VersionsPageCallback(page=page))
+    builder.button(text=_("common.back"), callback_data=VersionsPageCallback(page=page))
     builder.adjust(1)
     return builder.as_markup()

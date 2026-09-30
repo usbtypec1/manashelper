@@ -17,7 +17,7 @@ async def _show_food_menu_cleanup_settings(
         return
     option = await food_menu_cleanup_settings_service.get_option(callback_query.message.chat.id)
     await callback_query.message.edit_text(
-        _("🧹 Auto-delete food menu messages in this chat after:"),
+        _("food.auto_delete_prompt"),
         reply_markup=build_food_menu_cleanup_keyboard(option),
     )
 
@@ -40,4 +40,4 @@ async def on_set_food_menu_cleanup(
     if isinstance(callback_query.message, Message):
         await food_menu_cleanup_settings_service.set_option(callback_query.message.chat.id, callback_data.option)
     await _show_food_menu_cleanup_settings(callback_query, food_menu_cleanup_settings_service)
-    await callback_query.answer(_("Saved"))
+    await callback_query.answer(_("common.saved"))

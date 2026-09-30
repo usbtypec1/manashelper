@@ -38,10 +38,10 @@ def _current_weekday(now: datetime) -> int:
     return weekday if weekday in _WORKDAYS else _WORKDAYS[0]
 
 
-@router.message(TranslatedText("📅 Schedule"))
+@router.message(TranslatedText("menu.schedule"))
 @flags.private_chat_only
 async def on_timetable_menu_button(message: Message) -> None:
-    await message.answer(_("📅 Schedule"), reply_markup=build_timetable_menu_keyboard())
+    await message.answer(_("menu.schedule"), reply_markup=build_timetable_menu_keyboard())
 
 
 @router.callback_query(TimetableMenuCallback.filter(F.action == TimetableMenuAction.OPEN_MY_SCHEDULE))
@@ -53,12 +53,12 @@ async def on_my_schedule_selected(
     try:
         lessons = await schedule_service.get_user_schedule(callback_query.from_user.id)
     except UserNotFoundError:
-        await callback_query.answer(_("Please start with the /start command"), show_alert=True)
+        await callback_query.answer(_("common.start_required"), show_alert=True)
         return
     except NoTrackedCoursesError:
         if isinstance(callback_query.message, Message):
             await callback_query.message.edit_text(
-                _("You have no tracked courses yet. Pick your courses with the button below to see your schedule."),
+                _("schedule.no_tracked_courses"),
                 reply_markup=build_no_tracked_courses_keyboard(),
             )
         await callback_query.answer()
@@ -66,10 +66,7 @@ async def on_my_schedule_selected(
 
     if not lessons:
         await callback_query.answer(
-            _(
-                "The schedule for your courses hasn't been loaded yet. It updates once an hour "
-                "— please check back a bit later."
-            ),
+            _("schedule.not_loaded"),
             show_alert=True,
         )
         return
@@ -93,10 +90,10 @@ async def on_schedule_day_selected(
     try:
         lessons = await schedule_service.get_user_schedule(callback_query.from_user.id)
     except UserNotFoundError:
-        await callback_query.answer(_("Please start with the /start command"), show_alert=True)
+        await callback_query.answer(_("common.start_required"), show_alert=True)
         return
     except NoTrackedCoursesError:
-        await callback_query.answer(_("You no longer have any tracked courses"), show_alert=True)
+        await callback_query.answer(_("schedule.no_longer_tracked"), show_alert=True)
         return
 
     if isinstance(callback_query.message, Message):
@@ -117,7 +114,7 @@ async def list_departments(
     departments = await department_service.get_departments_by_faculty(callback_data.id)
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(
-            _("List of departments"), reply_markup=build_department_keyboard(departments)
+            _("schedule.departments"), reply_markup=build_department_keyboard(departments)
         )
     await callback_query.answer()
 
@@ -131,7 +128,7 @@ async def list_courses(
 ) -> None:
     courses = await course_service.get_courses_by_department(callback_data.id, callback_query.from_user.id)
     if isinstance(callback_query.message, Message):
-        await callback_query.message.edit_text(_("List of courses"), reply_markup=build_course_keyboard(courses))
+        await callback_query.message.edit_text(_("schedule.courses"), reply_markup=build_course_keyboard(courses))
     await callback_query.answer()
 
 
@@ -145,12 +142,12 @@ async def toggle_course_tracking(
     try:
         courses = await course_service.toggle_tracked_course(callback_data.id, callback_query.from_user.id)
     except CourseNotFoundError:
-        await callback_query.answer(_("Course not found"), show_alert=True)
+        await callback_query.answer(_("schedule.course_not_found"), show_alert=True)
         return
     except UserNotFoundError:
-        await callback_query.answer(_("Please start with the /start command"), show_alert=True)
+        await callback_query.answer(_("common.start_required"), show_alert=True)
         return
 
     if isinstance(callback_query.message, Message):
-        await callback_query.message.edit_text(_("List of courses"), reply_markup=build_course_keyboard(courses))
+        await callback_query.message.edit_text(_("schedule.courses"), reply_markup=build_course_keyboard(courses))
     await callback_query.answer()
