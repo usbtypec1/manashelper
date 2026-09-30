@@ -14,7 +14,7 @@ from manashelper.services.user_contact import PhoneNumberSummary
 
 def build_contact_request_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text=_("📱 Share phone number"), request_contact=True)]],
+        keyboard=[[KeyboardButton(text=_("phone.share"), request_contact=True)]],
         resize_keyboard=True,
         one_time_keyboard=True,
     )
@@ -30,10 +30,8 @@ def build_phone_numbers_keyboard(phone_numbers: list[PhoneNumberSummary]) -> Inl
     builder.adjust(1)
 
     action_builder = InlineKeyboardBuilder()
-    action_builder.button(
-        text=_("➕ Add a phone number"), callback_data=PhoneNumberActionCallback(action=PhoneNumberAction.ADD)
-    )
-    action_builder.button(text=_("◀️ Back"), callback_data=SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS))
+    action_builder.button(text=_("phone.add"), callback_data=PhoneNumberActionCallback(action=PhoneNumberAction.ADD))
+    action_builder.button(text=_("common.back"), callback_data=SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS))
     action_builder.adjust(1)
     builder.attach(action_builder)
     return builder.as_markup()

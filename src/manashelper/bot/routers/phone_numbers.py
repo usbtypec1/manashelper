@@ -30,7 +30,7 @@ class PhoneNumberForm(StatesGroup):
 
 
 def _phone_numbers_text() -> str:
-    return _("📱 <b>My phone numbers</b>\n\nThese are shown to buyers on the ads you post.")
+    return _("phone.list")
 
 
 async def _render_phone_numbers(callback_query: CallbackQuery, user_contact_service: UserContactService) -> None:
@@ -56,7 +56,7 @@ async def on_add_phone_number_requested(callback_query: CallbackQuery, state: FS
     await state.set_state(PhoneNumberForm.phone_number)
     if isinstance(callback_query.message, Message):
         await callback_query.message.answer(
-            _("Share a phone number using the button below, or type one in manually (e.g. +996700123456):"),
+            _("phone.number_prompt"),
             reply_markup=build_contact_request_keyboard(),
         )
     await callback_query.answer()
@@ -90,17 +90,17 @@ async def _save_phone_number(
         await user_contact_service.add_phone_number(user_id, phone_number)
     except UserNotFoundError:
         await state.clear()
-        await message.answer(_("Please start with the /start command"), reply_markup=ReplyKeyboardRemove())
+        await message.answer(_("common.start_required"), reply_markup=ReplyKeyboardRemove())
         return
     except InvalidPhoneNumberError:
         await message.answer(
-            _("That doesn't look like a valid phone number (e.g. +996700123456). Please try again:"),
+            _("phone.invalid"),
             reply_markup=build_contact_request_keyboard(),
         )
         return
 
     await state.clear()
-    await message.answer(_("✅ Phone number saved."), reply_markup=ReplyKeyboardRemove())
+    await message.answer(_("phone.saved"), reply_markup=ReplyKeyboardRemove())
     phone_numbers = await user_contact_service.get_phone_numbers(user_id)
     await message.answer(_phone_numbers_text(), reply_markup=build_phone_numbers_keyboard(phone_numbers))
 
@@ -115,7 +115,7 @@ async def on_delete_phone_number(
     try:
         await user_contact_service.delete_phone_number(callback_query.from_user.id, callback_data.id)
     except (PhoneNumberNotFoundError, PhoneNumberForbiddenError):
-        await callback_query.answer(_("This phone number is no longer saved"), show_alert=True)
+        await callback_query.answer(_("phone.not_found"), show_alert=True)
         return
 
     await _render_phone_numbers(callback_query, user_contact_service)

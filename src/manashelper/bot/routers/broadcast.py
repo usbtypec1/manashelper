@@ -44,7 +44,7 @@ async def on_broadcast_command(message: Message, state: FSMContext, settings: Fr
     # The admin chat is a single shared destination, not a specific recipient - always rendered in
     # `DEFAULT_LOCALE`, mirroring `advertisement.py::_notify_moderation_chat`.
     with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):
-        await message.answer(_("📢 Send the message you want to broadcast to every user:"))
+        await message.answer(_("broadcast.message_prompt"))
 
 
 @router.message(StateFilter(BroadcastForm.message))
@@ -55,11 +55,11 @@ async def on_broadcast_message_entered(message: Message, state: FSMContext, sett
     body = message.text or message.caption
     with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):
         if not body:
-            await message.answer(_("Please send the broadcast as a text message."))
+            await message.answer(_("broadcast.text_required"))
             return
 
         await state.update_data({_BODY_STATE_KEY: body})
-        preview = _("📢 <b>Broadcast preview:</b>\n\n{body}\n\nSend this to every user?").format(body=escape_html(body))
+        preview = _("broadcast.preview").format(body=escape_html(body))
         await message.answer(preview, reply_markup=build_broadcast_confirm_keyboard())
 
 
@@ -73,7 +73,7 @@ async def on_broadcast_cancelled(
 
     await state.clear()
     with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):
-        await callback_query.message.edit_text(_("❌ Broadcast cancelled."))
+        await callback_query.message.edit_text(_("broadcast.cancelled"))
     await callback_query.answer()
 
 
@@ -98,14 +98,14 @@ async def on_broadcast_confirmed(
         return
 
     with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):
-        await callback_query.message.edit_text(_("📤 Sending broadcast…"))
+        await callback_query.message.edit_text(_("broadcast.sending"))
 
     recipient_ids = await broadcast_service.get_recipient_ids()
     sent_count = 0
     for user_id in recipient_ids:
         locale = await locale_service.get_locale(user_id)
         with i18n.context(), i18n.use_locale(locale.value):
-            text = _("📢 <b>Message from the administration</b>\n\n{body}").format(body=escape_html(body))
+            text = _("broadcast.admin_message").format(body=escape_html(body))
         try:
             await bot.send_message(chat_id=user_id, text=text)
             sent_count += 1
@@ -113,5 +113,5 @@ async def on_broadcast_confirmed(
             logger.warning("Failed to deliver broadcast to user %s", user_id, exc_info=True)
 
     with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):
-        summary_text = _("✅ Broadcast sent to {sent}/{total} users.").format(sent=sent_count, total=len(recipient_ids))
+        summary_text = _("broadcast.sent").format(sent=sent_count, total=len(recipient_ids))
     await bot.send_message(chat_id=callback_query.message.chat.id, text=summary_text)

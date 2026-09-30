@@ -26,12 +26,7 @@ class LessonSearchForm(StatesGroup):
 async def on_search_selected(callback_query: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(LessonSearchForm.query)
     if isinstance(callback_query.message, Message):
-        await callback_query.message.edit_text(
-            _(
-                "Enter the subject name. You can type Turkish letters using regular Latin ones "
-                "(e.g. s instead of ş, or i instead of ı)."
-            )
-        )
+        await callback_query.message.edit_text(_("schedule.search_prompt"))
     await callback_query.answer()
 
 
@@ -46,12 +41,12 @@ async def on_search_query_entered(
 
     query = message.text.strip() if message.text else ""
     if len(query) < MIN_QUERY_LENGTH:
-        await message.answer(_("The query is too short. Open «🔎 Search for a subject» again and try once more."))
+        await message.answer(_("schedule.query_too_short"))
         return
 
     results = await lesson_search_service.search(query)
     if not results:
-        await message.answer(_("Nothing found."))
+        await message.answer(_("schedule.no_results"))
         return
 
     await state.update_data({RESULTS_KEY: results})
@@ -71,7 +66,7 @@ async def on_search_page_selected(
     data = await state.get_data()
     results: list[LessonSearchResult] | None = data.get(RESULTS_KEY)
     if not results:
-        await callback_query.answer(_("The search results have expired. Please search again."), show_alert=True)
+        await callback_query.answer(_("schedule.search_expired"), show_alert=True)
         return
 
     if isinstance(callback_query.message, Message):

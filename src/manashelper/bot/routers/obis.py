@@ -31,7 +31,7 @@ class ObisCredentialsForm(StatesGroup):
     password = State()
 
 
-@router.message(TranslatedText("📋 Attendance"))
+@router.message(TranslatedText("menu.attendance"))
 @flags.private_chat_only
 async def on_attendance_button(message: Message, obis_service: FromDishka[ObisService]) -> None:
     if message.from_user is None:
@@ -40,28 +40,28 @@ async def on_attendance_button(message: Message, obis_service: FromDishka[ObisSe
     try:
         attendance = await obis_service.get_attendance(message.from_user.id)
     except UserNotFoundError:
-        await message.answer(_("Please start with the /start command"))
+        await message.answer(_("common.start_required"))
         return
     except UserHasNoCredentialsError:
         await message.answer(
-            _("You haven't saved your OBIS credentials. Enter them using the button below."),
+            _("obis.credentials_missing"),
             reply_markup=build_no_credentials_keyboard(),
         )
         return
     except ObisLoginError:
         await message.answer(
-            _("Your OBIS credentials are invalid. Enter them again using the button below."),
+            _("obis.credentials_invalid"),
             reply_markup=build_no_credentials_keyboard(),
         )
         return
     except ObisParseError:
-        await message.answer(_("Couldn't fetch data from OBIS. Please try again later."))
+        await message.answer(_("obis.fetch_failed"))
         return
 
     await message.answer(format_attendance(attendance))
 
 
-@router.message(TranslatedText("💯 Grades"))
+@router.message(TranslatedText("menu.grades"))
 @flags.private_chat_only
 async def on_exams_button(message: Message, obis_service: FromDishka[ObisService]) -> None:
     if message.from_user is None:
@@ -70,22 +70,22 @@ async def on_exams_button(message: Message, obis_service: FromDishka[ObisService
     try:
         lesson_exams = await obis_service.get_exam_grades(message.from_user.id)
     except UserNotFoundError:
-        await message.answer(_("Please start with the /start command"))
+        await message.answer(_("common.start_required"))
         return
     except UserHasNoCredentialsError:
         await message.answer(
-            _("You haven't saved your OBIS credentials. Enter them using the button below."),
+            _("obis.credentials_missing"),
             reply_markup=build_no_credentials_keyboard(),
         )
         return
     except ObisLoginError:
         await message.answer(
-            _("Your OBIS credentials are invalid. Enter them again using the button below."),
+            _("obis.credentials_invalid"),
             reply_markup=build_no_credentials_keyboard(),
         )
         return
     except ObisParseError:
-        await message.answer(_("Couldn't fetch data from OBIS. Please try again later."))
+        await message.answer(_("obis.fetch_failed"))
         return
 
     await message.answer(format_exam_grades(lesson_exams))
@@ -95,9 +95,7 @@ async def on_exams_button(message: Message, obis_service: FromDishka[ObisService
 @flags.private_chat_only
 async def on_start_credentials(callback_query: CallbackQuery) -> None:
     if isinstance(callback_query.message, Message):
-        await callback_query.message.answer(
-            _("Please accept the bot's terms of use to continue."), reply_markup=build_terms_keyboard()
-        )
+        await callback_query.message.answer(_("obis.accept_terms_prompt"), reply_markup=build_terms_keyboard())
     await callback_query.answer()
 
 
@@ -106,7 +104,7 @@ async def on_start_credentials(callback_query: CallbackQuery) -> None:
 async def on_accept_terms(callback_query: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(ObisCredentialsForm.student_number)
     if isinstance(callback_query.message, Message):
-        await callback_query.message.answer(_("Enter your student number:"), reply_markup=build_cancel_keyboard())
+        await callback_query.message.answer(_("obis.student_number_prompt"), reply_markup=build_cancel_keyboard())
     await callback_query.answer()
 
 
@@ -115,7 +113,7 @@ async def on_accept_terms(callback_query: CallbackQuery, state: FSMContext) -> N
 async def on_cancel_credentials(callback_query: CallbackQuery, state: FSMContext) -> None:
     await state.clear()
     if isinstance(callback_query.message, Message):
-        await callback_query.message.answer(_("Cancelled"))
+        await callback_query.message.answer(_("obis.cancelled"))
     await callback_query.answer()
 
 
@@ -124,7 +122,7 @@ async def on_cancel_credentials(callback_query: CallbackQuery, state: FSMContext
 async def on_clear_credentials_requested(callback_query: CallbackQuery) -> None:
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(
-            _("Are you sure you want to clear your saved OBIS credentials?"),
+            _("obis.clear_confirmation"),
             reply_markup=build_confirm_clear_credentials_keyboard(),
         )
     await callback_query.answer()
@@ -139,12 +137,12 @@ async def on_confirm_clear_credentials(
     try:
         await obis_service.clear_credentials(callback_query.from_user.id)
     except UserNotFoundError:
-        await callback_query.answer(_("Please start with the /start command"), show_alert=True)
+        await callback_query.answer(_("common.start_required"), show_alert=True)
         return
 
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(
-            _("OBIS credentials removed ✅"), reply_markup=build_obis_settings_keyboard(has_credentials=False)
+            _("obis.credentials_removed"), reply_markup=build_obis_settings_keyboard(has_credentials=False)
         )
     await callback_query.answer()
 
@@ -154,14 +152,12 @@ async def on_confirm_clear_credentials(
 async def on_student_number_entered(message: Message, state: FSMContext) -> None:
     student_number = message.text.strip() if message.text else ""
     if not student_number:
-        await message.answer(
-            _("The student number can't be empty. Please try again:"), reply_markup=build_cancel_keyboard()
-        )
+        await message.answer(_("obis.empty_student_number"), reply_markup=build_cancel_keyboard())
         return
 
     await state.update_data(student_number=student_number)
     await state.set_state(ObisCredentialsForm.password)
-    await message.answer(_("Enter your OBIS password:"), reply_markup=build_cancel_keyboard())
+    await message.answer(_("obis.password_prompt"), reply_markup=build_cancel_keyboard())
 
 
 @router.message(StateFilter(ObisCredentialsForm.password))
@@ -181,23 +177,19 @@ async def on_password_entered(
 
     if not password or not student_number or message.from_user is None:
         await state.clear()
-        await message.answer(_("Something went wrong. Please try again."))
+        await message.answer(_("common.error_retry"))
         return
 
     try:
         await obis_service.save_credentials(message.from_user.id, student_number, password)
     except ObisLoginError:
         await state.set_state(ObisCredentialsForm.student_number)
-        await message.answer(
-            _("Invalid OBIS credentials. Enter your student number again:"), reply_markup=build_cancel_keyboard()
-        )
+        await message.answer(_("obis.login_failed"), reply_markup=build_cancel_keyboard())
         return
     except UserNotFoundError:
         await state.clear()
-        await message.answer(_("Please start with the /start command"))
+        await message.answer(_("common.start_required"))
         return
 
     await state.clear()
-    await message.answer(
-        _("Credentials saved successfully ✅"), reply_markup=build_obis_settings_keyboard(has_credentials=True)
-    )
+    await message.answer(_("obis.credentials_saved"), reply_markup=build_obis_settings_keyboard(has_credentials=True))

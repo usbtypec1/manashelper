@@ -76,7 +76,7 @@ uv run mypy src/manashelper                            # type check
 Gettext catalog workflow (see "Localization (i18n)" below for the full picture):
 
 ```
-uv run pybabel extract -F babel.cfg -o src/manashelper/locales/messages.pot --no-location src
+uv run pybabel extract -F babel.cfg -o src/manashelper/locales/messages.pot --no-location .
                                                         # scan source for _()/ngettext() calls -> .pot template
 uv run pybabel update -i src/manashelper/locales/messages.pot -d src/manashelper/locales
                                                         # merge new/changed source strings into every locale's .po
@@ -222,18 +222,19 @@ and are verified against a real OBIS login before being persisted. Passwords are
 ### Localization (i18n)
 
 All user-facing text is translated via aiogram's built-in `aiogram.utils.i18n` (a thin wrapper over GNU gettext,
-requiring the `Babel` package — see the `aiogram[i18n]` extra in `pyproject.toml`). Source strings are written in
-English directly at each call site as `_("...")` (`from aiogram.utils.i18n import gettext as _`) or, for
-count-dependent text, `ngettext(singular, plural, n)` — never behind a lookup table or an f-string-interpolated
-variable, because Babel's extractor only records a literal string argument, not whatever a variable happens to
-hold. Compiled catalogs live at `src/manashelper/locales/<locale>/LC_MESSAGES/messages.{po,mo}` for `ru`/`ky`/`tr`;
-English has **no catalog at all** — `I18n.gettext` already falls back to the raw (English) msgid when a locale or
-a specific message isn't found, so shipping a redundant identity catalog would just be more to keep in sync.
+requiring the `Babel` package — see the `aiogram[i18n]` extra in `pyproject.toml`). Call sites use stable message
+keys such as `_("menu.settings")` (`from aiogram.utils.i18n import gettext as _`) or, for count-dependent text,
+`ngettext("obis.skips_left.one", "obis.skips_left.many", n)`. Keep keys literal so Babel can extract them.
+All text, including English, lives in `src/manashelper/locales/<locale>/LC_MESSAGES/messages.{po,mo}` for
+`en`/`ru`/`ky`/`tr`/`zh` (simplified Chinese). `CatalogI18n` adds the English catalog as a fallback for missing
+translations and unsupported rendering locales, so a missing translation does not display a message key.
+Command JSON files in `docs/commands/` also contain description keys; the custom extractor in `babel.cfg`
+includes those when extraction runs from the repository root with `.` as its input directory.
 `*.po` files are the hand-translated source of truth and are committed; `*.mo` files are compiled build artifacts
 and are gitignored (compiled by `docker/Dockerfile` and by CI — see Commands above — anyone running the bot or
 test suite locally must run `pybabel compile` after cloning or after editing a `.po` file).
 
-`localization/locale.py::Locale` is the supported-locale enum (`ky`/`ru`/`en`/`tr`); `localization/i18n.py` holds
+`localization/locale.py::Locale` is the supported-locale enum (`ky`/`ru`/`en`/`tr`/`zh`); `localization/i18n.py` holds
 the single process-wide `I18n` instance. `User.locale` (nullable `String(2)`) persists a user's resolved locale.
 `bot/middlewares/i18n.py::LocaleMiddleware` (registered *after* `setup_dishka` in `bot/dispatcher.py`, so it can use the
 request-scoped container) runs on every update: it upserts the user via `services/locale.py::LocaleService`,
@@ -251,7 +252,8 @@ Jobs (the `jobs/` package) run outside any Telegram update, so there's no ambien
 context; each per-recipient send there looks up that user's `Locale` and wraps its own `format_...(...)` call in
 `with i18n.context(), i18n.use_locale(locale.value): ...` explicitly. A user can still change their locale
 explicitly at any time via `/language` or the "🌐 Language" row in Settings (`bot/routers/locale.py`), which
-shows the 4-language picker (`bot/keyboards/locale.py`) — the only place that picker is shown, now that
+shows the 5-language picker (`bot/keyboards/locale.py`) with names rendered from each language's own catalog —
+the only place that picker is shown, now that
 auto-detection never falls through to it.
 
 ### Scheduled jobs & change detection

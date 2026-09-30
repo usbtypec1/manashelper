@@ -6,6 +6,7 @@ class Locale(StrEnum):
     RU = "ru"
     EN = "en"
     TR = "tr"
+    ZH = "zh"
 
 
 DEFAULT_LOCALE = Locale.RU
@@ -15,6 +16,7 @@ _LANGUAGE_CODE_PREFIX_TO_LOCALE = {
     "ru": Locale.RU,
     "en": Locale.EN,
     "tr": Locale.TR,
+    "zh": Locale.ZH,
 }
 
 

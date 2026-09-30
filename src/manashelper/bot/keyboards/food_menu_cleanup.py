@@ -9,15 +9,15 @@ from manashelper.services.food_menu_cleanup_settings import FoodMenuCleanupOptio
 def _option_label(option: FoodMenuCleanupOption) -> str:
     match option:
         case FoodMenuCleanupOption.MINUTES_15:
-            return _("15 minutes")
+            return _("common.duration.minutes_15")
         case FoodMenuCleanupOption.MINUTES_45:
-            return _("45 minutes")
+            return _("common.duration.minutes_45")
         case FoodMenuCleanupOption.HOURS_3:
-            return _("3 hours")
+            return _("common.duration.hours_3")
         case FoodMenuCleanupOption.DAY_1:
-            return _("1 day")
+            return _("common.duration.days_1")
         case _:
-            return _("Off")
+            return _("common.off")
 
 
 def _mark(is_selected: bool) -> str:
@@ -37,6 +37,6 @@ def build_food_menu_cleanup_keyboard(current_option: FoodMenuCleanupOption) -> I
 
 def build_open_food_menu_cleanup_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text=_("🧹 Auto-delete settings"), callback_data=FoodMenuCleanupOpenCallback())
+    builder.button(text=_("food.auto_delete_settings"), callback_data=FoodMenuCleanupOpenCallback())
     builder.adjust(1)
     return builder.as_markup()

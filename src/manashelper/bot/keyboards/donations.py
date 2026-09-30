@@ -10,6 +10,8 @@ def build_donations_keyboard(banks: list[DonationBank]) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     for bank in banks:
         builder.button(text=bank.name, callback_data=DonationBankCallback(bank_id=bank.id))
-    builder.button(text=_("◀️ Back to settings"), callback_data=SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS))
+    builder.button(
+        text=_("common.back_to_settings"), callback_data=SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS)
+    )
     builder.adjust(1)
     return builder.as_markup()
