@@ -44,7 +44,7 @@ async def _send_daily_menu_broadcast(
                 caption = format_daily_menu(daily_menu)
                 media = build_photos(caption, daily_menu)
                 keyboard = build_open_food_menu_notifications_keyboard()
-                text = _("Enjoy your meal! 🍽")
+                text = _("food.enjoy_meal")
             photo_messages = await bot.send_media_group(chat_id=user_id, media=media)
             enjoy_message = await bot.send_message(chat_id=user_id, text=text, reply_markup=keyboard)
             message_ids = [sent.message_id for sent in photo_messages] + [enjoy_message.message_id]

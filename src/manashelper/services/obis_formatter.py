@@ -7,7 +7,7 @@ from manashelper.services.obis_notification import ExamGradeChange, LessonSkipCh
 
 def format_exam_grades(lessons: list[LessonExamsModel]) -> str:
     if not lessons:
-        return _("You don't have any exam grades.")
+        return _("obis.no_grades")
 
     blocks = []
     for lesson in lessons:
@@ -22,7 +22,7 @@ def format_exam_grades(lessons: list[LessonExamsModel]) -> str:
 
 def format_attendance(lessons: list[LessonAttendanceModel]) -> str:
     if not lessons:
-        return _("You don't have any subjects.")
+        return _("obis.no_subjects")
 
     blocks = []
     for lesson in lessons:
@@ -38,8 +38,8 @@ def format_attendance(lessons: list[LessonAttendanceModel]) -> str:
         block = "\n".join(
             [
                 name,
-                _format_skips_line(_("Theory"), lesson.theory_skips_percentage, theory_skips),
-                _format_skips_line(_("Practice"), lesson.practice_skips_percentage, practice_skips),
+                _format_skips_line(_("obis.theory"), lesson.theory_skips_percentage, theory_skips),
+                _format_skips_line(_("obis.practice"), lesson.practice_skips_percentage, practice_skips),
             ]
         )
         blocks.append(block)
@@ -51,7 +51,7 @@ def _format_skips_line(label: str, percentage: float | None, skippable: int | No
     line = f"{label}: {_format_float(percentage)}%"
     if skippable is None:
         return line
-    left = ngettext("{count} skip left", "{count} skips left", skippable).format(count=skippable)
+    left = ngettext("obis.skips_left.one", "obis.skips_left.many", skippable).format(count=skippable)
     return f"{line} ({left})"
 
 
@@ -63,24 +63,20 @@ def _format_float(value: float | None) -> str:
 
 
 def format_exam_grade_change(change: ExamGradeChange) -> str:
-    lesson = change.lesson_name or _("Subject")
-    exam = change.exam_name or _("Exam")
-    return _("🔔 New grade for the subject «{lesson}»\n{exam}: {score}").format(
-        lesson=lesson, exam=exam, score=change.score
-    )
+    lesson = change.lesson_name or _("obis.subject")
+    exam = change.exam_name or _("obis.exam")
+    return _("obis.new_grade").format(lesson=lesson, exam=exam, score=change.score)
 
 
 def format_lesson_skip_change(change: LessonSkipChange) -> str:
-    skip_type_label = _("theory") if change.skip_type is SkipType.THEORY else _("practice")
+    skip_type_label = _("obis.theory_lower") if change.skip_type is SkipType.THEORY else _("obis.practice_lower")
     lines = [
-        _("⚠️ A skip was recorded for the subject «{lesson}» ({skip_type})").format(
-            lesson=change.lesson_name, skip_type=skip_type_label
-        ),
-        _("Missed: {percent}%").format(percent=_format_float(change.skips_percentage)),
+        _("obis.skip_recorded").format(lesson=change.lesson_name, skip_type=skip_type_label),
+        _("obis.missed_percentage").format(percent=_format_float(change.skips_percentage)),
     ]
     if change.skippable is not None:
         lines.append(
-            ngettext("You have {count} skip left", "You have {count} skips left", change.skippable).format(
+            ngettext("obis.remaining_skips.one", "obis.remaining_skips.many", change.skippable).format(
                 count=change.skippable
             )
         )

@@ -23,37 +23,37 @@ UPCOMING_WINDOW_MINUTES = 45
 def weekday_abbr(weekday: int) -> str:
     match weekday:
         case 1:
-            return _("Mon")
+            return _("weekday.mon")
         case 2:
-            return _("Tue")
+            return _("weekday.tue")
         case 3:
-            return _("Wed")
+            return _("weekday.wed")
         case 4:
-            return _("Thu")
+            return _("weekday.thu")
         case 5:
-            return _("Fri")
+            return _("weekday.fri")
         case 6:
-            return _("Sat")
+            return _("weekday.sat")
         case _:
-            return _("Sun")
+            return _("weekday.sun")
 
 
 def weekday_full(weekday: int) -> str:
     match weekday:
         case 1:
-            return _("Monday")
+            return _("weekday.monday")
         case 2:
-            return _("Tuesday")
+            return _("weekday.tuesday")
         case 3:
-            return _("Wednesday")
+            return _("weekday.wednesday")
         case 4:
-            return _("Thursday")
+            return _("weekday.thursday")
         case 5:
-            return _("Friday")
+            return _("weekday.friday")
         case 6:
-            return _("Saturday")
+            return _("weekday.saturday")
         case _:
-            return _("Sunday")
+            return _("weekday.sunday")
 
 
 @dataclass(slots=True)
@@ -134,15 +134,15 @@ def format_day_schedule(weekday: int, lessons: list[ScheduleLessonModel], now: d
         (lesson for lesson in lessons if lesson.weekday == weekday),
         key=lambda lesson: parse_time_range_start_minutes(lesson.time_range),
     )
-    day_header = _("📅 <b>{day}</b>").format(day=day_name)
+    day_header = _("schedule.day_header").format(day=day_name)
     if not day_lessons:
-        return f"{day_header}\n\n{_('No classes.')}"
+        return f"{day_header}\n\n{_('schedule.no_classes')}"
 
     is_today = weekday == now.isoweekday()
     now_minutes = now.hour * 60 + now.minute
     blocks = _group_into_blocks(day_lessons, now_minutes, is_today)
     show_lunch = _should_show_lunch(day_lessons)
-    lunch_label = _("😋 Lunch break. Find out what's for lunch - /yemek")
+    lunch_label = _("schedule.lunch_break")
 
     lines = [day_header, ""]
     lunch_inserted = not show_lunch
@@ -180,16 +180,16 @@ def _format_change_lesson_content(content: str) -> str:
 def _format_change_block(change: LessonChange) -> str:
     previous_content, new_content = change.previous_content, change.new_content
     if previous_content is None and new_content is not None:
-        return _("➕ {time_range}\n{content}").format(
+        return _("schedule.change_added").format(
             time_range=change.time_range, content=_format_change_lesson_content(new_content)
         )
     if new_content is None and previous_content is not None:
-        return _("➖ {time_range} (cancelled)\n{content}").format(
+        return _("schedule.change_cancelled").format(
             time_range=change.time_range, content=_format_change_lesson_content(previous_content)
         )
     assert previous_content is not None
     assert new_content is not None
-    return _("✏️ {time_range}\n{previous}\n→\n{new}").format(
+    return _("schedule.change_updated").format(
         time_range=change.time_range,
         previous=_format_change_lesson_content(previous_content),
         new=_format_change_lesson_content(new_content),
@@ -201,10 +201,10 @@ def format_lesson_changes(changes: list[LessonChange]) -> str:
     for change in changes:
         by_weekday.setdefault(change.weekday, []).append(change)
 
-    sections = [_("🔔 <b>Schedule changes</b>")]
+    sections = [_("schedule.changes_header")]
     for weekday in sorted(by_weekday):
         day_changes = sorted(by_weekday[weekday], key=lambda change: change.time_range)
-        day_lines = [_("📅 <b>{day}</b>").format(day=weekday_full(weekday))]
+        day_lines = [_("schedule.day_header").format(day=weekday_full(weekday))]
         for change in day_changes:
             day_lines.append("")
             day_lines.append(_format_change_block(change))

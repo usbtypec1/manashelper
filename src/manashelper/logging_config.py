@@ -16,7 +16,7 @@ def configure_logging() -> None:
     console-only ones, so configuring this any earlier would just get overwritten.
     Every `logging.getLogger(...)` call in the app (and in aiogram/apscheduler) propagates up
     to the root logger by default, so this one setup covers all of them, including the
-    `@dispatcher.errors()` global handler in main.py.
+    global update error handler in bot/dispatcher.py.
     """
     _LOG_DIR.mkdir(parents=True, exist_ok=True)
 

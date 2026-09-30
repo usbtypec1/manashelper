@@ -1,15 +1,14 @@
 # Turkish translations for Manashelper.
 # Copyright (C) 2026 ORGANIZATION
-# This file is distributed under the same license as the Manashelper
-# project.
+# This file is distributed under the same license as the Manashelper project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Manashelper VERSION\n"
+"Project-Id-Version: Manashelper 0.1.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-25 10:11+0600\n"
-"PO-Revision-Date: 2026-09-15 11:14+0600\n"
+"POT-Creation-Date: 2026-09-30 09:57+0600\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: tr\n"
 "Language-Team: tr <LL@li.org>\n"
@@ -19,401 +18,330 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-msgid "➕ Post an ad"
-msgstr "➕ İlan ver"
-
-msgid "📋 My ads"
-msgstr "📋 İlanlarım"
-
-msgid "◀️ Back to menu"
-msgstr "◀️ Menüye dön"
-
-msgid "❌ Cancel"
+msgid "common.cancel"
 msgstr "❌ İptal"
 
-msgid "Skip"
+msgid "common.skip"
 msgstr "Atla"
 
-msgid "✅ Done"
+msgid "common.done"
 msgstr "✅ Tamam"
 
-msgid "45 minutes"
+msgid "common.duration.minutes_45"
 msgstr "45 dakika"
 
-msgid "6 hours"
+msgid "common.duration.hours_6"
 msgstr "6 saat"
 
-msgid "24 hours"
+msgid "common.duration.hours_24"
 msgstr "24 saat"
 
-msgid "7 days"
+msgid "common.duration.days_7"
 msgstr "7 gün"
 
-msgid "♾️ No expiration"
+msgid "ads.no_expiration"
 msgstr "♾️ Süresiz"
 
-msgid "✅ Submit for review"
+msgid "ads.submit_review"
 msgstr "✅ İncelemeye gönder"
 
-msgid "🗑 Delete"
+msgid "common.delete"
 msgstr "🗑 Sil"
 
-msgid "◀️ Back"
+msgid "common.back"
 msgstr "◀️ Geri"
 
-msgid "✅ Yes, delete"
+msgid "ads.confirm_delete"
 msgstr "✅ Evet, sil"
 
-msgid "✅ Approve"
+msgid "ads.post"
+msgstr "➕ İlan ver"
+
+msgid "ads.my_ads"
+msgstr "📋 İlanlarım"
+
+msgid "common.back_to_menu"
+msgstr "◀️ Menüye dön"
+
+msgid "ads.approve"
 msgstr "✅ Onayla"
 
-msgid "❌ Reject"
+msgid "ads.reject"
 msgstr "❌ Reddet"
 
-msgid "✏️ Add a comment"
+msgid "ads.add_comment"
 msgstr "✏️ Yorum ekle"
 
-msgid "🚫 No comment"
+msgid "ads.no_comment"
 msgstr "🚫 Yorum yok"
 
-msgid "✅ Send"
+msgid "common.send"
 msgstr "✅ Gönder"
 
-msgid "📅 Today"
+msgid "common.back_to_settings"
+msgstr "◀️ Ayarlara dön"
+
+msgid "food.today"
 msgstr "📅 Bugün"
 
-msgid "📆 Tomorrow"
+msgid "food.tomorrow"
 msgstr "📆 Yarın"
 
-msgid "🗓 Day after tomorrow"
+msgid "food.day_after_tomorrow"
 msgstr "🗓 Öbür gün"
 
-msgid "🧹 Auto-delete settings"
+msgid "food.auto_delete_settings"
 msgstr "🧹 Otomatik silme ayarları"
 
-msgid "15 minutes"
+msgid "common.duration.minutes_15"
 msgstr "15 dakika"
 
-msgid "3 hours"
+msgid "common.duration.hours_3"
 msgstr "3 saat"
 
-msgid "1 day"
+msgid "common.duration.days_1"
 msgstr "1 gün"
 
-msgid "Off"
+msgid "common.off"
 msgstr "Kapalı"
 
-msgid "Lunch"
+msgid "food.lunch"
 msgstr "Öğle"
 
-msgid "Dinner"
+msgid "food.dinner"
 msgstr "Akşam"
 
-msgid "✅ All"
+msgid "common.enable_all"
 msgstr "✅ Hepsi"
 
-msgid "❌ All"
+msgid "common.disable_all"
 msgstr "❌ Hepsi"
 
-msgid "⚙️ Configure notifications"
+msgid "notifications.configure"
 msgstr "⚙️ Bildirimleri ayarla"
 
-msgid "🔄 Update credentials"
+msgid "obis.update_credentials"
 msgstr "🔄 Bilgileri güncelle"
 
-msgid "🔑 Enter credentials"
+msgid "obis.enter_credentials"
 msgstr "🔑 Bilgileri gir"
 
-msgid "🗑 Clear credentials"
-msgstr "🗑 Bilgileri sil"
-
-msgid "✅ Yes, clear"
+msgid "obis.confirm_clear"
 msgstr "✅ Evet, sil"
 
-msgid "📃 Terms of use"
+msgid "obis.terms"
 msgstr "📃 Kullanım koşulları"
 
-msgid "✅ Accept terms"
+msgid "obis.accept_terms"
 msgstr "✅ Koşulları kabul et"
 
-msgid "📱 Share phone number"
-msgstr "📱 Telefon numarasını paylaş"
+msgid "obis.clear_credentials"
+msgstr "🗑 Bilgileri sil"
 
-msgid "➕ Add a phone number"
+msgid "phone.add"
 msgstr "➕ Telefon numarası ekle"
 
-msgid "🔔 Notifications"
+msgid "phone.share"
+msgstr "📱 Telefon numarasını paylaş"
+
+msgid "settings.notifications"
 msgstr "🔔 Bildirimler"
 
-msgid "📚 My lessons"
+msgid "settings.my_lessons"
 msgstr "📚 Derslerim"
 
-msgid "🔑 OBIS credentials"
+msgid "settings.obis_credentials"
 msgstr "🔑 OBIS bilgileri"
 
-msgid "📱 My phone numbers"
+msgid "settings.phone_numbers"
 msgstr "📱 Telefon numaralarım"
 
-msgid "🌐 Language"
+msgid "settings.language"
 msgstr "🌐 Dil"
 
-msgid "💬 Send feedback"
+msgid "settings.feedback"
 msgstr "💬 Geri bildirim gönder"
 
-msgid "Schedule changes"
-msgstr "Ders programı değişiklikleri"
+msgid "settings.donate"
+msgstr "❤️ Botu destekle"
 
-msgid "🍉 Food"
+msgid "menu.food"
 msgstr "🍉 Yemek"
 
-msgid "Exam grades"
+msgid "notifications.schedule_changes"
+msgstr "Ders programı değişiklikleri"
+
+msgid "notifications.exam_grades"
 msgstr "Sınav notları"
 
-msgid "Lesson skips"
+msgid "notifications.lesson_skips"
 msgstr "Devamsızlıklar"
 
-msgid "📅 My schedule"
+msgid "schedule.my_schedule"
 msgstr "📅 Ders programım"
 
-msgid "🔎 Search for a subject"
+msgid "schedule.search_subject"
 msgstr "🔎 Ders ara"
 
-msgid "📚 Choose courses"
+msgid "schedule.choose_courses"
 msgstr "📚 Ders seç"
 
-#, python-brace-format
-msgid "Year {number}"
+msgid "schedule.course_year"
 msgstr "{number}. sınıf"
 
-msgid "This feature is only available in a private chat with the bot."
+msgid "common.private_chat_only"
 msgstr "Bu özellik yalnızca bot ile özel sohbette kullanılabilir."
 
-#, python-brace-format
-msgid ""
-"📝 Let's create your ad.\n"
+msgid "menu.marketplace"
+msgstr "🛒 Pazar Yeri"
+
+msgid "ads.media_prompt"
+msgstr ""
+"🖼 Ürünün fotoğraflarını veya videolarını birer birer gönderin, en fazla 10 adet.\n"
 "\n"
-"First, send a <b>title</b> (up to {max} characters) - this is the first "
-"thing buyers will see."
-msgstr ""
-"📝 İlanınızı oluşturalım.\n"
-"\n"
-"Önce bir <b>başlık</b> gönderin (en fazla {max} karakter) - alıcıların "
-"göreceği ilk şey budur."
+"Bitirdiğinizde Tamam'a dokunun - ya da medya olmadan yayınlamak için hemen dokunun."
 
-#, python-brace-format
-msgid ""
-"🛒 <b>Marketplace</b>\n"
-"\n"
-"Post an ad for other students to see, or manage the ads you've already "
-"posted.\n"
-"\n"
-"🔗 <a href=\"{link}\">Browse the marketplace channel</a>"
-msgstr ""
-"🛒 <b>Pazar Yeri</b>\n"
-"\n"
-"Diğer öğrencilerin görmesi için bir ilan verin veya yayınladığınız "
-"ilanları yönetin.\n"
-"\n"
-"🔗 <a href=\"{link}\">Pazar Yeri kanalını aç</a>"
+msgid "ads.expiration_prompt"
+msgstr "⏳ Bu ilan otomatik olarak kaldırılmadan önce ne kadar süre görünür kalmalı?"
 
-msgid "🏠 Main menu"
-msgstr "🏠 Ana menü"
+msgid "ads.deleted"
+msgstr "İlan silindi ✅"
 
-msgid ""
-"You've posted the maximum of 5 ads for this hour. Please try again a bit "
-"later."
-msgstr "Bu saat için maksimum 5 ilan verdiniz. Lütfen biraz sonra tekrar deneyin."
-
-msgid "Please start with the /start command"
-msgstr "Lütfen /start komutuyla başlayın"
-
-msgid ""
-"📞 Before you can post an ad, buyers need a way to reach you.\n"
-"\n"
-"You don't currently have a public Telegram username, so please share a "
-"phone number using the button below, or type one in manually (e.g. "
-"+996700123456):"
-msgstr ""
-"📞 İlan verebilmeniz için alıcıların size ulaşabileceği bir yol olmalı.\n"
-"\n"
-"Şu anda genel bir Telegram kullanıcı adınız yok, bu yüzden lütfen "
-"aşağıdaki düğmeyi kullanarak bir telefon numarası paylaşın veya elle "
-"girin (örn. +996700123456):"
-
-msgid ""
-"Something went wrong saving that number. Please type your phone number "
-"manually:"
-msgstr ""
-"Bu numara kaydedilirken bir sorun oluştu. Lütfen telefon numaranızı elle "
-"girin:"
-
-msgid "✅ Phone number saved."
-msgstr "✅ Telefon numarası kaydedildi."
-
-msgid ""
-"That doesn't look like a valid phone number (e.g. +996700123456). Please "
-"try again:"
-msgstr ""
-"Bu geçerli bir telefon numarasına benzemiyor (örn. +996700123456). Lütfen"
-" tekrar deneyin:"
-
-#, python-brace-format
-msgid ""
-"The title can't be empty and must be at most {max} characters long. "
-"Please try again:"
-msgstr ""
-"Başlık boş olamaz ve en fazla {max} karakter uzunluğunda olmalıdır. "
-"Lütfen tekrar deneyin:"
-
-#, python-brace-format
-msgid ""
-"🧾 Now send a <b>description</b> (up to {max} characters) - condition, "
-"size, reason for selling, anything a buyer should know."
-msgstr ""
-"🧾 Şimdi bir <b>açıklama</b> gönderin (en fazla {max} karakter) - durumu, "
-"boyutu, satış nedeni, alıcının bilmesi gereken her şey."
-
-#, python-brace-format
-msgid ""
-"The description can't be empty and must be at most {max} characters long."
-" Please try again:"
-msgstr ""
-"Açıklama boş olamaz ve en fazla {max} karakter uzunluğunda olmalıdır. "
-"Lütfen tekrar deneyin:"
-
-msgid ""
-"💵 Send the price in som (digits only), or tap Skip if it's negotiable or "
-"not applicable:"
-msgstr ""
-"💵 Fiyatı som cinsinden gönderin (yalnızca rakam) veya pazarlık konusuysa "
-"ya da uygulanmıyorsa Atla'ya dokunun:"
-
-msgid ""
-"🖼 Send up to 10 photos or videos of the item, one at a time.\n"
-"\n"
-"Tap Done when you're finished - or tap it right away to post without "
-"media."
-msgstr ""
-"🖼 Ürünün fotoğraflarını veya videolarını birer birer gönderin, en fazla "
-"10 adet.\n"
-"\n"
-"Bitirdiğinizde Tamam'a dokunun - ya da medya olmadan yayınlamak için "
-"hemen dokunun."
-
-msgid "Please send a whole number (digits only), or tap Skip:"
-msgstr "Lütfen bir tam sayı gönderin (yalnızca rakam) veya Atla'ya dokunun:"
-
-#, python-brace-format
-msgid "You've reached the limit of {max} photos/videos. Tap Done to continue."
-msgstr "{max} foto/video sınırına ulaştınız. Devam etmek için Tamam'a dokunun."
-
-#, python-brace-format
-msgid "✅ Added: {count}/{max}. Send more, or tap Done when you're finished."
-msgstr ""
-"✅ Eklendi: {count}/{max}. Daha fazla gönderin veya bitirdiğinizde Tamam'a"
-" dokunun."
-
-msgid "⏳ How long should this ad stay visible before it's automatically removed?"
-msgstr ""
-"⏳ Bu ilan otomatik olarak kaldırılmadan önce ne kadar süre görünür "
-"kalmalı?"
-
-msgid "👀 Here's how your ad will look:"
-msgstr "👀 İlanınız şöyle görünecek:"
-
-msgid "❌ Cancelled."
-msgstr "❌ İptal edildi."
-
-msgid ""
-"✅ Your ad has been sent for moderator review. You'll be notified once "
-"it's approved or rejected."
-msgstr ""
-"✅ İlanınız moderatör incelemesine gönderildi. Onaylandığında veya "
-"reddedildiğinde bilgilendirileceksiniz."
-
-msgid "🆕 <b>New ad for review</b>"
-msgstr "🆕 <b>İncelenecek yeni ilan</b>"
-
-msgid "Review it:"
+msgid "ads.review_prompt"
 msgstr "İnceleyin:"
 
-#, python-brace-format
-msgid "📋 <b>My ads</b> (page {page}/{total})"
-msgstr "📋 <b>İlanlarım</b> (sayfa {page}/{total})"
-
-msgid ""
-"📋 <b>My ads</b>\n"
-"\n"
-"You haven't posted any ads yet."
+msgid "ads.empty_list"
 msgstr ""
 "📋 <b>İlanlarım</b>\n"
 "\n"
 "Henüz hiç ilan vermediniz."
 
-msgid "This ad no longer exists"
-msgstr "Bu ilan artık mevcut değil"
+msgid "ads.marketplace_intro"
+msgstr ""
+"🛒 <b>Pazar Yeri</b>\n"
+"\n"
+"Diğer öğrencilerin görmesi için bir ilan verin veya yayınladığınız ilanları yönetin.\n"
+"\n"
+"🔗 <a href=\"{link}\">Pazar Yeri kanalını aç</a>"
 
-msgid "Are you sure you want to delete this ad? This can't be undone."
+msgid "menu.main"
+msgstr "🏠 Ana menü"
+
+msgid "phone.saved"
+msgstr "✅ Telefon numarası kaydedildi."
+
+msgid "ads.price_prompt"
+msgstr "💵 Fiyatı som cinsinden gönderin (yalnızca rakam) veya pazarlık konusuysa ya da uygulanmıyorsa Atla'ya dokunun:"
+
+msgid "ads.preview"
+msgstr "👀 İlanınız şöyle görünecek:"
+
+msgid "ads.list_page"
+msgstr "📋 <b>İlanlarım</b> (sayfa {page}/{total})"
+
+msgid "ads.contact_prompt"
+msgstr ""
+"📞 İlan verebilmeniz için alıcıların size ulaşabileceği bir yol olmalı.\n"
+"\n"
+"Şu anda genel bir Telegram kullanıcı adınız yok, bu yüzden lütfen aşağıdaki düğmeyi kullanarak bir telefon numarası "
+"paylaşın veya elle girin (örn. +996700123456):"
+
+msgid "ads.invalid_price"
+msgstr "Lütfen bir tam sayı gönderin (yalnızca rakam) veya Atla'ya dokunun:"
+
+msgid "common.cancelled"
+msgstr "❌ İptal edildi."
+
+msgid "ads.submitted"
+msgstr "✅ İlanınız moderatör incelemesine gönderildi. Onaylandığında veya reddedildiğinde bilgilendirileceksiniz."
+
+msgid "ads.new_review"
+msgstr "🆕 <b>İncelenecek yeni ilan</b>"
+
+msgid "ads.delete_confirmation"
 msgstr "Bu ilanı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
 
-msgid "Ad deleted ✅"
-msgstr "İlan silindi ✅"
+msgid "ads.title_prompt"
+msgstr ""
+"📝 İlanınızı oluşturalım.\n"
+"\n"
+"Önce bir <b>başlık</b> gönderin (en fazla {max} karakter) - alıcıların göreceği ilk şey budur."
 
-msgid "You don't have permission to do this"
-msgstr "Bunu yapmaya yetkiniz yok"
+msgid "ads.hourly_limit"
+msgstr "Bu saat için maksimum 5 ilan verdiniz. Lütfen biraz sonra tekrar deneyin."
 
-msgid "This ad has already been reviewed"
-msgstr "Bu ilan zaten incelendi"
+msgid "common.start_required"
+msgstr "Lütfen /start komutuyla başlayın"
 
-msgid "Failed to publish this ad. Please try again later."
-msgstr "Bu ilan yayınlanamadı. Lütfen daha sonra tekrar deneyin."
+msgid "phone.save_failed"
+msgstr "Bu numara kaydedilirken bir sorun oluştu. Lütfen telefon numaranızı elle girin:"
 
-msgid "Approved and published ✅"
-msgstr "Onaylandı ve yayınlandı ✅"
+msgid "phone.invalid"
+msgstr "Bu geçerli bir telefon numarasına benzemiyor (örn. +996700123456). Lütfen tekrar deneyin:"
 
-#, python-brace-format
-msgid "Your ad \"{title}\" has been approved and published! 🎉"
-msgstr "\"{title}\" ilanınız onaylandı ve yayınlandı! 🎉"
+msgid "ads.description_prompt"
+msgstr ""
+"🧾 Şimdi bir <b>açıklama</b> gönderin (en fazla {max} karakter) - durumu, boyutu, satış nedeni, alıcının bilmesi "
+"gereken her şey."
 
-msgid "Reject this ad. Would you like to add a comment explaining why?"
-msgstr "Bu ilanı reddet. Nedenini açıklayan bir yorum eklemek ister misiniz?"
+msgid "ads.media_added"
+msgstr "✅ Eklendi: {count}/{max}. Daha fazla gönderin veya bitirdiğinizde Tamam'a dokunun."
 
-#, python-brace-format
-msgid "Your ad \"{title}\" was not approved."
+msgid "ads.not_found"
+msgstr "Bu ilan artık mevcut değil"
+
+msgid "ads.invalid_title"
+msgstr "Başlık boş olamaz ve en fazla {max} karakter uzunluğunda olmalıdır. Lütfen tekrar deneyin:"
+
+msgid "ads.invalid_description"
+msgstr "Açıklama boş olamaz ve en fazla {max} karakter uzunluğunda olmalıdır. Lütfen tekrar deneyin:"
+
+msgid "ads.media_limit"
+msgstr "{max} foto/video sınırına ulaştınız. Devam etmek için Tamam'a dokunun."
+
+msgid "ads.owner_rejected"
 msgstr "\"{title}\" ilanınız onaylanmadı."
 
-#, python-brace-format
-msgid "Reason: {comment}"
-msgstr "Neden: {comment}"
-
-msgid "Rejected ❌"
-msgstr "Reddedildi ❌"
-
-msgid "Please send the rejection comment as a text message:"
+msgid "ads.rejection_comment_prompt"
 msgstr "Lütfen ret nedenini bir metin mesajı olarak gönderin:"
 
-msgid "The comment can't be empty. Please try again:"
-msgstr "Yorum boş olamaz. Lütfen tekrar deneyin:"
-
-msgid "Something went wrong. Please try again."
-msgstr "Bir şeyler ters gitti. Lütfen tekrar deneyin."
-
-msgid "Rejection sent ✅"
+msgid "ads.rejection_sent"
 msgstr "Ret gönderildi ✅"
 
-msgid "📢 Send the message you want to broadcast to every user:"
+msgid "common.permission_denied"
+msgstr "Bunu yapmaya yetkiniz yok"
+
+msgid "ads.approved_published"
+msgstr "Onaylandı ve yayınlandı ✅"
+
+msgid "ads.rejection_prompt"
+msgstr "Bu ilanı reddet. Nedenini açıklayan bir yorum eklemek ister misiniz?"
+
+msgid "ads.rejected_notice"
+msgstr "Reddedildi ❌"
+
+msgid "ads.empty_comment"
+msgstr "Yorum boş olamaz. Lütfen tekrar deneyin:"
+
+msgid "common.error_retry"
+msgstr "Bir şeyler ters gitti. Lütfen tekrar deneyin."
+
+msgid "ads.already_reviewed"
+msgstr "Bu ilan zaten incelendi"
+
+msgid "ads.publish_failed"
+msgstr "Bu ilan yayınlanamadı. Lütfen daha sonra tekrar deneyin."
+
+msgid "ads.rejection_reason"
+msgstr "Neden: {comment}"
+
+msgid "ads.owner_approved"
+msgstr "\"{title}\" ilanınız onaylandı ve yayınlandı! 🎉"
+
+msgid "broadcast.message_prompt"
 msgstr "📢 Tüm kullanıcılara göndermek istediğiniz mesajı yazın:"
 
-msgid "Please send the broadcast as a text message."
-msgstr "Lütfen duyuruyu bir metin mesajı olarak gönderin."
-
-#, python-brace-format
-msgid ""
-"📢 <b>Broadcast preview:</b>\n"
-"\n"
-"{body}\n"
-"\n"
-"Send this to every user?"
+msgid "broadcast.preview"
 msgstr ""
 "📢 <b>Duyuru önizlemesi:</b>\n"
 "\n"
@@ -421,54 +349,53 @@ msgstr ""
 "\n"
 "Bu tüm kullanıcılara gönderilsin mi?"
 
-msgid "❌ Broadcast cancelled."
+msgid "broadcast.cancelled"
 msgstr "❌ Duyuru iptal edildi."
 
-msgid "📤 Sending broadcast…"
+msgid "broadcast.sending"
 msgstr "📤 Duyuru gönderiliyor…"
 
-#, python-brace-format
-msgid ""
-"📢 <b>Message from the administration</b>\n"
-"\n"
-"{body}"
+msgid "broadcast.sent"
+msgstr "✅ Duyuru {sent}/{total} kullanıcıya gönderildi."
+
+msgid "broadcast.text_required"
+msgstr "Lütfen duyuruyu bir metin mesajı olarak gönderin."
+
+msgid "broadcast.admin_message"
 msgstr ""
 "📢 <b>Yönetimden mesaj</b>\n"
 "\n"
 "{body}"
 
-#, python-brace-format
-msgid "✅ Broadcast sent to {sent}/{total} users."
-msgstr "✅ Duyuru {sent}/{total} kullanıcıya gönderildi."
+msgid "donations.qr_coming_soon"
+msgstr "Ödeme QR kodları yakında burada görünecek."
 
-msgid ""
-"💬 Please type the message you'd like to send to the administration. We'll"
-" reply here as soon as possible."
+msgid "donations.intro"
 msgstr ""
-"💬 Yönetime göndermek istediğiniz mesajı yazın. En kısa sürede burada "
-"yanıt vereceğiz."
+"❤️ <b>Manashelper'ın çalışmaya devam etmesine destek olun</b>\n"
+"\n"
+"28 Eylül'de ücretsiz AWS hesabına getirilen kısıtlamalar nedeniyle bot durdu. Ders programınızı, yemekhane menüsünü, "
+"notlarınızı ve devamsızlık bilgilerinizi görmeye devam edebilmeniz için botu ücretli bir sunucuya taşıdım.\n"
+"\n"
+"Katkınız, sizin ve botu kullanan diğer {others} kişinin erişimi için sunucu masrafını karşılamaya yardımcı olur. Her "
+"miktar değerlidir; bağışların tamamı sunucu kirasına harcanacaktır. Desteğiniz için teşekkürler!"
 
-msgid "Settings"
-msgstr "Ayarlar"
+msgid "donations.choose_bank"
+msgstr "Ödeme QR kodunu görmek için bir banka seçin:"
 
-#, python-brace-format
-msgid ""
-"The message can't be empty and must be at most {max} characters long. "
-"Please try again:"
-msgstr ""
-"Mesaj boş olamaz ve en fazla {max} karakter uzunluğunda olmalıdır. "
-"Lütfen tekrar deneyin:"
+msgid "donations.qr_unavailable"
+msgstr "Bu bankanın QR kodu artık kullanılamıyor."
 
-msgid "✅ Thank you! Your message has been sent to the administration."
+msgid "feedback.sent"
 msgstr "✅ Teşekkürler! Mesajınız yönetime gönderildi."
 
-#, python-brace-format
-msgid ""
-"💬 <b>New feedback</b> from {sender}:\n"
-"\n"
-"{body}\n"
-"\n"
-"<i>Reply to this message to answer.</i>"
+msgid "feedback.message_prompt"
+msgstr "💬 Yönetime göndermek istediğiniz mesajı yazın. En kısa sürede burada yanıt vereceğiz."
+
+msgid "settings.title"
+msgstr "Ayarlar"
+
+msgid "feedback.admin_message"
 msgstr ""
 "💬 {sender} kullanıcısından <b>yeni geri bildirim</b>:\n"
 "\n"
@@ -476,30 +403,22 @@ msgstr ""
 "\n"
 "<i>Yanıt vermek için bu mesajı yanıtlayın.</i>"
 
-#, python-brace-format
-msgid ""
-"📩 <b>Reply from the administration:</b>\n"
-"\n"
-"{text}"
+msgid "feedback.admin_reply"
 msgstr ""
 "📩 <b>Yönetimden yanıt:</b>\n"
 "\n"
 "{text}"
 
-msgid "⚠️ Failed to deliver the reply to the user."
-msgstr "⚠️ Yanıt kullanıcıya iletilemedi."
-
-#, fuzzy
-msgid "Reply sent ✅"
+msgid "feedback.reply_sent"
 msgstr "Ret gönderildi ✅"
 
-msgid ""
-"🍉 <b>Cafeteria menu</b>\n"
-"\n"
-"Choose a day below or send a command:\n"
-"• <code>/yemek today</code> — today\n"
-"• <code>/yemek tomorrow</code> — tomorrow\n"
-"• <code>/yemek 2</code> — in N days"
+msgid "feedback.invalid_message"
+msgstr "Mesaj boş olamaz ve en fazla {max} karakter uzunluğunda olmalıdır. Lütfen tekrar deneyin:"
+
+msgid "feedback.delivery_failed"
+msgstr "⚠️ Yanıt kullanıcıya iletilemedi."
+
+msgid "food.menu_prompt"
 msgstr ""
 "🍉 <b>Yemekhane menüsü</b>\n"
 "\n"
@@ -508,482 +427,356 @@ msgstr ""
 "• <code>/yemek tomorrow</code> — yarın\n"
 "• <code>/yemek 2</code> — N gün sonra"
 
-msgid "⭐ Rate the menu:"
+msgid "food.rate_prompt"
 msgstr "⭐ Menüyü değerlendirin:"
 
-msgid ""
-"ℹ️ Usage: <code>/yemek today</code>, <code>/yemek tomorrow</code>, or "
-"<code>/yemek 2</code>"
-msgstr ""
-"ℹ️ Kullanım: <code>/yemek today</code>, <code>/yemek tomorrow</code> veya"
-" <code>/yemek 2</code>"
-
-msgid "Thanks for your rating!"
+msgid "food.rating_thanks"
 msgstr "Değerlendirmeniz için teşekkürler!"
 
-msgid "🧹 Auto-delete food menu messages in this chat after:"
+msgid "food.command_usage"
+msgstr "ℹ️ Kullanım: <code>/yemek today</code>, <code>/yemek tomorrow</code> veya <code>/yemek 2</code>"
+
+msgid "food.auto_delete_prompt"
 msgstr "🧹 Bu sohbette yemek menüsü mesajlarını şu süre sonra otomatik sil:"
 
-msgid "Saved"
+msgid "common.saved"
 msgstr "Kaydedildi"
 
-msgid "🍽 Fine-tune menu notifications"
-msgstr "🍽 Menü bildirimlerini özelleştir"
-
-msgid "this isn't a button"
+msgid "common.not_a_button"
 msgstr "buna basma"
 
-msgid ""
-"Enter the subject name. You can type Turkish letters using regular Latin "
-"ones (e.g. s instead of ş, or i instead of ı)."
-msgstr ""
-"Ders adını girin. Türkçe harfleri normal Latin harfleriyle de "
-"yazabilirsiniz (örneğin ş yerine s, ı yerine i)."
+msgid "food.notification_settings"
+msgstr "🍽 Menü bildirimlerini özelleştir"
 
-msgid ""
-"The query is too short. Open «🔎 Search for a subject» again and try once "
-"more."
+msgid "schedule.search_prompt"
+msgstr "Ders adını girin. Türkçe harfleri normal Latin harfleriyle de yazabilirsiniz (örneğin ş yerine s, ı yerine i)."
+
+msgid "schedule.query_too_short"
 msgstr "Sorgu çok kısa. «🔎 Ders ara»yı tekrar açıp yeniden deneyin."
 
-msgid "Nothing found."
+msgid "schedule.no_results"
 msgstr "Hiçbir şey bulunamadı."
 
-msgid "The search results have expired. Please search again."
+msgid "schedule.search_expired"
 msgstr "Arama sonuçlarının süresi doldu. Lütfen tekrar arayın."
 
-#, python-brace-format
-msgid "✅ Language: {language}"
+msgid "language.selected"
 msgstr "✅ Dil: {language}"
 
-msgid ""
-"You haven't saved your OBIS credentials. Enter them using the button "
-"below."
-msgstr "OBIS bilgileriniz kayıtlı değil. Aşağıdaki butonla girin."
+msgid "menu.attendance"
+msgstr "📋 Yoklama"
 
-msgid ""
-"Your OBIS credentials are invalid. Enter them again using the button "
-"below."
-msgstr "OBIS bilgileriniz hatalı. Aşağıdaki butonla yeniden girin."
+msgid "menu.grades"
+msgstr "💯 Notlar"
 
-msgid "Couldn't fetch data from OBIS. Please try again later."
-msgstr "OBIS'ten veri alınamadı. Lütfen daha sonra tekrar deneyin."
-
-msgid "Please accept the bot's terms of use to continue."
-msgstr "Devam etmek için lütfen botun kullanım koşullarını kabul edin."
-
-msgid "Enter your student number:"
-msgstr "Öğrenci numaranızı girin:"
-
-msgid "Cancelled"
-msgstr "İptal edildi"
-
-msgid "Are you sure you want to clear your saved OBIS credentials?"
-msgstr "Kayıtlı OBIS bilgilerinizi silmek istediğinizden emin misiniz?"
-
-msgid "OBIS credentials removed ✅"
-msgstr "OBIS bilgileri silindi ✅"
-
-msgid "The student number can't be empty. Please try again:"
-msgstr "Öğrenci numarası boş olamaz. Lütfen tekrar deneyin:"
-
-msgid "Enter your OBIS password:"
+msgid "obis.password_prompt"
 msgstr "OBIS şifrenizi girin:"
 
-msgid "Invalid OBIS credentials. Enter your student number again:"
-msgstr "OBIS bilgileri hatalı. Öğrenci numaranızı tekrar girin:"
-
-msgid "Credentials saved successfully ✅"
+msgid "obis.credentials_saved"
 msgstr "Bilgiler başarıyla kaydedildi ✅"
 
-msgid ""
-"📱 <b>My phone numbers</b>\n"
-"\n"
-"These are shown to buyers on the ads you post."
+msgid "obis.accept_terms_prompt"
+msgstr "Devam etmek için lütfen botun kullanım koşullarını kabul edin."
+
+msgid "obis.student_number_prompt"
+msgstr "Öğrenci numaranızı girin:"
+
+msgid "obis.cancelled"
+msgstr "İptal edildi"
+
+msgid "obis.clear_confirmation"
+msgstr "Kayıtlı OBIS bilgilerinizi silmek istediğinizden emin misiniz?"
+
+msgid "obis.credentials_removed"
+msgstr "OBIS bilgileri silindi ✅"
+
+msgid "obis.empty_student_number"
+msgstr "Öğrenci numarası boş olamaz. Lütfen tekrar deneyin:"
+
+msgid "obis.credentials_missing"
+msgstr "OBIS bilgileriniz kayıtlı değil. Aşağıdaki butonla girin."
+
+msgid "obis.credentials_invalid"
+msgstr "OBIS bilgileriniz hatalı. Aşağıdaki butonla yeniden girin."
+
+msgid "obis.fetch_failed"
+msgstr "OBIS'ten veri alınamadı. Lütfen daha sonra tekrar deneyin."
+
+msgid "obis.login_failed"
+msgstr "OBIS bilgileri hatalı. Öğrenci numaranızı tekrar girin:"
+
+msgid "phone.list"
 msgstr ""
 "📱 <b>Telefon numaralarım</b>\n"
 "\n"
 "Bunlar, verdiğiniz ilanlarda alıcılara gösterilir."
 
-msgid ""
-"Share a phone number using the button below, or type one in manually "
-"(e.g. +996700123456):"
-msgstr ""
-"Aşağıdaki düğmeyi kullanarak bir telefon numarası paylaşın veya elle "
-"girin (örn. +996700123456):"
+msgid "phone.number_prompt"
+msgstr "Aşağıdaki düğmeyi kullanarak bir telefon numarası paylaşın veya elle girin (örn. +996700123456):"
 
-msgid "This phone number is no longer saved"
+msgid "phone.not_found"
 msgstr "Bu telefon numarası artık kayıtlı değil"
 
-msgid "Bot notification settings"
-msgstr "Bot bildirim ayarları"
-
-msgid "List of faculties"
-msgstr "Fakülteler listesi"
-
-msgid "OBIS settings"
-msgstr "OBIS ayarları"
-
-msgid "📅 Schedule"
-msgstr "📅 Ders programı"
-
-msgid "📋 Attendance"
-msgstr "📋 Yoklama"
-
-msgid "💯 Grades"
-msgstr "💯 Notlar"
-
-msgid "🛒 Marketplace"
-msgstr "🛒 Pazar Yeri"
-
-msgid "⚙️ Settings"
+msgid "menu.settings"
 msgstr "⚙️ Ayarlar"
 
-msgid "Welcome to Manashelper!"
+msgid "notifications.title"
+msgstr "Bot bildirim ayarları"
+
+msgid "schedule.faculties"
+msgstr "Fakülteler listesi"
+
+msgid "obis.settings"
+msgstr "OBIS ayarları"
+
+msgid "common.welcome"
 msgstr "Manashelper'a hoş geldiniz!"
 
-msgid "Keyboard is hidden"
+msgid "menu.keyboard_hidden"
 msgstr "Klavye gizlendi"
 
-msgid ""
-"You have no tracked courses yet. Pick your courses with the button below "
-"to see your schedule."
-msgstr ""
-"Henüz takip ettiğiniz bir ders yok. Ders programınızı görmek için "
-"aşağıdaki butondan derslerinizi seçin."
+msgid "menu.schedule"
+msgstr "📅 Ders programı"
 
-msgid ""
-"The schedule for your courses hasn't been loaded yet. It updates once an "
-"hour — please check back a bit later."
-msgstr ""
-"Derslerinizin ders programı henüz yüklenmedi. Saatte bir güncelleniyor — "
-"lütfen biraz sonra tekrar deneyin."
+msgid "schedule.not_loaded"
+msgstr "Derslerinizin ders programı henüz yüklenmedi. Saatte bir güncelleniyor — lütfen biraz sonra tekrar deneyin."
 
-msgid "You no longer have any tracked courses"
-msgstr "Artık takip ettiğiniz bir ders kalmadı"
-
-msgid "List of departments"
+msgid "schedule.departments"
 msgstr "Bölümler listesi"
 
-msgid "List of courses"
+msgid "schedule.courses"
 msgstr "Ders listesi"
 
-msgid "Course not found"
+msgid "schedule.no_longer_tracked"
+msgstr "Artık takip ettiğiniz bir ders kalmadı"
+
+msgid "schedule.course_not_found"
 msgstr "Ders bulunamadı"
 
-msgid "Enjoy your meal! 🍽"
+msgid "schedule.no_tracked_courses"
+msgstr "Henüz takip ettiğiniz bir ders yok. Ders programınızı görmek için aşağıdaki butondan derslerinizi seçin."
+
+msgid "food.enjoy_meal"
 msgstr "Afiyet olsun! 🍽"
 
-msgid "Awaiting review"
+msgid "ads.status_pending"
 msgstr "İnceleme bekleniyor"
 
-msgid "Published"
+msgid "ads.status_published"
 msgstr "Yayınlandı"
 
-msgid "Rejected"
+msgid "ads.status_rejected"
 msgstr "Reddedildi"
 
-#, python-brace-format
-msgid "💵 Price: <b>{price}</b> som"
-msgstr "💵 Fiyat: <b>{price}</b> som"
-
-#, python-brace-format
-msgid "⏰ Valid until: {date}"
-msgstr "⏰ Geçerlilik tarihi: {date}"
-
-#, python-brace-format
-msgid "📞 <a href=\"{link}\">Tap here to see the seller's contacts</a>"
-msgstr ""
-"📞 <a href=\"{link}\">Satıcının iletişim bilgilerini görmek için buraya "
-"dokunun</a>"
-
-msgid "📞 Contacts:"
-msgstr "📞 İletişim:"
-
-#, python-brace-format
-msgid "💬 Reason: {comment}"
-msgstr "💬 Neden: {comment}"
-
-#, python-brace-format
-msgid "📞 <b>Contacts for \"{title}\"</b>"
-msgstr "📞 <b>\"{title}\" için iletişim bilgileri</b>"
-
-msgid "The seller hasn't listed any contact details."
+msgid "ads.no_contacts"
 msgstr "Satıcı herhangi bir iletişim bilgisi eklememiş."
 
-#, python-brace-format
-msgid "🍽 <b>Menu for {weekday}, {date}</b>"
-msgstr "🍽 <b>{weekday}, {date} menüsü</b>"
+msgid "ads.contact_title"
+msgstr "📞 <b>\"{title}\" için iletişim bilgileri</b>"
 
-#, python-brace-format
-msgid "{index}. {name} — <b>{calories}</b> kcal"
-msgstr "{index}. {name} — <b>{calories}</b> kcal"
+msgid "ads.price"
+msgstr "💵 Fiyat: <b>{price}</b> som"
 
-#, python-brace-format
-msgid "🔥 Total: <b>{calories}</b> kcal"
-msgstr "🔥 Toplam: <b>{calories}</b> kcal"
+msgid "ads.valid_until"
+msgstr "⏰ Geçerlilik tarihi: {date}"
 
-#, python-brace-format
-msgid "⭐ Rating: <b>{average}</b> ({count})"
-msgstr "⭐ Puan: <b>{average}</b> ({count})"
+msgid "ads.contact_link"
+msgstr "📞 <a href=\"{link}\">Satıcının iletişim bilgilerini görmek için buraya dokunun</a>"
 
-msgid "⭐ No ratings yet"
-msgstr "⭐ Henüz puan yok"
+msgid "ads.contacts"
+msgstr "📞 İletişim:"
 
-#, python-brace-format
-msgid "👁 Views: {count}"
-msgstr "👁 Görüntülenme: {count}"
+msgid "ads.reason"
+msgstr "💬 Neden: {comment}"
 
-msgid "😔 Today's menu hasn't been published yet."
-msgstr "😔 Bugünün menüsü henüz yayınlanmadı."
-
-msgid "😔 The menu for that day hasn't been published yet."
+msgid "food.menu_unpublished"
 msgstr "😔 Seçilen günün menüsü henüz yayınlanmadı."
 
-#, python-brace-format
-msgid "🏫 {faculty} — {department}, {course_year}"
+msgid "food.today_unpublished"
+msgstr "😔 Bugünün menüsü henüz yayınlanmadı."
+
+msgid "food.no_ratings"
+msgstr "⭐ Henüz puan yok"
+
+msgid "food.menu_header"
+msgstr "🍽 <b>{weekday}, {date} menüsü</b>"
+
+msgid "food.total_calories"
+msgstr "🔥 Toplam: <b>{calories}</b> kcal"
+
+msgid "food.views"
+msgstr "👁 Görüntülenme: {count}"
+
+msgid "food.dish"
+msgstr "{index}. {name} — <b>{calories}</b> kcal"
+
+msgid "food.rating"
+msgstr "⭐ Puan: <b>{average}</b> ({count})"
+
+msgid "schedule.search_course"
 msgstr "🏫 {faculty} — {department}, {course_year}"
 
-#, python-brace-format
-msgid "📅 {weekday}"
+msgid "schedule.search_weekday"
 msgstr "📅 {weekday}"
 
-#, python-brace-format
-msgid "🔎 Found: {total} (page {page}/{total_pages})"
+msgid "schedule.results_page"
 msgstr "🔎 Bulunan: {total} (sayfa {page}/{total_pages})"
 
-#, python-brace-format
-msgid "🔎 Found: {total}"
+msgid "schedule.results"
 msgstr "🔎 Bulunan: {total}"
 
-msgid "You don't have any exam grades."
+msgid "obis.no_grades"
 msgstr "Sınav notunuz bulunmuyor."
 
-msgid "You don't have any subjects."
+msgid "obis.no_subjects"
 msgstr "Herhangi bir dersiniz yok."
 
-msgid "Theory"
-msgstr "Teori"
-
-msgid "Practice"
-msgstr "Uygulama"
-
-#, python-brace-format
-msgid "{count} skip left"
-msgid_plural "{count} skips left"
-msgstr[0] "{count} hak kaldı"
-
-msgid "Subject"
+msgid "obis.subject"
 msgstr "Ders"
 
-msgid "Exam"
+msgid "obis.exam"
 msgstr "Sınav"
 
-#, python-brace-format
-msgid ""
-"🔔 New grade for the subject «{lesson}»\n"
-"{exam}: {score}"
+msgid "obis.theory_lower"
+msgstr "teori"
+
+msgid "obis.practice_lower"
+msgstr "uygulama"
+
+msgid "obis.skips_left.one"
+msgid_plural "obis.skips_left.many"
+msgstr[0] "{count} hak kaldı"
+
+msgid "obis.new_grade"
 msgstr ""
 "🔔 «{lesson}» dersi için yeni not\n"
 "{exam}: {score}"
 
-msgid "theory"
-msgstr "teori"
-
-msgid "practice"
-msgstr "uygulama"
-
-#, python-brace-format
-msgid "⚠️ A skip was recorded for the subject «{lesson}» ({skip_type})"
+msgid "obis.skip_recorded"
 msgstr "⚠️ «{lesson}» dersinde devamsızlık kaydedildi ({skip_type})"
 
-#, python-brace-format
-msgid "Missed: {percent}%"
+msgid "obis.missed_percentage"
 msgstr "Devamsızlık: %{percent}"
 
-#, python-brace-format
-msgid "You have {count} skip left"
-msgid_plural "You have {count} skips left"
+msgid "obis.theory"
+msgstr "Teori"
+
+msgid "obis.practice"
+msgstr "Uygulama"
+
+msgid "obis.remaining_skips.one"
+msgid_plural "obis.remaining_skips.many"
 msgstr[0] "{count} hak kaldı"
 
-msgid "Mon"
-msgstr "Pzt"
-
-msgid "Tue"
-msgstr "Sal"
-
-msgid "Wed"
-msgstr "Çar"
-
-msgid "Thu"
-msgstr "Per"
-
-msgid "Fri"
-msgstr "Cum"
-
-msgid "Sat"
-msgstr "Cmt"
-
-msgid "Sun"
-msgstr "Paz"
-
-msgid "Monday"
-msgstr "Pazartesi"
-
-msgid "Tuesday"
-msgstr "Salı"
-
-msgid "Wednesday"
-msgstr "Çarşamba"
-
-msgid "Thursday"
-msgstr "Perşembe"
-
-msgid "Friday"
-msgstr "Cuma"
-
-msgid "Saturday"
-msgstr "Cumartesi"
-
-msgid "Sunday"
-msgstr "Pazar"
-
-#, python-brace-format
-msgid "📅 <b>{day}</b>"
-msgstr "📅 <b>{day}</b>"
-
-msgid "No classes."
-msgstr "Ders yok."
-
-msgid "😋 Lunch break. Find out what's for lunch - /yemek"
+msgid "schedule.lunch_break"
 msgstr "😋 Öğle arası. Yemekte ne var öğrenmek için - /yemek"
 
-#, python-brace-format
-msgid ""
-"➕ {time_range}\n"
-"{content}"
+msgid "schedule.changes_header"
+msgstr "🔔 <b>Ders programı değişiklikleri</b>"
+
+msgid "weekday.mon"
+msgstr "Pzt"
+
+msgid "weekday.tue"
+msgstr "Sal"
+
+msgid "weekday.wed"
+msgstr "Çar"
+
+msgid "weekday.thu"
+msgstr "Per"
+
+msgid "weekday.fri"
+msgstr "Cum"
+
+msgid "weekday.sat"
+msgstr "Cmt"
+
+msgid "weekday.sun"
+msgstr "Paz"
+
+msgid "weekday.monday"
+msgstr "Pazartesi"
+
+msgid "weekday.tuesday"
+msgstr "Salı"
+
+msgid "weekday.wednesday"
+msgstr "Çarşamba"
+
+msgid "weekday.thursday"
+msgstr "Perşembe"
+
+msgid "weekday.friday"
+msgstr "Cuma"
+
+msgid "weekday.saturday"
+msgstr "Cumartesi"
+
+msgid "weekday.sunday"
+msgstr "Pazar"
+
+msgid "schedule.day_header"
+msgstr "📅 <b>{day}</b>"
+
+msgid "schedule.change_updated"
+msgstr ""
+"✏️ {time_range}\n"
+"{previous}\n"
+"→\n"
+"{new}"
+
+msgid "schedule.no_classes"
+msgstr "Ders yok."
+
+msgid "schedule.change_added"
 msgstr ""
 "➕ {time_range}\n"
 "{content}"
 
-#, python-brace-format
-msgid ""
-"➖ {time_range} (cancelled)\n"
-"{content}"
+msgid "schedule.change_cancelled"
 msgstr ""
 "➖ {time_range} (iptal edildi)\n"
 "{content}"
 
-#, python-brace-format
-msgid ""
-"✏️ {time_range}\n"
-"{previous}\n"
-"→\n"
-"{new}"
-msgstr ""
-"✏️ {time_range}\n"
-"{previous}\n"
-"→\n"
-"{new}"
-
-msgid "🔔 <b>Schedule changes</b>"
-msgstr "🔔 <b>Ders programı değişiklikleri</b>"
-
-#, python-brace-format
-msgid "📦 Version history (page {page}/{total_pages})"
-msgstr "📦 Sürüm geçmişi (sayfa {page}/{total_pages})"
-
-msgid "📦 Version history"
+msgid "versions.title"
 msgstr "📦 Sürüm geçmişi"
 
-#, python-brace-format
-msgid "📦 <b>Version {version}</b>"
+msgid "versions.title_page"
+msgstr "📦 Sürüm geçmişi (sayfa {page}/{total_pages})"
+
+msgid "versions.version_header"
 msgstr "📦 <b>Sürüm {version}</b>"
 
-#, python-brace-format
-msgid "📅 Released: {date}"
+msgid "versions.release_date"
 msgstr "📅 Yayın tarihi: {date}"
 
-#~ msgid "😱 There should have been lunch here, but you have a lesson instead."
-#~ msgstr "😱 Burada öğle yemeği olması gerekiyordu ama dersin var."
+msgid "language.native_name"
+msgstr "Türkçe"
 
-#~ msgid "No notable changes recorded."
-#~ msgstr "Önemli bir değişiklik kaydedilmedi."
+msgid "language.button"
+msgstr "🇹🇷 Türkçe"
 
-#~ msgid "Start the bot"
-#~ msgstr "Botu başlat"
+msgid "language.prompt"
+msgstr "🌐 Тилди тандаңыз / Выберите язык / Please choose your language / Lütfen dilinizi seçin / 请选择语言"
 
-#~ msgid "View the cafeteria menu"
-#~ msgstr "Yemekhane menüsünü görüntüle"
+msgid "commands.start"
+msgstr "Botu başlat"
 
-#~ msgid "Change language"
-#~ msgstr "Dili değiştir"
+msgid "commands.yemek"
+msgstr "Yemekhane menüsünü görüntüle"
 
-#~ msgid "View the bot's version history"
-#~ msgstr "Botun sürüm geçmişini görüntüle"
+msgid "commands.language"
+msgstr "Dili değiştir"
 
-#~ msgid "Hide the keyboard"
-#~ msgstr "Klavyeyi gizle"
+msgid "commands.versions"
+msgstr "Botun sürüm geçmişini görüntüle"
 
-#~ msgid "➖ {weekday} {time_range}: {content} (cancelled)"
-#~ msgstr "➖ {weekday} {time_range}: {content} (iptal edildi)"
+msgid "commands.donate"
+msgstr "Botu destekle"
 
-#~ msgid ""
-#~ "To post an ad you need at "
-#~ "least one contact method (a Telegram "
-#~ "username or a phone number). You "
-#~ "don't have a public username, so "
-#~ "please share a phone number using "
-#~ "the button below, or type it "
-#~ "manually:"
-#~ msgstr ""
+msgid "commands.hide_keyboard"
+msgstr "Klavyeyi gizle"
 
-#~ msgid "Enter a description (up to {max} characters):"
-#~ msgstr "Bir açıklama girin (en fazla {max} karakter):"
-
-#~ msgid ""
-#~ "The description can't be empty and "
-#~ "must be at most {max} characters. "
-#~ "Please try again:"
-#~ msgstr ""
-
-#~ msgid "Enter a price in som, or tap Skip:"
-#~ msgstr "Fiyatı som cinsinden girin veya Atla'ya dokunun:"
-
-#~ msgid ""
-#~ "Send up to 10 photos or videos,"
-#~ " then tap Done. Or tap Done "
-#~ "right away to skip."
-#~ msgstr ""
-
-#~ msgid "Enter an expiration date as DD.MM.YYYY, or tap Skip for no expiration:"
-#~ msgstr ""
-#~ "Son kullanma tarihini GG.AA.YYYY olarak "
-#~ "girin veya süresiz için Atla'ya dokunun:"
-
-#~ msgid ""
-#~ "That doesn't look like a valid "
-#~ "date. Please use DD.MM.YYYY, or tap "
-#~ "Skip:"
-#~ msgstr ""
-#~ "Bu geçerli bir tarihe benzemiyor. Lütfen"
-#~ " GG.AA.YYYY biçimini kullanın veya Atla'ya"
-#~ " dokunun:"
-
-#~ msgid ""
-#~ "The expiration date must be in the"
-#~ " future. Please try again, or tap "
-#~ "Skip:"
-#~ msgstr ""
-#~ "Son kullanma tarihi gelecekte olmalıdır. "
-#~ "Lütfen tekrar deneyin veya Atla'ya "
-#~ "dokunun:"
-
-#~ msgid "Please review your ad:"
-#~ msgstr "İlanınızı gözden geçirin:"
-
-#~ msgid "Your ad has been submitted for review ✅"
-#~ msgstr "İlanınız incelemeye gönderildi ✅"
-
-#~ msgid "🛒 <b>Marketplace</b>"
-#~ msgstr "🛒 <b>Pazar Yeri</b>"
-
+msgid "commands.broadcast"
+msgstr "Tüm kullanıcılara mesaj gönder"

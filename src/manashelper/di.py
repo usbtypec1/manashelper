@@ -41,6 +41,7 @@ from manashelper.services.course import CourseService
 from manashelper.services.crypto import CryptoService
 from manashelper.services.daily_menu import DailyMenuService
 from manashelper.services.department import DepartmentService
+from manashelper.services.donations import DonationQrService, DonationService
 from manashelper.services.faculty import FacultyService
 from manashelper.services.feedback import FeedbackService
 from manashelper.services.food_menu_cleanup_settings import FoodMenuCleanupSettingsService
@@ -84,6 +85,7 @@ class AppProvider(Provider):
     crypto_service = provide(CryptoService)
     obis_client = provide(ObisClient)
     timetable_client = provide(TimetableClient)
+    donation_qr_service = provide(DonationQrService)
 
 
 class RequestProvider(Provider):
@@ -142,3 +144,4 @@ class RequestProvider(Provider):
     advertisement_contact_service = provide(AdvertisementContactService)
     feedback_service = provide(FeedbackService)
     broadcast_service = provide(BroadcastService)
+    donation_service = provide(DonationService)

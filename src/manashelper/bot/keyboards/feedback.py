@@ -7,5 +7,5 @@ from manashelper.bot.callback_data import FeedbackAction, FeedbackCallback
 
 def build_feedback_cancel_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text=_("❌ Cancel"), callback_data=FeedbackCallback(action=FeedbackAction.CANCEL))
+    builder.button(text=_("common.cancel"), callback_data=FeedbackCallback(action=FeedbackAction.CANCEL))
     return builder.as_markup()

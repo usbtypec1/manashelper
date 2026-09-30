@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -36,3 +36,7 @@ class UserRepository:
     async def get_all_ids(self) -> list[int]:
         result = await self._session.execute(select(User.id))
         return list(result.scalars().all())
+
+    async def count(self) -> int:
+        result = await self._session.execute(select(func.count()).select_from(User))
+        return result.scalar_one()

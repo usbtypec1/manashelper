@@ -36,7 +36,7 @@ class PrivateChatOnlyMiddleware(BaseMiddleware):
 
 
 async def _notify_private_chat_only(event: TelegramObject) -> None:
-    text = _("This feature is only available in a private chat with the bot.")
+    text = _("common.private_chat_only")
     if isinstance(event, Message):
         await event.reply(text)
     elif isinstance(event, CallbackQuery):

@@ -48,7 +48,7 @@ async def on_advertisement_deep_link(
     try:
         reveal = await advertisement_contact_service.reveal_contact(advertisement_id, message.from_user.id)
     except AdvertisementNotFoundError:
-        await message.answer(_("This ad no longer exists"))
+        await message.answer(_("ads.not_found"))
         return
 
     await message.answer(format_contact_reveal(reveal))

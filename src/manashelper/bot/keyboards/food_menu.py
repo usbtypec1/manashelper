@@ -17,11 +17,11 @@ _RATING_LABELS = {1: "1️⃣", 2: "2️⃣", 3: "3️⃣", 4: "4️⃣", 5: "5�
 def _day_label(day: FoodMenuDay) -> str:
     match day:
         case FoodMenuDay.TODAY:
-            return _("📅 Today")
+            return _("food.today")
         case FoodMenuDay.TOMORROW:
-            return _("📆 Tomorrow")
+            return _("food.tomorrow")
         case _:
-            return _("🗓 Day after tomorrow")
+            return _("food.day_after_tomorrow")
 
 
 def build_day_keyboard() -> InlineKeyboardMarkup:
@@ -39,6 +39,6 @@ def build_rating_keyboard(daily_menu_id: uuid.UUID) -> InlineKeyboardMarkup:
             text=_RATING_LABELS[score],
             callback_data=FoodMenuRatingCallback(daily_menu_id=daily_menu_id, rating=score),
         )
-    builder.button(text=_("🧹 Auto-delete settings"), callback_data=FoodMenuCleanupOpenCallback())
+    builder.button(text=_("food.auto_delete_settings"), callback_data=FoodMenuCleanupOpenCallback())
     builder.adjust(5, 1)
     return builder.as_markup()

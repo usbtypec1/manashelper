@@ -24,7 +24,7 @@ Core capabilities (current):
   notification kinds (schedule changes, before-lunch/before-dinner menu pings, exam-grade changes, lesson skips),
   backed by a lazily-created `NotificationSettings` row per user that defaults every toggle to enabled — see
   `services/notification_settings.py`.
-- **Scheduled notifications** (the `jobs/` package, wired up in `main.py`): the daily menu is broadcast to
+- **Scheduled notifications** (the `jobs/` package, wired up in `jobs/scheduler.py`): the daily menu is broadcast to
   opted-in users at 11:00/17:00 Bishkek time; OBIS exam grades and lesson attendance are polled hourly per user
   and diffed against previously-seen state to notify only on actual changes; each tracked course's timetable is
   scraped hourly and diffed to notify trackers of schedule changes — see "Scheduled jobs & change detection"
@@ -76,7 +76,7 @@ uv run mypy src/manashelper                            # type check
 Gettext catalog workflow (see "Localization (i18n)" below for the full picture):
 
 ```
-uv run pybabel extract -F babel.cfg -o src/manashelper/locales/messages.pot --no-location src
+uv run pybabel extract -F babel.cfg -o src/manashelper/locales/messages.pot --no-location .
                                                         # scan source for _()/ngettext() calls -> .pot template
 uv run pybabel update -i src/manashelper/locales/messages.pot -d src/manashelper/locales
                                                         # merge new/changed source strings into every locale's .po
@@ -145,7 +145,7 @@ scraped/ORM object to a dataclass) is a private module-level function, not a `@s
 ### Telegram update handling (aiogram routers)
 
 Each feature area is an aiogram `Router` (`bot/routers/start.py`, `bot/routers/timetable.py`), included into the
-`Dispatcher` in `main.py`. Unlike the old Java chain-of-responsibility (`shouldHandle`/`handle` over a flat handler
+`Dispatcher` in `bot/dispatcher.py`. Unlike the old Java chain-of-responsibility (`shouldHandle`/`handle` over a flat handler
 list, first match wins), aiogram matches each incoming update against filters declared on `@router.message(...)` /
 `@router.callback_query(...)` decorators — still effectively first-match-wins across included routers, so keep
 filters mutually exclusive the same way the Java handlers' `shouldHandle` predicates had to be.
@@ -171,7 +171,7 @@ read-modify-write isn't safe under concurrent access for the same user. This is 
 `di.py` defines two providers: `AppProvider` (`Scope.APP` — `Settings`, the `AsyncEngine`, the
 `async_sessionmaker`, created once per process) and `RequestProvider` (`Scope.REQUEST` — one `AsyncSession` per
 update, plus repositories/services built on top of it). `setup_dishka(container, dispatcher)` +
-`inject_router(dispatcher)` in `main.py` wire dependency injection into router handlers via `FromDishka[X]`
+`inject_router(dispatcher)` in `bot/dispatcher.py` wire dependency injection into router handlers via `FromDishka[X]`
 parameter annotations — the analog of Spring's constructor injection into `@Component`/`@Service` beans. The
 `RequestProvider`'s session provider commits on success and rolls back on exception, giving each update
 transactional semantics equivalent to Spring's `@Transactional`.
@@ -182,7 +182,7 @@ transactional semantics equivalent to Spring's `@Transactional`.
 `router=self` kwarg into every startup callback — colliding with the partial's bound `router` kwarg and raising
 `TypeError: inject_router() got multiple values for argument 'router'`. Instead call
 `setup_dishka(container, dispatcher)` (no `auto_inject`) followed by an explicit `inject_router(dispatcher)`, as
-done in `main.py` — confirmed working end-to-end against a real dispatcher, including through to a genuine
+done in `bot/dispatcher.py` — confirmed working end-to-end against a real dispatcher, including through to a genuine
 Telegram API call.
 
 ### Data layer
@@ -222,20 +222,21 @@ and are verified against a real OBIS login before being persisted. Passwords are
 ### Localization (i18n)
 
 All user-facing text is translated via aiogram's built-in `aiogram.utils.i18n` (a thin wrapper over GNU gettext,
-requiring the `Babel` package — see the `aiogram[i18n]` extra in `pyproject.toml`). Source strings are written in
-English directly at each call site as `_("...")` (`from aiogram.utils.i18n import gettext as _`) or, for
-count-dependent text, `ngettext(singular, plural, n)` — never behind a lookup table or an f-string-interpolated
-variable, because Babel's extractor only records a literal string argument, not whatever a variable happens to
-hold. Compiled catalogs live at `src/manashelper/locales/<locale>/LC_MESSAGES/messages.{po,mo}` for `ru`/`ky`/`tr`;
-English has **no catalog at all** — `I18n.gettext` already falls back to the raw (English) msgid when a locale or
-a specific message isn't found, so shipping a redundant identity catalog would just be more to keep in sync.
+requiring the `Babel` package — see the `aiogram[i18n]` extra in `pyproject.toml`). Call sites use stable message
+keys such as `_("menu.settings")` (`from aiogram.utils.i18n import gettext as _`) or, for count-dependent text,
+`ngettext("obis.skips_left.one", "obis.skips_left.many", n)`. Keep keys literal so Babel can extract them.
+All text, including English, lives in `src/manashelper/locales/<locale>/LC_MESSAGES/messages.{po,mo}` for
+`en`/`ru`/`ky`/`tr`/`zh` (simplified Chinese). `CatalogI18n` adds the English catalog as a fallback for missing
+translations and unsupported rendering locales, so a missing translation does not display a message key.
+Command JSON files in `docs/commands/` also contain description keys; the custom extractor in `babel.cfg`
+includes those when extraction runs from the repository root with `.` as its input directory.
 `*.po` files are the hand-translated source of truth and are committed; `*.mo` files are compiled build artifacts
 and are gitignored (compiled by `docker/Dockerfile` and by CI — see Commands above — anyone running the bot or
 test suite locally must run `pybabel compile` after cloning or after editing a `.po` file).
 
-`localization/locale.py::Locale` is the supported-locale enum (`ky`/`ru`/`en`/`tr`); `localization/i18n.py` holds
+`localization/locale.py::Locale` is the supported-locale enum (`ky`/`ru`/`en`/`tr`/`zh`); `localization/i18n.py` holds
 the single process-wide `I18n` instance. `User.locale` (nullable `String(2)`) persists a user's resolved locale.
-`bot/middlewares/i18n.py::LocaleMiddleware` (registered *after* `setup_dishka` in `main.py`, so it can use the
+`bot/middlewares/i18n.py::LocaleMiddleware` (registered *after* `setup_dishka` in `bot/dispatcher.py`, so it can use the
 request-scoped container) runs on every update: it upserts the user via `services/locale.py::LocaleService`,
 which returns the saved locale if there is one, otherwise auto-detects one from
 `message.from_user.language_code` (`localization/locale.py::resolve_from_language_code`), falling back to
@@ -251,12 +252,13 @@ Jobs (the `jobs/` package) run outside any Telegram update, so there's no ambien
 context; each per-recipient send there looks up that user's `Locale` and wraps its own `format_...(...)` call in
 `with i18n.context(), i18n.use_locale(locale.value): ...` explicitly. A user can still change their locale
 explicitly at any time via `/language` or the "🌐 Language" row in Settings (`bot/routers/locale.py`), which
-shows the 4-language picker (`bot/keyboards/locale.py`) — the only place that picker is shown, now that
+shows the 5-language picker (`bot/keyboards/locale.py`) with names rendered from each language's own catalog —
+the only place that picker is shown, now that
 auto-detection never falls through to it.
 
 ### Scheduled jobs & change detection
 
-`src/manashelper/jobs/` holds every `AsyncIOScheduler` job function registered in `main.py::main`, one module per
+`src/manashelper/jobs/` holds every `AsyncIOScheduler` job function registered in `jobs/scheduler.py`, one module per
 feature area (`jobs/food_menu.py`, `jobs/obis_notification.py`, `jobs/timetable_sync.py`,
 `jobs/scheduled_message_deletion.py`, `jobs/advertisement.py`), plus `jobs/common.py` for cross-cutting helpers
 shared by more than one job (`get_user_locale`, `send_notification`, `chunk`/`delete_message_batch` for batched
@@ -337,7 +339,7 @@ choices, since none of these had an existing pattern to copy:
   `format_advertisement(..., contact=...)`). The channel post instead embeds a bot deep link
   (`format_advertisement(..., contact_deep_link=...)`, built from `bot.get_me()` in
   `advertisement_moderation.py::on_approve` as `https://t.me/<bot>?start=ad_<id>`). Opening it is handled by
-  `bot/routers/advertisement_contact.py` (`CommandStart(deep_link=True)`, registered in `main.py` *before*
+  `bot/routers/advertisement_contact.py` (`CommandStart(deep_link=True)`, registered in `bot/dispatcher.py` *before*
   `start_router` so a bare `/start` still falls through to the normal welcome flow) via
   `AdvertisementContactService.reveal_contact`, which also logs the open as an `AdvertisementContactView` row
   (never deduplicated — every open is its own row, for counting interest).
@@ -395,7 +397,7 @@ purely "did this update originate from that chat" (`bot/routers/feedback.py::_is
   `jobs/food_menu.py`'s broadcasts (this one just runs from a bot command handler instead of a scheduled job,
   since it's an ad-hoc admin action rather than a recurring one).
 - **`/broadcast` is registered against `BotCommandScopeChat(chat_id=settings.admin_chat_id)`**
-  (`services/bot_commands.py::build_admin_commands`, wired up in `main.py::setup_commands`), not any of the
+  (`services/bot_commands.py::build_admin_commands`, wired up in `bot/commands.py::setup_commands`), not any of the
   "all chats" scopes every other command uses — it shouldn't show up as a suggestion in random group chats the
   bot happens to be added to, only in the one chat where it's actually authorized.
 - **HTML escaping**: both the admin's broadcast text and feedback bodies/replies go through

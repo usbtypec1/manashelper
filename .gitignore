@@ -32,5 +32,6 @@ htmlcov/
 
 ### Env / secrets ###
 .env
+/credentials.json
 
 logs/*

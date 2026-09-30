@@ -1,420 +1,347 @@
 # Russian translations for Manashelper.
 # Copyright (C) 2026 ORGANIZATION
-# This file is distributed under the same license as the Manashelper
-# project.
+# This file is distributed under the same license as the Manashelper project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Manashelper VERSION\n"
+"Project-Id-Version: Manashelper 0.1.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-25 10:11+0600\n"
-"PO-Revision-Date: 2026-09-15 11:14+0600\n"
+"POT-Creation-Date: 2026-09-30 09:57+0600\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
 "Language-Team: ru <LL@li.org>\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
-"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-msgid "➕ Post an ad"
-msgstr "➕ Подать объявление"
-
-msgid "📋 My ads"
-msgstr "📋 Мои объявления"
-
-msgid "◀️ Back to menu"
-msgstr "◀️ Назад в меню"
-
-msgid "❌ Cancel"
+msgid "common.cancel"
 msgstr "❌ Отмена"
 
-msgid "Skip"
+msgid "common.skip"
 msgstr "Пропустить"
 
-msgid "✅ Done"
+msgid "common.done"
 msgstr "✅ Готово"
 
-msgid "45 minutes"
+msgid "common.duration.minutes_45"
 msgstr "45 минут"
 
-msgid "6 hours"
+msgid "common.duration.hours_6"
 msgstr "6 часов"
 
-msgid "24 hours"
+msgid "common.duration.hours_24"
 msgstr "24 часа"
 
-msgid "7 days"
+msgid "common.duration.days_7"
 msgstr "7 дней"
 
-msgid "♾️ No expiration"
+msgid "ads.no_expiration"
 msgstr "♾️ Без срока действия"
 
-msgid "✅ Submit for review"
+msgid "ads.submit_review"
 msgstr "✅ Отправить на проверку"
 
-msgid "🗑 Delete"
+msgid "common.delete"
 msgstr "🗑 Удалить"
 
-msgid "◀️ Back"
+msgid "common.back"
 msgstr "◀️ Назад"
 
-msgid "✅ Yes, delete"
+msgid "ads.confirm_delete"
 msgstr "✅ Да, удалить"
 
-msgid "✅ Approve"
+msgid "ads.post"
+msgstr "➕ Подать объявление"
+
+msgid "ads.my_ads"
+msgstr "📋 Мои объявления"
+
+msgid "common.back_to_menu"
+msgstr "◀️ Назад в меню"
+
+msgid "ads.approve"
 msgstr "✅ Одобрить"
 
-msgid "❌ Reject"
+msgid "ads.reject"
 msgstr "❌ Отклонить"
 
-msgid "✏️ Add a comment"
+msgid "ads.add_comment"
 msgstr "✏️ Добавить комментарий"
 
-msgid "🚫 No comment"
+msgid "ads.no_comment"
 msgstr "🚫 Без комментария"
 
-msgid "✅ Send"
+msgid "common.send"
 msgstr "✅ Отправить"
 
-msgid "📅 Today"
+msgid "common.back_to_settings"
+msgstr "◀️ Назад в настройки"
+
+msgid "food.today"
 msgstr "📅 Сегодня"
 
-msgid "📆 Tomorrow"
+msgid "food.tomorrow"
 msgstr "📆 Завтра"
 
-msgid "🗓 Day after tomorrow"
+msgid "food.day_after_tomorrow"
 msgstr "🗓 Послезавтра"
 
-msgid "🧹 Auto-delete settings"
+msgid "food.auto_delete_settings"
 msgstr "🧹 Настройки автоудаления"
 
-msgid "15 minutes"
+msgid "common.duration.minutes_15"
 msgstr "15 минут"
 
-msgid "3 hours"
+msgid "common.duration.hours_3"
 msgstr "3 часа"
 
-msgid "1 day"
+msgid "common.duration.days_1"
 msgstr "1 сутки"
 
-msgid "Off"
+msgid "common.off"
 msgstr "Выключено"
 
-msgid "Lunch"
+msgid "food.lunch"
 msgstr "Обед"
 
-msgid "Dinner"
+msgid "food.dinner"
 msgstr "Ужин"
 
-msgid "✅ All"
+msgid "common.enable_all"
 msgstr "✅ Все"
 
-msgid "❌ All"
+msgid "common.disable_all"
 msgstr "❌ Все"
 
-msgid "⚙️ Configure notifications"
+msgid "notifications.configure"
 msgstr "⚙️ Настроить уведомления"
 
-msgid "🔄 Update credentials"
+msgid "obis.update_credentials"
 msgstr "🔄 Обновить данные"
 
-msgid "🔑 Enter credentials"
+msgid "obis.enter_credentials"
 msgstr "🔑 Ввести данные"
 
-msgid "🗑 Clear credentials"
-msgstr "🗑 Очистить данные"
-
-msgid "✅ Yes, clear"
+msgid "obis.confirm_clear"
 msgstr "✅ Да, очистить"
 
-msgid "📃 Terms of use"
+msgid "obis.terms"
 msgstr "📃 Условия использования"
 
-msgid "✅ Accept terms"
+msgid "obis.accept_terms"
 msgstr "✅ Принять условия"
 
-msgid "📱 Share phone number"
-msgstr "📱 Поделиться номером телефона"
+msgid "obis.clear_credentials"
+msgstr "🗑 Очистить данные"
 
-msgid "➕ Add a phone number"
+msgid "phone.add"
 msgstr "➕ Добавить номер телефона"
 
-msgid "🔔 Notifications"
+msgid "phone.share"
+msgstr "📱 Поделиться номером телефона"
+
+msgid "settings.notifications"
 msgstr "🔔 Уведомления"
 
-msgid "📚 My lessons"
+msgid "settings.my_lessons"
 msgstr "📚 Мои уроки"
 
-msgid "🔑 OBIS credentials"
+msgid "settings.obis_credentials"
 msgstr "🔑 Данные OBIS"
 
-msgid "📱 My phone numbers"
+msgid "settings.phone_numbers"
 msgstr "📱 Мои номера телефонов"
 
-msgid "🌐 Language"
+msgid "settings.language"
 msgstr "🌐 Язык"
 
-msgid "💬 Send feedback"
+msgid "settings.feedback"
 msgstr "💬 Обратная связь"
 
-msgid "Schedule changes"
-msgstr "Изменения расписания"
+msgid "settings.donate"
+msgstr "❤️ Поддержать бота"
 
-msgid "🍉 Food"
+msgid "menu.food"
 msgstr "🍉 Йемек"
 
-msgid "Exam grades"
+msgid "notifications.schedule_changes"
+msgstr "Изменения расписания"
+
+msgid "notifications.exam_grades"
 msgstr "Оценки за экзамены"
 
-msgid "Lesson skips"
+msgid "notifications.lesson_skips"
 msgstr "Пропуски уроков"
 
-msgid "📅 My schedule"
+msgid "schedule.my_schedule"
 msgstr "📅 Моё расписание"
 
-msgid "🔎 Search for a subject"
+msgid "schedule.search_subject"
 msgstr "🔎 Поиск предмета"
 
-msgid "📚 Choose courses"
+msgid "schedule.choose_courses"
 msgstr "📚 Выбрать курсы"
 
-#, python-brace-format
-msgid "Year {number}"
+msgid "schedule.course_year"
 msgstr "{number} курс"
 
-msgid "This feature is only available in a private chat with the bot."
+msgid "common.private_chat_only"
 msgstr "Эта функция доступна только в личном чате с ботом."
 
-#, python-brace-format
-msgid ""
-"📝 Let's create your ad.\n"
-"\n"
-"First, send a <b>title</b> (up to {max} characters) - this is the first "
-"thing buyers will see."
-msgstr ""
-"📝 Создадим ваше объявление.\n"
-"\n"
-"Сначала отправьте <b>заголовок</b> (до {max} символов) — это первое, что "
-"увидят покупатели."
+msgid "menu.marketplace"
+msgstr "🛒 Барахолка"
 
-#, python-brace-format
-msgid ""
-"🛒 <b>Marketplace</b>\n"
-"\n"
-"Post an ad for other students to see, or manage the ads you've already "
-"posted.\n"
-"\n"
-"🔗 <a href=\"{link}\">Browse the marketplace channel</a>"
-msgstr ""
-"🛒 <b>Барахолка</b>\n"
-"\n"
-"Разместите объявление для других студентов или управляйте уже "
-"размещёнными.\n"
-"\n"
-"🔗 <a href=\"{link}\">Перейти в канал барахолки</a>"
-
-msgid "🏠 Main menu"
-msgstr "🏠 Главное меню"
-
-msgid ""
-"You've posted the maximum of 5 ads for this hour. Please try again a bit "
-"later."
-msgstr "Вы разместили максимум 5 объявлений за этот час. Попробуйте немного позже."
-
-msgid "Please start with the /start command"
-msgstr "Пожалуйста, начните с команды /start"
-
-msgid ""
-"📞 Before you can post an ad, buyers need a way to reach you.\n"
-"\n"
-"You don't currently have a public Telegram username, so please share a "
-"phone number using the button below, or type one in manually (e.g. "
-"+996700123456):"
-msgstr ""
-"📞 Прежде чем разместить объявление, покупателям нужен способ с вами "
-"связаться.\n"
-"\n"
-"У вас сейчас нет публичного имени пользователя Telegram, поэтому, "
-"пожалуйста, поделитесь номером телефона с помощью кнопки ниже или введите"
-" его вручную (например, +996700123456):"
-
-msgid ""
-"Something went wrong saving that number. Please type your phone number "
-"manually:"
-msgstr ""
-"Не удалось сохранить этот номер. Пожалуйста, введите номер телефона "
-"вручную:"
-
-msgid "✅ Phone number saved."
-msgstr "✅ Номер телефона сохранён."
-
-msgid ""
-"That doesn't look like a valid phone number (e.g. +996700123456). Please "
-"try again:"
-msgstr ""
-"Это не похоже на корректный номер телефона (например, +996700123456). "
-"Попробуйте ещё раз:"
-
-#, python-brace-format
-msgid ""
-"The title can't be empty and must be at most {max} characters long. "
-"Please try again:"
-msgstr ""
-"Заголовок не может быть пустым и должен быть не длиннее {max} символов. "
-"Попробуйте снова:"
-
-#, python-brace-format
-msgid ""
-"🧾 Now send a <b>description</b> (up to {max} characters) - condition, "
-"size, reason for selling, anything a buyer should know."
-msgstr ""
-"🧾 Теперь отправьте <b>описание</b> (до {max} символов) — состояние, "
-"размер, причина продажи, всё, что должен знать покупатель."
-
-#, python-brace-format
-msgid ""
-"The description can't be empty and must be at most {max} characters long."
-" Please try again:"
-msgstr ""
-"Описание не может быть пустым и должно быть не длиннее {max} символов. "
-"Попробуйте снова:"
-
-msgid ""
-"💵 Send the price in som (digits only), or tap Skip if it's negotiable or "
-"not applicable:"
-msgstr ""
-"💵 Отправьте цену в сомах (только цифры) или нажмите «Пропустить», если "
-"цена договорная или не указана:"
-
-msgid ""
-"🖼 Send up to 10 photos or videos of the item, one at a time.\n"
-"\n"
-"Tap Done when you're finished - or tap it right away to post without "
-"media."
+msgid "ads.media_prompt"
 msgstr ""
 "🖼 Отправьте до 10 фото или видео товара, по одному за раз.\n"
 "\n"
-"Нажмите «Готово», когда закончите, — или сразу, чтобы опубликовать без "
-"медиа."
+"Нажмите «Готово», когда закончите, — или сразу, чтобы опубликовать без медиа."
 
-msgid "Please send a whole number (digits only), or tap Skip:"
-msgstr "Отправьте целое число (только цифры) или нажмите «Пропустить»:"
+msgid "ads.expiration_prompt"
+msgstr "⏳ Как долго это объявление должно оставаться видимым, прежде чем оно будет автоматически удалено?"
 
-#, python-brace-format
-msgid "You've reached the limit of {max} photos/videos. Tap Done to continue."
-msgstr "Вы достигли лимита в {max} фото/видео. Нажмите «Готово», чтобы продолжить."
+msgid "ads.deleted"
+msgstr "Объявление удалено ✅"
 
-#, python-brace-format
-msgid "✅ Added: {count}/{max}. Send more, or tap Done when you're finished."
-msgstr ""
-"✅ Добавлено: {count}/{max}. Отправьте ещё или нажмите «Готово», когда "
-"закончите."
-
-msgid "⏳ How long should this ad stay visible before it's automatically removed?"
-msgstr ""
-"⏳ Как долго это объявление должно оставаться видимым, прежде чем оно "
-"будет автоматически удалено?"
-
-msgid "👀 Here's how your ad will look:"
-msgstr "👀 Вот как будет выглядеть ваше объявление:"
-
-msgid "❌ Cancelled."
-msgstr "❌ Отменено."
-
-msgid ""
-"✅ Your ad has been sent for moderator review. You'll be notified once "
-"it's approved or rejected."
-msgstr ""
-"✅ Ваше объявление отправлено на проверку модератору. Вы получите "
-"уведомление после одобрения или отклонения."
-
-msgid "🆕 <b>New ad for review</b>"
-msgstr "🆕 <b>Новое объявление на проверку</b>"
-
-msgid "Review it:"
+msgid "ads.review_prompt"
 msgstr "Проверьте:"
 
-#, python-brace-format
-msgid "📋 <b>My ads</b> (page {page}/{total})"
-msgstr "📋 <b>Мои объявления</b> (страница {page}/{total})"
-
-msgid ""
-"📋 <b>My ads</b>\n"
-"\n"
-"You haven't posted any ads yet."
+msgid "ads.empty_list"
 msgstr ""
 "📋 <b>Мои объявления</b>\n"
 "\n"
 "Вы ещё не разместили ни одного объявления."
 
-msgid "This ad no longer exists"
-msgstr "Это объявление больше не существует"
+msgid "ads.marketplace_intro"
+msgstr ""
+"🛒 <b>Барахолка</b>\n"
+"\n"
+"Разместите объявление для других студентов или управляйте уже размещёнными.\n"
+"\n"
+"🔗 <a href=\"{link}\">Перейти в канал барахолки</a>"
 
-msgid "Are you sure you want to delete this ad? This can't be undone."
+msgid "menu.main"
+msgstr "🏠 Главное меню"
+
+msgid "phone.saved"
+msgstr "✅ Номер телефона сохранён."
+
+msgid "ads.price_prompt"
+msgstr "💵 Отправьте цену в сомах (только цифры) или нажмите «Пропустить», если цена договорная или не указана:"
+
+msgid "ads.preview"
+msgstr "👀 Вот как будет выглядеть ваше объявление:"
+
+msgid "ads.list_page"
+msgstr "📋 <b>Мои объявления</b> (страница {page}/{total})"
+
+msgid "ads.contact_prompt"
+msgstr ""
+"📞 Прежде чем разместить объявление, покупателям нужен способ с вами связаться.\n"
+"\n"
+"У вас сейчас нет публичного имени пользователя Telegram, поэтому, пожалуйста, поделитесь номером телефона с помощью "
+"кнопки ниже или введите его вручную (например, +996700123456):"
+
+msgid "ads.invalid_price"
+msgstr "Отправьте целое число (только цифры) или нажмите «Пропустить»:"
+
+msgid "common.cancelled"
+msgstr "❌ Отменено."
+
+msgid "ads.submitted"
+msgstr "✅ Ваше объявление отправлено на проверку модератору. Вы получите уведомление после одобрения или отклонения."
+
+msgid "ads.new_review"
+msgstr "🆕 <b>Новое объявление на проверку</b>"
+
+msgid "ads.delete_confirmation"
 msgstr "Вы уверены, что хотите удалить это объявление? Это действие необратимо."
 
-msgid "Ad deleted ✅"
-msgstr "Объявление удалено ✅"
+msgid "ads.title_prompt"
+msgstr ""
+"📝 Создадим ваше объявление.\n"
+"\n"
+"Сначала отправьте <b>заголовок</b> (до {max} символов) — это первое, что увидят покупатели."
 
-msgid "You don't have permission to do this"
-msgstr "У вас нет прав для этого действия"
+msgid "ads.hourly_limit"
+msgstr "Вы разместили максимум 5 объявлений за этот час. Попробуйте немного позже."
 
-msgid "This ad has already been reviewed"
-msgstr "Это объявление уже было рассмотрено"
+msgid "common.start_required"
+msgstr "Пожалуйста, начните с команды /start"
 
-msgid "Failed to publish this ad. Please try again later."
-msgstr "Не удалось опубликовать это объявление. Попробуйте позже."
+msgid "phone.save_failed"
+msgstr "Не удалось сохранить этот номер. Пожалуйста, введите номер телефона вручную:"
 
-msgid "Approved and published ✅"
-msgstr "Одобрено и опубликовано ✅"
+msgid "phone.invalid"
+msgstr "Это не похоже на корректный номер телефона (например, +996700123456). Попробуйте ещё раз:"
 
-#, python-brace-format
-msgid "Your ad \"{title}\" has been approved and published! 🎉"
-msgstr "Ваше объявление «{title}» одобрено и опубликовано! 🎉"
+msgid "ads.description_prompt"
+msgstr ""
+"🧾 Теперь отправьте <b>описание</b> (до {max} символов) — состояние, размер, причина продажи, всё, что должен знать "
+"покупатель."
 
-msgid "Reject this ad. Would you like to add a comment explaining why?"
-msgstr "Отклонить объявление. Хотите добавить комментарий с причиной?"
+msgid "ads.media_added"
+msgstr "✅ Добавлено: {count}/{max}. Отправьте ещё или нажмите «Готово», когда закончите."
 
-#, python-brace-format
-msgid "Your ad \"{title}\" was not approved."
+msgid "ads.not_found"
+msgstr "Это объявление больше не существует"
+
+msgid "ads.invalid_title"
+msgstr "Заголовок не может быть пустым и должен быть не длиннее {max} символов. Попробуйте снова:"
+
+msgid "ads.invalid_description"
+msgstr "Описание не может быть пустым и должно быть не длиннее {max} символов. Попробуйте снова:"
+
+msgid "ads.media_limit"
+msgstr "Вы достигли лимита в {max} фото/видео. Нажмите «Готово», чтобы продолжить."
+
+msgid "ads.owner_rejected"
 msgstr "Ваше объявление «{title}» не было одобрено."
 
-#, python-brace-format
-msgid "Reason: {comment}"
-msgstr "Причина: {comment}"
-
-msgid "Rejected ❌"
-msgstr "Отклонено ❌"
-
-msgid "Please send the rejection comment as a text message:"
+msgid "ads.rejection_comment_prompt"
 msgstr "Отправьте комментарий с причиной отклонения текстовым сообщением:"
 
-msgid "The comment can't be empty. Please try again:"
-msgstr "Комментарий не может быть пустым. Попробуйте снова:"
-
-msgid "Something went wrong. Please try again."
-msgstr "Что-то пошло не так. Попробуйте снова."
-
-msgid "Rejection sent ✅"
+msgid "ads.rejection_sent"
 msgstr "Отклонение отправлено ✅"
 
-msgid "📢 Send the message you want to broadcast to every user:"
+msgid "common.permission_denied"
+msgstr "У вас нет прав для этого действия"
+
+msgid "ads.approved_published"
+msgstr "Одобрено и опубликовано ✅"
+
+msgid "ads.rejection_prompt"
+msgstr "Отклонить объявление. Хотите добавить комментарий с причиной?"
+
+msgid "ads.rejected_notice"
+msgstr "Отклонено ❌"
+
+msgid "ads.empty_comment"
+msgstr "Комментарий не может быть пустым. Попробуйте снова:"
+
+msgid "common.error_retry"
+msgstr "Что-то пошло не так. Попробуйте снова."
+
+msgid "ads.already_reviewed"
+msgstr "Это объявление уже было рассмотрено"
+
+msgid "ads.publish_failed"
+msgstr "Не удалось опубликовать это объявление. Попробуйте позже."
+
+msgid "ads.rejection_reason"
+msgstr "Причина: {comment}"
+
+msgid "ads.owner_approved"
+msgstr "Ваше объявление «{title}» одобрено и опубликовано! 🎉"
+
+msgid "broadcast.message_prompt"
 msgstr "📢 Отправьте сообщение, которое нужно разослать всем пользователям:"
 
-msgid "Please send the broadcast as a text message."
-msgstr "Пожалуйста, отправьте рассылку текстовым сообщением."
-
-#, python-brace-format
-msgid ""
-"📢 <b>Broadcast preview:</b>\n"
-"\n"
-"{body}\n"
-"\n"
-"Send this to every user?"
+msgid "broadcast.preview"
 msgstr ""
 "📢 <b>Предпросмотр рассылки:</b>\n"
 "\n"
@@ -422,54 +349,53 @@ msgstr ""
 "\n"
 "Отправить всем пользователям?"
 
-msgid "❌ Broadcast cancelled."
+msgid "broadcast.cancelled"
 msgstr "❌ Рассылка отменена."
 
-msgid "📤 Sending broadcast…"
+msgid "broadcast.sending"
 msgstr "📤 Рассылка отправляется…"
 
-#, python-brace-format
-msgid ""
-"📢 <b>Message from the administration</b>\n"
-"\n"
-"{body}"
+msgid "broadcast.sent"
+msgstr "✅ Рассылка отправлена {sent}/{total} пользователям."
+
+msgid "broadcast.text_required"
+msgstr "Пожалуйста, отправьте рассылку текстовым сообщением."
+
+msgid "broadcast.admin_message"
 msgstr ""
 "📢 <b>Сообщение от администрации</b>\n"
 "\n"
 "{body}"
 
-#, python-brace-format
-msgid "✅ Broadcast sent to {sent}/{total} users."
-msgstr "✅ Рассылка отправлена {sent}/{total} пользователям."
+msgid "donations.qr_coming_soon"
+msgstr "QR-коды для перевода скоро появятся здесь."
 
-msgid ""
-"💬 Please type the message you'd like to send to the administration. We'll"
-" reply here as soon as possible."
+msgid "donations.intro"
 msgstr ""
-"💬 Напишите сообщение, которое хотите отправить администрации. Мы ответим "
-"здесь как можно скорее."
+"❤️ <b>Помогите Manashelper работать дальше</b>\n"
+"\n"
+"28 сентября бот перестал работать из-за ограничений бесплатного аккаунта AWS. Чтобы вы по-прежнему могли смотреть "
+"расписание, меню столовой, оценки и посещаемость, мне пришлось перенести его на платный сервер.\n"
+"\n"
+"Ваш вклад поможет оплачивать сервер для вас и ещё {others} пользователей бота. Поможет любая сумма: все донаты пойдут"
+" на аренду сервера. Спасибо за поддержку!"
 
-msgid "Settings"
-msgstr "Настройки"
+msgid "donations.choose_bank"
+msgstr "Выберите банк, чтобы открыть QR-код для перевода:"
 
-#, python-brace-format
-msgid ""
-"The message can't be empty and must be at most {max} characters long. "
-"Please try again:"
-msgstr ""
-"Сообщение не может быть пустым и должно быть не длиннее {max} символов. "
-"Попробуйте снова:"
+msgid "donations.qr_unavailable"
+msgstr "QR-код этого банка больше недоступен."
 
-msgid "✅ Thank you! Your message has been sent to the administration."
+msgid "feedback.sent"
 msgstr "✅ Спасибо! Ваше сообщение отправлено администрации."
 
-#, python-brace-format
-msgid ""
-"💬 <b>New feedback</b> from {sender}:\n"
-"\n"
-"{body}\n"
-"\n"
-"<i>Reply to this message to answer.</i>"
+msgid "feedback.message_prompt"
+msgstr "💬 Напишите сообщение, которое хотите отправить администрации. Мы ответим здесь как можно скорее."
+
+msgid "settings.title"
+msgstr "Настройки"
+
+msgid "feedback.admin_message"
 msgstr ""
 "💬 <b>Новое обращение</b> от {sender}:\n"
 "\n"
@@ -477,30 +403,22 @@ msgstr ""
 "\n"
 "<i>Ответьте на это сообщение, чтобы отправить ответ.</i>"
 
-#, python-brace-format
-msgid ""
-"📩 <b>Reply from the administration:</b>\n"
-"\n"
-"{text}"
+msgid "feedback.admin_reply"
 msgstr ""
 "📩 <b>Ответ от администрации:</b>\n"
 "\n"
 "{text}"
 
-msgid "⚠️ Failed to deliver the reply to the user."
-msgstr "⚠️ Не удалось доставить ответ пользователю."
-
-#, fuzzy
-msgid "Reply sent ✅"
+msgid "feedback.reply_sent"
 msgstr "Отклонение отправлено ✅"
 
-msgid ""
-"🍉 <b>Cafeteria menu</b>\n"
-"\n"
-"Choose a day below or send a command:\n"
-"• <code>/yemek today</code> — today\n"
-"• <code>/yemek tomorrow</code> — tomorrow\n"
-"• <code>/yemek 2</code> — in N days"
+msgid "feedback.invalid_message"
+msgstr "Сообщение не может быть пустым и должно быть не длиннее {max} символов. Попробуйте снова:"
+
+msgid "feedback.delivery_failed"
+msgstr "⚠️ Не удалось доставить ответ пользователю."
+
+msgid "food.menu_prompt"
 msgstr ""
 "🍉 <b>Меню столовой</b>\n"
 "\n"
@@ -509,487 +427,360 @@ msgstr ""
 "• <code>/yemek tomorrow</code> — завтра\n"
 "• <code>/yemek 2</code> — через N дней"
 
-msgid "⭐ Rate the menu:"
+msgid "food.rate_prompt"
 msgstr "⭐ Оцените меню:"
 
-msgid ""
-"ℹ️ Usage: <code>/yemek today</code>, <code>/yemek tomorrow</code>, or "
-"<code>/yemek 2</code>"
-msgstr ""
-"ℹ️ Использование: <code>/yemek today</code>, <code>/yemek tomorrow</code>"
-" или <code>/yemek 2</code>"
-
-msgid "Thanks for your rating!"
+msgid "food.rating_thanks"
 msgstr "Спасибо за оценку!"
 
-msgid "🧹 Auto-delete food menu messages in this chat after:"
+msgid "food.command_usage"
+msgstr "ℹ️ Использование: <code>/yemek today</code>, <code>/yemek tomorrow</code> или <code>/yemek 2</code>"
+
+msgid "food.auto_delete_prompt"
 msgstr "🧹 Автоудаление сообщений о меню в этом чате через:"
 
-msgid "Saved"
+msgid "common.saved"
 msgstr "Сохранено"
 
-msgid "🍽 Fine-tune menu notifications"
-msgstr "🍽 Точечная настройка уведомлений о меню"
-
-msgid "this isn't a button"
+msgid "common.not_a_button"
 msgstr "не жмакай сюды"
 
-msgid ""
-"Enter the subject name. You can type Turkish letters using regular Latin "
-"ones (e.g. s instead of ş, or i instead of ı)."
-msgstr ""
-"Введите название предмета. Турецкие буквы можно набирать обычными "
-"латинскими (например, s вместо ş или i вместо ı)."
+msgid "food.notification_settings"
+msgstr "🍽 Точечная настройка уведомлений о меню"
 
-msgid ""
-"The query is too short. Open «🔎 Search for a subject» again and try once "
-"more."
-msgstr ""
-"Слишком короткий запрос. Откройте «🔎 Поиск предмета» ещё раз и попробуйте"
-" снова."
+msgid "schedule.search_prompt"
+msgstr "Введите название предмета. Турецкие буквы можно набирать обычными латинскими (например, s вместо ş или i вместо ı)."
 
-msgid "Nothing found."
+msgid "schedule.query_too_short"
+msgstr "Слишком короткий запрос. Откройте «🔎 Поиск предмета» ещё раз и попробуйте снова."
+
+msgid "schedule.no_results"
 msgstr "Ничего не найдено."
 
-msgid "The search results have expired. Please search again."
+msgid "schedule.search_expired"
 msgstr "Результаты поиска устарели. Повторите поиск ещё раз."
 
-#, python-brace-format
-msgid "✅ Language: {language}"
+msgid "language.selected"
 msgstr "✅ Язык: {language}"
 
-msgid ""
-"You haven't saved your OBIS credentials. Enter them using the button "
-"below."
-msgstr "У вас не сохранены данные от OBIS. Введите их кнопкой ниже."
+msgid "menu.attendance"
+msgstr "📋 Йоклама"
 
-msgid ""
-"Your OBIS credentials are invalid. Enter them again using the button "
-"below."
-msgstr "Неверные данные от OBIS. Введите их заново кнопкой ниже."
+msgid "menu.grades"
+msgstr "💯 Оценки"
 
-msgid "Couldn't fetch data from OBIS. Please try again later."
-msgstr "Не удалось получить данные с OBIS. Попробуйте позже."
-
-msgid "Please accept the bot's terms of use to continue."
-msgstr "Пожалуйста, примите условия использования бота, чтобы продолжить."
-
-msgid "Enter your student number:"
-msgstr "Введите ваш студенческий номер:"
-
-msgid "Cancelled"
-msgstr "Отменено"
-
-msgid "Are you sure you want to clear your saved OBIS credentials?"
-msgstr "Вы уверены, что хотите очистить сохранённые данные от OBIS?"
-
-msgid "OBIS credentials removed ✅"
-msgstr "Данные от OBIS удалены ✅"
-
-msgid "The student number can't be empty. Please try again:"
-msgstr "Студенческий номер не может быть пустым. Попробуйте снова:"
-
-msgid "Enter your OBIS password:"
+msgid "obis.password_prompt"
 msgstr "Введите ваш пароль от OBIS:"
 
-msgid "Invalid OBIS credentials. Enter your student number again:"
-msgstr "Неверные данные от OBIS. Введите студенческий номер заново:"
-
-msgid "Credentials saved successfully ✅"
+msgid "obis.credentials_saved"
 msgstr "Данные успешно сохранены ✅"
 
-msgid ""
-"📱 <b>My phone numbers</b>\n"
-"\n"
-"These are shown to buyers on the ads you post."
+msgid "obis.accept_terms_prompt"
+msgstr "Пожалуйста, примите условия использования бота, чтобы продолжить."
+
+msgid "obis.student_number_prompt"
+msgstr "Введите ваш студенческий номер:"
+
+msgid "obis.cancelled"
+msgstr "Отменено"
+
+msgid "obis.clear_confirmation"
+msgstr "Вы уверены, что хотите очистить сохранённые данные от OBIS?"
+
+msgid "obis.credentials_removed"
+msgstr "Данные от OBIS удалены ✅"
+
+msgid "obis.empty_student_number"
+msgstr "Студенческий номер не может быть пустым. Попробуйте снова:"
+
+msgid "obis.credentials_missing"
+msgstr "У вас не сохранены данные от OBIS. Введите их кнопкой ниже."
+
+msgid "obis.credentials_invalid"
+msgstr "Неверные данные от OBIS. Введите их заново кнопкой ниже."
+
+msgid "obis.fetch_failed"
+msgstr "Не удалось получить данные с OBIS. Попробуйте позже."
+
+msgid "obis.login_failed"
+msgstr "Неверные данные от OBIS. Введите студенческий номер заново:"
+
+msgid "phone.list"
 msgstr ""
 "📱 <b>Мои номера телефонов</b>\n"
 "\n"
 "Они показываются покупателям в ваших объявлениях."
 
-msgid ""
-"Share a phone number using the button below, or type one in manually "
-"(e.g. +996700123456):"
-msgstr ""
-"Поделитесь номером телефона с помощью кнопки ниже или введите его вручную"
-" (например, +996700123456):"
+msgid "phone.number_prompt"
+msgstr "Поделитесь номером телефона с помощью кнопки ниже или введите его вручную (например, +996700123456):"
 
-msgid "This phone number is no longer saved"
+msgid "phone.not_found"
 msgstr "Этот номер телефона больше не сохранён"
 
-msgid "Bot notification settings"
-msgstr "Настройки уведомлений бота"
-
-msgid "List of faculties"
-msgstr "Список факультетов"
-
-msgid "OBIS settings"
-msgstr "Настройки OBIS"
-
-msgid "📅 Schedule"
-msgstr "📅 Расписание"
-
-msgid "📋 Attendance"
-msgstr "📋 Йоклама"
-
-msgid "💯 Grades"
-msgstr "💯 Оценки"
-
-msgid "🛒 Marketplace"
-msgstr "🛒 Барахолка"
-
-msgid "⚙️ Settings"
+msgid "menu.settings"
 msgstr "⚙️ Настройки"
 
-msgid "Welcome to Manashelper!"
+msgid "notifications.title"
+msgstr "Настройки уведомлений бота"
+
+msgid "schedule.faculties"
+msgstr "Список факультетов"
+
+msgid "obis.settings"
+msgstr "Настройки OBIS"
+
+msgid "common.welcome"
 msgstr "Добро пожаловать в Manashelper!"
 
-msgid "Keyboard is hidden"
+msgid "menu.keyboard_hidden"
 msgstr "Клавиатура скрыта"
 
-msgid ""
-"You have no tracked courses yet. Pick your courses with the button below "
-"to see your schedule."
-msgstr ""
-"У вас нет отслеживаемых курсов. Выберите курсы кнопкой ниже, чтобы видеть"
-" расписание."
+msgid "menu.schedule"
+msgstr "📅 Расписание"
 
-msgid ""
-"The schedule for your courses hasn't been loaded yet. It updates once an "
-"hour — please check back a bit later."
-msgstr ""
-"Расписание для ваших курсов ещё не загружено. Оно обновляется раз в час —"
-" попробуйте зайти чуть позже."
+msgid "schedule.not_loaded"
+msgstr "Расписание для ваших курсов ещё не загружено. Оно обновляется раз в час — попробуйте зайти чуть позже."
 
-msgid "You no longer have any tracked courses"
-msgstr "У вас больше нет отслеживаемых курсов"
-
-msgid "List of departments"
+msgid "schedule.departments"
 msgstr "Список направлений"
 
-msgid "List of courses"
+msgid "schedule.courses"
 msgstr "Список курсов"
 
-msgid "Course not found"
+msgid "schedule.no_longer_tracked"
+msgstr "У вас больше нет отслеживаемых курсов"
+
+msgid "schedule.course_not_found"
 msgstr "Курс не найден"
 
-msgid "Enjoy your meal! 🍽"
+msgid "schedule.no_tracked_courses"
+msgstr "У вас нет отслеживаемых курсов. Выберите курсы кнопкой ниже, чтобы видеть расписание."
+
+msgid "food.enjoy_meal"
 msgstr "Приятного аппетита! 🍽"
 
-msgid "Awaiting review"
+msgid "ads.status_pending"
 msgstr "Ожидает проверки"
 
-msgid "Published"
+msgid "ads.status_published"
 msgstr "Опубликовано"
 
-msgid "Rejected"
+msgid "ads.status_rejected"
 msgstr "Отклонено"
 
-#, python-brace-format
-msgid "💵 Price: <b>{price}</b> som"
-msgstr "💵 Цена: <b>{price}</b> сом"
-
-#, python-brace-format
-msgid "⏰ Valid until: {date}"
-msgstr "⏰ Действительно до: {date}"
-
-#, python-brace-format
-msgid "📞 <a href=\"{link}\">Tap here to see the seller's contacts</a>"
-msgstr "📞 <a href=\"{link}\">Нажмите здесь, чтобы увидеть контакты продавца</a>"
-
-msgid "📞 Contacts:"
-msgstr "📞 Контакты:"
-
-#, python-brace-format
-msgid "💬 Reason: {comment}"
-msgstr "💬 Причина: {comment}"
-
-#, python-brace-format
-msgid "📞 <b>Contacts for \"{title}\"</b>"
-msgstr "📞 <b>Контакты для «{title}»</b>"
-
-msgid "The seller hasn't listed any contact details."
+msgid "ads.no_contacts"
 msgstr "Продавец не указал контактные данные."
 
-#, python-brace-format
-msgid "🍽 <b>Menu for {weekday}, {date}</b>"
-msgstr "🍽 <b>Меню на {weekday}, {date}</b>"
+msgid "ads.contact_title"
+msgstr "📞 <b>Контакты для «{title}»</b>"
 
-#, python-brace-format
-msgid "{index}. {name} — <b>{calories}</b> kcal"
-msgstr "{index}. {name} — <b>{calories}</b> ккал"
+msgid "ads.price"
+msgstr "💵 Цена: <b>{price}</b> сом"
 
-#, python-brace-format
-msgid "🔥 Total: <b>{calories}</b> kcal"
-msgstr "🔥 Итого: <b>{calories}</b> ккал"
+msgid "ads.valid_until"
+msgstr "⏰ Действительно до: {date}"
 
-#, python-brace-format
-msgid "⭐ Rating: <b>{average}</b> ({count})"
-msgstr "⭐ Оценка: <b>{average}</b> ({count})"
+msgid "ads.contact_link"
+msgstr "📞 <a href=\"{link}\">Нажмите здесь, чтобы увидеть контакты продавца</a>"
 
-msgid "⭐ No ratings yet"
-msgstr "⭐ Оценок пока нет"
+msgid "ads.contacts"
+msgstr "📞 Контакты:"
 
-#, python-brace-format
-msgid "👁 Views: {count}"
-msgstr "👁 Просмотров: {count}"
+msgid "ads.reason"
+msgstr "💬 Причина: {comment}"
 
-msgid "😔 Today's menu hasn't been published yet."
-msgstr "😔 Меню на сегодня ещё не опубликовано."
-
-msgid "😔 The menu for that day hasn't been published yet."
+msgid "food.menu_unpublished"
 msgstr "😔 Меню на выбранный день ещё не опубликовано."
 
-#, python-brace-format
-msgid "🏫 {faculty} — {department}, {course_year}"
+msgid "food.today_unpublished"
+msgstr "😔 Меню на сегодня ещё не опубликовано."
+
+msgid "food.no_ratings"
+msgstr "⭐ Оценок пока нет"
+
+msgid "food.menu_header"
+msgstr "🍽 <b>Меню на {weekday}, {date}</b>"
+
+msgid "food.total_calories"
+msgstr "🔥 Итого: <b>{calories}</b> ккал"
+
+msgid "food.views"
+msgstr "👁 Просмотров: {count}"
+
+msgid "food.dish"
+msgstr "{index}. {name} — <b>{calories}</b> ккал"
+
+msgid "food.rating"
+msgstr "⭐ Оценка: <b>{average}</b> ({count})"
+
+msgid "schedule.search_course"
 msgstr "🏫 {faculty} — {department}, {course_year}"
 
-#, python-brace-format
-msgid "📅 {weekday}"
+msgid "schedule.search_weekday"
 msgstr "📅 {weekday}"
 
-#, python-brace-format
-msgid "🔎 Found: {total} (page {page}/{total_pages})"
+msgid "schedule.results_page"
 msgstr "🔎 Найдено: {total} (страница {page}/{total_pages})"
 
-#, python-brace-format
-msgid "🔎 Found: {total}"
+msgid "schedule.results"
 msgstr "🔎 Найдено: {total}"
 
-msgid "You don't have any exam grades."
+msgid "obis.no_grades"
 msgstr "У вас нет оценок за экзамены."
 
-msgid "You don't have any subjects."
+msgid "obis.no_subjects"
 msgstr "У вас нет предметов."
 
-msgid "Theory"
-msgstr "Теория"
+msgid "obis.subject"
+msgstr "Предмет"
 
-msgid "Practice"
-msgstr "Практика"
+msgid "obis.exam"
+msgstr "Экзамен"
 
-#, python-brace-format
-msgid "{count} skip left"
-msgid_plural "{count} skips left"
+msgid "obis.theory_lower"
+msgstr "теория"
+
+msgid "obis.practice_lower"
+msgstr "практика"
+
+msgid "obis.skips_left.one"
+msgid_plural "obis.skips_left.many"
 msgstr[0] "осталось {count} пропуск"
 msgstr[1] "осталось {count} пропуска"
 msgstr[2] "осталось {count} пропусков"
 
-msgid "Subject"
-msgstr "Предмет"
-
-msgid "Exam"
-msgstr "Экзамен"
-
-#, python-brace-format
-msgid ""
-"🔔 New grade for the subject «{lesson}»\n"
-"{exam}: {score}"
+msgid "obis.new_grade"
 msgstr ""
 "🔔 Новая оценка по предмету «{lesson}»\n"
 "{exam}: {score}"
 
-msgid "theory"
-msgstr "теория"
-
-msgid "practice"
-msgstr "практика"
-
-#, python-brace-format
-msgid "⚠️ A skip was recorded for the subject «{lesson}» ({skip_type})"
+msgid "obis.skip_recorded"
 msgstr "⚠️ Зафиксирован пропуск по предмету «{lesson}» ({skip_type})"
 
-#, python-brace-format
-msgid "Missed: {percent}%"
+msgid "obis.missed_percentage"
 msgstr "Пропущено: {percent}%"
 
-#, python-brace-format
-msgid "You have {count} skip left"
-msgid_plural "You have {count} skips left"
+msgid "obis.theory"
+msgstr "Теория"
+
+msgid "obis.practice"
+msgstr "Практика"
+
+msgid "obis.remaining_skips.one"
+msgid_plural "obis.remaining_skips.many"
 msgstr[0] "Осталось {count} пропуск"
 msgstr[1] "Осталось {count} пропуска"
 msgstr[2] "Осталось {count} пропусков"
 
-msgid "Mon"
-msgstr "Пн"
-
-msgid "Tue"
-msgstr "Вт"
-
-msgid "Wed"
-msgstr "Ср"
-
-msgid "Thu"
-msgstr "Чт"
-
-msgid "Fri"
-msgstr "Пт"
-
-msgid "Sat"
-msgstr "Сб"
-
-msgid "Sun"
-msgstr "Вс"
-
-msgid "Monday"
-msgstr "Понедельник"
-
-msgid "Tuesday"
-msgstr "Вторник"
-
-msgid "Wednesday"
-msgstr "Среда"
-
-msgid "Thursday"
-msgstr "Четверг"
-
-msgid "Friday"
-msgstr "Пятница"
-
-msgid "Saturday"
-msgstr "Суббота"
-
-msgid "Sunday"
-msgstr "Воскресенье"
-
-#, python-brace-format
-msgid "📅 <b>{day}</b>"
-msgstr "📅 <b>{day}</b>"
-
-msgid "No classes."
-msgstr "Пар нет."
-
-msgid "😋 Lunch break. Find out what's for lunch - /yemek"
+msgid "schedule.lunch_break"
 msgstr "😋 Обед. Узнать что на йемек - /yemek"
 
-#, python-brace-format
-msgid ""
-"➕ {time_range}\n"
-"{content}"
+msgid "schedule.changes_header"
+msgstr "🔔 <b>Изменения в расписании</b>"
+
+msgid "weekday.mon"
+msgstr "Пн"
+
+msgid "weekday.tue"
+msgstr "Вт"
+
+msgid "weekday.wed"
+msgstr "Ср"
+
+msgid "weekday.thu"
+msgstr "Чт"
+
+msgid "weekday.fri"
+msgstr "Пт"
+
+msgid "weekday.sat"
+msgstr "Сб"
+
+msgid "weekday.sun"
+msgstr "Вс"
+
+msgid "weekday.monday"
+msgstr "Понедельник"
+
+msgid "weekday.tuesday"
+msgstr "Вторник"
+
+msgid "weekday.wednesday"
+msgstr "Среда"
+
+msgid "weekday.thursday"
+msgstr "Четверг"
+
+msgid "weekday.friday"
+msgstr "Пятница"
+
+msgid "weekday.saturday"
+msgstr "Суббота"
+
+msgid "weekday.sunday"
+msgstr "Воскресенье"
+
+msgid "schedule.day_header"
+msgstr "📅 <b>{day}</b>"
+
+msgid "schedule.change_updated"
+msgstr ""
+"✏️ {time_range}\n"
+"{previous}\n"
+"→\n"
+"{new}"
+
+msgid "schedule.no_classes"
+msgstr "Пар нет."
+
+msgid "schedule.change_added"
 msgstr ""
 "➕ {time_range}\n"
 "{content}"
 
-#, python-brace-format
-msgid ""
-"➖ {time_range} (cancelled)\n"
-"{content}"
+msgid "schedule.change_cancelled"
 msgstr ""
 "➖ {time_range} (отменено)\n"
 "{content}"
 
-#, python-brace-format
-msgid ""
-"✏️ {time_range}\n"
-"{previous}\n"
-"→\n"
-"{new}"
-msgstr ""
-"✏️ {time_range}\n"
-"{previous}\n"
-"→\n"
-"{new}"
-
-msgid "🔔 <b>Schedule changes</b>"
-msgstr "🔔 <b>Изменения в расписании</b>"
-
-#, python-brace-format
-msgid "📦 Version history (page {page}/{total_pages})"
-msgstr "📦 История версий (страница {page}/{total_pages})"
-
-msgid "📦 Version history"
+msgid "versions.title"
 msgstr "📦 История версий"
 
-#, python-brace-format
-msgid "📦 <b>Version {version}</b>"
+msgid "versions.title_page"
+msgstr "📦 История версий (страница {page}/{total_pages})"
+
+msgid "versions.version_header"
 msgstr "📦 <b>Версия {version}</b>"
 
-#, python-brace-format
-msgid "📅 Released: {date}"
+msgid "versions.release_date"
 msgstr "📅 Дата выхода: {date}"
 
-#~ msgid "😱 There should have been lunch here, but you have a lesson instead."
-#~ msgstr "😱 Тут должен был быть обед, но у вас урок."
+msgid "language.native_name"
+msgstr "Русский"
 
-#~ msgid "No notable changes recorded."
-#~ msgstr "Значимых изменений не зафиксировано."
+msgid "language.button"
+msgstr "🇷🇺 Русский"
 
-#~ msgid "Start the bot"
-#~ msgstr "Запуск бота"
+msgid "language.prompt"
+msgstr "🌐 Тилди тандаңыз / Выберите язык / Please choose your language / Lütfen dilinizi seçin / 请选择语言"
 
-#~ msgid "View the cafeteria menu"
-#~ msgstr "Просмотр меню столовой"
+msgid "commands.start"
+msgstr "Запуск бота"
 
-#~ msgid "Change language"
-#~ msgstr "Сменить язык"
+msgid "commands.yemek"
+msgstr "Просмотр меню столовой"
 
-#~ msgid "View the bot's version history"
-#~ msgstr "Посмотреть историю версий бота"
+msgid "commands.language"
+msgstr "Сменить язык"
 
-#~ msgid "Hide the keyboard"
-#~ msgstr "Скрыть клавиатуру"
+msgid "commands.versions"
+msgstr "Посмотреть историю версий бота"
 
-#~ msgid "➖ {weekday} {time_range}: {content} (cancelled)"
-#~ msgstr "➖ {weekday} {time_range}: {content} (отменено)"
+msgid "commands.donate"
+msgstr "Поддержать бота"
 
-#~ msgid ""
-#~ "To post an ad you need at "
-#~ "least one contact method (a Telegram "
-#~ "username or a phone number). You "
-#~ "don't have a public username, so "
-#~ "please share a phone number using "
-#~ "the button below, or type it "
-#~ "manually:"
-#~ msgstr ""
+msgid "commands.hide_keyboard"
+msgstr "Скрыть клавиатуру"
 
-#~ msgid "Enter a description (up to {max} characters):"
-#~ msgstr "Введите описание (до {max} символов):"
-
-#~ msgid ""
-#~ "The description can't be empty and "
-#~ "must be at most {max} characters. "
-#~ "Please try again:"
-#~ msgstr ""
-
-#~ msgid "Enter a price in som, or tap Skip:"
-#~ msgstr "Введите цену в сомах или нажмите «Пропустить»:"
-
-#~ msgid ""
-#~ "Send up to 10 photos or videos,"
-#~ " then tap Done. Or tap Done "
-#~ "right away to skip."
-#~ msgstr ""
-
-#~ msgid "Enter an expiration date as DD.MM.YYYY, or tap Skip for no expiration:"
-#~ msgstr ""
-#~ "Введите дату истечения в формате "
-#~ "ДД.ММ.ГГГГ или нажмите «Пропустить», если "
-#~ "срок не ограничен:"
-
-#~ msgid ""
-#~ "That doesn't look like a valid "
-#~ "date. Please use DD.MM.YYYY, or tap "
-#~ "Skip:"
-#~ msgstr ""
-#~ "Это не похоже на корректную дату. "
-#~ "Используйте формат ДД.ММ.ГГГГ или нажмите "
-#~ "«Пропустить»:"
-
-#~ msgid ""
-#~ "The expiration date must be in the"
-#~ " future. Please try again, or tap "
-#~ "Skip:"
-#~ msgstr ""
-#~ "Дата истечения должна быть в будущем."
-#~ " Попробуйте ещё раз или нажмите "
-#~ "«Пропустить»:"
-
-#~ msgid "Please review your ad:"
-#~ msgstr "Проверьте ваше объявление:"
-
-#~ msgid "Your ad has been submitted for review ✅"
-#~ msgstr "Ваше объявление отправлено на проверку ✅"
-
-#~ msgid "🛒 <b>Marketplace</b>"
-#~ msgstr "🛒 <b>Барахолка</b>"
-
+msgid "commands.broadcast"
+msgstr "Разослать сообщение всем пользователям"
