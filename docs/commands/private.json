@@ -36,6 +36,15 @@
     }
   },
   {
+    "command": "donate",
+    "description": {
+      "en": "Support the bot",
+      "ru": "Поддержать бота",
+      "ky": "Ботту колдоо",
+      "tr": "Botu destekle"
+    }
+  },
+  {
     "command": "hide_keyboard",
     "description": {
       "en": "Hide the keyboard",
