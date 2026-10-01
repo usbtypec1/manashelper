@@ -18,6 +18,144 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+msgid "commands.eders"
+msgstr "eders тапшырмалары жана тесттери"
+
+msgid "eders.loading"
+msgstr "eders тапшырмалары жүктөлүүдө…"
+
+msgid "eders.fetch_failed"
+msgstr "eders жүктөлгөн жок. Кийин кайра аракет кылыңыз."
+
+msgid "eders.expired"
+msgstr "Тизме эскирди. /eders буйругун кайра жөнөтүңүз."
+
+msgid "eders.unknown"
+msgstr "Белгисиз"
+
+msgid "eders.date_conflict"
+msgstr "Даталар бири-бирине дал келбейт: {value}"
+
+msgid "eders.date_unverified"
+msgstr "{value} (так убакыт ырасталган эмес)"
+
+msgid "eders.not_submitted"
+msgstr "Тапшырылган эмес"
+
+msgid "eders.draft"
+msgstr "Долбоор — тапшырылган эмес"
+
+msgid "eders.submitted"
+msgstr "Тапшырылды (тест: аракет аяктады)"
+
+msgid "eders.in_progress"
+msgstr "Тест аракети аткарылууда"
+
+msgid "eders.not_graded"
+msgstr "Баалана элек"
+
+msgid "eders.graded"
+msgstr "Бааланды"
+
+msgid "eders.page"
+msgstr "eders: жазуу {page}/{count}"
+
+msgid "eders.empty"
+msgstr "Бул чыпкага туура келген жазуу жок."
+
+msgid "eders.filter_note"
+msgstr "Булак: eders баалар серептөөсүндөгү курстар. Ырасталган убакыт — Asia/Bishkek. Убакыт алкагы ырасталбаган же карама-каршы даталар убакыт чыпкаларына кирбейт; «Так мөөнөтү жок» бөлүмүн караңыз. Иштерди eders аркылуу аткарып, тапшырыңыз."
+
+msgid "eders.opens"
+msgstr "Ачылат: {value}"
+
+msgid "eders.closes"
+msgstr "Мөөнөтү: {value}"
+
+msgid "eders.submission"
+msgstr "Тапшыруу: {value}"
+
+msgid "eders.grading"
+msgstr "Баалоо: {value}"
+
+msgid "eders.title_date_mismatch"
+msgstr "Аталыштагы дата коюлган мөөнөттөн айырмаланат."
+
+msgid "eders.filter_all"
+msgstr "Жакындагы жана алдыдагы"
+
+msgid "eders.filter_week"
+msgstr "Алдыдагы жети күн"
+
+msgid "eders.filter_available"
+msgstr "Азыр жеткиликтүү"
+
+msgid "eders.filter_awaiting"
+msgstr "Баалоону күтүүдө"
+
+msgid "eders.filter_unknown"
+msgstr "Так мөөнөтү жок"
+
+msgid "commands.eders_settings"
+msgstr "eders эскертүүлөрүн жөндөө"
+
+msgid "commands.week"
+msgstr "Менин окуу жумам"
+
+msgid "eders.reminder_day"
+msgstr "eders эскертүүсү: мөөнөткө бир күн калганда"
+
+msgid "eders.reminder_two_hours"
+msgstr "eders эскертүүсү: мөөнөткө эки саат калганда"
+
+msgid "eders.opened_notification"
+msgstr "eders тапшырмасы ачылды"
+
+msgid "eders.changed_notification"
+msgstr "eders мөөнөтү өзгөрдү"
+
+msgid "eders.previous_deadline"
+msgstr "Мурунку мөөнөт: {value}"
+
+msgid "eders.setting_day"
+msgstr "Бир күн мурун"
+
+msgid "eders.setting_two_hours"
+msgstr "Эки саат мурун"
+
+msgid "eders.setting_openings"
+msgstr "Тапшырма жана тесттердин ачылышы"
+
+msgid "eders.setting_changes"
+msgstr "Мөөнөттөрдүн өзгөрүшү"
+
+msgid "eders.setting_archived"
+msgstr "180 күндөн эски мөөнөттөрдү жашыруу"
+
+msgid "eders.settings_header"
+msgstr "eders эскертүүлөрү. Баскычтар жөндөөлөрдү күйгүзүп же өчүрөт. /eders — тапшырмалар, /week — алдыдагы жети күн."
+
+msgid "eders.week_header"
+msgstr "Менин окуу жумам: {start}–{end} (Asia/Bishkek)"
+
+msgid "eders.week_no_schedule"
+msgstr "Сабактарды кошуу үчүн курстарга көз салууну күйгүзүңүз."
+
+msgid "eders.week_opens"
+msgstr "Ачылат"
+
+msgid "eders.week_due"
+msgstr "Мөөнөтү"
+
+msgid "eders.week_material"
+msgstr "Жаңы табылган материал: {value}"
+
+msgid "eders.week_many_deadlines"
+msgstr "Бул күндөгү мөөнөттөр: {count}"
+
+msgid "eders.week_empty_day"
+msgstr "Белгилүү окуялар жок."
+
 msgid "common.cancel"
 msgstr "❌ Жокко чыгаруу"
 
@@ -806,3 +944,87 @@ msgstr "🍉 Менюну ачуу"
 
 msgid "food.rich_command_usage"
 msgstr "Колдонуу: /yemek today, /yemek tomorrow же /yemek 2"
+
+msgid "obis.loading_grades"
+msgstr "📚 Баалар жүктөлүүдө…"
+
+msgid "obis.loading_attendance"
+msgstr "📋 Калтырылган сабактар жүктөлүүдө…"
+
+msgid "obis.page_indicator"
+msgstr "Бет {page}/{total}"
+
+msgid "obis.result_expired"
+msgstr "Бул жыйынтык мындан ары жеткиликтүү эмес. Меню аркылуу бааларды же калтырылган сабактарды кайра сураңыз."
+
+msgid "student_questions.preparatory"
+msgstr "Даярдоо курсу"
+
+msgid "student_questions.year_1"
+msgstr "1-курс"
+
+msgid "student_questions.year_2"
+msgstr "2-курс"
+
+msgid "student_questions.year_3"
+msgstr "3-курс"
+
+msgid "student_questions.year_4"
+msgstr "4-курс"
+
+msgid "student_questions.year_5"
+msgstr "5-курс"
+
+msgid "student_questions.not_student"
+msgstr "Мен студент эмесмин"
+
+msgid "student_questions.yes"
+msgstr "Ооба"
+
+msgid "student_questions.no"
+msgstr "Жок"
+
+msgid "student_questions.intro"
+msgstr "Университет тууралуу суроолорго жооп издөө боюнча кыска сурамжылоо. Бир нече суроого жооп бериңиз."
+
+msgid "student_questions.course_prompt"
+msgstr "1. Кайсы курста окуйсуз?"
+
+msgid "student_questions.search_prompt"
+msgstr "2. Университетке тапшыруу же окуу учурунда жообун көпкө издеген суроолоруңуз болгонбу?"
+
+msgid "student_questions.questions_prompt"
+msgstr "3. Ошол суроолорду тизмектеп жазыңыз."
+
+msgid "student_questions.found_prompt"
+msgstr "4. Акыры ошол суроолорго жооп таптыңызбы?"
+
+msgid "student_questions.sources_prompt"
+msgstr "5. Суроолоруңузга жоопторду кайдан таптыңыз?"
+
+msgid "student_questions.beta_prompt"
+msgstr "6. Университет тууралуу дээрлик баарын билген эксперименталдык боттун бета-тестине катышкыңыз келеби?"
+
+msgid "student_questions.thanks"
+msgstr "7. Жоопторуңуз үчүн рахмат!"
+
+msgid "student_questions.beta_follow_up"
+msgstr "Бета-тестке катышуу үчүн бир айдын ичинде сиз менен байланышабыз."
+
+msgid "student_questions.already_completed"
+msgstr "Бул сурамжылоону мурда толтургансыз. Кайра толтургуңуз келеби? Аяктагандан кийин жаңы анкета мурункусун алмаштырат."
+
+msgid "student_questions.fill_again"
+msgstr "Кайра толтуруу"
+
+msgid "student_questions.expired"
+msgstr "Бул баскычтар эскирди. Сурамжылоону шилтеме аркылуу кайра ачыңыз."
+
+msgid "student_questions.cancelled"
+msgstr "Сурамжылоо токтотулду. Сакталган анкета өзгөргөн жок."
+
+msgid "student_questions.invalid_text"
+msgstr "Узундугу 1ден {max} белгиге чейин болгон текст жөнөтүңүз."
+
+msgid "student_questions.use_buttons"
+msgstr "Жоопту баскычтар аркылуу тандаңыз."

@@ -14,6 +14,7 @@ from manashelper.repositories.daily_menu_rating_repository import DailyMenuRatin
 from manashelper.repositories.daily_menu_repository import DailyMenuRepository
 from manashelper.repositories.department_repository import DepartmentRepository
 from manashelper.repositories.dish_repository import DishRepository
+from manashelper.repositories.eders_repository import EdersRepository
 from manashelper.repositories.faculty_repository import FacultyRepository
 from manashelper.repositories.feedback_repository import FeedbackRepository
 from manashelper.repositories.food_menu_cleanup_settings_repository import FoodMenuCleanupSettingsRepository
@@ -24,10 +25,12 @@ from manashelper.repositories.lesson_history_repository import LessonHistoryRepo
 from manashelper.repositories.lesson_repository import LessonRepository
 from manashelper.repositories.notification_settings_repository import NotificationSettingsRepository
 from manashelper.repositories.scheduled_message_deletion_repository import ScheduledMessageDeletionRepository
+from manashelper.repositories.student_questions_repository import StudentQuestionsRepository
 from manashelper.repositories.user_exam_grade_repository import UserExamGradeRepository
 from manashelper.repositories.user_lesson_attendance_repository import UserLessonAttendanceRepository
 from manashelper.repositories.user_phone_number_repository import UserPhoneNumberRepository
 from manashelper.repositories.user_repository import UserRepository
+from manashelper.scraping.eders_client import EdersClient
 from manashelper.scraping.food_menu_client import FoodMenuClient
 from manashelper.scraping.food_menu_parser import FoodMenuParser
 from manashelper.scraping.obis_client import ObisClient
@@ -42,6 +45,8 @@ from manashelper.services.crypto import CryptoService
 from manashelper.services.daily_menu import DailyMenuService
 from manashelper.services.department import DepartmentService
 from manashelper.services.donations import DonationQrService, DonationService
+from manashelper.services.eders import EdersService
+from manashelper.services.eders_tracking import EdersTrackingService
 from manashelper.services.faculty import FacultyService
 from manashelper.services.feedback import FeedbackService
 from manashelper.services.food_menu_cleanup_settings import FoodMenuCleanupSettingsService
@@ -54,6 +59,8 @@ from manashelper.services.notification_settings import NotificationSettingsServi
 from manashelper.services.obis import ObisService
 from manashelper.services.obis_notification import ObisNotificationService
 from manashelper.services.schedule import ScheduleService
+from manashelper.services.student_questions import StudentQuestionsService
+from manashelper.services.study_week import StudyWeekService
 from manashelper.services.timetable_sync import TimetableSyncService
 from manashelper.services.user_contact import UserContactService
 
@@ -84,6 +91,7 @@ class AppProvider(Provider):
     food_menu_parser = provide(FoodMenuParser)
     crypto_service = provide(CryptoService)
     obis_client = provide(ObisClient)
+    eders_client = provide(EdersClient)
     timetable_client = provide(TimetableClient)
     donation_qr_service = provide(DonationQrService)
 
@@ -106,6 +114,7 @@ class RequestProvider(Provider):
     course_repository = provide(CourseRepository)
     user_repository = provide(UserRepository)
     dish_repository = provide(DishRepository)
+    eders_repository = provide(EdersRepository)
     daily_menu_repository = provide(DailyMenuRepository)
     daily_menu_rating_repository = provide(DailyMenuRatingRepository)
     notification_settings_repository = provide(NotificationSettingsRepository)
@@ -121,6 +130,7 @@ class RequestProvider(Provider):
     advertisement_repository = provide(AdvertisementRepository)
     advertisement_contact_view_repository = provide(AdvertisementContactViewRepository)
     feedback_repository = provide(FeedbackRepository)
+    student_questions_repository = provide(StudentQuestionsRepository)
 
     faculty_service = provide(FacultyService)
     department_service = provide(DepartmentService)
@@ -128,11 +138,14 @@ class RequestProvider(Provider):
     daily_menu_service = provide(DailyMenuService)
     food_menu_sync_service = provide(FoodMenuSyncService)
     obis_service = provide(ObisService)
+    eders_service = provide(EdersService)
+    eders_tracking_service = provide(EdersTrackingService)
     notification_settings_service = provide(NotificationSettingsService)
     food_menu_notification_settings_service = provide(FoodMenuNotificationSettingsService)
     obis_notification_service = provide(ObisNotificationService)
     timetable_sync_service = provide(TimetableSyncService)
     schedule_service = provide(ScheduleService)
+    study_week_service = provide(StudyWeekService)
     lesson_search_service = provide(LessonSearchService)
     locale_service = provide(LocaleService)
     message_deletion_service = provide(MessageDeletionService)
@@ -143,5 +156,6 @@ class RequestProvider(Provider):
     advertisement_moderation_service = provide(AdvertisementModerationService)
     advertisement_contact_service = provide(AdvertisementContactService)
     feedback_service = provide(FeedbackService)
+    student_questions_service = provide(StudentQuestionsService)
     broadcast_service = provide(BroadcastService)
     donation_service = provide(DonationService)

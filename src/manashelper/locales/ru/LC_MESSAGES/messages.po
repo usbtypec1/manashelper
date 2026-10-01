@@ -18,6 +18,144 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+msgid "commands.eders"
+msgstr "Задания и тесты eders"
+
+msgid "eders.loading"
+msgstr "Загружаю задания eders…"
+
+msgid "eders.fetch_failed"
+msgstr "Не удалось загрузить eders. Попробуйте позже."
+
+msgid "eders.expired"
+msgstr "Список устарел. Отправьте /eders снова."
+
+msgid "eders.unknown"
+msgstr "Неизвестно"
+
+msgid "eders.date_conflict"
+msgstr "Сроки противоречат друг другу: {value}"
+
+msgid "eders.date_unverified"
+msgstr "{value} (точное время не подтверждено)"
+
+msgid "eders.not_submitted"
+msgstr "Не сдано"
+
+msgid "eders.draft"
+msgstr "Черновик — не сдано"
+
+msgid "eders.submitted"
+msgstr "Сдано (для теста: попытка завершена)"
+
+msgid "eders.in_progress"
+msgstr "Попытка теста выполняется"
+
+msgid "eders.not_graded"
+msgstr "Пока не оценено"
+
+msgid "eders.graded"
+msgstr "Оценено"
+
+msgid "eders.page"
+msgstr "eders: запись {page}/{count}"
+
+msgid "eders.empty"
+msgstr "По этому фильтру записей нет."
+
+msgid "eders.filter_note"
+msgstr "Источник: курсы из обзора оценок eders. Подтверждённое время — Asia/Bishkek. Сроки с неподтверждённым часовым поясом или конфликтом не попадают во временные фильтры; смотрите «Без точного срока». Выполняйте и сдавайте работы на eders."
+
+msgid "eders.opens"
+msgstr "Открытие: {value}"
+
+msgid "eders.closes"
+msgstr "Срок: {value}"
+
+msgid "eders.submission"
+msgstr "Сдача: {value}"
+
+msgid "eders.grading"
+msgstr "Оценивание: {value}"
+
+msgid "eders.title_date_mismatch"
+msgstr "Дата в названии отличается от установленного срока."
+
+msgid "eders.filter_all"
+msgstr "Недавние и предстоящие"
+
+msgid "eders.filter_week"
+msgstr "Ближайшие семь дней"
+
+msgid "eders.filter_available"
+msgstr "Доступные сейчас"
+
+msgid "eders.filter_awaiting"
+msgstr "Ожидают оценки"
+
+msgid "eders.filter_unknown"
+msgstr "Без точного срока"
+
+msgid "commands.eders_settings"
+msgstr "Настроить напоминания eders"
+
+msgid "commands.week"
+msgstr "Моя учебная неделя"
+
+msgid "eders.reminder_day"
+msgstr "Напоминание eders: за сутки до срока"
+
+msgid "eders.reminder_two_hours"
+msgstr "Напоминание eders: за два часа до срока"
+
+msgid "eders.opened_notification"
+msgstr "В eders открылась активность"
+
+msgid "eders.changed_notification"
+msgstr "В eders изменился срок"
+
+msgid "eders.previous_deadline"
+msgstr "Прежний срок: {value}"
+
+msgid "eders.setting_day"
+msgstr "За сутки"
+
+msgid "eders.setting_two_hours"
+msgstr "За два часа"
+
+msgid "eders.setting_openings"
+msgstr "Открытие заданий и тестов"
+
+msgid "eders.setting_changes"
+msgstr "Изменения сроков"
+
+msgid "eders.setting_archived"
+msgstr "Скрывать сроки старше 180 дней"
+
+msgid "eders.settings_header"
+msgstr "Напоминания eders. Кнопки включают и отключают настройки. /eders — задания, /week — ближайшие семь дней."
+
+msgid "eders.week_header"
+msgstr "Моя учебная неделя: {start}–{end} (Asia/Bishkek)"
+
+msgid "eders.week_no_schedule"
+msgstr "Подключите отслеживание курсов, чтобы добавить пары в сводку."
+
+msgid "eders.week_opens"
+msgstr "Открытие"
+
+msgid "eders.week_due"
+msgstr "Срок"
+
+msgid "eders.week_material"
+msgstr "Новый обнаруженный материал: {value}"
+
+msgid "eders.week_many_deadlines"
+msgstr "Сроков в этот день: {count}"
+
+msgid "eders.week_empty_day"
+msgstr "Известных событий нет."
+
 msgid "common.cancel"
 msgstr "❌ Отмена"
 
@@ -804,3 +942,87 @@ msgstr "🍉 Открыть меню"
 
 msgid "food.rich_command_usage"
 msgstr "Использование: /yemek today, /yemek tomorrow или /yemek 2"
+
+msgid "obis.loading_grades"
+msgstr "📚 Загружаю оценки…"
+
+msgid "obis.loading_attendance"
+msgstr "📋 Загружаю пропуски…"
+
+msgid "obis.page_indicator"
+msgstr "Страница {page}/{total}"
+
+msgid "obis.result_expired"
+msgstr "Этот результат больше недоступен. Запросите оценки или пропуски заново через меню."
+
+msgid "student_questions.preparatory"
+msgstr "Хазырлык"
+
+msgid "student_questions.year_1"
+msgstr "1 курс"
+
+msgid "student_questions.year_2"
+msgstr "2 курс"
+
+msgid "student_questions.year_3"
+msgstr "3 курс"
+
+msgid "student_questions.year_4"
+msgstr "4 курс"
+
+msgid "student_questions.year_5"
+msgstr "5 курс"
+
+msgid "student_questions.not_student"
+msgstr "Я не студент"
+
+msgid "student_questions.yes"
+msgstr "Да"
+
+msgid "student_questions.no"
+msgstr "Нет"
+
+msgid "student_questions.intro"
+msgstr "Короткий опрос о поиске ответов на вопросы по университету. Пожалуйста, ответьте на несколько вопросов."
+
+msgid "student_questions.course_prompt"
+msgstr "1. Какой вы курс?"
+
+msgid "student_questions.search_prompt"
+msgstr "2. В процессе поступления или обучения возникали ли у вас вопросы, ответы на которые вы искали долго?"
+
+msgid "student_questions.questions_prompt"
+msgstr "3. Пожалуйста, перечислите эти вопросы."
+
+msgid "student_questions.found_prompt"
+msgstr "4. Вы нашли в итоге ответы на эти вопросы?"
+
+msgid "student_questions.sources_prompt"
+msgstr "5. Где вы нашли ответы на ваши вопросы?"
+
+msgid "student_questions.beta_prompt"
+msgstr "6. Хотите поучаствовать в бета-тесте экспериментального бота, который знает практически всё по университету?"
+
+msgid "student_questions.thanks"
+msgstr "7. Спасибо за ваши ответы!"
+
+msgid "student_questions.beta_follow_up"
+msgstr "В течение месяца мы свяжемся с вами для участия в бета-тесте."
+
+msgid "student_questions.already_completed"
+msgstr "Вы уже заполняли этот опрос. Хотите заполнить заново? После завершения новая анкета заменит предыдущую."
+
+msgid "student_questions.fill_again"
+msgstr "Заполнить заново"
+
+msgid "student_questions.expired"
+msgstr "Эти кнопки больше не актуальны. Откройте опрос по ссылке заново."
+
+msgid "student_questions.cancelled"
+msgstr "Опрос отменён. Сохранённая анкета не изменена."
+
+msgid "student_questions.invalid_text"
+msgstr "Пожалуйста, отправьте текст длиной от 1 до {max} символов."
+
+msgid "student_questions.use_buttons"
+msgstr "Пожалуйста, выберите ответ с помощью кнопок."

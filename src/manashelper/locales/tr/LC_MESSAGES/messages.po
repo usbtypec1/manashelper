@@ -18,6 +18,144 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+msgid "commands.eders"
+msgstr "eders ödev ve sınavlarını görüntüle"
+
+msgid "eders.loading"
+msgstr "eders ödevleri yükleniyor…"
+
+msgid "eders.fetch_failed"
+msgstr "eders yüklenemedi. Daha sonra tekrar deneyin."
+
+msgid "eders.expired"
+msgstr "Bu listenin süresi doldu. /eders komutunu tekrar çalıştırın."
+
+msgid "eders.unknown"
+msgstr "Bilinmiyor"
+
+msgid "eders.date_conflict"
+msgstr "Çelişen tarihler: {value}"
+
+msgid "eders.date_unverified"
+msgstr "{value} (kesin saat doğrulanmadı)"
+
+msgid "eders.not_submitted"
+msgstr "Teslim edilmedi"
+
+msgid "eders.draft"
+msgstr "Taslak — teslim edilmedi"
+
+msgid "eders.submitted"
+msgstr "Teslim edildi (sınav: deneme tamamlandı)"
+
+msgid "eders.in_progress"
+msgstr "Sınav denemesi devam ediyor"
+
+msgid "eders.not_graded"
+msgstr "Henüz not verilmedi"
+
+msgid "eders.graded"
+msgstr "Not verildi"
+
+msgid "eders.page"
+msgstr "eders: öğe {page}/{count}"
+
+msgid "eders.empty"
+msgstr "Bu filtreye uyan öğe yok."
+
+msgid "eders.filter_note"
+msgstr "Kaynak: eders not özetindeki dersler. Doğrulanmış saatler Asia/Bishkek saat dilimindedir. Saat dilimi doğrulanmamış veya çelişen tarihler zaman filtrelerine dahil edilmez; “Kesin tarihi yok” bölümüne bakın. Çalışmaları eders üzerinde tamamlayıp teslim edin."
+
+msgid "eders.opens"
+msgstr "Açılış: {value}"
+
+msgid "eders.closes"
+msgstr "Son tarih: {value}"
+
+msgid "eders.submission"
+msgstr "Teslim durumu: {value}"
+
+msgid "eders.grading"
+msgstr "Notlandırma: {value}"
+
+msgid "eders.title_date_mismatch"
+msgstr "Başlıktaki tarih ayarlanan son tarihten farklı."
+
+msgid "eders.filter_all"
+msgstr "Güncel öğeler"
+
+msgid "eders.filter_week"
+msgstr "Önümüzdeki yedi gün"
+
+msgid "eders.filter_available"
+msgstr "Şimdi açık"
+
+msgid "eders.filter_awaiting"
+msgstr "Not bekleyenler"
+
+msgid "eders.filter_unknown"
+msgstr "Kesin tarihi yok"
+
+msgid "commands.eders_settings"
+msgstr "eders hatırlatıcılarını ayarla"
+
+msgid "commands.week"
+msgstr "Haftalık ders özetim"
+
+msgid "eders.reminder_day"
+msgstr "eders hatırlatıcısı: son tarihten bir gün önce"
+
+msgid "eders.reminder_two_hours"
+msgstr "eders hatırlatıcısı: son tarihten iki saat önce"
+
+msgid "eders.opened_notification"
+msgstr "eders etkinliği açıldı"
+
+msgid "eders.changed_notification"
+msgstr "eders son tarihi değişti"
+
+msgid "eders.previous_deadline"
+msgstr "Önceki son tarih: {value}"
+
+msgid "eders.setting_day"
+msgstr "Bir gün önce"
+
+msgid "eders.setting_two_hours"
+msgstr "İki saat önce"
+
+msgid "eders.setting_openings"
+msgstr "Ödev ve sınav açılışları"
+
+msgid "eders.setting_changes"
+msgstr "Son tarih değişiklikleri"
+
+msgid "eders.setting_archived"
+msgstr "180 günden eski tarihleri gizle"
+
+msgid "eders.settings_header"
+msgstr "eders hatırlatıcıları. Düğmeler ayarları açıp kapatır. /eders ile ödevleri, /week ile önümüzdeki yedi günü görüntüleyin."
+
+msgid "eders.week_header"
+msgstr "Ders haftam: {start}–{end} (Asia/Bishkek)"
+
+msgid "eders.week_no_schedule"
+msgstr "Dersleri özete eklemek için ders takibini açın."
+
+msgid "eders.week_opens"
+msgstr "Açılış"
+
+msgid "eders.week_due"
+msgstr "Son tarih"
+
+msgid "eders.week_material"
+msgstr "Yeni bulunan materyal: {value}"
+
+msgid "eders.week_many_deadlines"
+msgstr "Bugünkü son tarihler: {count}"
+
+msgid "eders.week_empty_day"
+msgstr "Bilinen etkinlik yok."
+
 msgid "common.cancel"
 msgstr "❌ İptal"
 
@@ -800,3 +938,87 @@ msgstr "🍉 Menüyü aç"
 
 msgid "food.rich_command_usage"
 msgstr "Kullanım: /yemek today, /yemek tomorrow veya /yemek 2"
+
+msgid "obis.loading_grades"
+msgstr "📚 Notlar yükleniyor…"
+
+msgid "obis.loading_attendance"
+msgstr "📋 Devamsızlık bilgileri yükleniyor…"
+
+msgid "obis.page_indicator"
+msgstr "Sayfa {page}/{total}"
+
+msgid "obis.result_expired"
+msgstr "Bu sonuç artık mevcut değil. Menüden notları veya devamsızlık bilgilerini yeniden isteyin."
+
+msgid "student_questions.preparatory"
+msgstr "Hazırlık"
+
+msgid "student_questions.year_1"
+msgstr "1. sınıf"
+
+msgid "student_questions.year_2"
+msgstr "2. sınıf"
+
+msgid "student_questions.year_3"
+msgstr "3. sınıf"
+
+msgid "student_questions.year_4"
+msgstr "4. sınıf"
+
+msgid "student_questions.year_5"
+msgstr "5. sınıf"
+
+msgid "student_questions.not_student"
+msgstr "Öğrenci değilim"
+
+msgid "student_questions.yes"
+msgstr "Evet"
+
+msgid "student_questions.no"
+msgstr "Hayır"
+
+msgid "student_questions.intro"
+msgstr "Üniversite hakkındaki sorulara cevap bulma üzerine kısa bir anket. Lütfen birkaç soruyu cevaplayın."
+
+msgid "student_questions.course_prompt"
+msgstr "1. Kaçıncı sınıftasınız?"
+
+msgid "student_questions.search_prompt"
+msgstr "2. Başvuru veya öğrenim sürecinde cevabını uzun süre aradığınız sorular oldu mu?"
+
+msgid "student_questions.questions_prompt"
+msgstr "3. Lütfen bu soruları listeleyin."
+
+msgid "student_questions.found_prompt"
+msgstr "4. Sonunda bu soruların cevaplarını buldunuz mu?"
+
+msgid "student_questions.sources_prompt"
+msgstr "5. Sorularınızın cevaplarını nerede buldunuz?"
+
+msgid "student_questions.beta_prompt"
+msgstr "6. Üniversite hakkında neredeyse her şeyi bilen deneysel bir botun beta testine katılmak ister misiniz?"
+
+msgid "student_questions.thanks"
+msgstr "7. Cevaplarınız için teşekkür ederiz!"
+
+msgid "student_questions.beta_follow_up"
+msgstr "Beta testine katılım için bir ay içinde sizinle iletişime geçeceğiz."
+
+msgid "student_questions.already_completed"
+msgstr "Bu anketi daha önce doldurdunuz. Tekrar doldurmak ister misiniz? Tamamladığınızda yeni yanıtlar önceki yanıtların yerini alacak."
+
+msgid "student_questions.fill_again"
+msgstr "Tekrar doldur"
+
+msgid "student_questions.expired"
+msgstr "Bu düğmelerin süresi doldu. Anket bağlantısını tekrar açın."
+
+msgid "student_questions.cancelled"
+msgstr "Anket iptal edildi. Kaydedilmiş yanıtlarınız değişmedi."
+
+msgid "student_questions.invalid_text"
+msgstr "Lütfen 1 ile {max} karakter arasında bir metin gönderin."
+
+msgid "student_questions.use_buttons"
+msgstr "Lütfen düğmeleri kullanarak bir cevap seçin."

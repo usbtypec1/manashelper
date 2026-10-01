@@ -27,10 +27,11 @@ Core capabilities (current):
   the real OBIS login before saving (AES-GCM encrypted at rest), and lets the user fetch their current exam
   grades and lesson-attendance/skip-budget summary on demand — see `services/obis.py`,
   `scraping/obis_client.py`, `scraping/obis_parser.py`, `bot/routers/obis.py`.
-  User-requested grades and attendance stream via `bot/message_stream.py`: show a rich draft heading before
-  fetching, refresh it during slow requests, append each subject and persist the final rich message. Draft API
-  failures fall back to a heading message edited when loading completes. Scheduled OBIS notifications remain
-  regular messages. OBIS returns a complete HTML page, so subject data appears after that fetch finishes.
+  User-requested grades and attendance send a regular loading message, then edit it into compact plain-text
+  pages with standard inline navigation. Pages contain up to two subjects and are bounded by text length and
+  line count. The last five multipage results per user are cached in FSM data by message ID, so page changes
+  do not re-fetch OBIS or mix results from separate messages. Restarting the bot or clearing FSM data expires
+  navigation; the callback asks the user to request fresh data. Scheduled OBIS notifications remain unchanged.
 - **Notification settings**: a `⚙️ Settings` menu (`bot/routers/settings.py`) lets each user toggle five
   notification kinds (schedule changes, before-lunch/before-dinner menu pings, exam-grade changes, lesson skips),
   backed by a lazily-created `NotificationSettings` row per user that defaults every toggle to enabled — see
@@ -415,6 +416,16 @@ purely "did this update originate from that chat" (`bot/routers/feedback.py::_is
   `services/html_sanitization.py::escape_html` before being interpolated into an HTML-parse-mode message, same
   correctness reasoning as the advertising platform (an unescaped bare `&`/`<`/`>` makes Telegram reject the
   whole `sendMessage` call).
+
+### Student questions survey
+
+The private deep link `/start student_questions` opens a localized survey about students' course,
+university questions, answer sources and interest in an experimental bot beta. Questions 3–5 are
+conditional. Completed responses are stored in `student_questions_responses`, with the Telegram user
+ID as the primary key. A second submission requires explicit confirmation and replaces the old response
+only when the new survey finishes; cancellation leaves the existing response intact. Incomplete drafts
+use FSM memory and are lost on restart. Callback session IDs reject buttons from previous runs.
+The survey router precedes the advertisement deep-link router, which otherwise claims every start payload.
 
 ## Roadmap (not yet ported from the Java version)
 

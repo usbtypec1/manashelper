@@ -18,6 +18,144 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+msgid "commands.eders"
+msgstr "View eders assignments and quizzes"
+
+msgid "eders.loading"
+msgstr "Loading eders assignments…"
+
+msgid "eders.fetch_failed"
+msgstr "Could not load eders. Try again later."
+
+msgid "eders.expired"
+msgstr "This list has expired. Run /eders again."
+
+msgid "eders.unknown"
+msgstr "Unknown"
+
+msgid "eders.date_conflict"
+msgstr "Conflicting dates: {value}"
+
+msgid "eders.date_unverified"
+msgstr "{value} (exact time unverified)"
+
+msgid "eders.not_submitted"
+msgstr "Not submitted"
+
+msgid "eders.draft"
+msgstr "Draft — not submitted"
+
+msgid "eders.submitted"
+msgstr "Submitted (quiz: finished attempt)"
+
+msgid "eders.in_progress"
+msgstr "Quiz attempt in progress"
+
+msgid "eders.not_graded"
+msgstr "Not graded yet"
+
+msgid "eders.graded"
+msgstr "Graded"
+
+msgid "eders.page"
+msgstr "eders: item {page}/{count}"
+
+msgid "eders.empty"
+msgstr "No items match this filter."
+
+msgid "eders.filter_note"
+msgstr "Source: courses listed in the eders grade overview. Confirmed times use Asia/Bishkek. Dates with an unverified timezone or conflicts are excluded from time filters; see “Unknown deadline”. Complete and submit work on eders."
+
+msgid "eders.opens"
+msgstr "Opens: {value}"
+
+msgid "eders.closes"
+msgstr "Deadline: {value}"
+
+msgid "eders.submission"
+msgstr "Submission: {value}"
+
+msgid "eders.grading"
+msgstr "Grading: {value}"
+
+msgid "eders.title_date_mismatch"
+msgstr "The date in the title differs from the configured deadline."
+
+msgid "eders.filter_all"
+msgstr "Recent items"
+
+msgid "eders.filter_week"
+msgstr "Next seven days"
+
+msgid "eders.filter_available"
+msgstr "Available now"
+
+msgid "eders.filter_awaiting"
+msgstr "Awaiting grade"
+
+msgid "eders.filter_unknown"
+msgstr "Unknown deadline"
+
+msgid "commands.eders_settings"
+msgstr "Configure eders reminders"
+
+msgid "commands.week"
+msgstr "My study week"
+
+msgid "eders.reminder_day"
+msgstr "eders deadline reminder: one day before"
+
+msgid "eders.reminder_two_hours"
+msgstr "eders deadline reminder: two hours before"
+
+msgid "eders.opened_notification"
+msgstr "An eders activity has opened"
+
+msgid "eders.changed_notification"
+msgstr "The eders deadline has changed"
+
+msgid "eders.previous_deadline"
+msgstr "Previous deadline: {value}"
+
+msgid "eders.setting_day"
+msgstr "One day before"
+
+msgid "eders.setting_two_hours"
+msgstr "Two hours before"
+
+msgid "eders.setting_openings"
+msgstr "Activity openings"
+
+msgid "eders.setting_changes"
+msgstr "Deadline changes"
+
+msgid "eders.setting_archived"
+msgstr "Hide deadlines older than 180 days"
+
+msgid "eders.settings_header"
+msgstr "eders reminders. Each button toggles a setting. Use /eders for assignments and /week for your next seven days."
+
+msgid "eders.week_header"
+msgstr "My study week: {start}–{end} (Asia/Bishkek)"
+
+msgid "eders.week_no_schedule"
+msgstr "Track your courses to add classes to this summary."
+
+msgid "eders.week_opens"
+msgstr "Opens"
+
+msgid "eders.week_due"
+msgstr "Deadline"
+
+msgid "eders.week_material"
+msgstr "Newly discovered material: {value}"
+
+msgid "eders.week_many_deadlines"
+msgstr "Deadlines today: {count}"
+
+msgid "eders.week_empty_day"
+msgstr "No known events."
+
 msgid "common.cancel"
 msgstr "❌ Cancel"
 
@@ -804,3 +942,87 @@ msgstr "🍉 Open cafeteria menu"
 
 msgid "food.rich_command_usage"
 msgstr "Usage: /yemek today, /yemek tomorrow, or /yemek 2"
+
+msgid "obis.loading_grades"
+msgstr "📚 Loading grades…"
+
+msgid "obis.loading_attendance"
+msgstr "📋 Loading attendance…"
+
+msgid "obis.page_indicator"
+msgstr "Page {page}/{total}"
+
+msgid "obis.result_expired"
+msgstr "This result is no longer available. Request grades or attendance again using the menu."
+
+msgid "student_questions.preparatory"
+msgstr "Preparatory year"
+
+msgid "student_questions.year_1"
+msgstr "Year 1"
+
+msgid "student_questions.year_2"
+msgstr "Year 2"
+
+msgid "student_questions.year_3"
+msgstr "Year 3"
+
+msgid "student_questions.year_4"
+msgstr "Year 4"
+
+msgid "student_questions.year_5"
+msgstr "Year 5"
+
+msgid "student_questions.not_student"
+msgstr "I am not a student"
+
+msgid "student_questions.yes"
+msgstr "Yes"
+
+msgid "student_questions.no"
+msgstr "No"
+
+msgid "student_questions.intro"
+msgstr "A short survey about finding answers to university questions. Please answer a few questions."
+
+msgid "student_questions.course_prompt"
+msgstr "1. What year are you in?"
+
+msgid "student_questions.search_prompt"
+msgstr "2. During admission or your studies, did you have questions whose answers took a long time to find?"
+
+msgid "student_questions.questions_prompt"
+msgstr "3. Please list those questions."
+
+msgid "student_questions.found_prompt"
+msgstr "4. Did you eventually find answers to those questions?"
+
+msgid "student_questions.sources_prompt"
+msgstr "5. Where did you find the answers to your questions?"
+
+msgid "student_questions.beta_prompt"
+msgstr "6. Would you like to beta-test an experimental bot that knows almost everything about the university?"
+
+msgid "student_questions.thanks"
+msgstr "7. Thank you for your answers!"
+
+msgid "student_questions.beta_follow_up"
+msgstr "We will contact you within a month to take part in the beta test."
+
+msgid "student_questions.already_completed"
+msgstr "You have already completed this survey. Would you like to fill it out again? Once completed, the new response will replace the previous one."
+
+msgid "student_questions.fill_again"
+msgstr "Fill out again"
+
+msgid "student_questions.expired"
+msgstr "These buttons have expired. Open the survey link again."
+
+msgid "student_questions.cancelled"
+msgstr "Survey cancelled. Your saved response has not changed."
+
+msgid "student_questions.invalid_text"
+msgstr "Please send text between 1 and {max} characters long."
+
+msgid "student_questions.use_buttons"
+msgstr "Please choose an answer using the buttons."

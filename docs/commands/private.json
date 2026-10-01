@@ -20,6 +20,18 @@
     "description": "commands.donate"
   },
   {
+    "command": "eders",
+    "description": "commands.eders"
+  },
+  {
+    "command": "eders_settings",
+    "description": "commands.eders_settings"
+  },
+  {
+    "command": "week",
+    "description": "commands.week"
+  },
+  {
     "command": "hide_keyboard",
     "description": "commands.hide_keyboard"
   }

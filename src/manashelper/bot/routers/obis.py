@@ -4,37 +4,33 @@ from contextlib import suppress
 
 import httpx
 from aiogram import F, Router, flags
-from aiogram.exceptions import TelegramBadRequest
+from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import (
-    CallbackQuery,
-    InputRichBlockParagraph,
-    InputRichBlockSectionHeading,
-    InputRichBlockUnion,
-    Message,
-)
+from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.callback_data import ObisAction, ObisCallback
+from manashelper.bot.callback_data import ObisAction, ObisCallback, ObisResultsPageCallback
 from manashelper.bot.filters.translated_text import TranslatedText
 from manashelper.bot.keyboards.obis import (
     build_cancel_keyboard,
     build_confirm_clear_credentials_keyboard,
     build_no_credentials_keyboard,
+    build_obis_results_keyboard,
     build_obis_settings_keyboard,
     build_terms_keyboard,
 )
-from manashelper.bot.message_stream import RichMessageStream
 from manashelper.scraping.obis_client import ObisLoginError
 from manashelper.scraping.obis_parser import ObisParseError
 from manashelper.services.obis import ObisService, UserHasNoCredentialsError, UserNotFoundError
-from manashelper.services.obis_formatter import build_attendance_blocks, build_exam_grade_blocks
+from manashelper.services.obis_formatter import format_attendance_pages, format_exam_grades_pages
 
 router = Router(name="obis")
 logger = logging.getLogger(__name__)
+RESULTS_KEY = "obis_result_pages"
+MAX_SAVED_RESULTS = 5
 
 
 class ObisCredentialsForm(StatesGroup):
@@ -42,63 +38,98 @@ class ObisCredentialsForm(StatesGroup):
     password = State()
 
 
-async def _stream_obis_response[T](
+async def _show_obis_results[T](
     message: Message,
+    state: FSMContext,
     fetch: Callable[[int], Awaitable[list[T]]],
-    format_lesson: Callable[[T], list[InputRichBlockUnion]],
-    title: str,
-    empty_text: str,
+    format_results: Callable[[list[T]], list[str]],
+    loading_text: str,
 ) -> None:
     if message.from_user is None:
         return
-    stream = RichMessageStream(message, [InputRichBlockSectionHeading(size=2, text=title)])
-    await stream.start()
+    sent = await message.answer(loading_text, parse_mode=None)
     try:
-        lessons = await stream.load(fetch(message.from_user.id))
+        lessons = await fetch(message.from_user.id)
     except UserNotFoundError:
-        await stream.finish_error(_("common.start_required"))
+        await sent.edit_text(_("common.start_required"))
         return
     except UserHasNoCredentialsError:
-        await stream.finish_error(
+        await sent.edit_text(
             _("obis.credentials_missing"),
             reply_markup=build_no_credentials_keyboard(),
         )
         return
     except ObisLoginError:
-        await stream.finish_error(
+        await sent.edit_text(
             _("obis.credentials_invalid"),
             reply_markup=build_no_credentials_keyboard(),
         )
         return
     except (ObisParseError, httpx.HTTPError):
         logger.warning("Failed to load requested OBIS data", exc_info=True)
-        await stream.finish_error(_("obis.fetch_failed"))
+        await sent.edit_text(_("obis.fetch_failed"))
         return
     except Exception:
-        await stream.finish_error(_("obis.fetch_failed"))
+        await sent.edit_text(_("obis.fetch_failed"))
         raise
-    if lessons:
-        for lesson in lessons:
-            await stream.append(format_lesson(lesson))
-    else:
-        await stream.append([InputRichBlockParagraph(text=empty_text)])
-    await stream.finish()
+    pages = format_results(lessons)
+    if len(pages) > 1:
+        data = await state.get_data()
+        snapshots: dict[str, list[str]] = dict(data.get(RESULTS_KEY, {}))
+        snapshots[str(sent.message_id)] = pages
+        while len(snapshots) > MAX_SAVED_RESULTS:
+            snapshots.pop(next(iter(snapshots)))
+        await state.update_data({RESULTS_KEY: snapshots})
+    await sent.edit_text(pages[0], parse_mode=None, reply_markup=build_obis_results_keyboard(0, len(pages)))
 
 
 @router.message(TranslatedText("menu.attendance"))
 @flags.private_chat_only
-async def on_attendance_button(message: Message, obis_service: FromDishka[ObisService]) -> None:
-    await _stream_obis_response(
-        message, obis_service.get_attendance, build_attendance_blocks, _("menu.attendance"), _("obis.no_subjects")
+async def on_attendance_button(message: Message, state: FSMContext, obis_service: FromDishka[ObisService]) -> None:
+    await _show_obis_results(
+        message, state, obis_service.get_attendance, format_attendance_pages, _("obis.loading_attendance")
     )
 
 
 @router.message(TranslatedText("menu.grades"))
 @flags.private_chat_only
-async def on_exams_button(message: Message, obis_service: FromDishka[ObisService]) -> None:
-    await _stream_obis_response(
-        message, obis_service.get_exam_grades, build_exam_grade_blocks, _("menu.grades"), _("obis.no_grades")
+async def on_exams_button(message: Message, state: FSMContext, obis_service: FromDishka[ObisService]) -> None:
+    await _show_obis_results(
+        message, state, obis_service.get_exam_grades, format_exam_grades_pages, _("obis.loading_grades")
     )
+
+
+@router.callback_query(ObisResultsPageCallback.filter())
+@flags.private_chat_only
+async def on_obis_results_page(
+    callback_query: CallbackQuery, callback_data: ObisResultsPageCallback, state: FSMContext
+) -> None:
+    message = callback_query.message
+    if not isinstance(message, Message):
+        await callback_query.answer()
+        return
+    data = await state.get_data()
+    snapshots: dict[str, list[str]] = data.get(RESULTS_KEY, {})
+    pages = snapshots.get(str(message.message_id))
+    if not pages or not 0 <= callback_data.page < len(pages):
+        await callback_query.answer(_("obis.result_expired"), show_alert=True)
+        return
+    try:
+        await message.edit_text(
+            pages[callback_data.page],
+            parse_mode=None,
+            reply_markup=build_obis_results_keyboard(callback_data.page, len(pages)),
+        )
+    except TelegramBadRequest as error:
+        if "message is not modified" not in error.message:
+            logger.warning("Failed to change requested OBIS page", exc_info=True)
+            await callback_query.answer(_("common.error_retry"), show_alert=True)
+            return
+    except TelegramAPIError:
+        logger.warning("Failed to change requested OBIS page", exc_info=True)
+        await callback_query.answer(_("common.error_retry"), show_alert=True)
+        return
+    await callback_query.answer()
 
 
 @router.callback_query(ObisCallback.filter(F.action == ObisAction.START_CREDENTIALS))
