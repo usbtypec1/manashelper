@@ -942,3 +942,15 @@ msgstr "🍉 Open cafeteria menu"
 
 msgid "food.rich_command_usage"
 msgstr "Usage: /yemek today, /yemek tomorrow, or /yemek 2"
+
+msgid "obis.loading_grades"
+msgstr "📚 Loading grades…"
+
+msgid "obis.loading_attendance"
+msgstr "📋 Loading attendance…"
+
+msgid "obis.page_indicator"
+msgstr "Page {page}/{total}"
+
+msgid "obis.result_expired"
+msgstr "This result is no longer available. Request grades or attendance again using the menu."

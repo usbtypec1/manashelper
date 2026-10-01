@@ -111,6 +111,10 @@ class ObisCallback(CallbackData, prefix="obis"):
     action: ObisAction
 
 
+class ObisResultsPageCallback(CallbackData, prefix="obis_results_page"):
+    page: int
+
+
 class EdersPageCallback(CallbackData, prefix="eders"):
     selected: DeadlineFilter
     page: int = 0

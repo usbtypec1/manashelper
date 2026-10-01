@@ -933,3 +933,15 @@ msgstr "🍉 打开菜单"
 
 msgid "food.rich_command_usage"
 msgstr "用法：/yemek today、/yemek tomorrow 或 /yemek 2"
+
+msgid "obis.loading_grades"
+msgstr "📚 正在加载成绩…"
+
+msgid "obis.loading_attendance"
+msgstr "📋 正在加载缺勤信息…"
+
+msgid "obis.page_indicator"
+msgstr "第 {page}/{total} 页"
+
+msgid "obis.result_expired"
+msgstr "此结果已失效。请通过菜单重新查询成绩或缺勤信息。"

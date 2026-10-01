@@ -27,10 +27,11 @@ Core capabilities (current):
   the real OBIS login before saving (AES-GCM encrypted at rest), and lets the user fetch their current exam
   grades and lesson-attendance/skip-budget summary on demand — see `services/obis.py`,
   `scraping/obis_client.py`, `scraping/obis_parser.py`, `bot/routers/obis.py`.
-  User-requested grades and attendance stream via `bot/message_stream.py`: show a rich draft heading before
-  fetching, refresh it during slow requests, append each subject and persist the final rich message. Draft API
-  failures fall back to a heading message edited when loading completes. Scheduled OBIS notifications remain
-  regular messages. OBIS returns a complete HTML page, so subject data appears after that fetch finishes.
+  User-requested grades and attendance send a regular loading message, then edit it into compact plain-text
+  pages with standard inline navigation. Pages contain up to two subjects and are bounded by text length and
+  line count. The last five multipage results per user are cached in FSM data by message ID, so page changes
+  do not re-fetch OBIS or mix results from separate messages. Restarting the bot or clearing FSM data expires
+  navigation; the callback asks the user to request fresh data. Scheduled OBIS notifications remain unchanged.
 - **Notification settings**: a `⚙️ Settings` menu (`bot/routers/settings.py`) lets each user toggle five
   notification kinds (schedule changes, before-lunch/before-dinner menu pings, exam-grade changes, lesson skips),
   backed by a lazily-created `NotificationSettings` row per user that defaults every toggle to enabled — see

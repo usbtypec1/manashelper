@@ -938,3 +938,15 @@ msgstr "🍉 Menüyü aç"
 
 msgid "food.rich_command_usage"
 msgstr "Kullanım: /yemek today, /yemek tomorrow veya /yemek 2"
+
+msgid "obis.loading_grades"
+msgstr "📚 Notlar yükleniyor…"
+
+msgid "obis.loading_attendance"
+msgstr "📋 Devamsızlık bilgileri yükleniyor…"
+
+msgid "obis.page_indicator"
+msgstr "Sayfa {page}/{total}"
+
+msgid "obis.result_expired"
+msgstr "Bu sonuç artık mevcut değil. Menüden notları veya devamsızlık bilgilerini yeniden isteyin."
