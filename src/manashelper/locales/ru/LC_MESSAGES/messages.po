@@ -954,3 +954,75 @@ msgstr "Страница {page}/{total}"
 
 msgid "obis.result_expired"
 msgstr "Этот результат больше недоступен. Запросите оценки или пропуски заново через меню."
+
+msgid "student_questions.preparatory"
+msgstr "Хазырлык"
+
+msgid "student_questions.year_1"
+msgstr "1 курс"
+
+msgid "student_questions.year_2"
+msgstr "2 курс"
+
+msgid "student_questions.year_3"
+msgstr "3 курс"
+
+msgid "student_questions.year_4"
+msgstr "4 курс"
+
+msgid "student_questions.year_5"
+msgstr "5 курс"
+
+msgid "student_questions.not_student"
+msgstr "Я не студент"
+
+msgid "student_questions.yes"
+msgstr "Да"
+
+msgid "student_questions.no"
+msgstr "Нет"
+
+msgid "student_questions.intro"
+msgstr "Короткий опрос о поиске ответов на вопросы по университету. Пожалуйста, ответьте на несколько вопросов."
+
+msgid "student_questions.course_prompt"
+msgstr "1. Какой вы курс?"
+
+msgid "student_questions.search_prompt"
+msgstr "2. В процессе поступления или обучения возникали ли у вас вопросы, ответы на которые вы искали долго?"
+
+msgid "student_questions.questions_prompt"
+msgstr "3. Пожалуйста, перечислите эти вопросы."
+
+msgid "student_questions.found_prompt"
+msgstr "4. Вы нашли в итоге ответы на эти вопросы?"
+
+msgid "student_questions.sources_prompt"
+msgstr "5. Где вы нашли ответы на ваши вопросы?"
+
+msgid "student_questions.beta_prompt"
+msgstr "6. Хотите поучаствовать в бета-тесте экспериментального бота, который знает практически всё по университету?"
+
+msgid "student_questions.thanks"
+msgstr "7. Спасибо за ваши ответы!"
+
+msgid "student_questions.beta_follow_up"
+msgstr "В течение месяца мы свяжемся с вами для участия в бета-тесте."
+
+msgid "student_questions.already_completed"
+msgstr "Вы уже заполняли этот опрос. Хотите заполнить заново? После завершения новая анкета заменит предыдущую."
+
+msgid "student_questions.fill_again"
+msgstr "Заполнить заново"
+
+msgid "student_questions.expired"
+msgstr "Эти кнопки больше не актуальны. Откройте опрос по ссылке заново."
+
+msgid "student_questions.cancelled"
+msgstr "Опрос отменён. Сохранённая анкета не изменена."
+
+msgid "student_questions.invalid_text"
+msgstr "Пожалуйста, отправьте текст длиной от 1 до {max} символов."
+
+msgid "student_questions.use_buttons"
+msgstr "Пожалуйста, выберите ответ с помощью кнопок."

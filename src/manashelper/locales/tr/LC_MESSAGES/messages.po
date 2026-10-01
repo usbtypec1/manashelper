@@ -950,3 +950,75 @@ msgstr "Sayfa {page}/{total}"
 
 msgid "obis.result_expired"
 msgstr "Bu sonuç artık mevcut değil. Menüden notları veya devamsızlık bilgilerini yeniden isteyin."
+
+msgid "student_questions.preparatory"
+msgstr "Hazırlık"
+
+msgid "student_questions.year_1"
+msgstr "1. sınıf"
+
+msgid "student_questions.year_2"
+msgstr "2. sınıf"
+
+msgid "student_questions.year_3"
+msgstr "3. sınıf"
+
+msgid "student_questions.year_4"
+msgstr "4. sınıf"
+
+msgid "student_questions.year_5"
+msgstr "5. sınıf"
+
+msgid "student_questions.not_student"
+msgstr "Öğrenci değilim"
+
+msgid "student_questions.yes"
+msgstr "Evet"
+
+msgid "student_questions.no"
+msgstr "Hayır"
+
+msgid "student_questions.intro"
+msgstr "Üniversite hakkındaki sorulara cevap bulma üzerine kısa bir anket. Lütfen birkaç soruyu cevaplayın."
+
+msgid "student_questions.course_prompt"
+msgstr "1. Kaçıncı sınıftasınız?"
+
+msgid "student_questions.search_prompt"
+msgstr "2. Başvuru veya öğrenim sürecinde cevabını uzun süre aradığınız sorular oldu mu?"
+
+msgid "student_questions.questions_prompt"
+msgstr "3. Lütfen bu soruları listeleyin."
+
+msgid "student_questions.found_prompt"
+msgstr "4. Sonunda bu soruların cevaplarını buldunuz mu?"
+
+msgid "student_questions.sources_prompt"
+msgstr "5. Sorularınızın cevaplarını nerede buldunuz?"
+
+msgid "student_questions.beta_prompt"
+msgstr "6. Üniversite hakkında neredeyse her şeyi bilen deneysel bir botun beta testine katılmak ister misiniz?"
+
+msgid "student_questions.thanks"
+msgstr "7. Cevaplarınız için teşekkür ederiz!"
+
+msgid "student_questions.beta_follow_up"
+msgstr "Beta testine katılım için bir ay içinde sizinle iletişime geçeceğiz."
+
+msgid "student_questions.already_completed"
+msgstr "Bu anketi daha önce doldurdunuz. Tekrar doldurmak ister misiniz? Tamamladığınızda yeni yanıtlar önceki yanıtların yerini alacak."
+
+msgid "student_questions.fill_again"
+msgstr "Tekrar doldur"
+
+msgid "student_questions.expired"
+msgstr "Bu düğmelerin süresi doldu. Anket bağlantısını tekrar açın."
+
+msgid "student_questions.cancelled"
+msgstr "Anket iptal edildi. Kaydedilmiş yanıtlarınız değişmedi."
+
+msgid "student_questions.invalid_text"
+msgstr "Lütfen 1 ile {max} karakter arasında bir metin gönderin."
+
+msgid "student_questions.use_buttons"
+msgstr "Lütfen düğmeleri kullanarak bir cevap seçin."

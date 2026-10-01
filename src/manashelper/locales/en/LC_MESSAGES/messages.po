@@ -954,3 +954,75 @@ msgstr "Page {page}/{total}"
 
 msgid "obis.result_expired"
 msgstr "This result is no longer available. Request grades or attendance again using the menu."
+
+msgid "student_questions.preparatory"
+msgstr "Preparatory year"
+
+msgid "student_questions.year_1"
+msgstr "Year 1"
+
+msgid "student_questions.year_2"
+msgstr "Year 2"
+
+msgid "student_questions.year_3"
+msgstr "Year 3"
+
+msgid "student_questions.year_4"
+msgstr "Year 4"
+
+msgid "student_questions.year_5"
+msgstr "Year 5"
+
+msgid "student_questions.not_student"
+msgstr "I am not a student"
+
+msgid "student_questions.yes"
+msgstr "Yes"
+
+msgid "student_questions.no"
+msgstr "No"
+
+msgid "student_questions.intro"
+msgstr "A short survey about finding answers to university questions. Please answer a few questions."
+
+msgid "student_questions.course_prompt"
+msgstr "1. What year are you in?"
+
+msgid "student_questions.search_prompt"
+msgstr "2. During admission or your studies, did you have questions whose answers took a long time to find?"
+
+msgid "student_questions.questions_prompt"
+msgstr "3. Please list those questions."
+
+msgid "student_questions.found_prompt"
+msgstr "4. Did you eventually find answers to those questions?"
+
+msgid "student_questions.sources_prompt"
+msgstr "5. Where did you find the answers to your questions?"
+
+msgid "student_questions.beta_prompt"
+msgstr "6. Would you like to beta-test an experimental bot that knows almost everything about the university?"
+
+msgid "student_questions.thanks"
+msgstr "7. Thank you for your answers!"
+
+msgid "student_questions.beta_follow_up"
+msgstr "We will contact you within a month to take part in the beta test."
+
+msgid "student_questions.already_completed"
+msgstr "You have already completed this survey. Would you like to fill it out again? Once completed, the new response will replace the previous one."
+
+msgid "student_questions.fill_again"
+msgstr "Fill out again"
+
+msgid "student_questions.expired"
+msgstr "These buttons have expired. Open the survey link again."
+
+msgid "student_questions.cancelled"
+msgstr "Survey cancelled. Your saved response has not changed."
+
+msgid "student_questions.invalid_text"
+msgstr "Please send text between 1 and {max} characters long."
+
+msgid "student_questions.use_buttons"
+msgstr "Please choose an answer using the buttons."

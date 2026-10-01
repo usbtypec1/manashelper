@@ -417,6 +417,16 @@ purely "did this update originate from that chat" (`bot/routers/feedback.py::_is
   correctness reasoning as the advertising platform (an unescaped bare `&`/`<`/`>` makes Telegram reject the
   whole `sendMessage` call).
 
+### Student questions survey
+
+The private deep link `/start student_questions` opens a localized survey about students' course,
+university questions, answer sources and interest in an experimental bot beta. Questions 3–5 are
+conditional. Completed responses are stored in `student_questions_responses`, with the Telegram user
+ID as the primary key. A second submission requires explicit confirmation and replaces the old response
+only when the new survey finishes; cancellation leaves the existing response intact. Incomplete drafts
+use FSM memory and are lost on restart. Callback session IDs reject buttons from previous runs.
+The survey router precedes the advertisement deep-link router, which otherwise claims every start payload.
+
 ## Roadmap (not yet ported from the Java version)
 
 - **About screens**: static informational callback handlers.

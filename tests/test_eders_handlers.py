@@ -35,6 +35,7 @@ from manashelper.services.eders_tracking import EdersEvent, EdersTrackingService
 from manashelper.services.locale import LocaleService
 from manashelper.services.obis import UserHasNoCredentialsError
 from manashelper.services.schedule import NoTrackedCoursesError
+from manashelper.services.student_questions import StudentQuestionsService
 from manashelper.services.study_week import StudyWeekService
 
 
@@ -161,7 +162,11 @@ async def test_application_resolves_new_services_and_registers_thirty_minute_pol
     try:
         dispatcher = create_dispatcher(container)
         assert "eders" in {router.name for router in dispatcher.sub_routers}
+        router_names = [router.name for router in dispatcher.sub_routers]
+        assert router_names.index("student_questions") < router_names.index("advertisement_contact")
+        assert router_names.index("student_questions") < router_names.index("start")
         async with container() as request:
+            assert isinstance(await request.get(StudentQuestionsService), StudentQuestionsService)
             assert isinstance(await request.get(EdersService), EdersService)
             assert isinstance(await request.get(StudyWeekService), StudyWeekService)
         scheduler = create_scheduler(container, bot)

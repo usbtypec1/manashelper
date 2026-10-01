@@ -945,3 +945,75 @@ msgstr "第 {page}/{total} 页"
 
 msgid "obis.result_expired"
 msgstr "此结果已失效。请通过菜单重新查询成绩或缺勤信息。"
+
+msgid "student_questions.preparatory"
+msgstr "预科"
+
+msgid "student_questions.year_1"
+msgstr "一年级"
+
+msgid "student_questions.year_2"
+msgstr "二年级"
+
+msgid "student_questions.year_3"
+msgstr "三年级"
+
+msgid "student_questions.year_4"
+msgstr "四年级"
+
+msgid "student_questions.year_5"
+msgstr "五年级"
+
+msgid "student_questions.not_student"
+msgstr "我不是学生"
+
+msgid "student_questions.yes"
+msgstr "是"
+
+msgid "student_questions.no"
+msgstr "否"
+
+msgid "student_questions.intro"
+msgstr "这是一份关于查找大学相关问题答案的简短问卷。请回答几个问题。"
+
+msgid "student_questions.course_prompt"
+msgstr "1. 您是几年级的学生？"
+
+msgid "student_questions.search_prompt"
+msgstr "2. 在入学或学习过程中，您是否遇到过需要花很长时间寻找答案的问题？"
+
+msgid "student_questions.questions_prompt"
+msgstr "3. 请列出这些问题。"
+
+msgid "student_questions.found_prompt"
+msgstr "4. 您最终找到这些问题的答案了吗？"
+
+msgid "student_questions.sources_prompt"
+msgstr "5. 您在哪里找到了这些问题的答案？"
+
+msgid "student_questions.beta_prompt"
+msgstr "6. 您愿意参加一个几乎了解大学所有信息的实验性机器人的公测吗？"
+
+msgid "student_questions.thanks"
+msgstr "7. 感谢您的回答！"
+
+msgid "student_questions.beta_follow_up"
+msgstr "我们将在一个月内联系您参加公测。"
+
+msgid "student_questions.already_completed"
+msgstr "您已经填写过此问卷。您想重新填写吗？完成后，新问卷将替换之前的问卷。"
+
+msgid "student_questions.fill_again"
+msgstr "重新填写"
+
+msgid "student_questions.expired"
+msgstr "这些按钮已失效。请通过链接重新打开问卷。"
+
+msgid "student_questions.cancelled"
+msgstr "问卷已取消。已保存的回答未更改。"
+
+msgid "student_questions.invalid_text"
+msgstr "请发送长度为1到{max}个字符的文本。"
+
+msgid "student_questions.use_buttons"
+msgstr "请使用按钮选择答案。"

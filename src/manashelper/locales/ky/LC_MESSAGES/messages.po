@@ -956,3 +956,75 @@ msgstr "Бет {page}/{total}"
 
 msgid "obis.result_expired"
 msgstr "Бул жыйынтык мындан ары жеткиликтүү эмес. Меню аркылуу бааларды же калтырылган сабактарды кайра сураңыз."
+
+msgid "student_questions.preparatory"
+msgstr "Даярдоо курсу"
+
+msgid "student_questions.year_1"
+msgstr "1-курс"
+
+msgid "student_questions.year_2"
+msgstr "2-курс"
+
+msgid "student_questions.year_3"
+msgstr "3-курс"
+
+msgid "student_questions.year_4"
+msgstr "4-курс"
+
+msgid "student_questions.year_5"
+msgstr "5-курс"
+
+msgid "student_questions.not_student"
+msgstr "Мен студент эмесмин"
+
+msgid "student_questions.yes"
+msgstr "Ооба"
+
+msgid "student_questions.no"
+msgstr "Жок"
+
+msgid "student_questions.intro"
+msgstr "Университет тууралуу суроолорго жооп издөө боюнча кыска сурамжылоо. Бир нече суроого жооп бериңиз."
+
+msgid "student_questions.course_prompt"
+msgstr "1. Кайсы курста окуйсуз?"
+
+msgid "student_questions.search_prompt"
+msgstr "2. Университетке тапшыруу же окуу учурунда жообун көпкө издеген суроолоруңуз болгонбу?"
+
+msgid "student_questions.questions_prompt"
+msgstr "3. Ошол суроолорду тизмектеп жазыңыз."
+
+msgid "student_questions.found_prompt"
+msgstr "4. Акыры ошол суроолорго жооп таптыңызбы?"
+
+msgid "student_questions.sources_prompt"
+msgstr "5. Суроолоруңузга жоопторду кайдан таптыңыз?"
+
+msgid "student_questions.beta_prompt"
+msgstr "6. Университет тууралуу дээрлик баарын билген эксперименталдык боттун бета-тестине катышкыңыз келеби?"
+
+msgid "student_questions.thanks"
+msgstr "7. Жоопторуңуз үчүн рахмат!"
+
+msgid "student_questions.beta_follow_up"
+msgstr "Бета-тестке катышуу үчүн бир айдын ичинде сиз менен байланышабыз."
+
+msgid "student_questions.already_completed"
+msgstr "Бул сурамжылоону мурда толтургансыз. Кайра толтургуңуз келеби? Аяктагандан кийин жаңы анкета мурункусун алмаштырат."
+
+msgid "student_questions.fill_again"
+msgstr "Кайра толтуруу"
+
+msgid "student_questions.expired"
+msgstr "Бул баскычтар эскирди. Сурамжылоону шилтеме аркылуу кайра ачыңыз."
+
+msgid "student_questions.cancelled"
+msgstr "Сурамжылоо токтотулду. Сакталган анкета өзгөргөн жок."
+
+msgid "student_questions.invalid_text"
+msgstr "Узундугу 1ден {max} белгиге чейин болгон текст жөнөтүңүз."
+
+msgid "student_questions.use_buttons"
+msgstr "Жоопту баскычтар аркылуу тандаңыз."

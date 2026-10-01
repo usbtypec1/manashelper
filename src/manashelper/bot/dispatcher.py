@@ -26,6 +26,7 @@ from manashelper.bot.routers.obis import router as obis_router
 from manashelper.bot.routers.phone_numbers import router as phone_numbers_router
 from manashelper.bot.routers.settings import router as settings_router
 from manashelper.bot.routers.start import router as start_router
+from manashelper.bot.routers.student_questions import router as student_questions_router
 from manashelper.bot.routers.timetable import router as timetable_router
 from manashelper.bot.routers.versions import router as versions_router
 
@@ -51,7 +52,8 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
 
     dispatcher.errors.register(on_error)
     dispatcher.include_routers(
-        # Claim /start ad_<id> before the general CommandStart handler.
+        # Survey and advertisement deep links must precede handlers claiming all /start payloads.
+        student_questions_router,
         advertisement_contact_router,
         start_router,
         locale_router,
