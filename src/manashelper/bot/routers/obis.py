@@ -1,11 +1,20 @@
+import logging
+from collections.abc import Awaitable, Callable
 from contextlib import suppress
 
+import httpx
 from aiogram import F, Router, flags
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import (
+    CallbackQuery,
+    InputRichBlockParagraph,
+    InputRichBlockSectionHeading,
+    InputRichBlockUnion,
+    Message,
+)
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
@@ -18,12 +27,14 @@ from manashelper.bot.keyboards.obis import (
     build_obis_settings_keyboard,
     build_terms_keyboard,
 )
+from manashelper.bot.message_stream import RichMessageStream
 from manashelper.scraping.obis_client import ObisLoginError
 from manashelper.scraping.obis_parser import ObisParseError
 from manashelper.services.obis import ObisService, UserHasNoCredentialsError, UserNotFoundError
-from manashelper.services.obis_formatter import format_attendance, format_exam_grades
+from manashelper.services.obis_formatter import build_attendance_blocks, build_exam_grade_blocks
 
 router = Router(name="obis")
+logger = logging.getLogger(__name__)
 
 
 class ObisCredentialsForm(StatesGroup):
@@ -31,64 +42,63 @@ class ObisCredentialsForm(StatesGroup):
     password = State()
 
 
-@router.message(TranslatedText("menu.attendance"))
-@flags.private_chat_only
-async def on_attendance_button(message: Message, obis_service: FromDishka[ObisService]) -> None:
+async def _stream_obis_response[T](
+    message: Message,
+    fetch: Callable[[int], Awaitable[list[T]]],
+    format_lesson: Callable[[T], list[InputRichBlockUnion]],
+    title: str,
+    empty_text: str,
+) -> None:
     if message.from_user is None:
         return
-
+    stream = RichMessageStream(message, [InputRichBlockSectionHeading(size=2, text=title)])
+    await stream.start()
     try:
-        attendance = await obis_service.get_attendance(message.from_user.id)
+        lessons = await stream.load(fetch(message.from_user.id))
     except UserNotFoundError:
-        await message.answer(_("common.start_required"))
+        await stream.finish_error(_("common.start_required"))
         return
     except UserHasNoCredentialsError:
-        await message.answer(
+        await stream.finish_error(
             _("obis.credentials_missing"),
             reply_markup=build_no_credentials_keyboard(),
         )
         return
     except ObisLoginError:
-        await message.answer(
+        await stream.finish_error(
             _("obis.credentials_invalid"),
             reply_markup=build_no_credentials_keyboard(),
         )
         return
-    except ObisParseError:
-        await message.answer(_("obis.fetch_failed"))
+    except (ObisParseError, httpx.HTTPError):
+        logger.warning("Failed to load requested OBIS data", exc_info=True)
+        await stream.finish_error(_("obis.fetch_failed"))
         return
+    except Exception:
+        await stream.finish_error(_("obis.fetch_failed"))
+        raise
+    if lessons:
+        for lesson in lessons:
+            await stream.append(format_lesson(lesson))
+    else:
+        await stream.append([InputRichBlockParagraph(text=empty_text)])
+    await stream.finish()
 
-    await message.answer(format_attendance(attendance))
+
+@router.message(TranslatedText("menu.attendance"))
+@flags.private_chat_only
+async def on_attendance_button(message: Message, obis_service: FromDishka[ObisService]) -> None:
+    await _stream_obis_response(
+        message, obis_service.get_attendance, build_attendance_blocks, _("menu.attendance"), _("obis.no_subjects")
+    )
 
 
 @router.message(TranslatedText("menu.grades"))
 @flags.private_chat_only
 async def on_exams_button(message: Message, obis_service: FromDishka[ObisService]) -> None:
-    if message.from_user is None:
-        return
-
-    try:
-        lesson_exams = await obis_service.get_exam_grades(message.from_user.id)
-    except UserNotFoundError:
-        await message.answer(_("common.start_required"))
-        return
-    except UserHasNoCredentialsError:
-        await message.answer(
-            _("obis.credentials_missing"),
-            reply_markup=build_no_credentials_keyboard(),
-        )
-        return
-    except ObisLoginError:
-        await message.answer(
-            _("obis.credentials_invalid"),
-            reply_markup=build_no_credentials_keyboard(),
-        )
-        return
-    except ObisParseError:
-        await message.answer(_("obis.fetch_failed"))
-        return
-
-    await message.answer(format_exam_grades(lesson_exams))
+    await _stream_obis_response(
+        message, obis_service.get_exam_grades, build_exam_grade_blocks, _("menu.grades"), _("obis.no_grades")
+    )
 
 
 @router.callback_query(ObisCallback.filter(F.action == ObisAction.START_CREDENTIALS))

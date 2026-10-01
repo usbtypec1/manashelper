@@ -15,7 +15,7 @@ from manashelper.services.daily_menu import BISHKEK_TZ
 def create_scheduler(container: AsyncContainer, bot: Bot) -> AsyncIOScheduler:
     # Run interval jobs immediately so startup doesn't leave data empty for an hour.
     now = datetime.now(BISHKEK_TZ)
-    scheduler = AsyncIOScheduler()
+    scheduler = AsyncIOScheduler(timezone=BISHKEK_TZ)
     scheduler.add_job(sync_daily_menus_job, "interval", minutes=10, args=[container], next_run_time=now)
     scheduler.add_job(broadcast_lunch_menu_job, "cron", hour=11, minute=0, timezone=BISHKEK_TZ, args=[container, bot])
     scheduler.add_job(broadcast_dinner_menu_job, "cron", hour=17, minute=0, timezone=BISHKEK_TZ, args=[container, bot])

@@ -55,6 +55,14 @@ class FoodMenuCallback(CallbackData, prefix="food_menu"):
     day: FoodMenuDay
 
 
+class FoodMenuOpenCallback(CallbackData, prefix="food_menu_open"):
+    pass
+
+
+class FoodMenuDateCallback(CallbackData, prefix="food_menu_date"):
+    menu_date: str
+
+
 class FoodMenuRatingCallback(CallbackData, prefix="food_menu_rating"):
     daily_menu_id: uuid.UUID
     rating: int

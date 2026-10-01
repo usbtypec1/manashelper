@@ -420,23 +420,13 @@ msgstr "Билдирүү бош болбошу керек жана {max} бел�
 msgid "feedback.delivery_failed"
 msgstr "⚠️ Жоопту колдонуучуга жеткирүү мүмкүн болгон жок."
 
-msgid "food.menu_prompt"
-msgstr ""
-"🍉 <b>Ашкана менюсу</b>\n"
-"\n"
-"Төмөндөгү күндү тандаңыз же команда жөнөтүңүз:\n"
-"• <code>/yemek today</code> — бүгүн\n"
-"• <code>/yemek tomorrow</code> — эртең\n"
-"• <code>/yemek 2</code> — N күндөн кийин"
 
 msgid "food.rate_prompt"
-msgstr "⭐ Менюну баалаңыз:"
+msgstr "Күндүн менюсуна 1ден 5ке чейин баа бериңиз. Бааны өзгөртсөңүз болот."
 
 msgid "food.rating_thanks"
 msgstr "Баалаганыңыз үчүн рахмат!"
 
-msgid "food.command_usage"
-msgstr "ℹ️ Колдонуу: <code>/yemek today</code>, <code>/yemek tomorrow</code> же <code>/yemek 2</code>"
 
 msgid "food.auto_delete_prompt"
 msgstr "🧹 Бул чатта меню жөнүндө билдирүүлөрдү автоматтык түрдө өчүрүү:"
@@ -598,6 +588,21 @@ msgstr "😔 Тандалган күндүн менюсу азырынча жа�
 
 msgid "food.today_unpublished"
 msgstr "😔 Бүгүнкү меню азырынча жарыяланган жок."
+
+msgid "food.rich_menu_header"
+msgstr "🍽 {weekday}, {date} күнүнүн менюсу"
+
+msgid "food.rich_dish"
+msgstr "{index}. {name} — {calories} ккал"
+
+msgid "food.rich_total_calories"
+msgstr "🔥 Жалпы: {calories} ккал"
+
+msgid "food.rich_rating"
+msgstr "⭐ Баа: {average} ({count})"
+
+msgid "food.rating_unavailable"
+msgstr "Бул менюга мындан ары баа берүү мүмкүн эмес."
 
 msgid "food.no_ratings"
 msgstr "⭐ Азырынча баа жок"
@@ -786,3 +791,18 @@ msgstr "Баскычтопту жашыруу"
 
 msgid "commands.broadcast"
 msgstr "Бардык колдонуучуларга билдирүү жиберүү"
+
+msgid "food.day_selection_title"
+msgstr "🍉 Ашкананын менюсу"
+
+msgid "food.choose_day"
+msgstr "Күндү тандаңыз:"
+
+msgid "food.no_available_menus"
+msgstr "Кийинки 7 күндүн менюсу азырынча жарыялана элек."
+
+msgid "food.open_menu"
+msgstr "🍉 Менюну ачуу"
+
+msgid "food.rich_command_usage"
+msgstr "Колдонуу: /yemek today, /yemek tomorrow же /yemek 2"

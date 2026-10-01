@@ -1,7 +1,8 @@
 [
   {
     "command": "yemek",
-    "description": "commands.yemek"
+    "description": "commands.yemek",
+    "is_ephemeral": true
   },
   {
     "command": "versions",

@@ -16,7 +16,8 @@ async def _show_food_menu_cleanup_settings(
     if not isinstance(callback_query.message, Message):
         return
     option = await food_menu_cleanup_settings_service.get_option(callback_query.message.chat.id)
-    await callback_query.message.edit_text(
+    send = callback_query.message.answer if callback_query.message.rich_message else callback_query.message.edit_text
+    await send(
         _("food.auto_delete_prompt"),
         reply_markup=build_food_menu_cleanup_keyboard(option),
     )

@@ -6,13 +6,14 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
-from aiogram.types import Message
+from aiogram.types import BotCommandScopeChat, Message
 from babel.messages.extract import extract_from_dir
 from babel.messages.frontend import parse_mapping_cfg
 from babel.messages.mofile import write_mo
 from babel.messages.pofile import read_po
 
 from manashelper.bot.callback_data import LocaleCallback
+from manashelper.bot.commands import setup_commands
 from manashelper.bot.filters.translated_text import TranslatedText
 from manashelper.bot.keyboards.locale import build_locale_keyboard, native_language_name
 from manashelper.bot.routers.start import build_main_keyboard
@@ -24,6 +25,20 @@ from manashelper.services.locale import LocaleService
 ROOT = Path(__file__).resolve().parents[1]
 LOCALES_DIR = ROOT / "src/manashelper/locales"
 KEY_PATTERN = re.compile(r"[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+")
+
+
+@pytest.mark.parametrize("admin_chat_id", [0, 123_456])
+async def test_command_registration_allows_local_start_without_admin_chat(admin_chat_id: int) -> None:
+    bot = AsyncMock()
+    settings = SimpleNamespace(admin_chat_id=admin_chat_id)
+    await setup_commands(bot, settings)
+    admin_calls = [
+        call for call in bot.set_my_commands.await_args_list if isinstance(call.kwargs["scope"], BotCommandScopeChat)
+    ]
+    assert len(admin_calls) == int(bool(admin_chat_id))
+    if admin_chat_id:
+        assert admin_calls[0].kwargs["scope"].chat_id == admin_chat_id
+    assert bot.set_my_commands.await_count == len(Locale) * 2 + 2 + int(bool(admin_chat_id))
 
 
 def _catalog(locale: Locale):
@@ -123,6 +138,14 @@ def test_command_descriptions_use_requested_locale(locale: Locale) -> None:
     chinese = {command.command: command.description for command in build_private_commands(Locale.ZH)}
     assert chinese["start"] == "启动机器人"
     assert chinese["language"] == "更改语言"
+
+
+@pytest.mark.parametrize("locale", list(Locale))
+def test_only_group_yemek_command_is_ephemeral(locale: Locale) -> None:
+    group = {command.command: command for command in build_group_commands(locale)}
+    assert group["yemek"].is_ephemeral is True
+    assert group["versions"].is_ephemeral is None
+    assert all(command.is_ephemeral is None for command in build_private_commands(locale))
 
 
 def test_missing_translations_fall_back_to_english_catalog(tmp_path: Path) -> None:

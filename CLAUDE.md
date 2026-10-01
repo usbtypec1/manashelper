@@ -15,11 +15,22 @@ Core capabilities (current):
 
 - **Faculty/department/course catalog browsing** via inline keyboards, backed by Postgres.
 - **Per-user course tracking**: tapping a course toggles tracking it (✅) via a `user_courses` join table.
-- **Cafeteria daily menu**: scraped menu with dish photos/calories and per-user ratings.
+- **Cafeteria daily menu**: a rich message with dish photos in a compact collage, a dish/calorie list and one 1–5 rating row for the
+  whole day's menu. Ratings are unique per menu and user; voting again updates the score and refreshes the message.
+  Notification settings appear only in broadcasts; settings buttons each occupy their own row.
+  Day selection uses embedded rich message buttons for published menus from today through the next 6 days;
+  callback payloads contain fixed dates. In groups, `/yemek` is registered as an ephemeral command. Menu replies,
+  day selection and rating edits are visible only to the requesting user. Ephemeral menus omit cleanup controls
+  and scheduled deletion. For ordinary commands, bots without administrator rights show one public Open menu
+  button; clicking it opens an ephemeral day selector. Private menus and broadcasts retain cleanup controls.
 - **OBIS integration**: an aiogram FSM conversation collects a student's OBIS credentials, verifies them against
   the real OBIS login before saving (AES-GCM encrypted at rest), and lets the user fetch their current exam
   grades and lesson-attendance/skip-budget summary on demand — see `services/obis.py`,
   `scraping/obis_client.py`, `scraping/obis_parser.py`, `bot/routers/obis.py`.
+  User-requested grades and attendance stream via `bot/message_stream.py`: show a rich draft heading before
+  fetching, refresh it during slow requests, append each subject and persist the final rich message. Draft API
+  failures fall back to a heading message edited when loading completes. Scheduled OBIS notifications remain
+  regular messages. OBIS returns a complete HTML page, so subject data appears after that fetch finishes.
 - **Notification settings**: a `⚙️ Settings` menu (`bot/routers/settings.py`) lets each user toggle five
   notification kinds (schedule changes, before-lunch/before-dinner menu pings, exam-grade changes, lesson skips),
   backed by a lazily-created `NotificationSettings` row per user that defaults every toggle to enabled — see
@@ -285,7 +296,7 @@ entire history at them):
   user+lesson_code) rows; a user with no saved OBIS credentials is skipped cheaply (a local DB check) before any
   network call, so polling every user hourly is safe.
 - **Daily menu broadcast** (`jobs/food_menu.py::broadcast_lunch_menu_job`/`broadcast_dinner_menu_job`, cron
-  11:00/17:00 `Asia/Bishkek`): re-sends the same media-group format used for an on-demand `/yemek` request to
+  11:00/17:00 `Asia/Bishkek`): sends the same rich message with embedded menu rating buttons used for `/yemek` to
   every user with `before_lunch_enabled`/`before_dinner_enabled`.
 
 `NotificationSettingsRepository` centralizes "who should be notified": a user with no `NotificationSettings` row

@@ -418,23 +418,13 @@ msgstr "Mesaj boş olamaz ve en fazla {max} karakter uzunluğunda olmalıdır. L
 msgid "feedback.delivery_failed"
 msgstr "⚠️ Yanıt kullanıcıya iletilemedi."
 
-msgid "food.menu_prompt"
-msgstr ""
-"🍉 <b>Yemekhane menüsü</b>\n"
-"\n"
-"Aşağıdan bir gün seçin veya komut gönderin:\n"
-"• <code>/yemek today</code> — bugün\n"
-"• <code>/yemek tomorrow</code> — yarın\n"
-"• <code>/yemek 2</code> — N gün sonra"
 
 msgid "food.rate_prompt"
-msgstr "⭐ Menüyü değerlendirin:"
+msgstr "Günün menüsüne 1 ile 5 arasında puan verin. Puanınızı değiştirebilirsiniz."
 
 msgid "food.rating_thanks"
 msgstr "Değerlendirmeniz için teşekkürler!"
 
-msgid "food.command_usage"
-msgstr "ℹ️ Kullanım: <code>/yemek today</code>, <code>/yemek tomorrow</code> veya <code>/yemek 2</code>"
 
 msgid "food.auto_delete_prompt"
 msgstr "🧹 Bu sohbette yemek menüsü mesajlarını şu süre sonra otomatik sil:"
@@ -594,6 +584,21 @@ msgstr "😔 Seçilen günün menüsü henüz yayınlanmadı."
 
 msgid "food.today_unpublished"
 msgstr "😔 Bugünün menüsü henüz yayınlanmadı."
+
+msgid "food.rich_menu_header"
+msgstr "🍽 {weekday}, {date} menüsü"
+
+msgid "food.rich_dish"
+msgstr "{index}. {name} — {calories} kcal"
+
+msgid "food.rich_total_calories"
+msgstr "🔥 Toplam: {calories} kcal"
+
+msgid "food.rich_rating"
+msgstr "⭐ Puan: {average} ({count})"
+
+msgid "food.rating_unavailable"
+msgstr "Bu menü artık puanlanamıyor."
 
 msgid "food.no_ratings"
 msgstr "⭐ Henüz puan yok"
@@ -780,3 +785,18 @@ msgstr "Klavyeyi gizle"
 
 msgid "commands.broadcast"
 msgstr "Tüm kullanıcılara mesaj gönder"
+
+msgid "food.day_selection_title"
+msgstr "🍉 Yemekhane menüsü"
+
+msgid "food.choose_day"
+msgstr "Bir gün seçin:"
+
+msgid "food.no_available_menus"
+msgstr "Önümüzdeki 7 günün menüleri henüz yayınlanmadı."
+
+msgid "food.open_menu"
+msgstr "🍉 Menüyü aç"
+
+msgid "food.rich_command_usage"
+msgstr "Kullanım: /yemek today, /yemek tomorrow veya /yemek 2"
