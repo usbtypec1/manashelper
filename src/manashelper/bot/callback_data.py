@@ -4,6 +4,8 @@ from enum import StrEnum
 from aiogram.filters.callback_data import CallbackData
 
 from manashelper.localization.locale import Locale
+from manashelper.services.eders_models import DeadlineFilter
+from manashelper.services.eders_tracking import EdersSetting
 from manashelper.services.food_menu_cleanup_settings import FoodMenuCleanupOption
 from manashelper.services.food_menu_notification_settings import FoodMenuMeal
 from manashelper.services.notification_settings import NotificationSetting
@@ -107,6 +109,15 @@ class ObisAction(StrEnum):
 
 class ObisCallback(CallbackData, prefix="obis"):
     action: ObisAction
+
+
+class EdersPageCallback(CallbackData, prefix="eders"):
+    selected: DeadlineFilter
+    page: int = 0
+
+
+class EdersSettingCallback(CallbackData, prefix="eders_setting"):
+    setting: EdersSetting
 
 
 class SettingsAction(StrEnum):

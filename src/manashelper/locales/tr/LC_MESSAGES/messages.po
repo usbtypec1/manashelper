@@ -18,6 +18,144 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+msgid "commands.eders"
+msgstr "eders ödev ve sınavlarını görüntüle"
+
+msgid "eders.loading"
+msgstr "eders ödevleri yükleniyor…"
+
+msgid "eders.fetch_failed"
+msgstr "eders yüklenemedi. Daha sonra tekrar deneyin."
+
+msgid "eders.expired"
+msgstr "Bu listenin süresi doldu. /eders komutunu tekrar çalıştırın."
+
+msgid "eders.unknown"
+msgstr "Bilinmiyor"
+
+msgid "eders.date_conflict"
+msgstr "Çelişen tarihler: {value}"
+
+msgid "eders.date_unverified"
+msgstr "{value} (kesin saat doğrulanmadı)"
+
+msgid "eders.not_submitted"
+msgstr "Teslim edilmedi"
+
+msgid "eders.draft"
+msgstr "Taslak — teslim edilmedi"
+
+msgid "eders.submitted"
+msgstr "Teslim edildi (sınav: deneme tamamlandı)"
+
+msgid "eders.in_progress"
+msgstr "Sınav denemesi devam ediyor"
+
+msgid "eders.not_graded"
+msgstr "Henüz not verilmedi"
+
+msgid "eders.graded"
+msgstr "Not verildi"
+
+msgid "eders.page"
+msgstr "eders: öğe {page}/{count}"
+
+msgid "eders.empty"
+msgstr "Bu filtreye uyan öğe yok."
+
+msgid "eders.filter_note"
+msgstr "Kaynak: eders not özetindeki dersler. Doğrulanmış saatler Asia/Bishkek saat dilimindedir. Saat dilimi doğrulanmamış veya çelişen tarihler zaman filtrelerine dahil edilmez; “Kesin tarihi yok” bölümüne bakın. Çalışmaları eders üzerinde tamamlayıp teslim edin."
+
+msgid "eders.opens"
+msgstr "Açılış: {value}"
+
+msgid "eders.closes"
+msgstr "Son tarih: {value}"
+
+msgid "eders.submission"
+msgstr "Teslim durumu: {value}"
+
+msgid "eders.grading"
+msgstr "Notlandırma: {value}"
+
+msgid "eders.title_date_mismatch"
+msgstr "Başlıktaki tarih ayarlanan son tarihten farklı."
+
+msgid "eders.filter_all"
+msgstr "Güncel öğeler"
+
+msgid "eders.filter_week"
+msgstr "Önümüzdeki yedi gün"
+
+msgid "eders.filter_available"
+msgstr "Şimdi açık"
+
+msgid "eders.filter_awaiting"
+msgstr "Not bekleyenler"
+
+msgid "eders.filter_unknown"
+msgstr "Kesin tarihi yok"
+
+msgid "commands.eders_settings"
+msgstr "eders hatırlatıcılarını ayarla"
+
+msgid "commands.week"
+msgstr "Haftalık ders özetim"
+
+msgid "eders.reminder_day"
+msgstr "eders hatırlatıcısı: son tarihten bir gün önce"
+
+msgid "eders.reminder_two_hours"
+msgstr "eders hatırlatıcısı: son tarihten iki saat önce"
+
+msgid "eders.opened_notification"
+msgstr "eders etkinliği açıldı"
+
+msgid "eders.changed_notification"
+msgstr "eders son tarihi değişti"
+
+msgid "eders.previous_deadline"
+msgstr "Önceki son tarih: {value}"
+
+msgid "eders.setting_day"
+msgstr "Bir gün önce"
+
+msgid "eders.setting_two_hours"
+msgstr "İki saat önce"
+
+msgid "eders.setting_openings"
+msgstr "Ödev ve sınav açılışları"
+
+msgid "eders.setting_changes"
+msgstr "Son tarih değişiklikleri"
+
+msgid "eders.setting_archived"
+msgstr "180 günden eski tarihleri gizle"
+
+msgid "eders.settings_header"
+msgstr "eders hatırlatıcıları. Düğmeler ayarları açıp kapatır. /eders ile ödevleri, /week ile önümüzdeki yedi günü görüntüleyin."
+
+msgid "eders.week_header"
+msgstr "Ders haftam: {start}–{end} (Asia/Bishkek)"
+
+msgid "eders.week_no_schedule"
+msgstr "Dersleri özete eklemek için ders takibini açın."
+
+msgid "eders.week_opens"
+msgstr "Açılış"
+
+msgid "eders.week_due"
+msgstr "Son tarih"
+
+msgid "eders.week_material"
+msgstr "Yeni bulunan materyal: {value}"
+
+msgid "eders.week_many_deadlines"
+msgstr "Bugünkü son tarihler: {count}"
+
+msgid "eders.week_empty_day"
+msgstr "Bilinen etkinlik yok."
+
 msgid "common.cancel"
 msgstr "❌ İptal"
 

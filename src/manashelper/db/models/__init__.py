@@ -9,6 +9,7 @@ from manashelper.db.models.daily_menu import DailyMenu, daily_menu_dishes
 from manashelper.db.models.daily_menu_rating import DailyMenuRating
 from manashelper.db.models.department import Department
 from manashelper.db.models.dish import Dish
+from manashelper.db.models.eders import EdersNotification, EdersState
 from manashelper.db.models.faculty import Faculty
 from manashelper.db.models.feedback_message import FeedbackMessage
 from manashelper.db.models.food_menu_cleanup_settings import FoodMenuCleanupSettings
@@ -33,6 +34,8 @@ __all__ = [
     "DailyMenuRating",
     "Department",
     "Dish",
+    "EdersNotification",
+    "EdersState",
     "Faculty",
     "FeedbackMessage",
     "FoodMenuCleanupSettings",

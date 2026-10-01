@@ -18,6 +18,144 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+msgid "commands.eders"
+msgstr "View eders assignments and quizzes"
+
+msgid "eders.loading"
+msgstr "Loading eders assignments…"
+
+msgid "eders.fetch_failed"
+msgstr "Could not load eders. Try again later."
+
+msgid "eders.expired"
+msgstr "This list has expired. Run /eders again."
+
+msgid "eders.unknown"
+msgstr "Unknown"
+
+msgid "eders.date_conflict"
+msgstr "Conflicting dates: {value}"
+
+msgid "eders.date_unverified"
+msgstr "{value} (exact time unverified)"
+
+msgid "eders.not_submitted"
+msgstr "Not submitted"
+
+msgid "eders.draft"
+msgstr "Draft — not submitted"
+
+msgid "eders.submitted"
+msgstr "Submitted (quiz: finished attempt)"
+
+msgid "eders.in_progress"
+msgstr "Quiz attempt in progress"
+
+msgid "eders.not_graded"
+msgstr "Not graded yet"
+
+msgid "eders.graded"
+msgstr "Graded"
+
+msgid "eders.page"
+msgstr "eders: item {page}/{count}"
+
+msgid "eders.empty"
+msgstr "No items match this filter."
+
+msgid "eders.filter_note"
+msgstr "Source: courses listed in the eders grade overview. Confirmed times use Asia/Bishkek. Dates with an unverified timezone or conflicts are excluded from time filters; see “Unknown deadline”. Complete and submit work on eders."
+
+msgid "eders.opens"
+msgstr "Opens: {value}"
+
+msgid "eders.closes"
+msgstr "Deadline: {value}"
+
+msgid "eders.submission"
+msgstr "Submission: {value}"
+
+msgid "eders.grading"
+msgstr "Grading: {value}"
+
+msgid "eders.title_date_mismatch"
+msgstr "The date in the title differs from the configured deadline."
+
+msgid "eders.filter_all"
+msgstr "Recent items"
+
+msgid "eders.filter_week"
+msgstr "Next seven days"
+
+msgid "eders.filter_available"
+msgstr "Available now"
+
+msgid "eders.filter_awaiting"
+msgstr "Awaiting grade"
+
+msgid "eders.filter_unknown"
+msgstr "Unknown deadline"
+
+msgid "commands.eders_settings"
+msgstr "Configure eders reminders"
+
+msgid "commands.week"
+msgstr "My study week"
+
+msgid "eders.reminder_day"
+msgstr "eders deadline reminder: one day before"
+
+msgid "eders.reminder_two_hours"
+msgstr "eders deadline reminder: two hours before"
+
+msgid "eders.opened_notification"
+msgstr "An eders activity has opened"
+
+msgid "eders.changed_notification"
+msgstr "The eders deadline has changed"
+
+msgid "eders.previous_deadline"
+msgstr "Previous deadline: {value}"
+
+msgid "eders.setting_day"
+msgstr "One day before"
+
+msgid "eders.setting_two_hours"
+msgstr "Two hours before"
+
+msgid "eders.setting_openings"
+msgstr "Activity openings"
+
+msgid "eders.setting_changes"
+msgstr "Deadline changes"
+
+msgid "eders.setting_archived"
+msgstr "Hide deadlines older than 180 days"
+
+msgid "eders.settings_header"
+msgstr "eders reminders. Each button toggles a setting. Use /eders for assignments and /week for your next seven days."
+
+msgid "eders.week_header"
+msgstr "My study week: {start}–{end} (Asia/Bishkek)"
+
+msgid "eders.week_no_schedule"
+msgstr "Track your courses to add classes to this summary."
+
+msgid "eders.week_opens"
+msgstr "Opens"
+
+msgid "eders.week_due"
+msgstr "Deadline"
+
+msgid "eders.week_material"
+msgstr "Newly discovered material: {value}"
+
+msgid "eders.week_many_deadlines"
+msgstr "Deadlines today: {count}"
+
+msgid "eders.week_empty_day"
+msgstr "No known events."
+
 msgid "common.cancel"
 msgstr "❌ Cancel"
 

@@ -18,6 +18,144 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+msgid "commands.eders"
+msgstr "查看 eders 作业和测验"
+
+msgid "eders.loading"
+msgstr "正在加载 eders 作业…"
+
+msgid "eders.fetch_failed"
+msgstr "无法加载 eders，请稍后重试。"
+
+msgid "eders.expired"
+msgstr "列表已过期，请再次发送 /eders。"
+
+msgid "eders.unknown"
+msgstr "未知"
+
+msgid "eders.date_conflict"
+msgstr "日期冲突：{value}"
+
+msgid "eders.date_unverified"
+msgstr "{value}（准确时间尚未确认）"
+
+msgid "eders.not_submitted"
+msgstr "未提交"
+
+msgid "eders.draft"
+msgstr "草稿，尚未提交"
+
+msgid "eders.submitted"
+msgstr "已提交（测验：答题已完成）"
+
+msgid "eders.in_progress"
+msgstr "正在答题"
+
+msgid "eders.not_graded"
+msgstr "尚未评分"
+
+msgid "eders.graded"
+msgstr "已评分"
+
+msgid "eders.page"
+msgstr "eders：第 {page}/{count} 项"
+
+msgid "eders.empty"
+msgstr "没有符合此筛选条件的项目。"
+
+msgid "eders.filter_note"
+msgstr "来源：eders 成绩概览中的课程。已确认的时间使用 Asia/Bishkek 时区。时区未确认或有冲突的日期不计入时间筛选，请查看“截止时间未知”。请在 eders 上完成并提交作业。"
+
+msgid "eders.opens"
+msgstr "开放时间：{value}"
+
+msgid "eders.closes"
+msgstr "截止时间：{value}"
+
+msgid "eders.submission"
+msgstr "提交状态：{value}"
+
+msgid "eders.grading"
+msgstr "评分状态：{value}"
+
+msgid "eders.title_date_mismatch"
+msgstr "标题中的日期与设置的截止日期不同。"
+
+msgid "eders.filter_all"
+msgstr "近期项目"
+
+msgid "eders.filter_week"
+msgstr "未来七天"
+
+msgid "eders.filter_available"
+msgstr "当前开放"
+
+msgid "eders.filter_awaiting"
+msgstr "待评分"
+
+msgid "eders.filter_unknown"
+msgstr "截止时间未知"
+
+msgid "commands.eders_settings"
+msgstr "设置 eders 提醒"
+
+msgid "commands.week"
+msgstr "我的学习周"
+
+msgid "eders.reminder_day"
+msgstr "eders 截止提醒：提前一天"
+
+msgid "eders.reminder_two_hours"
+msgstr "eders 截止提醒：提前两小时"
+
+msgid "eders.opened_notification"
+msgstr "eders 活动已开放"
+
+msgid "eders.changed_notification"
+msgstr "eders 截止时间已更改"
+
+msgid "eders.previous_deadline"
+msgstr "原截止时间：{value}"
+
+msgid "eders.setting_day"
+msgstr "提前一天"
+
+msgid "eders.setting_two_hours"
+msgstr "提前两小时"
+
+msgid "eders.setting_openings"
+msgstr "作业和测验开放"
+
+msgid "eders.setting_changes"
+msgstr "截止时间更改"
+
+msgid "eders.setting_archived"
+msgstr "隐藏超过 180 天的截止项目"
+
+msgid "eders.settings_header"
+msgstr "eders 提醒。点击按钮可切换设置。/eders 查看作业，/week 查看未来七天。"
+
+msgid "eders.week_header"
+msgstr "我的学习周：{start}–{end}（Asia/Bishkek）"
+
+msgid "eders.week_no_schedule"
+msgstr "开启课程跟踪以在摘要中显示课表。"
+
+msgid "eders.week_opens"
+msgstr "开放"
+
+msgid "eders.week_due"
+msgstr "截止"
+
+msgid "eders.week_material"
+msgstr "新发现的材料：{value}"
+
+msgid "eders.week_many_deadlines"
+msgstr "当天截止项目：{count}"
+
+msgid "eders.week_empty_day"
+msgstr "没有已知事件。"
+
 msgid "common.cancel"
 msgstr "❌ 取消"
 

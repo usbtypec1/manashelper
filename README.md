@@ -20,6 +20,10 @@ You just chat with it on Telegram like you would with a friend, tapping buttons 
   lesson-attendance/skip budget straight from the chat. The bot can also notify you as soon as a new grade is
   posted or an absence is recorded, without you needing to check manually.
 - ⚙️ **Notification settings** — turn any of the above notifications on or off individually, whenever you like.
+- 📚 **eders deadlines** — `/eders` lists assignments and quizzes with filters; `/eders_settings` configures
+  reminders one day and two hours before a deadline, activity openings and deadline changes. `/week` combines
+  the next seven days of classes, activity dates and newly discovered materials. eders is checked every 30 minutes
+  using the linked OBIS account. Unverified timezones and conflicting dates are shown explicitly.
 - 🌐 **Multiple languages** — the bot speaks Kyrgyz, Russian, Turkish and English, and picks a language
   automatically based on your Telegram app's language (you can also switch manually at any time).
 
@@ -53,6 +57,7 @@ into the architecture, package layout, and design decisions.
    DATASOURCE_USERNAME=user123
    DATASOURCE_PASSWORD=pass123
    OBIS_ENCRYPTION_KEY=<see below>
+   EDERS_POLL_MINUTES=30
    ```
    Generate a value for `OBIS_ENCRYPTION_KEY` (a base64-encoded 32-byte AES-256 key used to encrypt stored OBIS
    passwords at rest):
