@@ -1,8 +1,40 @@
+from aiogram.types import InputRichBlockParagraph, InputRichBlockSectionHeading, InputRichBlockUnion
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.i18n import ngettext
 
 from manashelper.services.obis import LessonAttendanceModel, LessonExamsModel
 from manashelper.services.obis_notification import ExamGradeChange, LessonSkipChange, SkipType
+
+
+def build_exam_grade_blocks(lesson: LessonExamsModel) -> list[InputRichBlockUnion]:
+    name = lesson.lesson_name or _("obis.subject")
+    title = f"{name} ({lesson.lesson_code})" if lesson.lesson_code else name
+    blocks: list[InputRichBlockUnion] = [InputRichBlockSectionHeading(size=3, text=title)]
+    if lesson.exams:
+        lines = [
+            f"{exam.name or _('obis.exam')}: {exam.score if exam.score is not None else '-'}" for exam in lesson.exams
+        ]
+        blocks.append(InputRichBlockParagraph(text="\n".join(lines)))
+    return blocks
+
+
+def build_attendance_blocks(lesson: LessonAttendanceModel) -> list[InputRichBlockUnion]:
+    name = lesson.lesson_name
+    if lesson.theory_skippable == 0 or lesson.practice_skippable == 0:
+        name = f"❗ {name}"
+    elif any(count is not None and count <= 1 for count in (lesson.theory_skippable, lesson.practice_skippable)):
+        name = f"⚠️ {name}"
+    return [
+        InputRichBlockSectionHeading(size=3, text=name),
+        InputRichBlockParagraph(
+            text="\n".join(
+                [
+                    _format_skips_line(_("obis.theory"), lesson.theory_skips_percentage, lesson.theory_skippable),
+                    _format_skips_line(_("obis.practice"), lesson.practice_skips_percentage, lesson.practice_skippable),
+                ]
+            )
+        ),
+    ]
 
 
 def format_exam_grades(lessons: list[LessonExamsModel]) -> str:

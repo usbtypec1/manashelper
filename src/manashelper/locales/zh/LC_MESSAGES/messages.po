@@ -413,23 +413,13 @@ msgstr "消息不能为空，且不能超过 {max} 个字符。请重试："
 msgid "feedback.delivery_failed"
 msgstr "⚠️ 无法向用户发送回复。"
 
-msgid "food.menu_prompt"
-msgstr ""
-"🍉 <b>食堂菜单</b>\n"
-"\n"
-"请选择下方日期或发送命令：\n"
-"• <code>/yemek today</code> — 今天\n"
-"• <code>/yemek tomorrow</code> — 明天\n"
-"• <code>/yemek 2</code> — N 天后"
 
 msgid "food.rate_prompt"
-msgstr "⭐ 请为菜单评分："
+msgstr "请为当天的整份菜单打1到5分。您可以修改评分。"
 
 msgid "food.rating_thanks"
 msgstr "感谢你的评分！"
 
-msgid "food.command_usage"
-msgstr "ℹ️ 用法：<code>/yemek today</code>、<code>/yemek tomorrow</code> 或 <code>/yemek 2</code>"
 
 msgid "food.auto_delete_prompt"
 msgstr "🧹 此聊天中的食堂菜单消息将在以下时间后自动删除："
@@ -589,6 +579,21 @@ msgstr "😔 当天的菜单尚未发布。"
 
 msgid "food.today_unpublished"
 msgstr "😔 今天的菜单尚未发布。"
+
+msgid "food.rich_menu_header"
+msgstr "🍽 {date}，{weekday}的菜单"
+
+msgid "food.rich_dish"
+msgstr "{index}. {name} — {calories} 千卡"
+
+msgid "food.rich_total_calories"
+msgstr "🔥 总计：{calories} 千卡"
+
+msgid "food.rich_rating"
+msgstr "⭐ 评分：{average}（{count}）"
+
+msgid "food.rating_unavailable"
+msgstr "这份菜单已无法评分。"
 
 msgid "food.no_ratings"
 msgstr "⭐ 暂无评分"
@@ -775,3 +780,18 @@ msgstr "隐藏键盘"
 
 msgid "commands.broadcast"
 msgstr "向所有用户群发消息"
+
+msgid "food.day_selection_title"
+msgstr "🍉 食堂菜单"
+
+msgid "food.choose_day"
+msgstr "请选择日期："
+
+msgid "food.no_available_menus"
+msgstr "未来7天的菜单尚未发布。"
+
+msgid "food.open_menu"
+msgstr "🍉 打开菜单"
+
+msgid "food.rich_command_usage"
+msgstr "用法：/yemek today、/yemek tomorrow 或 /yemek 2"

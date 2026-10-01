@@ -26,9 +26,10 @@ async def _show_food_menu_notifications(
     callback_query: CallbackQuery, summary: FoodMenuNotificationSettingsSummary
 ) -> None:
     if isinstance(callback_query.message, Message):
-        await callback_query.message.edit_text(
-            _("food.notification_settings"), reply_markup=build_food_menu_notifications_keyboard(summary)
+        send = (
+            callback_query.message.answer if callback_query.message.rich_message else callback_query.message.edit_text
         )
+        await send(_("food.notification_settings"), reply_markup=build_food_menu_notifications_keyboard(summary))
 
 
 @router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_FOOD_MENU_NOTIFICATIONS))
