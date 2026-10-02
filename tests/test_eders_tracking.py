@@ -9,11 +9,13 @@ from manashelper.db.models import User
 from manashelper.repositories.eders_repository import EdersRepository
 from manashelper.repositories.user_repository import UserRepository
 from manashelper.services.eders import EdersService
+from manashelper.services.eders_catalog import find_grades
 from manashelper.services.eders_models import (
     ActivityDate,
     ActivityKind,
     EdersActivity,
     EdersCourse,
+    EdersGrade,
     EdersSnapshot,
     SubmissionStatus,
 )
@@ -148,3 +150,114 @@ async def test_repeated_deadline_change_is_a_new_notification(tracking):
         events = await tracking.pending_events(980_001, observed)
         assert len(events) == 1 and events[0].event_type == "changed"
         await tracking.mark_sent(980_001, events[0].key, observed)
+
+
+def grade(**changes):
+    return replace(
+        EdersGrade(
+            301,
+            EdersCourse(10, "Course"),
+            "Work",
+            "https://eders.manas.edu.kg/mod/assign/view.php?id=20",
+            grade="0",
+            feedback="Good",
+            visible_fields=("grade", "feedback"),
+        ),
+        **changes,
+    )
+
+
+def content_snapshot(activities=(), grades=(), minutes=0):
+    return EdersSnapshot(tuple(activities), NOW + timedelta(minutes=minutes), tuple(grades), True, True)
+
+
+async def test_material_and_grade_delivery_retry_survives_observation_and_is_deduplicated(tracking):
+    reading = item(id=22, kind=ActivityKind.RESOURCE, opens=ActivityDate(), closes=ActivityDate())
+    await tracking.observe(980_001, "a", content_snapshot([reading], [grade(grade=None, feedback=None)]))
+    assert await tracking.pending_events(980_001, NOW) == []
+    current = content_snapshot([reading, replace(reading, id=23)], [grade()], 30)
+    await tracking.observe(980_001, "a", current)
+    events = await tracking.pending_events(980_001, current.fetched_at)
+    assert {event.event_type for event in events} == {"material_new", "grade_changed"}
+    grade_event = next(event for event in events if event.grade)
+    assert grade_event.grade.grade == "0" and grade_event.previous_grade.grade is None
+    later = replace(current, fetched_at=current.fetched_at + timedelta(days=5))
+    await tracking.observe(980_001, "a", later)
+    retry = await tracking.pending_events(980_001, later.fetched_at)
+    assert {event.key for event in retry} == {event.key for event in events}
+    for event in retry:
+        await tracking.mark_sent(980_001, event.key, later.fetched_at)
+    await tracking.observe(980_001, "a", replace(later, fetched_at=later.fetched_at + timedelta(minutes=30)))
+    assert await tracking.pending_events(980_001, later.fetched_at + timedelta(minutes=30)) == []
+
+
+async def test_superseded_grade_cancels_old_retry_and_repeated_corrections_are_distinct(tracking):
+    await tracking.observe(980_001, "a", content_snapshot(grades=[grade()]))
+    keys = set()
+    for minute, value in ((30, "90"), (60, "0"), (90, "90")):
+        current = content_snapshot(grades=[grade(grade=value)], minutes=minute)
+        await tracking.observe(980_001, "a", current)
+        events = await tracking.pending_events(980_001, current.fetched_at)
+        assert len(events) == 1 and events[0].grade.grade == value
+        assert events[0].key not in keys
+        keys.add(events[0].key)
+    await tracking.mark_sent(980_001, events[0].key, current.fetched_at)
+    assert await tracking.pending_events(980_001, current.fetched_at) == []
+
+
+async def test_content_settings_cancel_pending_events_and_do_not_backfill_when_enabled(tracking):
+    await tracking.observe(980_001, "a", content_snapshot(grades=[grade()]))
+    current = content_snapshot([item(kind=ActivityKind.RESOURCE)], [grade(feedback="Changed")], 30)
+    await tracking.observe(980_001, "a", current)
+    assert len(await tracking.pending_events(980_001, current.fetched_at)) == 2
+    await tracking.toggle(980_001, EdersSetting.NEW_MATERIALS)
+    await tracking.toggle(980_001, EdersSetting.GRADE_CHANGES)
+    assert await tracking.pending_events(980_001, current.fetched_at) == []
+    await tracking.toggle(980_001, EdersSetting.NEW_MATERIALS)
+    await tracking.toggle(980_001, EdersSetting.GRADE_CHANGES)
+    await tracking.observe(980_001, "a", replace(current, fetched_at=current.fetched_at + timedelta(minutes=30)))
+    assert await tracking.pending_events(980_001, current.fetched_at + timedelta(minutes=30)) == []
+
+
+async def test_new_account_resets_grade_and_material_baselines_and_cancels_old_queue(tracking):
+    await tracking.observe(980_001, "a", content_snapshot(grades=[grade()]))
+    current = content_snapshot([item(kind=ActivityKind.RESOURCE)], [grade(grade="90")], 30)
+    await tracking.observe(980_001, "a", current)
+    assert len(await tracking.pending_events(980_001, current.fetched_at)) == 2
+    await tracking.observe(980_001, "b", replace(current, fetched_at=current.fetched_at + timedelta(minutes=30)))
+    assert await tracking.pending_events(980_001, current.fetched_at + timedelta(minutes=30)) == []
+
+
+async def test_deadline_shortened_into_past_notifies_and_cancels_reminders(tracking):
+    await tracking.observe(980_001, "a", EdersSnapshot((item(),), NOW))
+    closed = item(closes=ActivityDate(NOW + timedelta(minutes=15)))
+    current = EdersSnapshot((closed,), NOW + timedelta(minutes=30))
+    await tracking.observe(980_001, "a", current)
+    events = await tracking.pending_events(980_001, current.fetched_at)
+    assert len(events) == 1 and events[0].event_type == "changed"
+    assert events[0].previous_deadline == item().closes.instant
+
+
+async def test_grade_permission_loss_preserves_baseline_and_pauses_retry_until_restored(tracking):
+    await tracking.observe(980_001, "a", content_snapshot(grades=[grade()]))
+    current = content_snapshot(grades=[grade(grade="90")], minutes=30)
+    await tracking.observe(980_001, "a", current)
+    event = (await tracking.pending_events(980_001, current.fetched_at))[0]
+    hidden = replace(content_snapshot(minutes=60), unavailable_grade_courses=(10,))
+    observed = await tracking.observe(980_001, "a", hidden)
+    assert observed.grades == current.grades and find_grades(observed) == []
+    assert await tracking.pending_events(980_001, hidden.fetched_at) == []
+    restored = replace(current, fetched_at=NOW + timedelta(minutes=90))
+    await tracking.observe(980_001, "a", restored)
+    pending = await tracking.pending_events(980_001, restored.fetched_at)
+    assert len(pending) == 1 and pending[0].key == event.key
+
+
+async def test_first_available_grade_report_after_permission_failure_only_establishes_baseline(tracking):
+    await tracking.observe(980_001, "a", replace(content_snapshot(), unavailable_grade_courses=(10,)))
+    restored = content_snapshot(grades=[grade()], minutes=30)
+    await tracking.observe(980_001, "a", restored)
+    assert await tracking.pending_events(980_001, restored.fetched_at) == []
+    current = content_snapshot(grades=[grade(grade="95")], minutes=60)
+    await tracking.observe(980_001, "a", current)
+    assert len(await tracking.pending_events(980_001, current.fetched_at)) == 1

@@ -935,7 +935,7 @@ msgid "food.choose_day"
 msgstr "Выберите день:"
 
 msgid "food.no_available_menus"
-msgstr "Меню на ближайшие 7 дней пока не опубликовано."
+msgstr "Меню на ближайшие 3 дней пока не опубликовано."
 
 msgid "food.open_menu"
 msgstr "🍉 Открыть меню"
@@ -1026,3 +1026,150 @@ msgstr "Пожалуйста, отправьте текст длиной от 1 
 
 msgid "student_questions.use_buttons"
 msgstr "Пожалуйста, выберите ответ с помощью кнопок."
+
+msgid "eders.filter_not_submitted"
+msgstr "Не сдана"
+
+msgid "eders.filter_submitted"
+msgstr "Сдана"
+
+msgid "eders.filter_graded"
+msgstr "Оценена"
+
+msgid "eders.filter_unknown_status"
+msgstr "Статус сдачи неизвестен"
+
+msgid "eders.setting_materials"
+msgstr "Новые и обновлённые материалы"
+
+msgid "eders.setting_grades"
+msgstr "Изменения оценок и комментариев"
+
+msgid "eders.section"
+msgstr "Раздел: {value}"
+
+msgid "eders.attempt_count"
+msgstr "Попыток: {count}"
+
+msgid "eders.attempt"
+msgstr "Попытка {number}: {status}; оценка: {grade}"
+
+msgid "eders.quiz_result"
+msgstr "Результат теста: {value}"
+
+msgid "eders.grade_notification"
+msgstr "📊 Изменилась оценка или комментарий преподавателя в eders"
+
+msgid "eders.previous_grade"
+msgstr "Прежняя оценка: {value}"
+
+msgid "eders.previous_feedback"
+msgstr "Прежний комментарий: {value}"
+
+msgid "eders.material_notification"
+msgstr "📎 Новый обнаруженный материал в eders"
+
+msgid "eders.material_changed_notification"
+msgstr "📎 Обновлён материал в eders"
+
+msgid "eders.grade_value"
+msgstr "Оценка: {value}"
+
+msgid "eders.grade_range"
+msgstr "Диапазон: {value}"
+
+msgid "eders.grade_percentage"
+msgstr "Процент: {value}"
+
+msgid "eders.grade_weight"
+msgstr "Вес: {value}"
+
+msgid "eders.grade_contribution"
+msgstr "Вклад в итог курса: {value}"
+
+msgid "eders.grade_feedback"
+msgstr "Комментарий преподавателя: {value}"
+
+msgid "eders.grades_header"
+msgstr "📊 Журнал оценок eders"
+
+msgid "eders.materials_header"
+msgstr "📚 Материалы eders по предметам и разделам"
+
+msgid "eders.catalog_empty"
+msgstr "Подходящих записей нет."
+
+msgid "eders.updated_at"
+msgstr "Последнее обновление: {value} (Бишкек)"
+
+msgid "eders.grade_source_note"
+msgstr "Источник: eders. Это не итоговые оценки OBIS. Неизвестная или скрытая оценка не равна нулю. Полные сведения и комментарии доступны по ссылке на работу."
+
+msgid "eders.materials_search_hint"
+msgstr "Поиск по названию и теме: /materials слова для поиска. Ссылки открывают eders; файлы не скачиваются."
+
+msgid "eders.all_courses"
+msgstr "Все предметы"
+
+msgid "eders.choose_course"
+msgstr "Выбрать предмет"
+
+msgid "eders.search_query"
+msgstr "Поиск: {value}"
+
+msgid "eders.search_too_long"
+msgstr "Поисковый запрос должен быть не длиннее 100 символов."
+
+msgid "commands.materials"
+msgstr "Найти материалы предметов в eders"
+
+msgid "commands.eders_grades"
+msgstr "Оценки и комментарии преподавателей eders"
+
+msgid "commands.submissions"
+msgstr "Статусы сдачи заданий и тестов"
+
+msgid "eders.feedback_header"
+msgstr "Комментарий преподавателя из eders"
+
+msgid "eders.back_to_grade"
+msgstr "Назад к оценке"
+
+msgid "eders.full_feedback"
+msgstr "Полный комментарий"
+
+msgid "eders.grades_unavailable"
+msgstr "Журнал оценок некоторых выбранных предметов скрыт или недоступен в eders."
+
+msgid "eders.material_type"
+msgstr "Тип: {value}"
+
+msgid "eders.kind_assignment"
+msgstr "Задание"
+
+msgid "eders.kind_quiz"
+msgstr "Тест"
+
+msgid "eders.kind_resource"
+msgstr "Файл"
+
+msgid "eders.kind_link"
+msgstr "Ссылка"
+
+msgid "eders.kind_page"
+msgstr "Страница"
+
+msgid "eders.kind_book"
+msgstr "Книга"
+
+msgid "eders.kind_folder"
+msgstr "Папка"
+
+msgid "eders.kind_lesson"
+msgstr "Урок"
+
+msgid "eders.kind_h5p"
+msgstr "Интерактивный материал"
+
+msgid "eders.kind_label"
+msgstr "Текстовый блок"

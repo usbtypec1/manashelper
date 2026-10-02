@@ -1,4 +1,5 @@
 import re
+from contextlib import suppress
 from dataclasses import replace
 from datetime import UTC, datetime
 from urllib.parse import parse_qs, urljoin, urlsplit
@@ -14,12 +15,18 @@ from manashelper.services.eders_models import (
     ActivityKind,
     EdersActivity,
     EdersCourse,
+    EdersGrade,
     GradingStatus,
+    QuizAttempt,
     SubmissionStatus,
 )
 
 
 class EdersParseError(Exception):
+    pass
+
+
+class EdersGradesUnavailableError(EdersParseError):
     pass
 
 
@@ -178,12 +185,37 @@ def parse_course_activities(html: str, course: EdersCourse, timezone: ZoneInfo |
         raise EdersParseError("Missing eders course content")
     activities: dict[tuple[ActivityKind, int], EdersActivity] = {}
     for item in soup.select(".course-content li.activity"):
+        section_node = item.find_parent("li", class_="section")
+        if section_node is None:
+            section_node = item.find_parent(attrs={"data-for": "section"})
+        section_title = section_node.select_one(".sectionname, .section-title") if section_node else None
+        section = section_title.get_text(" ", strip=True) if section_title else ""
         link = item.select_one(".activityname a[href], .activityinstance a[href]")
         href = link.get("href") if link else None
         if link is None or not isinstance(href, str):
+            if "modtype_label" in (item.get("class") or []):
+                identifier_match = re.fullmatch(r"module-(\d+)", str(item.get("id", "")))
+                content = item.select_one(".contentwithoutlink, .activity-altcontent")
+                if identifier_match and content and content.get_text(" ", strip=True):
+                    identifier = int(identifier_match[1])
+                    activities[ActivityKind.LABEL, identifier] = EdersActivity(
+                        identifier,
+                        course,
+                        ActivityKind.LABEL,
+                        content.get_text(" ", strip=True),
+                        f"{EDERS_BASE_URL}/course/view.php?id={course.id}",
+                        section=section,
+                    )
             continue
         try:
-            url = safe_eders_url(href, {f"/mod/{kind.value}/view.php" for kind in ActivityKind})
+            url = safe_eders_url(
+                href,
+                {
+                    f"/mod/{kind.value}/view.php"
+                    for kind in ActivityKind
+                    if kind not in {ActivityKind.LABEL, ActivityKind.GRADE}
+                },
+            )
         except EdersUnsafeUrlError:
             continue
         kind = ActivityKind(urlsplit(url).path.split("/")[2])
@@ -195,7 +227,9 @@ def parse_course_activities(html: str, course: EdersCourse, timezone: ZoneInfo |
                 name = name.removesuffix(hidden.get_text(" ", strip=True)).strip()
         opens, closes = _dates(item, timezone)
         identifier = eders_id(url)
-        activities[kind, identifier] = EdersActivity(identifier, course, kind, name, url, opens, closes)
+        activities[kind, identifier] = EdersActivity(
+            identifier, course, kind, name, url, opens, closes, section=section
+        )
     return list(activities.values())
 
 
@@ -226,7 +260,7 @@ def _assignment_status(soup: BeautifulSoup) -> tuple[SubmissionStatus, GradingSt
     return submission, grading
 
 
-def _quiz_status(soup: BeautifulSoup) -> tuple[SubmissionStatus, GradingStatus]:
+def _quiz_attempts(soup: BeautifulSoup) -> tuple[QuizAttempt, ...]:
     # A completed attempt confirms that attempt's submission, not completion of the
     # entire quiz. An active later attempt takes precedence. Hidden grades stay unknown.
     table = soup.select_one("table.quizattemptsummary")
@@ -239,16 +273,20 @@ def _quiz_status(soup: BeautifulSoup) -> tuple[SubmissionStatus, GradingStatus]:
                 label, cell = row.select_one("th"), row.select_one("td")
                 if label and cell:
                     fields[label.get_text(" ", strip=True).casefold()] = cell.get_text(" ", strip=True)
-            attempts.append(_attempt_status(fields.get("status", ""), fields.get("grade", "")))
-        return _latest_attempt(attempts)
+            status, grading = _attempt_status(fields.get("status", ""), fields.get("grade", ""))
+            attempts.append(
+                QuizAttempt(fields.get("attempt"), status, grading, _optional_value(fields.get("grade", "")))
+            )
+        return tuple(attempts)
     if table is None:
-        return SubmissionStatus.UNKNOWN, GradingStatus.UNKNOWN
+        return ()
     headers = [cell.get_text(" ", strip=True).casefold() for cell in table.select("thead th")]
     status_index = next((i for i, value in enumerate(headers) if value in {"state", "status"}), None)
     if status_index is None:
-        return SubmissionStatus.UNKNOWN, GradingStatus.UNKNOWN
+        return ()
     grade_index = next((i for i, value in enumerate(headers) if value.startswith("grade")), None)
-    states: list[tuple[SubmissionStatus, GradingStatus]] = []
+    number_index = next((i for i, value in enumerate(headers) if value == "attempt"), None)
+    states: list[QuizAttempt] = []
     for row in table.select("tbody tr"):
         cells = row.select(":scope > td")
         if len(cells) <= status_index:
@@ -257,8 +295,23 @@ def _quiz_status(soup: BeautifulSoup) -> tuple[SubmissionStatus, GradingStatus]:
         grade_text = ""
         if grade_index is not None and grade_index < len(cells):
             grade_text = cells[grade_index].get_text(" ", strip=True)
-        states.append(_attempt_status(value, grade_text))
-    return _latest_attempt(states)
+        status, grading = _attempt_status(value, grade_text)
+        number = (
+            cells[number_index].get_text(" ", strip=True)
+            if number_index is not None and number_index < len(cells)
+            else None
+        )
+        states.append(QuizAttempt(number, status, grading, _optional_value(grade_text)))
+    return tuple(states)
+
+
+def _quiz_status(soup: BeautifulSoup) -> tuple[SubmissionStatus, GradingStatus]:
+    attempts = _quiz_attempts(soup)
+    if not attempts and any(
+        node.get_text(" ", strip=True) == "No attempts have been made yet" for node in soup.select("#region-main p")
+    ):
+        return SubmissionStatus.NOT_SUBMITTED, GradingStatus.UNKNOWN
+    return _latest_attempt([(item.submission, item.grading) for item in attempts])
 
 
 def _attempt_status(value: str, grade_text: str) -> tuple[SubmissionStatus, GradingStatus]:
@@ -305,5 +358,98 @@ def parse_activity_details(html: str, activity: EdersActivity, timezone: ZoneInf
             except ValueError:
                 pass
     return replace(
-        activity, opens=opens, closes=closes, submission=submission, grading=grading, title_date_mismatch=mismatch
+        activity,
+        opens=opens,
+        closes=closes,
+        submission=submission,
+        grading=grading,
+        title_date_mismatch=mismatch,
+        attempts=_quiz_attempts(soup) if activity.kind == ActivityKind.QUIZ else (),
+        quiz_result=_quiz_result(soup) if activity.kind == ActivityKind.QUIZ else None,
     )
+
+
+def _optional_value(text: str) -> str | None:
+    value = " ".join(text.split())
+    return None if value.casefold() in {"", "-", "–", "—", "not yet graded", "not available"} else value
+
+
+def _quiz_result(soup: BeautifulSoup) -> str | None:
+    for heading in soup.select("#feedback h3, .quizinfo h3, .quizgrade, .quizresults"):
+        value = heading.get_text(" ", strip=True)
+        if re.match(r"Your (?:final|current) grade", value, re.IGNORECASE):
+            return value
+    return None
+
+
+def parse_course_grades(html: str, course: EdersCourse) -> list[EdersGrade]:
+    raw = BeautifulSoup(html, "lxml")
+    if any(
+        (
+            "you do not have permission to view grades" in node.get_text(" ", strip=True).casefold()
+            or node.get_text(" ", strip=True).casefold().startswith("cannot view grades")
+        )
+        for node in raw.select("#region-main .errorbox, #region-main .alert-danger")
+    ):
+        raise EdersGradesUnavailableError("Eders grades are hidden or unavailable")
+    soup = _page(html)
+    table = soup.select_one("#region-main .user-report-container table, #region-main table.user-grade")
+    if table is None:
+        # The Moodle teacher zero state asks to select a user; it is not an empty student report.
+        if soup.select_one("#region-main .zero-state, #region-main .gradereport-user-zero-state"):
+            raise EdersGradesUnavailableError("Eders user grade report unavailable")
+        raise EdersParseError("Missing eders user grade report")
+    grades: dict[int, EdersGrade] = {}
+    for row in table.select("tr"):
+        header = row.select_one('th[id^="row_"]')
+        if header is None:
+            if row.select_one('td[headers*="grade"]'):
+                raise EdersParseError("Missing eders grade row identifier")
+            continue
+        match = re.fullmatch(r"row_(\d+)(?:_\d+)?", str(header.get("id", "")))
+        if match is None:
+            raise EdersParseError("Invalid eders grade item identifier")
+        name_node = header.select_one(".rowtitle") or header
+        # Screen reader labels and icons must not become part of grades or item names.
+        for hidden in row.select(".accesshide, script, style"):
+            hidden.decompose()
+        fields: dict[str, str | None] = {}
+        for cell in row.select(":scope > td"):
+            headers = cell.get("headers")
+            tokens = headers if isinstance(headers, list) else str(headers or "").split()
+            for token in tokens:
+                column = re.fullmatch(
+                    r"(grade|range|percentage|feedback|weight|contributiontocoursetotal)\d*", str(token)
+                )
+                if column:
+                    key = "contribution" if column[1] == "contributiontocoursetotal" else column[1]
+                    fields[key] = _optional_value(cell.get_text(" ", strip=True))
+        url = f"{EDERS_BASE_URL}/grade/report/user/index.php?id={course.id}"
+        link = name_node.select_one("a[href]")
+        if link and isinstance(href := link.get("href"), str):
+            with suppress(EdersUnsafeUrlError):
+                url = safe_eders_url(
+                    href,
+                    {
+                        f"/mod/{kind.value}/view.php"
+                        for kind in ActivityKind
+                        if kind not in {ActivityKind.LABEL, ActivityKind.GRADE}
+                    },
+                )
+        identifier = int(match[1])
+        grades[identifier] = EdersGrade(
+            identifier,
+            course,
+            name_node.get_text(" ", strip=True),
+            url,
+            grade=fields.get("grade"),
+            range=fields.get("range"),
+            percentage=fields.get("percentage"),
+            feedback=fields.get("feedback"),
+            weight=fields.get("weight"),
+            contribution=fields.get("contribution"),
+            visible_fields=tuple(sorted(fields)),
+        )
+    if not grades and table.select('th[id^="row_"]'):
+        raise EdersParseError("Unrecognized eders grade rows")
+    return list(grades.values())

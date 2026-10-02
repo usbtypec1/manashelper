@@ -926,7 +926,7 @@ msgid "food.choose_day"
 msgstr "请选择日期："
 
 msgid "food.no_available_menus"
-msgstr "未来7天的菜单尚未发布。"
+msgstr "未来3天的菜单尚未发布。"
 
 msgid "food.open_menu"
 msgstr "🍉 打开菜单"
@@ -1017,3 +1017,150 @@ msgstr "请发送长度为1到{max}个字符的文本。"
 
 msgid "student_questions.use_buttons"
 msgstr "请使用按钮选择答案。"
+
+msgid "eders.filter_not_submitted"
+msgstr "未提交"
+
+msgid "eders.filter_submitted"
+msgstr "已提交"
+
+msgid "eders.filter_graded"
+msgstr "已评分"
+
+msgid "eders.filter_unknown_status"
+msgstr "提交状态未知"
+
+msgid "eders.setting_materials"
+msgstr "新增和更新的资料"
+
+msgid "eders.setting_grades"
+msgstr "成绩和评语变更"
+
+msgid "eders.section"
+msgstr "章节：{value}"
+
+msgid "eders.attempt_count"
+msgstr "尝试次数：{count}"
+
+msgid "eders.attempt"
+msgstr "第{number}次尝试：{status}；成绩：{grade}"
+
+msgid "eders.quiz_result"
+msgstr "测验结果：{value}"
+
+msgid "eders.grade_notification"
+msgstr "📊 eders成绩或教师评语已变更"
+
+msgid "eders.previous_grade"
+msgstr "原成绩：{value}"
+
+msgid "eders.previous_feedback"
+msgstr "原评语：{value}"
+
+msgid "eders.material_notification"
+msgstr "📎 在eders中发现新资料"
+
+msgid "eders.material_changed_notification"
+msgstr "📎 eders资料已更新"
+
+msgid "eders.grade_value"
+msgstr "成绩：{value}"
+
+msgid "eders.grade_range"
+msgstr "分数范围：{value}"
+
+msgid "eders.grade_percentage"
+msgstr "百分比：{value}"
+
+msgid "eders.grade_weight"
+msgstr "权重：{value}"
+
+msgid "eders.grade_contribution"
+msgstr "对课程总成绩的贡献：{value}"
+
+msgid "eders.grade_feedback"
+msgstr "教师评语：{value}"
+
+msgid "eders.grades_header"
+msgstr "📊 eders成绩册"
+
+msgid "eders.materials_header"
+msgstr "📚 按课程和章节查看eders资料"
+
+msgid "eders.catalog_empty"
+msgstr "没有匹配的记录。"
+
+msgid "eders.updated_at"
+msgstr "最后更新：{value}（比什凯克时间）"
+
+msgid "eders.grade_source_note"
+msgstr "来源：eders。这些不是OBIS最终成绩。未知或隐藏的成绩不等于零。完整信息和评语请通过作业链接查看。"
+
+msgid "eders.materials_search_hint"
+msgstr "按标题和主题搜索：/materials 搜索词。链接打开eders页面，不会下载文件。"
+
+msgid "eders.all_courses"
+msgstr "所有课程"
+
+msgid "eders.choose_course"
+msgstr "选择课程"
+
+msgid "eders.search_query"
+msgstr "搜索：{value}"
+
+msgid "eders.search_too_long"
+msgstr "搜索内容不得超过100个字符。"
+
+msgid "commands.materials"
+msgstr "查找eders课程资料"
+
+msgid "commands.eders_grades"
+msgstr "查看eders成绩和教师评语"
+
+msgid "commands.submissions"
+msgstr "查看作业和测验提交状态"
+
+msgid "eders.feedback_header"
+msgstr "eders教师评语"
+
+msgid "eders.back_to_grade"
+msgstr "返回成绩"
+
+msgid "eders.full_feedback"
+msgstr "完整评语"
+
+msgid "eders.grades_unavailable"
+msgstr "部分所选课程的eders成绩报告已隐藏或无法访问。"
+
+msgid "eders.material_type"
+msgstr "类型：{value}"
+
+msgid "eders.kind_assignment"
+msgstr "作业"
+
+msgid "eders.kind_quiz"
+msgstr "测验"
+
+msgid "eders.kind_resource"
+msgstr "文件"
+
+msgid "eders.kind_link"
+msgstr "链接"
+
+msgid "eders.kind_page"
+msgstr "页面"
+
+msgid "eders.kind_book"
+msgstr "书籍"
+
+msgid "eders.kind_folder"
+msgstr "文件夹"
+
+msgid "eders.kind_lesson"
+msgstr "课程"
+
+msgid "eders.kind_h5p"
+msgstr "互动内容"
+
+msgid "eders.kind_label"
+msgstr "文本块"

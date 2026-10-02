@@ -9,7 +9,7 @@ from manashelper.repositories.daily_menu_rating_repository import DailyMenuRatin
 from manashelper.repositories.daily_menu_repository import DailyMenuRepository
 
 BISHKEK_TZ = zoneinfo.ZoneInfo("Asia/Bishkek")
-MENU_LOOKAHEAD_DAYS = 7
+MENU_LOOKAHEAD_DAYS = 3
 
 
 class DailyMenuNotFoundError(Exception):

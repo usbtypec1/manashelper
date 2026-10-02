@@ -28,7 +28,7 @@ SNAPSHOT_KEY = "eders_snapshot"
 SNAPSHOT_TTL = timedelta(minutes=15)
 
 
-@router.message(Command("eders"))
+@router.message(Command("eders", "submissions"))
 @flags.private_chat_only
 async def on_eders_command(
     message: Message,

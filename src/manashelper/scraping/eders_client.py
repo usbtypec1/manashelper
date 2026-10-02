@@ -6,13 +6,15 @@ import httpx
 from bs4 import BeautifulSoup
 
 from manashelper.scraping.eders_parser import (
+    EdersGradesUnavailableError,
     parse_account_timezone,
     parse_activity_details,
     parse_course_activities,
+    parse_course_grades,
     parse_courses,
 )
 from manashelper.scraping.eders_urls import EDERS_BASE_URL, EdersUnsafeUrlError, safe_eders_url
-from manashelper.scraping.obis_client import OBIS_BASE_URL, OBIS_LOGIN_PATH, ObisLoginError
+from manashelper.scraping.obis_client import OBIS_ATTENDANCE_PATH, OBIS_BASE_URL, OBIS_LOGIN_PATH, ObisLoginError
 from manashelper.scraping.obis_parser import parse_login_page_csrf_token
 from manashelper.services.eders_models import ActivityKind, EdersSnapshot
 
@@ -24,6 +26,10 @@ class EdersFetchError(Exception):
 
 
 class EdersSessionExpiredError(EdersFetchError):
+    pass
+
+
+class EdersPermissionError(EdersFetchError):
     pass
 
 
@@ -46,6 +52,9 @@ def _validate_url(url: str, phase: str) -> None:
             raise EdersSessionExpiredError("OBIS session expired")
         if phase != "read" and parts.path in {"/", "/site/index", "/site/login", "/site/eders"} and not params:
             return
+        # OBIS can finish a successful login on the student's current courses page.
+        if phase == "login" and parts.path == OBIS_ATTENDANCE_PATH and not params:
+            return
     elif parts.netloc == urlsplit(EDERS_BASE_URL).netloc:
         if parts.path in {"/login/index.php", "/auth/userkey/login.php"} and phase == "read":
             raise EdersSessionExpiredError("Eders session expired")
@@ -57,14 +66,23 @@ def _validate_url(url: str, phase: str) -> None:
                 and params["key"][0]
             ):
                 return
-            if parts.path in {"/", "/my/", "/my/index.php", "/my/courses.php"} and not params:
+            if parts.path in {"", "/", "/my/", "/my/index.php", "/my/courses.php"} and not params:
                 return
         if parts.path == "/grade/report/overview/index.php" and not params:
             return
         if phase == "read" and parts.path == "/user/profile.php" and not params:
             return
         if phase == "read":
-            safe_eders_url(url, {"/course/view.php", "/mod/assign/view.php", "/mod/quiz/view.php"})
+            safe_eders_url(
+                url,
+                {
+                    "/course/view.php",
+                    "/mod/assign/view.php",
+                    "/mod/quiz/view.php",
+                    "/grade/report/user/index.php",
+                    "/course/user.php",
+                },
+            )
             return
     raise EdersUnsafeUrlError("Unsupported authentication or read-only URL")
 
@@ -101,6 +119,8 @@ async def _request(
             data = None
             continue
         if not response.is_success:
+            if response.status_code == 403:
+                raise EdersPermissionError("Eders access denied")
             raise EdersFetchError(f"Eders returned HTTP {response.status_code}")
         if phase == "read" and BeautifulSoup(response.text, "lxml").select_one(
             "input[name=logintoken], input[name='LoginForm[username]']"
@@ -149,6 +169,8 @@ class EdersClient:
                     overview = await _request(client, OVERVIEW_URL, "read")
                     courses = parse_courses(overview.text)
                     activities = []
+                    grades = []
+                    unavailable_grade_courses = []
                     for course in courses:
                         page = await _request(client, f"{EDERS_BASE_URL}/course/view.php?id={course.id}", "read")
                         for activity in parse_course_activities(page.text, course, timezone):
@@ -156,7 +178,22 @@ class EdersClient:
                                 details = await _request(client, activity.url, "read")
                                 activity = parse_activity_details(details.text, activity, timezone)
                             activities.append(activity)
-                    return EdersSnapshot(tuple(activities), datetime.now(UTC))
+                        try:
+                            report = await _request(
+                                client, f"{EDERS_BASE_URL}/grade/report/user/index.php?id={course.id}", "read"
+                            )
+                            grades.extend(parse_course_grades(report.text, course))
+                        except (EdersGradesUnavailableError, EdersPermissionError):
+                            unavailable_grade_courses.append(course.id)
+                    return EdersSnapshot(
+                        tuple(activities),
+                        datetime.now(UTC),
+                        tuple(grades),
+                        grades_observed=True,
+                        catalog_observed=True,
+                        courses=tuple(courses),
+                        unavailable_grade_courses=tuple(unavailable_grade_courses),
+                    )
             except EdersSessionExpiredError:
                 if attempt:
                     raise

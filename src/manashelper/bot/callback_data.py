@@ -4,7 +4,7 @@ from enum import StrEnum
 from aiogram.filters.callback_data import CallbackData
 
 from manashelper.localization.locale import Locale
-from manashelper.services.eders_models import DeadlineFilter
+from manashelper.services.eders_models import DeadlineFilter, EdersCatalogView
 from manashelper.services.eders_tracking import EdersSetting
 from manashelper.services.food_menu_cleanup_settings import FoodMenuCleanupOption
 from manashelper.services.food_menu_notification_settings import FoodMenuMeal
@@ -145,6 +145,14 @@ class EdersPageCallback(CallbackData, prefix="eders"):
 
 class EdersSettingCallback(CallbackData, prefix="eders_setting"):
     setting: EdersSetting
+
+
+class EdersCatalogCallback(CallbackData, prefix="ec"):
+    session_id: str
+    view: EdersCatalogView
+    course_id: int = 0
+    page: int = 0
+    grade_id: int = 0
 
 
 class SettingsAction(StrEnum):

@@ -24,6 +24,18 @@
     "description": "commands.eders"
   },
   {
+    "command": "materials",
+    "description": "commands.materials"
+  },
+  {
+    "command": "eders_grades",
+    "description": "commands.eders_grades"
+  },
+  {
+    "command": "submissions",
+    "description": "commands.submissions"
+  },
+  {
     "command": "eders_settings",
     "description": "commands.eders_settings"
   },

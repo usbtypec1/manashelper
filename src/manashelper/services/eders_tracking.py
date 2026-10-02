@@ -6,7 +6,7 @@ from enum import StrEnum
 from manashelper.db.models.eders import EdersNotification
 from manashelper.repositories.eders_repository import EdersRepository
 from manashelper.repositories.user_repository import UserRepository
-from manashelper.services.eders_models import ActivityKind, EdersActivity, EdersSnapshot, SubmissionStatus
+from manashelper.services.eders_models import ActivityKind, EdersActivity, EdersGrade, EdersSnapshot, SubmissionStatus
 from manashelper.services.eders_serialization import deserialize_snapshot, serialize_snapshot
 from manashelper.services.obis import UserNotFoundError
 
@@ -17,6 +17,8 @@ class EdersSetting(StrEnum):
     OPENINGS = "openings"
     DEADLINE_CHANGES = "deadline_changes"
     HIDE_ARCHIVED = "hide_archived"
+    NEW_MATERIALS = "new_materials"
+    GRADE_CHANGES = "grade_changes"
 
 
 @dataclass(frozen=True, slots=True)
@@ -26,6 +28,8 @@ class EdersSettings:
     openings: bool
     deadline_changes: bool
     hide_archived: bool
+    new_materials: bool = True
+    grade_changes: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,9 +40,13 @@ class EdersEvent:
     event_time: datetime
     due_at: datetime
     previous_deadline: datetime | None = None
+    grade: EdersGrade | None = None
+    previous_grade: EdersGrade | None = None
 
 
 def activity_key(activity: EdersActivity) -> str:
+    if activity.kind == ActivityKind.GRADE:
+        return f"grade:{activity.course.id}:{activity.id}"
     return f"{activity.kind.value}:{activity.id}"
 
 
@@ -68,7 +76,7 @@ def plan_events(snapshot: EdersSnapshot, previous: EdersSnapshot | None, setting
             and closes
             and before.closes.instant
             and closes != before.closes.instant
-            and closes > now
+            and max(closes, before.closes.instant) > now - timedelta(days=180)
         ):
             events.append(_event(activity, "changed", closes, now, before.closes.instant))
         if activity.submission == SubmissionStatus.SUBMITTED:
@@ -87,7 +95,59 @@ def plan_events(snapshot: EdersSnapshot, previous: EdersSnapshot | None, setting
             and (opens > now or (before and previous and previous.fetched_at <= opens))
         ):
             events.append(_event(activity, "opened", opens, opens))
+    events.extend(plan_content_events(snapshot, previous, settings))
     return events
+
+
+def material_signature(item: EdersActivity) -> tuple[int, str, ActivityKind, str]:
+    return item.course.id, item.name, item.kind, item.section
+
+
+def grade_key(item: EdersGrade) -> str:
+    return f"grade:{item.course.id}:{item.id}"
+
+
+def grade_signature(item: EdersGrade) -> tuple[str | None, str | None, str | None]:
+    return item.grade, item.percentage, item.feedback
+
+
+def plan_content_events(
+    snapshot: EdersSnapshot, previous: EdersSnapshot | None, settings: EdersSettings
+) -> list[EdersEvent]:
+    if previous is None:
+        return []
+    events = []
+    if settings.new_materials and previous.catalog_observed and snapshot.catalog_observed:
+        old = {activity_key(item): item for item in previous.activities}
+        for item in snapshot.activities:
+            before = old.get(activity_key(item))
+            if before is None or material_signature(before) != material_signature(item):
+                kind = "material_new" if before is None else "material_changed"
+                events.append(_event(item, kind, snapshot.fetched_at, snapshot.fetched_at))
+    if settings.grade_changes and previous.grades_observed and snapshot.grades_observed:
+        old_grades = {grade_key(item): item for item in previous.grades}
+        for grade in snapshot.grades:
+            before_grade = old_grades.get(grade_key(grade))
+            if grade.course.id in snapshot.unavailable_grade_courses or (
+                before_grade is None and grade.course.id in previous.unavailable_grade_courses
+            ):
+                continue
+            changed = any(
+                field in grade.visible_fields
+                and getattr(grade, field) != (getattr(before_grade, field) if before_grade else None)
+                for field in ("grade", "percentage", "feedback")
+            )
+            if not changed:
+                continue
+            item = EdersActivity(grade.id, grade.course, ActivityKind.GRADE, grade.name, grade.url)
+            event = _event(item, "grade_changed", snapshot.fetched_at, snapshot.fetched_at)
+            events.append(replace(event, grade=grade, previous_grade=before_grade))
+    return events
+
+
+def _event_payload(event: EdersEvent, fetched_at: datetime) -> str:
+    grades = tuple(grade for grade in (event.grade, event.previous_grade) if grade is not None)
+    return serialize_snapshot(EdersSnapshot((event.activity,), fetched_at, grades))
 
 
 class EdersTrackingService:
@@ -115,6 +175,12 @@ class EdersTrackingService:
         )
         if previous and previous.fetched_at >= snapshot.fetched_at:
             return previous
+        if previous and snapshot.unavailable_grade_courses:
+            snapshot = replace(
+                snapshot,
+                grades=snapshot.grades
+                + tuple(grade for grade in previous.grades if grade.course.id in snapshot.unavailable_grade_courses),
+            )
         old = {activity_key(item): item for item in previous.activities} if previous else {}
         snapshot = replace(
             snapshot,
@@ -135,6 +201,7 @@ class EdersTrackingService:
         existing = await self._repository.get_notifications(user_id)
         stored = {event.event_key: event for event in existing}
         current = {activity_key(item): item for item in snapshot.activities}
+        current_grades = {grade_key(item): item for item in snapshot.grades}
         for stored_event in existing:
             item = current.get(stored_event.activity_key)
             valid_change = (
@@ -161,7 +228,28 @@ class EdersTrackingService:
                     )
                 )
             )
-            if previous is None or (stored_event.event_key not in planned and not valid_change and not valid_reminder):
+            payload = deserialize_snapshot(stored_event.payload)
+            valid_material = (
+                stored_event.event_type in {"material_new", "material_changed"}
+                and settings.new_materials
+                and item
+                and material_signature(item) == material_signature(payload.activities[0])
+            )
+            grade = current_grades.get(stored_event.activity_key)
+            valid_grade = (
+                stored_event.event_type == "grade_changed"
+                and settings.grade_changes
+                and grade
+                and payload.grades
+                and grade_signature(grade) == grade_signature(payload.grades[0])
+            )
+            if previous is None or (
+                stored_event.event_key not in planned
+                and not valid_change
+                and not valid_reminder
+                and not valid_material
+                and not valid_grade
+            ):
                 stored_event.cancelled = True
             elif item:
                 stored_event.payload = serialize_snapshot(EdersSnapshot((item,), snapshot.fetched_at))
@@ -169,17 +257,17 @@ class EdersTrackingService:
             if key in stored:
                 if stored[key].sent_at is None:
                     stored[key].cancelled = False
-                    stored[key].payload = serialize_snapshot(EdersSnapshot((event.activity,), snapshot.fetched_at))
+                    stored[key].payload = _event_payload(event, snapshot.fetched_at)
                 continue
             self._repository.add_notification(
                 EdersNotification(
                     user_id=user_id,
                     event_key=key,
-                    activity_key=activity_key(event.activity),
+                    activity_key=grade_key(event.grade) if event.grade else activity_key(event.activity),
                     event_type=event.event_type,
                     event_time=event.event_time,
                     due_at=event.due_at,
-                    payload=serialize_snapshot(EdersSnapshot((event.activity,), snapshot.fetched_at)),
+                    payload=_event_payload(event, snapshot.fetched_at),
                     previous_deadline=event.previous_deadline,
                 )
             )
@@ -191,6 +279,8 @@ class EdersTrackingService:
         settings = await self.get_settings(user_id)
         rows = await self._repository.get_notifications(user_id)
         candidates = []
+        state = await self._repository.get_state(user_id)
+        snapshot = deserialize_snapshot(state.snapshot) if state.snapshot else None
         for row in rows:
             if row.cancelled or row.sent_at or row.due_at > now:
                 continue
@@ -199,17 +289,41 @@ class EdersTrackingService:
                 "before_2": settings.two_hours_before,
                 "opened": settings.openings,
                 "changed": settings.deadline_changes,
+                "material_new": settings.new_materials,
+                "material_changed": settings.new_materials,
+                "grade_changed": settings.grade_changes,
             }[row.event_type]
-            activity = deserialize_snapshot(row.payload).activities[0]
+            payload = deserialize_snapshot(row.payload)
+            activity = payload.activities[0]
+            if (
+                enabled
+                and row.event_type == "grade_changed"
+                and snapshot
+                and activity.course.id in snapshot.unavailable_grade_courses
+            ):
+                continue
             if (
                 not enabled
-                or (activity.closes.instant and activity.closes.instant <= now)
+                or (
+                    row.event_type in {"before_24", "before_2", "opened"}
+                    and activity.closes.instant
+                    and activity.closes.instant <= now
+                )
                 or (row.event_type == "opened" and now - row.event_time > timedelta(days=1))
             ):
                 row.cancelled = True
                 continue
             candidates.append(
-                EdersEvent(row.event_key, activity, row.event_type, row.event_time, row.due_at, row.previous_deadline)
+                EdersEvent(
+                    row.event_key,
+                    activity,
+                    row.event_type,
+                    row.event_time,
+                    row.due_at,
+                    row.previous_deadline,
+                    payload.grades[0] if payload.grades else None,
+                    payload.grades[1] if len(payload.grades) > 1 else None,
+                )
             )
         # If a prolonged outage crossed both thresholds, deliver the nearest reminder.
         nearer = {activity_key(event.activity) for event in candidates if event.event_type == "before_2"}

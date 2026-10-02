@@ -107,7 +107,8 @@ uv run python -m manashelper.main
 The app needs Postgres and the environment variables defined in `src/manashelper/config.py`: Telegram token,
 database credentials, OBIS encryption key, advertisement channel ID/link, moderation chat ID and admin chat ID.
 `DATASOURCE_HOST` defaults to the Docker service name `db`; use `localhost` when running outside Docker.
-`docker-compose.dev.yml` starts the development Postgres on port 5432. A local `.env` is read automatically and
+`docker-compose.dev.yml` starts the development Postgres on port 5432 by default. `DATASOURCE_PORT` overrides
+the published development port and the bot's database connection port. A local `.env` is read automatically and
 is ignored by Git.
 
 For local verification, use a development `.env` with `TELEGRAM_BOT_TOKEN`, `OBIS_ENCRYPTION_KEY` and

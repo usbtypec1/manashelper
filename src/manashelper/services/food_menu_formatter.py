@@ -76,20 +76,12 @@ def _format_menu_rating(daily_menu: DailyMenuModel) -> str:
     return _("food.no_ratings")
 
 
-def build_menu_day_selection(day_buttons: list[InputRichBlockButtons], *, show_usage: bool = False) -> InputRichMessage:
-    blocks: list[InputRichBlockUnion] = [InputRichBlockSectionHeading(size=2, text=_("food.day_selection_title"))]
+def format_menu_day_selection(has_dates: bool, *, show_usage: bool = False) -> str:
+    lines = [_("food.day_selection_title")]
     if show_usage:
-        blocks.append(InputRichBlockParagraph(text=_("food.rich_command_usage")))
-    blocks.append(InputRichBlockParagraph(text=_("food.choose_day") if day_buttons else _("food.no_available_menus")))
-    blocks.extend(day_buttons)
-    return InputRichMessage(blocks=blocks, skip_entity_detection=True)
-
-
-def build_menu_launcher(open_button: InputRichBlockButtons) -> InputRichMessage:
-    return InputRichMessage(
-        blocks=[InputRichBlockSectionHeading(size=2, text=_("food.day_selection_title")), open_button],
-        skip_entity_detection=True,
-    )
+        lines.append(_("food.rich_command_usage"))
+    lines.append(_("food.choose_day") if has_dates else _("food.no_available_menus"))
+    return "\n\n".join(lines)
 
 
 def build_daily_menu_rich_message(

@@ -15,6 +15,10 @@ def build_eders_keyboard(selected: DeadlineFilter, page: int, count: int) -> Inl
         (DeadlineFilter.AVAILABLE, _("eders.filter_available")),
         (DeadlineFilter.AWAITING_GRADE, _("eders.filter_awaiting")),
         (DeadlineFilter.UNKNOWN_DEADLINE, _("eders.filter_unknown")),
+        (DeadlineFilter.NOT_SUBMITTED, _("eders.filter_not_submitted")),
+        (DeadlineFilter.SUBMITTED, _("eders.filter_submitted")),
+        (DeadlineFilter.GRADED, _("eders.filter_graded")),
+        (DeadlineFilter.UNKNOWN_STATUS, _("eders.filter_unknown_status")),
     ):
         builder.button(
             text=f"✓ {label}" if value == selected else label,
@@ -38,6 +42,8 @@ def build_eders_settings_keyboard(settings: EdersSettings) -> InlineKeyboardMark
         (EdersSetting.OPENINGS, _("eders.setting_openings")),
         (EdersSetting.DEADLINE_CHANGES, _("eders.setting_changes")),
         (EdersSetting.HIDE_ARCHIVED, _("eders.setting_archived")),
+        (EdersSetting.NEW_MATERIALS, _("eders.setting_materials")),
+        (EdersSetting.GRADE_CHANGES, _("eders.setting_grades")),
     ):
         marker = "✅" if getattr(settings, setting.value) else "⬜"
         builder.button(text=f"{marker} {label}", callback_data=EdersSettingCallback(setting=setting))

@@ -11,6 +11,13 @@ class ActivityKind(StrEnum):
     QUIZ = "quiz"
     RESOURCE = "resource"
     LINK = "url"
+    PAGE = "page"
+    BOOK = "book"
+    FOLDER = "folder"
+    LESSON = "lesson"
+    H5P = "h5pactivity"
+    LABEL = "label"
+    GRADE = "grade"
 
 
 class SubmissionStatus(StrEnum):
@@ -33,6 +40,18 @@ class DeadlineFilter(StrEnum):
     AVAILABLE = "available"
     AWAITING_GRADE = "awaiting_grade"
     UNKNOWN_DEADLINE = "unknown_deadline"
+    NOT_SUBMITTED = "not_submitted"
+    SUBMITTED = "submitted"
+    GRADED = "graded"
+    UNKNOWN_STATUS = "unknown_status"
+
+
+class EdersCatalogView(StrEnum):
+    MATERIAL_COURSES = "mc"
+    MATERIALS = "m"
+    GRADE_COURSES = "gc"
+    GRADES = "g"
+    FEEDBACK = "f"
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,6 +70,29 @@ class EdersCourse:
 
 
 @dataclass(frozen=True, slots=True)
+class QuizAttempt:
+    number: str | None
+    submission: SubmissionStatus
+    grading: GradingStatus
+    grade: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class EdersGrade:
+    id: int
+    course: EdersCourse
+    name: str
+    url: str
+    grade: str | None = None
+    range: str | None = None
+    percentage: str | None = None
+    feedback: str | None = None
+    weight: str | None = None
+    contribution: str | None = None
+    visible_fields: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class EdersActivity:
     id: int
     course: EdersCourse
@@ -63,9 +105,18 @@ class EdersActivity:
     grading: GradingStatus = GradingStatus.UNKNOWN
     title_date_mismatch: bool = False
     first_seen: datetime | None = None
+    section: str = ""
+    attempts: tuple[QuizAttempt, ...] = ()
+    quiz_result: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class EdersSnapshot:
     activities: tuple[EdersActivity, ...]
     fetched_at: datetime
+    grades: tuple[EdersGrade, ...] = ()
+    # Old deadline-only snapshots must establish a separate grade baseline.
+    grades_observed: bool = False
+    catalog_observed: bool = False
+    courses: tuple[EdersCourse, ...] = ()
+    unavailable_grade_courses: tuple[int, ...] = ()

@@ -35,7 +35,7 @@ def format_study_week(week: StudyWeek) -> list[str]:
                     if not opening:
                         deadline_count += 1
             if (
-                item.kind in {ActivityKind.RESOURCE, ActivityKind.LINK}
+                item.kind not in {ActivityKind.ASSIGNMENT, ActivityKind.QUIZ, ActivityKind.GRADE}
                 and item.first_seen
                 and item.first_seen.astimezone(BISHKEK_TZ).date() == day
             ):

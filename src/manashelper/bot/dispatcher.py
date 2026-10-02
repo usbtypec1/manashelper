@@ -16,6 +16,7 @@ from manashelper.bot.routers.advertisement_moderation import router as advertise
 from manashelper.bot.routers.broadcast import router as broadcast_router
 from manashelper.bot.routers.donations import router as donations_router
 from manashelper.bot.routers.eders import router as eders_router
+from manashelper.bot.routers.eders_catalog import router as eders_catalog_router
 from manashelper.bot.routers.feedback import router as feedback_router
 from manashelper.bot.routers.food_menu import router as food_menu_router
 from manashelper.bot.routers.food_menu_cleanup import router as food_menu_cleanup_router
@@ -64,6 +65,7 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
         food_menu_cleanup_router,
         obis_router,
         eders_router,
+        eders_catalog_router,
         settings_router,
         donations_router,
         phone_numbers_router,

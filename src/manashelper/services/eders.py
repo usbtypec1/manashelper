@@ -39,11 +39,23 @@ def filter_activities(
             include = activity.submission == SubmissionStatus.SUBMITTED and activity.grading == GradingStatus.NOT_GRADED
         elif selected == DeadlineFilter.UNKNOWN_DEADLINE:
             include = closes is None
+        elif selected == DeadlineFilter.NOT_SUBMITTED:
+            include = activity.submission in {
+                SubmissionStatus.NOT_SUBMITTED,
+                SubmissionStatus.DRAFT,
+                SubmissionStatus.IN_PROGRESS,
+            }
+        elif selected == DeadlineFilter.SUBMITTED:
+            include = activity.submission == SubmissionStatus.SUBMITTED
+        elif selected == DeadlineFilter.GRADED:
+            include = activity.grading == GradingStatus.GRADED
+        elif selected == DeadlineFilter.UNKNOWN_STATUS:
+            include = activity.submission == SubmissionStatus.UNKNOWN
         else:
             # Hide dated activities from previous years. With an unknown timezone,
             # the bot cannot safely classify an item as archived.
             include = not hide_archived or closes is None or closes >= now - timedelta(days=180)
-        if include:
+        if include and (not hide_archived or closes is None or closes >= now - timedelta(days=180)):
             results.append(activity)
     return sorted(results, key=lambda item: (item.closes.instant or datetime.max.replace(tzinfo=UTC), item.name))
 

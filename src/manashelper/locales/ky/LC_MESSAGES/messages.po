@@ -937,7 +937,7 @@ msgid "food.choose_day"
 msgstr "Күндү тандаңыз:"
 
 msgid "food.no_available_menus"
-msgstr "Кийинки 7 күндүн менюсу азырынча жарыялана элек."
+msgstr "Кийинки 3 күндүн менюсу азырынча жарыялана элек."
 
 msgid "food.open_menu"
 msgstr "🍉 Менюну ачуу"
@@ -1028,3 +1028,150 @@ msgstr "Узундугу 1ден {max} белгиге чейин болгон т
 
 msgid "student_questions.use_buttons"
 msgstr "Жоопту баскычтар аркылуу тандаңыз."
+
+msgid "eders.filter_not_submitted"
+msgstr "Тапшырылган эмес"
+
+msgid "eders.filter_submitted"
+msgstr "Тапшырылган"
+
+msgid "eders.filter_graded"
+msgstr "Бааланган"
+
+msgid "eders.filter_unknown_status"
+msgstr "Тапшыруу абалы белгисиз"
+
+msgid "eders.setting_materials"
+msgstr "Жаңы жана жаңыртылган материалдар"
+
+msgid "eders.setting_grades"
+msgstr "Баалардын жана пикирлердин өзгөрүшү"
+
+msgid "eders.section"
+msgstr "Бөлүм: {value}"
+
+msgid "eders.attempt_count"
+msgstr "Аракеттер: {count}"
+
+msgid "eders.attempt"
+msgstr "{number}-аракет: {status}; баа: {grade}"
+
+msgid "eders.quiz_result"
+msgstr "Тесттин жыйынтыгы: {value}"
+
+msgid "eders.grade_notification"
+msgstr "📊 eders платформасында баа же мугалимдин пикири өзгөрдү"
+
+msgid "eders.previous_grade"
+msgstr "Мурунку баа: {value}"
+
+msgid "eders.previous_feedback"
+msgstr "Мурунку пикир: {value}"
+
+msgid "eders.material_notification"
+msgstr "📎 eders платформасында жаңы материал табылды"
+
+msgid "eders.material_changed_notification"
+msgstr "📎 eders платформасында материал жаңырды"
+
+msgid "eders.grade_value"
+msgstr "Баа: {value}"
+
+msgid "eders.grade_range"
+msgstr "Диапазон: {value}"
+
+msgid "eders.grade_percentage"
+msgstr "Пайыз: {value}"
+
+msgid "eders.grade_weight"
+msgstr "Салмак: {value}"
+
+msgid "eders.grade_contribution"
+msgstr "Курстун жыйынтыгына салым: {value}"
+
+msgid "eders.grade_feedback"
+msgstr "Мугалимдин пикири: {value}"
+
+msgid "eders.grades_header"
+msgstr "📊 eders баалар журналы"
+
+msgid "eders.materials_header"
+msgstr "📚 Предметтер жана бөлүмдөр боюнча eders материалдары"
+
+msgid "eders.catalog_empty"
+msgstr "Дал келген маалымат жок."
+
+msgid "eders.updated_at"
+msgstr "Акыркы жаңыртуу: {value} (Бишкек)"
+
+msgid "eders.grade_source_note"
+msgstr "Булак: eders. Бул OBIS системасындагы жыйынтык баалар эмес. Белгисиз же жашырылган баа нөлгө барабар эмес. Толук маалымат жана пикирлер иштин шилтемесинде бар."
+
+msgid "eders.materials_search_hint"
+msgstr "Аталыш жана тема боюнча издөө: /materials издөө сөздөрү. Шилтемелер eders платформасын ачат; файлдар жүктөлбөйт."
+
+msgid "eders.all_courses"
+msgstr "Бардык предметтер"
+
+msgid "eders.choose_course"
+msgstr "Предмет тандоо"
+
+msgid "eders.search_query"
+msgstr "Издөө: {value}"
+
+msgid "eders.search_too_long"
+msgstr "Издөө суроосу 100 белгиден ашпашы керек."
+
+msgid "commands.materials"
+msgstr "eders платформасынан предметтердин материалдарын табуу"
+
+msgid "commands.eders_grades"
+msgstr "eders баалары жана мугалимдердин пикирлери"
+
+msgid "commands.submissions"
+msgstr "Тапшырмалардын жана тесттердин тапшырылуу абалы"
+
+msgid "eders.feedback_header"
+msgstr "eders платформасындагы мугалимдин пикири"
+
+msgid "eders.back_to_grade"
+msgstr "Баага кайтуу"
+
+msgid "eders.full_feedback"
+msgstr "Толук пикир"
+
+msgid "eders.grades_unavailable"
+msgstr "Тандалган айрым предметтердин баалар журналы eders платформасында жашырылган же жеткиликсиз."
+
+msgid "eders.material_type"
+msgstr "Түрү: {value}"
+
+msgid "eders.kind_assignment"
+msgstr "Тапшырма"
+
+msgid "eders.kind_quiz"
+msgstr "Тест"
+
+msgid "eders.kind_resource"
+msgstr "Файл"
+
+msgid "eders.kind_link"
+msgstr "Шилтеме"
+
+msgid "eders.kind_page"
+msgstr "Барак"
+
+msgid "eders.kind_book"
+msgstr "Китеп"
+
+msgid "eders.kind_folder"
+msgstr "Папка"
+
+msgid "eders.kind_lesson"
+msgstr "Сабак"
+
+msgid "eders.kind_h5p"
+msgstr "Интерактивдүү материал"
+
+msgid "eders.kind_label"
+msgstr "Тексттик блок"

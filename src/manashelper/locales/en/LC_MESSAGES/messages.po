@@ -935,7 +935,7 @@ msgid "food.choose_day"
 msgstr "Choose a day:"
 
 msgid "food.no_available_menus"
-msgstr "No menus have been published for the next 7 days yet."
+msgstr "No menus have been published for the next 3 days yet."
 
 msgid "food.open_menu"
 msgstr "🍉 Open cafeteria menu"
@@ -1026,3 +1026,150 @@ msgstr "Please send text between 1 and {max} characters long."
 
 msgid "student_questions.use_buttons"
 msgstr "Please choose an answer using the buttons."
+
+msgid "eders.filter_not_submitted"
+msgstr "Not submitted"
+
+msgid "eders.filter_submitted"
+msgstr "Submitted"
+
+msgid "eders.filter_graded"
+msgstr "Graded"
+
+msgid "eders.filter_unknown_status"
+msgstr "Unknown submission status"
+
+msgid "eders.setting_materials"
+msgstr "New and updated materials"
+
+msgid "eders.setting_grades"
+msgstr "Grade and feedback changes"
+
+msgid "eders.section"
+msgstr "Section: {value}"
+
+msgid "eders.attempt_count"
+msgstr "Attempts: {count}"
+
+msgid "eders.attempt"
+msgstr "Attempt {number}: {status}; grade: {grade}"
+
+msgid "eders.quiz_result"
+msgstr "Quiz result: {value}"
+
+msgid "eders.grade_notification"
+msgstr "📊 An eders grade or teacher comment has changed"
+
+msgid "eders.previous_grade"
+msgstr "Previous grade: {value}"
+
+msgid "eders.previous_feedback"
+msgstr "Previous comment: {value}"
+
+msgid "eders.material_notification"
+msgstr "📎 Newly discovered material in eders"
+
+msgid "eders.material_changed_notification"
+msgstr "📎 Material updated in eders"
+
+msgid "eders.grade_value"
+msgstr "Grade: {value}"
+
+msgid "eders.grade_range"
+msgstr "Range: {value}"
+
+msgid "eders.grade_percentage"
+msgstr "Percentage: {value}"
+
+msgid "eders.grade_weight"
+msgstr "Weight: {value}"
+
+msgid "eders.grade_contribution"
+msgstr "Contribution to course total: {value}"
+
+msgid "eders.grade_feedback"
+msgstr "Teacher comment: {value}"
+
+msgid "eders.grades_header"
+msgstr "📊 eders gradebook"
+
+msgid "eders.materials_header"
+msgstr "📚 eders materials by course and section"
+
+msgid "eders.catalog_empty"
+msgstr "No matching items."
+
+msgid "eders.updated_at"
+msgstr "Last updated: {value} (Bishkek)"
+
+msgid "eders.grade_source_note"
+msgstr "Source: eders. These are not the final OBIS grades. Unknown or hidden grades are not zero. Full details and comments are available via the item link."
+
+msgid "eders.materials_search_hint"
+msgstr "Search titles and topics: /materials search words. Links open eders; files are not downloaded."
+
+msgid "eders.all_courses"
+msgstr "All courses"
+
+msgid "eders.choose_course"
+msgstr "Choose a course"
+
+msgid "eders.search_query"
+msgstr "Search: {value}"
+
+msgid "eders.search_too_long"
+msgstr "Please keep the search query within 100 characters."
+
+msgid "commands.materials"
+msgstr "Find eders course materials"
+
+msgid "commands.eders_grades"
+msgstr "View eders grades and teacher comments"
+
+msgid "commands.submissions"
+msgstr "View assignment and quiz submission status"
+
+msgid "eders.feedback_header"
+msgstr "Teacher comment from eders"
+
+msgid "eders.back_to_grade"
+msgstr "Back to grade"
+
+msgid "eders.full_feedback"
+msgstr "Full comment"
+
+msgid "eders.grades_unavailable"
+msgstr "Grade reports for some selected courses are hidden or unavailable in eders."
+
+msgid "eders.material_type"
+msgstr "Type: {value}"
+
+msgid "eders.kind_assignment"
+msgstr "Assignment"
+
+msgid "eders.kind_quiz"
+msgstr "Quiz"
+
+msgid "eders.kind_resource"
+msgstr "File"
+
+msgid "eders.kind_link"
+msgstr "Link"
+
+msgid "eders.kind_page"
+msgstr "Page"
+
+msgid "eders.kind_book"
+msgstr "Book"
+
+msgid "eders.kind_folder"
+msgstr "Folder"
+
+msgid "eders.kind_lesson"
+msgstr "Lesson"
+
+msgid "eders.kind_h5p"
+msgstr "Interactive content"
+
+msgid "eders.kind_label"
+msgstr "Text block"

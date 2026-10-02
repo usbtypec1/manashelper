@@ -108,11 +108,11 @@ async def test_ordinary_group_command_uses_day_selector_when_bot_is_not_admin(mo
     service, cleanup = AsyncMock(), AsyncMock()
     with i18n.context(), i18n.use_locale("en"):
         await cmd_yemek(incoming, CommandObject(command="yemek", args="today"), service, cleanup)
-    prompt = _methods(request, SendRichMessage)[0]
+    prompt = _methods(request, SendMessage)[0]
     assert prompt.ephemeral_message_parameters is None
-    rows = [block for block in prompt.rich_message.blocks if block.type == "buttons"]
+    rows = prompt.reply_markup.inline_keyboard
     assert len(rows) == 1
-    assert rows[0].buttons[0].callback_data == FoodMenuOpenCallback().pack()
+    assert rows[0][0].callback_data == FoodMenuOpenCallback().pack()
     service.get_available_dates.assert_not_awaited()
     service.get_daily_menu_by_skipping_days.assert_not_awaited()
     cleanup.schedule_cleanup.assert_not_awaited()
@@ -162,23 +162,23 @@ async def test_ephemeral_command_usage_and_day_picker_remain_private(monkeypatch
     ).as_(bot)
     service = AsyncMock()
     today = date(2026, 10, 1)
-    service.get_available_dates.return_value = DailyMenuAvailability(today, [today, today + timedelta(days=6)])
+    service.get_available_dates.return_value = DailyMenuAvailability(today, [today, today + timedelta(days=2)])
     with i18n.context(), i18n.use_locale("en"):
         await cmd_yemek(incoming, CommandObject(command="yemek", args=args), service, AsyncMock())
-    prompt = _methods(request, SendRichMessage)[0]
+    prompt = _methods(request, SendMessage)[0]
     assert prompt.ephemeral_message_parameters.receiver_user_id == USER.id
     assert prompt.reply_parameters.ephemeral_message_id == 11
-    rows = [block for block in prompt.rich_message.blocks if block.type == "buttons"]
-    assert [FoodMenuDateCallback.unpack(row.buttons[0].callback_data).menu_date for row in rows] == [
+    rows = prompt.reply_markup.inline_keyboard
+    assert [FoodMenuDateCallback.unpack(row[0].callback_data).menu_date for row in rows] == [
         today.isoformat(),
-        (today + timedelta(days=6)).isoformat(),
+        (today + timedelta(days=2)).isoformat(),
     ]
     assert prompt.reply_parameters.message_id is None
     assert not _methods(request, GetChatMember)
 
 
-@pytest.mark.parametrize("days", [0, 1, 7])
-async def test_open_button_shows_ephemeral_rich_day_selection_without_admin_rights(monkeypatch, days) -> None:
+@pytest.mark.parametrize("days", [0, 1, 3])
+async def test_open_button_shows_ephemeral_inline_day_selection_without_admin_rights(monkeypatch, days) -> None:
     bot, request = _bot(monkeypatch)
     message = Message(message_id=42, date=0, chat=Chat(id=CHAT_ID, type="supergroup")).as_(bot)
     callback = CallbackQuery(id="open-menu", from_user=USER, chat_instance="chat", message=message).as_(bot)
@@ -188,16 +188,16 @@ async def test_open_button_shows_ephemeral_rich_day_selection_without_admin_righ
     service.get_available_dates.return_value = DailyMenuAvailability(today, dates)
     with i18n.context(), i18n.use_locale("en"):
         await on_food_menu_open_callback(callback, service)
-    sent = _methods(request, SendRichMessage)[0]
+    sent = _methods(request, SendMessage)[0]
     assert sent.ephemeral_message_parameters.receiver_user_id == USER.id
     assert sent.ephemeral_message_parameters.callback_query_id == callback.id
     assert sent.ephemeral_message_parameters.replace_callback_query_message is True
-    rows = [block for block in sent.rich_message.blocks if block.type == "buttons"]
-    assert [FoodMenuDateCallback.unpack(row.buttons[0].callback_data).menu_date for row in rows] == [
+    rows = sent.reply_markup.inline_keyboard if sent.reply_markup else []
+    assert [FoodMenuDateCallback.unpack(row[0].callback_data).menu_date for row in rows] == [
         menu_date.isoformat() for menu_date in dates
     ]
     if not days:
-        assert "No menus" in sent.rich_message.blocks[1].text
+        assert "No menus" in sent.text
     assert not _methods(request, GetChatMember)
 
 
@@ -233,11 +233,11 @@ async def test_day_picker_is_ephemeral_in_groups_and_normal_in_private_chat(monk
     service.get_available_dates.return_value = DailyMenuAvailability(today, [today])
     with i18n.context(), i18n.use_locale("en"):
         await cmd_yemek(incoming, CommandObject(command="yemek"), service, AsyncMock())
-    prompt = _methods(request, SendRichMessage)[0]
+    prompt = _methods(request, SendMessage)[0]
     assert (prompt.ephemeral_message_parameters is None) is (chat_type == "private")
     assert prompt.reply_parameters is None
-    rows = [block for block in prompt.rich_message.blocks if block.type == "buttons"]
-    assert rows[0].buttons[0].callback_data == FoodMenuDateCallback(menu_date=today.isoformat()).pack()
+    rows = prompt.reply_markup.inline_keyboard
+    assert rows[0][0].callback_data == FoodMenuDateCallback(menu_date=today.isoformat()).pack()
 
 
 async def test_ephemeral_rating_uses_ephemeral_edit_and_preserves_personal_selection(monkeypatch) -> None:

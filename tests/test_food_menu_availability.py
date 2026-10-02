@@ -18,7 +18,7 @@ class _Clock(datetime):
         return datetime(2097, 12, 28, 22, 30, tzinfo=UTC).astimezone(tz or BISHKEK_TZ)
 
 
-async def test_availability_includes_only_published_dates_in_seven_day_window_and_keeps_views(
+async def test_availability_includes_only_published_dates_in_three_day_window_and_keeps_views(
     session: AsyncSession, monkeypatch
 ) -> None:
     monkeypatch.setattr(daily_menu_module, "datetime", _Clock)
@@ -32,7 +32,7 @@ async def test_availability_includes_only_published_dates_in_seven_day_window_an
     service = DailyMenuService(DailyMenuRepository(session), DailyMenuRatingRepository(session))
     available = await service.get_available_dates()
     assert available.today == today
-    assert available.dates == [today + timedelta(days=offset) for offset in (0, 2, 4, 6)]
+    assert available.dates == [today + timedelta(days=offset) for offset in (0, 2)]
     for menu in menus:
         await session.refresh(menu)
         assert menu.views_count == 23
@@ -44,18 +44,18 @@ async def test_availability_is_empty_when_no_menu_is_published(session: AsyncSes
     assert (await service.get_available_dates()).dates == []
 
 
-def test_all_seven_day_buttons_contain_fixed_dates_and_fit_callback_limit() -> None:
+def test_three_day_inline_buttons_contain_fixed_dates_and_fit_callback_limit() -> None:
     from manashelper.bot.callback_data import FoodMenuDateCallback
-    from manashelper.bot.keyboards.food_menu import build_menu_day_buttons
+    from manashelper.bot.keyboards.food_menu import build_menu_day_keyboard
 
     today = _Clock.now().date()
-    dates = [today + timedelta(days=offset) for offset in range(7)]
+    dates = [today + timedelta(days=offset) for offset in range(3)]
     for locale in ("en", "ru", "ky", "tr", "zh"):
         with i18n.context(), i18n.use_locale(locale):
-            rows = build_menu_day_buttons(dates, today)
+            rows = build_menu_day_keyboard(dates, today).inline_keyboard
             for menu_date, row in zip(dates, rows, strict=True):
-                assert len(row.buttons) == 1
-                button = row.buttons[0]
+                assert len(row) == 1
+                button = row[0]
                 assert menu_date.strftime("%d.%m") in button.text
                 assert FoodMenuDateCallback.unpack(button.callback_data).menu_date == menu_date.isoformat()
                 assert len(button.callback_data.encode()) <= 64

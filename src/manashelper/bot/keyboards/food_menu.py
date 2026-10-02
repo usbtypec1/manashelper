@@ -31,24 +31,21 @@ def _day_label(menu_date: date, today: date) -> str:
     return f"{name} · {menu_date:%d.%m}"
 
 
-def build_menu_day_buttons(menu_dates: list[date], today: date) -> list[InputRichBlockButtons]:
-    return [
-        InputRichBlockButtons(
-            buttons=[
-                RichMessageButton(
-                    text=_day_label(menu_date, today),
-                    callback_data=FoodMenuDateCallback(menu_date=menu_date.isoformat()).pack(),
-                )
-            ]
+def build_menu_day_keyboard(menu_dates: list[date], today: date) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    for menu_date in menu_dates:
+        builder.button(
+            text=_day_label(menu_date, today),
+            callback_data=FoodMenuDateCallback(menu_date=menu_date.isoformat()),
         )
-        for menu_date in menu_dates
-    ]
+    builder.adjust(1)
+    return builder.as_markup()
 
 
-def build_menu_open_button() -> InputRichBlockButtons:
-    return InputRichBlockButtons(
-        buttons=[RichMessageButton(text=_("food.open_menu"), callback_data=FoodMenuOpenCallback().pack())]
-    )
+def build_menu_open_keyboard() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(text=_("food.open_menu"), callback_data=FoodMenuOpenCallback())
+    return builder.as_markup()
 
 
 def build_food_menu_settings_buttons(*, include_notifications: bool = False) -> list[RichMessageButton]:

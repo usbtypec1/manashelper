@@ -217,7 +217,12 @@ def test_week_combines_classes_opens_deadlines_and_new_materials() -> None:
     assert all(len(chunk) <= 3500 for chunk in chunks)
 
 
-async def test_client_authenticates_once_and_retries_expired_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("hidden_grades", [False, True])
+@pytest.mark.parametrize("login_landing", ["/", "/vs-ders/taken-lessons"])
+@pytest.mark.parametrize("eders_landing", ["/my/", ""])
+async def test_client_authenticates_once_and_retries_expired_snapshot(
+    monkeypatch: pytest.MonkeyPatch, hidden_grades, login_landing, eders_landing
+) -> None:
     requests = []
     clients = []
     expired = False
@@ -229,14 +234,14 @@ async def test_client_authenticates_once_and_retries_expired_snapshot(monkeypatc
         if path == "/site/login":
             if request.method == "GET":
                 return httpx.Response(200, text='<form><input name="_csrf" value="test"></form>')
-            return httpx.Response(302, headers={"location": "/"})
-        if request.url.host == "obistest.manas.edu.kg" and path == "/":
+            return httpx.Response(302, headers={"location": login_landing})
+        if request.url.host == "obistest.manas.edu.kg" and path == login_landing:
             return httpx.Response(200, text="Logged in")
         if path == "/site/eders":
             return httpx.Response(302, headers={"location": f"{EDERS_BASE_URL}/auth/userkey/login.php?key=fake-secret"})
         if path == "/auth/userkey/login.php":
-            return httpx.Response(303, headers={"location": "/my/"})
-        if path == "/my/":
+            return httpx.Response(303, headers={"location": EDERS_BASE_URL + eders_landing})
+        if request.url.host == "eders.manas.edu.kg" and path == (eders_landing or "/"):
             return httpx.Response(200, text="Welcome")
         if path == "/user/profile.php":
             return httpx.Response(200, text=fixture("profile"))
@@ -256,6 +261,10 @@ async def test_client_authenticates_once_and_retries_expired_snapshot(monkeypatc
             return httpx.Response(200, text=fixture("assignment"))
         if path == "/mod/quiz/view.php":
             return httpx.Response(200, text=fixture("quiz"))
+        if path == "/grade/report/user/index.php":
+            if hidden_grades:
+                return httpx.Response(403, text="Grades unavailable")
+            return httpx.Response(200, text=fixture("grades"))
         raise AssertionError(f"Unexpected request: {request.method} {path}")
 
     def factory():
@@ -266,6 +275,8 @@ async def test_client_authenticates_once_and_retries_expired_snapshot(monkeypatc
     monkeypatch.setattr(eders_client, "_new_http_client", factory)
     result = await EdersClient().fetch_snapshot("fake-student", "fake-password")
     assert len(result.activities) == 3
+    assert result.unavailable_grade_courses == ((10, 11) if hidden_grades else ())
+    assert len(result.grades) == (0 if hidden_grades else 4)
     assert all(client.is_closed for client in clients)
     assert len(clients) == 2
     assert all(

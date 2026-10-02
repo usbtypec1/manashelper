@@ -931,7 +931,7 @@ msgid "food.choose_day"
 msgstr "Bir gün seçin:"
 
 msgid "food.no_available_menus"
-msgstr "Önümüzdeki 7 günün menüleri henüz yayınlanmadı."
+msgstr "Önümüzdeki 3 günün menüleri henüz yayınlanmadı."
 
 msgid "food.open_menu"
 msgstr "🍉 Menüyü aç"
@@ -1022,3 +1022,150 @@ msgstr "Lütfen 1 ile {max} karakter arasında bir metin gönderin."
 
 msgid "student_questions.use_buttons"
 msgstr "Lütfen düğmeleri kullanarak bir cevap seçin."
+
+msgid "eders.filter_not_submitted"
+msgstr "Teslim edilmedi"
+
+msgid "eders.filter_submitted"
+msgstr "Teslim edildi"
+
+msgid "eders.filter_graded"
+msgstr "Not verildi"
+
+msgid "eders.filter_unknown_status"
+msgstr "Teslim durumu bilinmiyor"
+
+msgid "eders.setting_materials"
+msgstr "Yeni ve güncellenen materyaller"
+
+msgid "eders.setting_grades"
+msgstr "Not ve yorum değişiklikleri"
+
+msgid "eders.section"
+msgstr "Bölüm: {value}"
+
+msgid "eders.attempt_count"
+msgstr "Denemeler: {count}"
+
+msgid "eders.attempt"
+msgstr "Deneme {number}: {status}; not: {grade}"
+
+msgid "eders.quiz_result"
+msgstr "Sınav sonucu: {value}"
+
+msgid "eders.grade_notification"
+msgstr "📊 eders üzerinde bir not veya öğretmen yorumu değişti"
+
+msgid "eders.previous_grade"
+msgstr "Önceki not: {value}"
+
+msgid "eders.previous_feedback"
+msgstr "Önceki yorum: {value}"
+
+msgid "eders.material_notification"
+msgstr "📎 eders üzerinde yeni materyal bulundu"
+
+msgid "eders.material_changed_notification"
+msgstr "📎 eders üzerinde materyal güncellendi"
+
+msgid "eders.grade_value"
+msgstr "Not: {value}"
+
+msgid "eders.grade_range"
+msgstr "Aralık: {value}"
+
+msgid "eders.grade_percentage"
+msgstr "Yüzde: {value}"
+
+msgid "eders.grade_weight"
+msgstr "Ağırlık: {value}"
+
+msgid "eders.grade_contribution"
+msgstr "Ders toplamına katkı: {value}"
+
+msgid "eders.grade_feedback"
+msgstr "Öğretmen yorumu: {value}"
+
+msgid "eders.grades_header"
+msgstr "📊 eders not defteri"
+
+msgid "eders.materials_header"
+msgstr "📚 Ders ve bölümlere göre eders materyalleri"
+
+msgid "eders.catalog_empty"
+msgstr "Eşleşen kayıt yok."
+
+msgid "eders.updated_at"
+msgstr "Son güncelleme: {value} (Bişkek)"
+
+msgid "eders.grade_source_note"
+msgstr "Kaynak: eders. Bunlar OBIS final notları değildir. Bilinmeyen veya gizli not sıfır değildir. Tüm bilgiler ve yorumlar çalışma bağlantısında bulunur."
+
+msgid "eders.materials_search_hint"
+msgstr "Başlık ve konu araması: /materials arama sözcükleri. Bağlantılar eders sayfasını açar; dosyalar indirilmez."
+
+msgid "eders.all_courses"
+msgstr "Tüm dersler"
+
+msgid "eders.choose_course"
+msgstr "Ders seç"
+
+msgid "eders.search_query"
+msgstr "Arama: {value}"
+
+msgid "eders.search_too_long"
+msgstr "Arama sorgusu en fazla 100 karakter olmalıdır."
+
+msgid "commands.materials"
+msgstr "eders ders materyallerini ara"
+
+msgid "commands.eders_grades"
+msgstr "eders notları ve öğretmen yorumları"
+
+msgid "commands.submissions"
+msgstr "Ödev ve sınav teslim durumları"
+
+msgid "eders.feedback_header"
+msgstr "eders öğretmen yorumu"
+
+msgid "eders.back_to_grade"
+msgstr "Nota dön"
+
+msgid "eders.full_feedback"
+msgstr "Tam yorum"
+
+msgid "eders.grades_unavailable"
+msgstr "Seçilen bazı derslerin not raporları eders üzerinde gizli veya erişilemez."
+
+msgid "eders.material_type"
+msgstr "Tür: {value}"
+
+msgid "eders.kind_assignment"
+msgstr "Ödev"
+
+msgid "eders.kind_quiz"
+msgstr "Sınav"
+
+msgid "eders.kind_resource"
+msgstr "Dosya"
+
+msgid "eders.kind_link"
+msgstr "Bağlantı"
+
+msgid "eders.kind_page"
+msgstr "Sayfa"
+
+msgid "eders.kind_book"
+msgstr "Kitap"
+
+msgid "eders.kind_folder"
+msgstr "Klasör"
+
+msgid "eders.kind_lesson"
+msgstr "Ders"
+
+msgid "eders.kind_h5p"
+msgstr "Etkileşimli içerik"
+
+msgid "eders.kind_label"
+msgstr "Metin bloğu"

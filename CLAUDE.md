@@ -116,7 +116,8 @@ authorized, see "Advertising platform" below), `ADMIN_CHAT_ID` (the chat id of t
 feedback and for triggering broadcasts — the bot must be a member there; anyone acting from this chat is treated
 as authorized, see "Feedback & broadcast" below), and optionally `DATASOURCE_HOST` (defaults to `db`, the
 docker-compose service name — set to `localhost` for local dev outside Docker). `docker-compose.dev.yml` starts
-only Postgres, exposed on host port `5432`. A local `.env` file (gitignored) is read automatically via
+only Postgres, exposed on host port `5432` by default. `DATASOURCE_PORT` overrides the published development
+port and the bot's connection port. A local `.env` file (gitignored) is read automatically via
 `pydantic-settings`.
 
 CI/CD (`.github/workflows/ci-cd.yml`): the `test` job (lint + type-check + tests against a Postgres service
@@ -426,6 +427,25 @@ ID as the primary key. A second submission requires explicit confirmation and re
 only when the new survey finishes; cancellation leaves the existing response intact. Incomplete drafts
 use FSM memory and are lost on restart. Callback session IDs reject buttons from previous runs.
 The survey router precedes the advertisement deep-link router, which otherwise claims every start payload.
+
+### eders deadlines, materials and grades
+
+`/eders` and `/submissions` show assignment and quiz statuses with deadline and submission filters.
+`/week` combines the tracked timetable, upcoming deadlines and recently observed materials.
+`/materials [query]` searches material names, sections and courses; `/eders_grades` shows the separate
+Moodle journal, including optional grading metadata and paginated full feedback. Quiz attempts and their
+individual grades remain separate from the overall quiz result. Missing grades are distinct from zero.
+
+The client authenticates through OBIS SSO per fetch and reads allowed course, activity, profile and own
+grade-report pages. Resource files are not downloaded. Snapshots and notification queues are persisted;
+first observations establish a baseline without flooding users. `/eders_settings` controls deadline,
+opening, submission, new-material and grade/comment notifications. A hidden grade journal leaves deadline
+and material collection available and preserves the previous grade baseline for subsequent comparisons.
+
+Parser, handler and notification tests use synthetic Moodle HTML and local Postgres. Live snapshot
+collection was also verified on one connected account; markup across multiple educational programmes
+still needs verification. Priority 3 of the feature
+specification remains outside this implementation.
 
 ## Roadmap (not yet ported from the Java version)
 

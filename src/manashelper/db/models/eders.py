@@ -17,6 +17,8 @@ class EdersState(Base):
     openings: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     deadline_changes: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     hide_archived: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    new_materials: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    grade_changes: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
 
 
 class EdersNotification(Base):

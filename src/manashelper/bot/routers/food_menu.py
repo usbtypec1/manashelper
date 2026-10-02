@@ -19,16 +19,15 @@ from manashelper.bot.callback_data import (
 from manashelper.bot.filters.translated_text import TranslatedText
 from manashelper.bot.keyboards.food_menu import (
     build_food_menu_settings_buttons,
-    build_menu_day_buttons,
-    build_menu_open_button,
+    build_menu_day_keyboard,
+    build_menu_open_keyboard,
     build_menu_rating_buttons,
 )
 from manashelper.services.daily_menu import BISHKEK_TZ, DailyMenuNotFoundError, DailyMenuService
 from manashelper.services.food_menu_cleanup_settings import FoodMenuCleanupSettingsService
 from manashelper.services.food_menu_formatter import (
     build_daily_menu_rich_message,
-    build_menu_day_selection,
-    build_menu_launcher,
+    format_menu_day_selection,
     format_not_found,
     refresh_daily_menu_rating,
 )
@@ -67,7 +66,7 @@ async def _response_parameters(
 
 
 async def _send_menu_launcher(message: Message) -> None:
-    await message.answer_rich(rich_message=build_menu_launcher(build_menu_open_button()))
+    await message.answer(_("food.day_selection_title"), reply_markup=build_menu_open_keyboard())
 
 
 async def _show_day_prompt(
@@ -82,10 +81,9 @@ async def _show_day_prompt(
         await _send_menu_launcher(message)
         return
     availability = await daily_menu_service.get_available_dates()
-    await message.answer_rich(
-        rich_message=build_menu_day_selection(
-            build_menu_day_buttons(availability.dates, availability.today), show_usage=show_usage
-        ),
+    await message.answer(
+        format_menu_day_selection(bool(availability.dates), show_usage=show_usage),
+        reply_markup=build_menu_day_keyboard(availability.dates, availability.today) if availability.dates else None,
         ephemeral_message_parameters=parameters,
         reply_parameters=reply_parameters,
     )
