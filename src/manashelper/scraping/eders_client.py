@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import UTC, datetime
 from urllib.parse import parse_qs, urljoin, urlsplit
 
@@ -9,14 +10,13 @@ from manashelper.scraping.eders_parser import (
     parse_account_timezone,
     parse_activity_details,
     parse_course_activities,
-    parse_courses,
+    parse_enrolled_courses,
 )
 from manashelper.scraping.eders_urls import EDERS_BASE_URL, EdersUnsafeUrlError, safe_eders_url
-from manashelper.scraping.obis_client import OBIS_BASE_URL, OBIS_LOGIN_PATH, ObisLoginError
-from manashelper.scraping.obis_parser import parse_login_page_csrf_token
-from manashelper.services.eders_models import ActivityKind, EdersSnapshot
+from manashelper.scraping.obis_client import OBIS_BASE_URL, OBIS_LOGIN_PATH, _login, _new_http_client
+from manashelper.services.eders_models import ActivityKind, EdersCourse, EdersSnapshot
 
-OVERVIEW_URL = f"{EDERS_BASE_URL}/grade/report/overview/index.php"
+COURSES_METHOD = "core_course_get_enrolled_courses_by_timeline_classification"
 
 
 class EdersFetchError(Exception):
@@ -25,15 +25,6 @@ class EdersFetchError(Exception):
 
 class EdersSessionExpiredError(EdersFetchError):
     pass
-
-
-def _new_http_client() -> httpx.AsyncClient:
-    # Redirects are checked before following; the SSO key lives only in this client.
-    # httpx logs full URLs at INFO, and httpcore can log request headers at DEBUG.
-    # Neither library may log the temporary authentication session.
-    logging.getLogger("httpx").setLevel(logging.WARNING)
-    logging.getLogger("httpcore").setLevel(logging.WARNING)
-    return httpx.AsyncClient(follow_redirects=False, timeout=15.0)
 
 
 def _validate_url(url: str, phase: str) -> None:
@@ -84,7 +75,9 @@ async def _request(
             request_url = url
             if phase == "read":
                 request_url = str(httpx.URL(url).copy_add_param("lang", "en"))
-            response = await client.request("POST" if data is not None else "GET", request_url, data=data)
+            response = await client.request(
+                "POST" if data is not None else "GET", request_url, data=data, follow_redirects=False
+            )
         except httpx.HTTPError:
             # httpx exceptions include the request URL, which can contain an SSO key.
             raise EdersFetchError("Eders request failed") from None
@@ -110,53 +103,110 @@ async def _request(
     raise EdersFetchError("Too many authentication redirects")
 
 
-async def _authenticate(client: httpx.AsyncClient, student_number: str, plain_password: str) -> None:
-    login_url = f"{OBIS_BASE_URL}{OBIS_LOGIN_PATH}"
-    page = await _request(client, login_url, "login")
-    token = parse_login_page_csrf_token(page.text)
-    response = await _request(
-        client,
-        login_url,
-        "login",
-        {"LoginForm[username]": student_number, "LoginForm[password_hash]": plain_password, "_csrf": token},
-    )
-    if response.url.path.rstrip("/") == OBIS_LOGIN_PATH:
-        raise ObisLoginError("Invalid OBIS credentials")
-    response = await _request(client, f"{OBIS_BASE_URL}/site/eders", "sso")
-    if response.url.host == urlsplit(OBIS_BASE_URL).hostname:
-        # Some OBIS deployments render the SSO link instead of redirecting to it.
-        for link in BeautifulSoup(response.text, "lxml").select("a[href]"):
-            href = link.get("href")
-            if not isinstance(href, str):
-                continue
-            url = urljoin(str(response.url), href)
-            if urlsplit(url).path == "/auth/userkey/login.php":
-                await _request(client, url, "sso")
-                return
-        raise EdersFetchError("Missing OBIS to eders transition")
+def _sesskey(html: str) -> str:
+    soup = BeautifulSoup(html, "lxml")
+    for link in soup.select("a[href]"):
+        href = link.get("href")
+        if isinstance(href, str) and urlsplit(urljoin(EDERS_BASE_URL, href)).netloc == "eders.manas.edu.kg":
+            keys = parse_qs(urlsplit(href).query).get("sesskey", [])
+            if len(keys) == 1 and re.fullmatch(r"[A-Za-z0-9]+", keys[0]):
+                return keys[0]
+    match = re.search(r'"sesskey"\s*:\s*"([A-Za-z0-9]+)"', html)
+    if match:
+        return match[1]
+    raise EdersSessionExpiredError("Missing Eders session key")
 
 
 class EdersClient:
+    async def login(self, client: httpx.AsyncClient, student_number: str, plain_password: str) -> str:
+        # Same cookie jar and OBIS login flow as the export script.
+        logging.getLogger("httpx").setLevel(logging.WARNING)
+        logging.getLogger("httpcore").setLevel(logging.WARNING)
+        try:
+            await _login(client, student_number, plain_password)
+            response = await _request(client, f"{OBIS_BASE_URL}/site/eders", "sso")
+            # Some deployments render the SSO link rather than redirecting.
+            if response.url.host == urlsplit(OBIS_BASE_URL).hostname:
+                for link in BeautifulSoup(response.text, "lxml").select("a[href]"):
+                    href = link.get("href")
+                    if isinstance(href, str) and urlsplit(href).path == "/auth/userkey/login.php":
+                        response = await _request(client, urljoin(str(response.url), href), "sso")
+                        break
+        except httpx.HTTPError:
+            raise EdersFetchError("OBIS authentication request failed") from None
+        return _sesskey(response.text)
+
+    async def _courses(self, client: httpx.AsyncClient, sesskey: str) -> list[EdersCourse]:
+        courses: dict[int, EdersCourse] = {}
+        offset = 0
+        while True:
+            try:
+                response = await client.post(
+                    f"{EDERS_BASE_URL}/lib/ajax/service.php",
+                    params={"sesskey": sesskey, "info": COURSES_METHOD},
+                    json=[
+                        {
+                            "index": 0,
+                            "methodname": COURSES_METHOD,
+                            "args": {
+                                "offset": offset,
+                                "limit": 0,
+                                "classification": "all",
+                                "sort": "fullname",
+                                "customfieldname": "",
+                                "customfieldvalue": "",
+                                "requiredfields": [
+                                    "id",
+                                    "fullname",
+                                    "shortname",
+                                    "showcoursecategory",
+                                    "showshortname",
+                                    "visible",
+                                    "enddate",
+                                ],
+                            },
+                        }
+                    ],
+                    follow_redirects=False,
+                )
+                if response.is_redirect:
+                    raise EdersSessionExpiredError("Eders AJAX session expired")
+                response.raise_for_status()
+                payload = response.json()
+            except (httpx.HTTPError, ValueError):
+                raise EdersFetchError("Could not load enrolled Eders courses") from None
+            if isinstance(payload, list) and payload and isinstance(payload[0], dict):
+                error = payload[0].get("exception", {})
+                if isinstance(error, dict) and error.get("errorcode") in {"invalidsesskey", "requireloginerror"}:
+                    raise EdersSessionExpiredError("Eders AJAX session expired")
+            batch, next_offset = parse_enrolled_courses(payload)
+            courses.update((course.id, course) for course in batch)
+            if next_offset is None or next_offset < 0 or not batch:
+                return list(courses.values())
+            if next_offset <= offset:
+                raise EdersFetchError("Invalid Eders course pagination")
+            offset = next_offset
+
     async def fetch_snapshot(self, student_number: str, plain_password: str) -> EdersSnapshot:
         # One short-lived session per snapshot, one retry of the whole snapshot.
         # Partial results must not be treated as a successful observation.
         for attempt in range(2):
             try:
                 async with _new_http_client() as client:
-                    await _authenticate(client, student_number, plain_password)
+                    sesskey = await self.login(client, student_number, plain_password)
                     profile = await _request(client, f"{EDERS_BASE_URL}/user/profile.php", "read")
                     timezone = parse_account_timezone(profile.text)
-                    overview = await _request(client, OVERVIEW_URL, "read")
-                    courses = parse_courses(overview.text)
+                    courses = await self._courses(client, sesskey)
                     activities = []
                     for course in courses:
                         page = await _request(client, f"{EDERS_BASE_URL}/course/view.php?id={course.id}", "read")
-                        for activity in parse_course_activities(page.text, course, timezone):
+                        course_timezone = parse_account_timezone(page.text) or timezone
+                        for activity in parse_course_activities(page.text, course, course_timezone):
                             if activity.kind in {ActivityKind.ASSIGNMENT, ActivityKind.QUIZ}:
                                 details = await _request(client, activity.url, "read")
-                                activity = parse_activity_details(details.text, activity, timezone)
+                                activity = parse_activity_details(details.text, activity, course_timezone)
                             activities.append(activity)
-                    return EdersSnapshot(tuple(activities), datetime.now(UTC))
+                    return EdersSnapshot(tuple(activities), datetime.now(UTC), courses=tuple(courses))
             except EdersSessionExpiredError:
                 if attempt:
                     raise

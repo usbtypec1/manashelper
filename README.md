@@ -23,7 +23,10 @@ You just chat with it on Telegram like you would with a friend, tapping buttons 
 - 📚 **eders deadlines** — `/eders` lists assignments and quizzes with filters; `/eders_settings` configures
   reminders one day and two hours before a deadline, activity openings and deadline changes. `/week` combines
   the next seven days of classes, activity dates and newly discovered materials. eders is checked every 30 minutes
-  using the linked OBIS account. Unverified timezones and conflicting dates are shown explicitly.
+  using the linked OBIS account. `/materials` lists course materials; `/materials text` searches course names,
+  sections and titles. New and renamed materials or changed text blocks are grouped by course in notifications.
+  Folders, links, files, forums and text blocks are supported. Initial syncs are silent for materials.
+  Unverified timezones and conflicting dates are shown explicitly. See [Eders tracking](docs/eders-tracking.md).
 - 🌐 **Multiple languages** — the bot speaks Kyrgyz, Russian, Turkish and English, and picks a language
   automatically based on your Telegram app's language (you can also switch manually at any time).
 

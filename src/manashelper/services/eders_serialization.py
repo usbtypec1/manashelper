@@ -46,7 +46,14 @@ def deserialize_snapshot(payload: str) -> EdersSnapshot:
             grading=GradingStatus(value["grading"]),
             title_date_mismatch=value["title_date_mismatch"],
             first_seen=datetime.fromisoformat(value["first_seen"]) if value["first_seen"] else None,
+            section=value.get("section", ""),
+            description=value.get("description", ""),
         )
         for value in data["activities"]
     )
-    return EdersSnapshot(activities, datetime.fromisoformat(data["fetched_at"]))
+    return EdersSnapshot(
+        activities,
+        datetime.fromisoformat(data["fetched_at"]),
+        courses=tuple(EdersCourse(**course) for course in data.get("courses", [])),
+        schema_version=data.get("schema_version", 1),
+    )

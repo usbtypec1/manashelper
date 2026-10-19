@@ -71,6 +71,7 @@ async def test_command_caches_public_snapshot_and_pagination_avoids_network() ->
     message.answer = AsyncMock()
     message.edit_text = AsyncMock()
     message.from_user = SimpleNamespace(id=1)
+    message.text = "/eders"
     context = state()
     await on_eders_command(message, context, service, tracking)
     assert (await context.get_data())[SNAPSHOT_KEY] == data
@@ -176,3 +177,107 @@ async def test_application_resolves_new_services_and_registers_thirty_minute_pol
     finally:
         await container.close()
         await bot.session.close()
+
+
+async def test_materials_search_keeps_matching_course_and_section_in_cached_view() -> None:
+    from dataclasses import replace
+
+    service, tracking = AsyncMock(), AsyncMock()
+    data = snapshot()
+    reading = replace(data.activities[0], id=21, kind=ActivityKind.RESOURCE, name="Arrays", section="Week 5")
+    service.get_snapshot.return_value = replace(data, activities=(*data.activities, reading))
+    tracking.get_settings.return_value = SimpleNamespace(hide_archived=True)
+    message = AsyncMock(spec=Message)
+    message.from_user = SimpleNamespace(id=1)
+    message.text = "/materials Week 5"
+    message.answer = AsyncMock()
+    context = state()
+    await on_eders_command(message, context, service, tracking)
+    assert (await context.get_data())[SNAPSHOT_KEY].activities == (reading,)
+    text = message.answer.call_args.args[0]
+    assert "Arrays" in text and "Week 5" in text and "Submission:" not in text
+
+
+async def test_job_groups_new_materials_and_acknowledges_all_events_only_on_success() -> None:
+    service, tracking, locales = AsyncMock(), AsyncMock(), AsyncMock()
+    tracking.get_poll_user_ids.return_value = [1]
+    now = datetime.now(UTC)
+    first = EdersEvent("first", snapshot().activities[0], "material_new", now, now)
+    second = EdersEvent("second", snapshot().activities[0], "material_changed", now, now)
+    tracking.pending_events.return_value = [first, second]
+    locales.get_locale.return_value = Locale.EN
+    dependencies = {EdersService: service, EdersTrackingService: tracking, LocaleService: locales}
+
+    @asynccontextmanager
+    async def scope():
+        yield SimpleNamespace(get=AsyncMock(side_effect=lambda cls: dependencies[cls]))
+
+    bot = AsyncMock(spec=Bot)
+    bot.send_message.side_effect = TelegramBadRequest(method=SendMessage(chat_id=1, text="test"), message="failure")
+    await poll_eders_job(scope, bot)
+    tracking.mark_sent.assert_not_awaited()
+    bot.send_message.side_effect = None
+    bot.send_message.reset_mock()
+    await poll_eders_job(scope, bot)
+    bot.send_message.assert_awaited_once()
+    assert [call.args[1] for call in tracking.mark_sent.await_args_list] == ["first", "second"]
+
+
+async def test_eders_settings_open_from_notifications_and_keep_return_path_after_toggle() -> None:
+    from manashelper.bot.callback_data import EdersSettingCallback, SettingsAction, SettingsCallback
+    from manashelper.bot.keyboards.settings import build_notifications_keyboard, build_settings_keyboard
+    from manashelper.bot.routers.eders import on_eders_setting, on_open_eders_settings
+    from manashelper.services.eders_tracking import EdersSetting, EdersSettings
+    from manashelper.services.notification_settings import NotificationSettingsSummary
+
+    main = build_settings_keyboard()
+    assert any(
+        button.callback_data == SettingsCallback(action=SettingsAction.OPEN_NOTIFICATIONS).pack()
+        for row in main.inline_keyboard
+        for button in row
+    )
+    notifications = build_notifications_keyboard(NotificationSettingsSummary(True, True, True))
+    entry = next(
+        button
+        for row in notifications.inline_keyboard
+        for button in row
+        if button.callback_data == SettingsCallback(action=SettingsAction.OPEN_EDERS_NOTIFICATIONS).pack()
+    )
+    assert entry.text == "Eders"
+    callback = AsyncMock(spec=CallbackQuery)
+    callback.from_user = SimpleNamespace(id=42)
+    callback.message = AsyncMock(spec=Message)
+    callback.message.edit_text = AsyncMock()
+    callback.answer = AsyncMock()
+    tracking = AsyncMock()
+    tracking.get_settings.return_value = EdersSettings(True, True, True, True, True)
+    tracking.toggle.return_value = EdersSettings(False, True, True, True, True)
+    await on_open_eders_settings(callback, tracking)
+    tracking.get_settings.assert_awaited_once_with(42)
+    for selected in (None, EdersSetting.DAY_BEFORE):
+        if selected:
+            await on_eders_setting(callback, EdersSettingCallback(setting=selected), tracking)
+        keyboard = callback.message.edit_text.call_args.kwargs["reply_markup"]
+        assert (
+            keyboard.inline_keyboard[-1][0].callback_data
+            == SettingsCallback(action=SettingsAction.BACK_TO_NOTIFICATIONS).pack()
+        )
+        assert len(keyboard.inline_keyboard) == len(EdersSetting) + 1
+    tracking.toggle.assert_awaited_once_with(42, EdersSetting.DAY_BEFORE)
+    assert callback.message.edit_text.call_args.kwargs["reply_markup"].inline_keyboard[0][0].text.startswith("⬜")
+
+
+async def test_open_eders_settings_for_unknown_user_shows_alert() -> None:
+    from manashelper.bot.routers.eders import on_open_eders_settings
+    from manashelper.services.obis import UserNotFoundError
+
+    callback = AsyncMock(spec=CallbackQuery)
+    callback.from_user = SimpleNamespace(id=42)
+    callback.message = AsyncMock(spec=Message)
+    callback.message.edit_text = AsyncMock()
+    callback.answer = AsyncMock()
+    tracking = AsyncMock()
+    tracking.get_settings.side_effect = UserNotFoundError(42)
+    await on_open_eders_settings(callback, tracking)
+    callback.message.edit_text.assert_not_awaited()
+    assert callback.answer.call_args.kwargs["show_alert"] is True

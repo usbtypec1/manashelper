@@ -14,6 +14,7 @@ from manashelper.services.eders_models import (
 )
 from manashelper.services.eders_tracking import EdersTrackingService
 from manashelper.services.obis import UserHasNoCredentialsError, UserNotFoundError
+from manashelper.services.time_utils import BISHKEK_TZ
 
 
 def filter_activities(
@@ -21,11 +22,23 @@ def filter_activities(
 ) -> list[EdersActivity]:
     results = []
     for activity in activities:
+        if selected in {DeadlineFilter.MATERIALS, DeadlineFilter.NEW_MATERIALS}:
+            if selected == DeadlineFilter.MATERIALS or activity.first_seen:
+                results.append(activity)
+            continue
         if activity.kind not in {ActivityKind.ASSIGNMENT, ActivityKind.QUIZ}:
             continue
         closes = activity.closes.instant
         opens = activity.opens.instant
-        if selected == DeadlineFilter.NEXT_SEVEN_DAYS:
+        if selected == DeadlineFilter.TODAY:
+            include = closes is not None and closes.astimezone(BISHKEK_TZ).date() == now.astimezone(BISHKEK_TZ).date()
+        elif selected == DeadlineFilter.NOT_SUBMITTED:
+            include = activity.submission in {
+                SubmissionStatus.NOT_SUBMITTED,
+                SubmissionStatus.DRAFT,
+                SubmissionStatus.IN_PROGRESS,
+            }
+        elif selected == DeadlineFilter.NEXT_SEVEN_DAYS:
             include = closes is not None and now <= closes <= now + timedelta(days=7)
         elif selected == DeadlineFilter.AVAILABLE:
             include = (
@@ -45,6 +58,8 @@ def filter_activities(
             include = not hide_archived or closes is None or closes >= now - timedelta(days=180)
         if include:
             results.append(activity)
+    if selected in {DeadlineFilter.MATERIALS, DeadlineFilter.NEW_MATERIALS}:
+        return sorted(results, key=lambda item: (item.course.name, item.section, item.name))
     return sorted(results, key=lambda item: (item.closes.instant or datetime.max.replace(tzinfo=UTC), item.name))
 
 

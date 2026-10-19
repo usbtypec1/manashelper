@@ -237,14 +237,19 @@ async def test_client_authenticates_once_and_retries_expired_snapshot(monkeypatc
         if path == "/auth/userkey/login.php":
             return httpx.Response(303, headers={"location": "/my/"})
         if path == "/my/":
-            return httpx.Response(200, text="Welcome")
+            return httpx.Response(200, text='<a href="/login/logout.php?sesskey=testkey">Logout</a>')
         if path == "/user/profile.php":
             return httpx.Response(200, text=fixture("profile"))
-        if path == "/grade/report/overview/index.php":
+        if path == "/lib/ajax/service.php":
             if not expired:
                 expired = True
                 return httpx.Response(302, headers={"location": "/login/index.php"})
-            return httpx.Response(200, text=fixture("courses"))
+            return httpx.Response(
+                200,
+                json=[
+                    {"data": {"courses": [{"id": 10, "fullname": "Sample course"}, {"id": 11, "fullname": "Other"}]}}
+                ],
+            )
         if path == "/course/view.php":
             return httpx.Response(
                 200,
@@ -259,7 +264,9 @@ async def test_client_authenticates_once_and_retries_expired_snapshot(monkeypatc
         raise AssertionError(f"Unexpected request: {request.method} {path}")
 
     def factory():
-        client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+        client = httpx.AsyncClient(
+            base_url=OBIS_BASE_URL, follow_redirects=True, transport=httpx.MockTransport(handler)
+        )
         clients.append(client)
         return client
 
@@ -269,7 +276,7 @@ async def test_client_authenticates_once_and_retries_expired_snapshot(monkeypatc
     assert all(client.is_closed for client in clients)
     assert len(clients) == 2
     assert all(
-        str(request.url).startswith(f"{OBIS_BASE_URL}/site/login") for request in requests if request.method == "POST"
+        request.url.path in {"/site/login", "/lib/ajax/service.php"} for request in requests if request.method == "POST"
     )
     assert "fake-secret" not in serialize_snapshot(result)
     assert not any(request.url.path == "/login/index.php" for request in requests)
@@ -299,13 +306,14 @@ async def test_redirect_allowlist_blocks_actions_before_request_and_hides_secret
 async def test_persistent_session_expiry_stops_after_one_retry(monkeypatch: pytest.MonkeyPatch) -> None:
     authenticate = []
 
-    async def login(client, student, password):
+    async def login(self, client, student, password):
         authenticate.append(student)
+        return "testkey"
 
     def handler(request):
         return httpx.Response(200, text='<input name="logintoken">')
 
-    monkeypatch.setattr(eders_client, "_authenticate", login)
+    monkeypatch.setattr(EdersClient, "login", login)
     monkeypatch.setattr(
         eders_client, "_new_http_client", lambda: httpx.AsyncClient(transport=httpx.MockTransport(handler))
     )

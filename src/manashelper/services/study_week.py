@@ -2,8 +2,9 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
 from manashelper.services.eders import EdersService
-from manashelper.services.eders_models import BISHKEK_TZ, EdersSnapshot
+from manashelper.services.eders_models import EdersSnapshot
 from manashelper.services.schedule import NoTrackedCoursesError, ScheduleLessonModel, ScheduleService
+from manashelper.services.time_utils import BISHKEK_TZ
 
 
 @dataclass(frozen=True, slots=True)

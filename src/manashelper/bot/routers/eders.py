@@ -1,13 +1,14 @@
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
-from aiogram import Router, flags
+from aiogram import F, Router, flags
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, LinkPreviewOptions, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.callback_data import EdersPageCallback, EdersSettingCallback
+from manashelper.bot.callback_data import EdersPageCallback, EdersSettingCallback, SettingsAction, SettingsCallback
 from manashelper.bot.keyboards.eders import build_eders_keyboard, build_eders_settings_keyboard
 from manashelper.bot.keyboards.obis import build_no_credentials_keyboard
 from manashelper.scraping.eders_client import EdersFetchError
@@ -28,7 +29,7 @@ SNAPSHOT_KEY = "eders_snapshot"
 SNAPSHOT_TTL = timedelta(minutes=15)
 
 
-@router.message(Command("eders"))
+@router.message(Command("eders", "materials"))
 @flags.private_chat_only
 async def on_eders_command(
     message: Message,
@@ -54,8 +55,19 @@ async def on_eders_command(
     except (EdersFetchError, EdersParseError, EdersUnsafeUrlError, ObisParseError):
         await message.answer(_("eders.fetch_failed"))
         return
+    command, separator, query = (message.text or "").partition(" ")
+    selected = DeadlineFilter.MATERIALS if command.split("@")[0] == "/materials" else DeadlineFilter.ALL
+    if query.strip():
+        search = query.strip().casefold()
+        snapshot = replace(
+            snapshot,
+            activities=tuple(
+                item
+                for item in snapshot.activities
+                if search in f"{item.course.name} {item.section} {item.name} {item.description}".casefold()
+            ),
+        )
     await state.update_data({SNAPSHOT_KEY: snapshot})
-    selected = DeadlineFilter.ALL
     settings = await tracking.get_settings(message.from_user.id)
     activities = filter_activities(snapshot.activities, selected, datetime.now(UTC), settings.hide_archived)
     await message.answer(
@@ -106,6 +118,21 @@ async def on_eders_settings(message: Message, tracking: FromDishka[EdersTracking
         await message.answer(_("common.start_required"))
         return
     await message.answer(_("eders.settings_header"), reply_markup=build_eders_settings_keyboard(settings))
+
+
+@router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_EDERS_NOTIFICATIONS))
+@flags.private_chat_only
+async def on_open_eders_settings(callback: CallbackQuery, tracking: FromDishka[EdersTrackingService]) -> None:
+    try:
+        settings = await tracking.get_settings(callback.from_user.id)
+    except UserNotFoundError:
+        await callback.answer(_("common.start_required"), show_alert=True)
+        return
+    if isinstance(callback.message, Message):
+        await callback.message.edit_text(
+            _("eders.settings_header"), reply_markup=build_eders_settings_keyboard(settings)
+        )
+    await callback.answer()
 
 
 @router.callback_query(EdersSettingCallback.filter())

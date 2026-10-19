@@ -47,5 +47,10 @@ def build_notifications_keyboard(settings: NotificationSettingsSummary) -> Inlin
         text=f"{_mark(settings.lesson_skips_enabled)} {_('notifications.lesson_skips')}",
         callback_data=NotificationSettingCallback(setting=NotificationSetting.LESSON_SKIPS),
     )
+    builder.button(
+        text=_("notifications.eders"),
+        callback_data=SettingsCallback(action=SettingsAction.OPEN_EDERS_NOTIFICATIONS),
+    )
+    builder.button(text=_("common.back"), callback_data=SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS))
     builder.adjust(1)
     return builder.as_markup()

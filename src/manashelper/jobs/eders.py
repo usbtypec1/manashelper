@@ -13,7 +13,7 @@ from manashelper.scraping.eders_urls import EdersUnsafeUrlError
 from manashelper.scraping.obis_client import ObisLoginError
 from manashelper.scraping.obis_parser import ObisParseError
 from manashelper.services.eders import EdersService
-from manashelper.services.eders_formatter import format_eders_event
+from manashelper.services.eders_formatter import format_eders_event, format_material_events
 from manashelper.services.eders_tracking import EdersTrackingService
 from manashelper.services.locale import LocaleService
 from manashelper.services.obis import UserHasNoCredentialsError, UserNotFoundError
@@ -37,15 +37,23 @@ async def poll_eders_job(container: AsyncContainer, bot: Bot) -> None:
                 locale_service = await request.get(LocaleService)
                 await service.get_snapshot(user_id)
                 locale = await locale_service.get_locale(user_id)
-                for event in await tracking.pending_events(user_id, datetime.now(UTC)):
-                    with i18n.context(), i18n.use_locale(locale.value):
-                        text = format_eders_event(event)
+                events = await tracking.pending_events(user_id, datetime.now(UTC))
+                with i18n.context(), i18n.use_locale(locale.value):
+                    materials = [event for event in events if event.event_type.startswith("material_")]
+                    messages = format_material_events(materials)
+                    messages.extend(
+                        (format_eders_event(event), [event])
+                        for event in events
+                        if not event.event_type.startswith("material_")
+                    )
+                for text, batch in messages:
                     try:
                         await bot.send_message(user_id, text, link_preview_options=LinkPreviewOptions(is_disabled=True))
                     except TelegramAPIError:
                         logger.warning("Failed to send eders notification to user %s", user_id, exc_info=True)
                         continue
-                    await tracking.mark_sent(user_id, event.key, datetime.now(UTC))
+                    for event in batch:
+                        await tracking.mark_sent(user_id, event.key, datetime.now(UTC))
         except (
             UserNotFoundError,
             UserHasNoCredentialsError,

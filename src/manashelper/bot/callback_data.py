@@ -149,6 +149,7 @@ class EdersSettingCallback(CallbackData, prefix="eders_setting"):
 
 class SettingsAction(StrEnum):
     OPEN_NOTIFICATIONS = "open_notifications"
+    OPEN_EDERS_NOTIFICATIONS = "open_eders_notifications"
     OPEN_FOOD_MENU_NOTIFICATIONS = "open_food_menu_notifications"
     BACK_TO_NOTIFICATIONS = "back_to_notifications"
     OPEN_COURSE_TRACKING = "open_course_tracking"
