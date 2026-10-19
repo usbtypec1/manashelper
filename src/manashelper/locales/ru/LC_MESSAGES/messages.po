@@ -1026,3 +1026,33 @@ msgstr "Пожалуйста, отправьте текст длиной от 1 
 
 msgid "student_questions.use_buttons"
 msgstr "Пожалуйста, выберите ответ с помощью кнопок."
+
+msgid "eders.filter_today"
+msgstr "Сегодня"
+
+msgid "eders.filter_not_submitted"
+msgstr "Не сдано"
+
+msgid "eders.filter_materials"
+msgstr "Материалы курсов"
+
+msgid "eders.filter_new_materials"
+msgstr "Новые материалы"
+
+msgid "eders.setting_materials"
+msgstr "Новые и изменённые материалы"
+
+msgid "eders.material_new"
+msgstr "Новый материал"
+
+msgid "eders.material_changed"
+msgstr "Материал изменён"
+
+msgid "commands.materials"
+msgstr "Материалы Eders и поиск"
+
+msgid "eders.materials_help"
+msgstr "Поиск по курсу, разделу или названию: /materials текст. Новые — впервые обнаруженные после начальной синхронизации."
+
+msgid "notifications.eders"
+msgstr "Eders"

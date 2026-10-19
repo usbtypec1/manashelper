@@ -1022,3 +1022,33 @@ msgstr "Lütfen 1 ile {max} karakter arasında bir metin gönderin."
 
 msgid "student_questions.use_buttons"
 msgstr "Lütfen düğmeleri kullanarak bir cevap seçin."
+
+msgid "eders.filter_today"
+msgstr "Bugün"
+
+msgid "eders.filter_not_submitted"
+msgstr "Teslim edilmedi"
+
+msgid "eders.filter_materials"
+msgstr "Ders materyalleri"
+
+msgid "eders.filter_new_materials"
+msgstr "Yeni materyaller"
+
+msgid "eders.setting_materials"
+msgstr "Yeni ve değişen materyaller"
+
+msgid "eders.material_new"
+msgstr "Yeni materyal"
+
+msgid "eders.material_changed"
+msgstr "Materyal güncellendi"
+
+msgid "commands.materials"
+msgstr "Eders materyalleri ve arama"
+
+msgid "eders.materials_help"
+msgstr "Ders, bölüm veya başlığa göre arama: /materials metin. Yeni, ilk eşitlemeden sonra keşfedilen demektir."
+
+msgid "notifications.eders"
+msgstr "Eders"

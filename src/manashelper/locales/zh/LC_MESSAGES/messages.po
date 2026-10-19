@@ -1017,3 +1017,33 @@ msgstr "请发送长度为1到{max}个字符的文本。"
 
 msgid "student_questions.use_buttons"
 msgstr "请使用按钮选择答案。"
+
+msgid "eders.filter_today"
+msgstr "今天"
+
+msgid "eders.filter_not_submitted"
+msgstr "未提交"
+
+msgid "eders.filter_materials"
+msgstr "课程资料"
+
+msgid "eders.filter_new_materials"
+msgstr "新发现的资料"
+
+msgid "eders.setting_materials"
+msgstr "新增和更改的资料"
+
+msgid "eders.material_new"
+msgstr "新增资料"
+
+msgid "eders.material_changed"
+msgstr "资料已更新"
+
+msgid "commands.materials"
+msgstr "Eders 资料与搜索"
+
+msgid "eders.materials_help"
+msgstr "按课程、章节或标题搜索：/materials 文本。新增是指首次同步后发现的资料。"
+
+msgid "notifications.eders"
+msgstr "Eders"

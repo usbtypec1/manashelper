@@ -1028,3 +1028,33 @@ msgstr "Узундугу 1ден {max} белгиге чейин болгон т
 
 msgid "student_questions.use_buttons"
 msgstr "Жоопту баскычтар аркылуу тандаңыз."
+
+msgid "eders.filter_today"
+msgstr "Бүгүн"
+
+msgid "eders.filter_not_submitted"
+msgstr "Тапшырыла элек"
+
+msgid "eders.filter_materials"
+msgstr "Курстун материалдары"
+
+msgid "eders.filter_new_materials"
+msgstr "Жаңы материалдар"
+
+msgid "eders.setting_materials"
+msgstr "Жаңы жана өзгөргөн материалдар"
+
+msgid "eders.material_new"
+msgstr "Жаңы материал"
+
+msgid "eders.material_changed"
+msgstr "Материал өзгөрдү"
+
+msgid "commands.materials"
+msgstr "Eders материалдары жана издөө"
+
+msgid "eders.materials_help"
+msgstr "Курс, бөлүм же аталыш боюнча издөө: /materials текст. Жаңы — алгачкы шайкештештирүүдөн кийин табылган материалдар."
+
+msgid "notifications.eders"
+msgstr "Eders"

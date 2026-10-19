@@ -2,9 +2,10 @@ from datetime import timedelta
 
 from aiogram.utils.i18n import gettext as _
 
-from manashelper.services.eders_models import BISHKEK_TZ, ActivityKind
+from manashelper.services.eders_models import ActivityKind
 from manashelper.services.html_sanitization import escape_html
 from manashelper.services.study_week import StudyWeek, week_end
+from manashelper.services.time_utils import BISHKEK_TZ
 from manashelper.services.timetable_formatter import weekday_full
 
 
@@ -35,7 +36,7 @@ def format_study_week(week: StudyWeek) -> list[str]:
                     if not opening:
                         deadline_count += 1
             if (
-                item.kind in {ActivityKind.RESOURCE, ActivityKind.LINK}
+                item.kind not in {ActivityKind.ASSIGNMENT, ActivityKind.QUIZ}
                 and item.first_seen
                 and item.first_seen.astimezone(BISHKEK_TZ).date() == day
             ):

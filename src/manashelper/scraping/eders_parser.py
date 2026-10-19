@@ -1,3 +1,4 @@
+import json
 import re
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -9,7 +10,6 @@ from bs4.element import Tag
 
 from manashelper.scraping.eders_urls import EDERS_BASE_URL, EdersUnsafeUrlError, eders_id, safe_eders_url
 from manashelper.services.eders_models import (
-    BISHKEK_TZ,
     ActivityDate,
     ActivityKind,
     EdersActivity,
@@ -17,10 +17,34 @@ from manashelper.services.eders_models import (
     GradingStatus,
     SubmissionStatus,
 )
+from manashelper.services.time_utils import BISHKEK_TZ
 
 
 class EdersParseError(Exception):
     pass
+
+
+def parse_enrolled_courses(payload: object) -> tuple[list[EdersCourse], int | None]:
+    if not isinstance(payload, list) or len(payload) != 1 or not isinstance(payload[0], dict):
+        raise EdersParseError("Invalid enrolled courses response")
+    result = payload[0]
+    if result.get("error"):
+        raise EdersParseError("Eders rejected the enrolled courses request")
+    data = result.get("data")
+    if not isinstance(data, dict) or not isinstance(data.get("courses"), list):
+        raise EdersParseError("Missing enrolled courses")
+    courses = {}
+    for row in data["courses"]:
+        if not isinstance(row, dict):
+            raise EdersParseError("Invalid enrolled course")
+        identifier, name = row.get("id"), row.get("fullname")
+        if type(identifier) is not int or identifier <= 0 or not isinstance(name, str) or not name.strip():
+            raise EdersParseError("Invalid enrolled course fields")
+        courses[identifier] = EdersCourse(identifier, name.strip())
+    next_offset = data.get("nextoffset")
+    if next_offset is not None and type(next_offset) is not int:
+        raise EdersParseError("Invalid course pagination")
+    return list(courses.values()), next_offset
 
 
 def _page(html: str) -> BeautifulSoup:
@@ -69,7 +93,18 @@ def parse_courses(html: str) -> list[EdersCourse]:
 
 
 def parse_account_timezone(html: str) -> ZoneInfo | None:
-    soup = _page(html)
+    return _account_timezone(_page(html))
+
+
+def _account_timezone(soup: BeautifulSoup) -> ZoneInfo | None:
+    # Actual Eders pages expose the effective timezone in Moodle's configuration.
+    for script in soup.select("script"):
+        match = re.search(r'"usertimezone"\s*:\s*("(?:[^"\\]|\\.)*")', script.get_text())
+        if match:
+            try:
+                return ZoneInfo(json.loads(match[1]))
+            except (ZoneInfoNotFoundError, ValueError, TypeError):
+                pass
     for item in soup.select(".profile_tree dl"):
         label, value = item.select_one("dt"), item.select_one("dd")
         if label and value and label.get_text(" ", strip=True).casefold() == "timezone":
@@ -84,7 +119,7 @@ def _text_datetime(text: str, timezone: ZoneInfo | None) -> datetime | None:
     if timezone is None:
         return None
     normalized = " ".join(text.split())
-    match = re.search(r"\b(\d{1,2}) ([A-Za-z]+) (20\d{2}),? (\d{1,2}):(\d{2})(?:\s*([AP]M))?\b", normalized)
+    match = re.search(r"\b(\d{1,2}) ([^\W\d_]+) (20\d{2}),? (\d{1,2}):(\d{2})(?:\s*([AP]M))?\b", normalized)
     if match is None:
         return None
     day, month, year, hour, minute, am_pm = match.groups()
@@ -102,13 +137,30 @@ def _text_datetime(text: str, timezone: ZoneInfo | None) -> datetime | None:
         "november",
         "december",
     ]
+    turkish = [
+        "ocak",
+        "şubat",
+        "mart",
+        "nisan",
+        "mayıs",
+        "haziran",
+        "temmuz",
+        "ağustos",
+        "eylül",
+        "ekim",
+        "kasım",
+        "aralık",
+    ]
     try:
         hours = int(hour)
         if am_pm:
             if not 1 <= hours <= 12:
                 return None
             hours = hours % 12 + (12 if am_pm == "PM" else 0)
-        value = datetime(int(year), months.index(month.casefold()) + 1, int(day), hours, int(minute), tzinfo=timezone)
+        month_names = months if month.casefold() in months else turkish
+        value = datetime(
+            int(year), month_names.index(month.casefold()) + 1, int(day), hours, int(minute), tzinfo=timezone
+        )
         # Reject ambiguous and nonexistent local times across daylight-saving changes.
         if value.utcoffset() != value.replace(fold=1).utcoffset():
             return None
@@ -165,9 +217,9 @@ def _dates(node: Tag | BeautifulSoup, timezone: ZoneInfo | None) -> tuple[Activi
             continue
         name = label.get_text(" ", strip=True).rstrip(":").casefold()
         value = _parse_date(block, timezone)
-        if name in {"opens", "opened"}:
+        if name in {"opens", "opened", "açılış", "açıldı"}:
             opens = _merge_date(opens, value)
-        elif name in {"due", "closes", "closed"}:
+        elif name in {"due", "closes", "closed", "son tarih", "kapanış"}:
             closes = _merge_date(closes, value)
     return opens, closes
 
@@ -177,7 +229,27 @@ def parse_course_activities(html: str, course: EdersCourse, timezone: ZoneInfo |
     if soup.select_one("#region-main .course-content") is None:
         raise EdersParseError("Missing eders course content")
     activities: dict[tuple[ActivityKind, int], EdersActivity] = {}
+    timezone = _account_timezone(soup) or timezone
     for item in soup.select(".course-content li.activity"):
+        section_node = item.find_parent("li", class_="section")
+        heading = section_node.select_one(".sectionname") if section_node else None
+        section = heading.get_text(" ", strip=True) if heading else ""
+        content = item.select_one(".activity-altcontent")
+        description = content.get_text(" ", strip=True) if content else ""
+        if "modtype_label" in item.get_attribute_list("class"):
+            match = re.fullmatch(r"module-(\d+)", str(item.get("id", "")))
+            if match and description:
+                identifier = int(match[1])
+                activities[ActivityKind.LABEL, identifier] = EdersActivity(
+                    identifier,
+                    course,
+                    ActivityKind.LABEL,
+                    description[:300],
+                    f"{EDERS_BASE_URL}/course/view.php?id={course.id}#module-{identifier}",
+                    section=section,
+                    description=description,
+                )
+            continue
         link = item.select_one(".activityname a[href], .activityinstance a[href]")
         href = link.get("href") if link else None
         if link is None or not isinstance(href, str):
@@ -195,7 +267,9 @@ def parse_course_activities(html: str, course: EdersCourse, timezone: ZoneInfo |
                 name = name.removesuffix(hidden.get_text(" ", strip=True)).strip()
         opens, closes = _dates(item, timezone)
         identifier = eders_id(url)
-        activities[kind, identifier] = EdersActivity(identifier, course, kind, name, url, opens, closes)
+        activities[kind, identifier] = EdersActivity(
+            identifier, course, kind, name, url, opens, closes, section=section, description=description
+        )
     return list(activities.values())
 
 
@@ -284,6 +358,7 @@ def _latest_attempt(states: list[tuple[SubmissionStatus, GradingStatus]]) -> tup
 
 def parse_activity_details(html: str, activity: EdersActivity, timezone: ZoneInfo | None = None) -> EdersActivity:
     soup = _page(html)
+    timezone = _account_timezone(soup) or timezone
     body = soup.select_one("body")
     expected = f"page-mod-{activity.kind.value}-view"
     if body is None or body.get("id") != expected:

@@ -1,9 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
-from zoneinfo import ZoneInfo
-
-BISHKEK_TZ = ZoneInfo("Asia/Bishkek")
 
 
 class ActivityKind(StrEnum):
@@ -11,6 +8,10 @@ class ActivityKind(StrEnum):
     QUIZ = "quiz"
     RESOURCE = "resource"
     LINK = "url"
+    FOLDER = "folder"
+    LABEL = "label"
+    FORUM = "forum"
+    FEEDBACK = "feedback"
 
 
 class SubmissionStatus(StrEnum):
@@ -33,6 +34,10 @@ class DeadlineFilter(StrEnum):
     AVAILABLE = "available"
     AWAITING_GRADE = "awaiting_grade"
     UNKNOWN_DEADLINE = "unknown_deadline"
+    TODAY = "today"
+    NOT_SUBMITTED = "not_submitted"
+    MATERIALS = "materials"
+    NEW_MATERIALS = "new_materials"
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,15 +62,19 @@ class EdersActivity:
     kind: ActivityKind
     name: str
     url: str
-    opens: ActivityDate = ActivityDate()
-    closes: ActivityDate = ActivityDate()
+    opens: ActivityDate = field(default_factory=ActivityDate)
+    closes: ActivityDate = field(default_factory=ActivityDate)
     submission: SubmissionStatus = SubmissionStatus.UNKNOWN
     grading: GradingStatus = GradingStatus.UNKNOWN
     title_date_mismatch: bool = False
     first_seen: datetime | None = None
+    section: str = ""
+    description: str = ""
 
 
 @dataclass(frozen=True, slots=True)
 class EdersSnapshot:
     activities: tuple[EdersActivity, ...]
     fetched_at: datetime
+    courses: tuple[EdersCourse, ...] = field(default_factory=tuple)
+    schema_version: int = 2

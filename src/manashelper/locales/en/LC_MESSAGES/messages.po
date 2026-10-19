@@ -1026,3 +1026,33 @@ msgstr "Please send text between 1 and {max} characters long."
 
 msgid "student_questions.use_buttons"
 msgstr "Please choose an answer using the buttons."
+
+msgid "eders.filter_today"
+msgstr "Today"
+
+msgid "eders.filter_not_submitted"
+msgstr "Not submitted"
+
+msgid "eders.filter_materials"
+msgstr "Course materials"
+
+msgid "eders.filter_new_materials"
+msgstr "Newly discovered"
+
+msgid "eders.setting_materials"
+msgstr "New and changed materials"
+
+msgid "eders.material_new"
+msgstr "New material"
+
+msgid "eders.material_changed"
+msgstr "Material updated"
+
+msgid "commands.materials"
+msgstr "Eders materials and search"
+
+msgid "eders.materials_help"
+msgstr "Search by course, section or title: /materials text. New means first discovered after the initial sync."
+
+msgid "notifications.eders"
+msgstr "Eders"

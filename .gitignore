@@ -35,3 +35,6 @@ htmlcov/
 /credentials.json
 
 logs/*
+
+# Private Eders exports contain account and session data.
+/r/

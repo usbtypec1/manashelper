@@ -17,6 +17,7 @@ class EdersSetting(StrEnum):
     OPENINGS = "openings"
     DEADLINE_CHANGES = "deadline_changes"
     HIDE_ARCHIVED = "hide_archived"
+    NEW_MATERIALS = "new_materials"
 
 
 @dataclass(frozen=True, slots=True)
@@ -26,6 +27,7 @@ class EdersSettings:
     openings: bool
     deadline_changes: bool
     hide_archived: bool
+    new_materials: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,13 +56,21 @@ def _event(
 
 def plan_events(snapshot: EdersSnapshot, previous: EdersSnapshot | None, settings: EdersSettings) -> list[EdersEvent]:
     old = {activity_key(item): item for item in previous.activities} if previous else {}
+    known_courses = {course.id for course in previous.courses} if previous else set()
+    if previous:
+        known_courses.update(item.course.id for item in previous.activities)
     events = []
     now = snapshot.fetched_at
     for activity in snapshot.activities:
-        if activity.kind not in {ActivityKind.ASSIGNMENT, ActivityKind.QUIZ}:
-            continue
         key = activity_key(activity)
         before = old.get(key)
+        if settings.new_materials and previous and previous.schema_version == snapshot.schema_version:
+            if before is None and activity.course.id in known_courses:
+                events.append(_event(activity, "material_new", now, now))
+            elif before and (before.name, before.description) != (activity.name, activity.description):
+                events.append(_event(activity, "material_changed", now, now))
+        if activity.kind not in {ActivityKind.ASSIGNMENT, ActivityKind.QUIZ}:
+            continue
         closes, opens = activity.closes.instant, activity.opens.instant
         if (
             settings.deadline_changes
@@ -116,6 +126,9 @@ class EdersTrackingService:
         if previous and previous.fetched_at >= snapshot.fetched_at:
             return previous
         old = {activity_key(item): item for item in previous.activities} if previous else {}
+        known_courses = {course.id for course in previous.courses} if previous else set()
+        if previous:
+            known_courses.update(item.course.id for item in previous.activities)
         snapshot = replace(
             snapshot,
             activities=tuple(
@@ -123,7 +136,13 @@ class EdersTrackingService:
                     item,
                     first_seen=old[activity_key(item)].first_seen
                     if activity_key(item) in old
-                    else (snapshot.fetched_at if previous else None),
+                    else (
+                        snapshot.fetched_at
+                        if previous
+                        and previous.schema_version == snapshot.schema_version
+                        and item.course.id in known_courses
+                        else None
+                    ),
                 )
                 for item in snapshot.activities
             ),
@@ -161,7 +180,12 @@ class EdersTrackingService:
                     )
                 )
             )
-            if previous is None or (stored_event.event_key not in planned and not valid_change and not valid_reminder):
+            valid_material = (
+                item and stored_event.event_type in {"material_new", "material_changed"} and settings.new_materials
+            )
+            if previous is None or (
+                stored_event.event_key not in planned and not valid_change and not valid_reminder and not valid_material
+            ):
                 stored_event.cancelled = True
             elif item:
                 stored_event.payload = serialize_snapshot(EdersSnapshot((item,), snapshot.fetched_at))
@@ -199,11 +223,17 @@ class EdersTrackingService:
                 "before_2": settings.two_hours_before,
                 "opened": settings.openings,
                 "changed": settings.deadline_changes,
+                "material_new": settings.new_materials,
+                "material_changed": settings.new_materials,
             }[row.event_type]
             activity = deserialize_snapshot(row.payload).activities[0]
             if (
                 not enabled
-                or (activity.closes.instant and activity.closes.instant <= now)
+                or (
+                    row.event_type not in {"material_new", "material_changed"}
+                    and activity.closes.instant
+                    and activity.closes.instant <= now
+                )
                 or (row.event_type == "opened" and now - row.event_time > timedelta(days=1))
             ):
                 row.cancelled = True
