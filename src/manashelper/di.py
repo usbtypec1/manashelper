@@ -32,7 +32,6 @@ from manashelper.scraping.food_menu_parser import FoodMenuParser
 from manashelper.scraping.obis_client import ObisClient
 from manashelper.scraping.timetable_client import TimetableClient
 from manashelper.services.action_log import ActionLogService
-from manashelper.services.broadcast import BroadcastService
 from manashelper.services.course import CourseService
 from manashelper.services.crypto import CryptoService
 from manashelper.services.daily_menu import DailyMenuService
@@ -137,4 +136,3 @@ class RequestProvider(Provider):
     food_menu_cleanup_settings_service = provide(FoodMenuCleanupSettingsService)
     action_log_service = provide(ActionLogService)
     user_contact_service = provide(UserContactService)
-    broadcast_service = provide(BroadcastService)

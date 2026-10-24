@@ -25,6 +25,8 @@ Release history lives in flat `modules/versions/`, with functions and no artific
 `docs/versions/` path is tested for both checkout and Docker-like layouts.
 Donations lives in flat `modules/donations/`: catalog, Telegram QR adapter, application service and presentation.
 Its provider keeps DonationQrService in APP for shared bounded caching and DonationService in REQUEST.
+Broadcast lives in flat `modules/broadcast/`: SendBroadcast uses UsersQuery and a delivery protocol;
+Telegram localization, HTML and API errors stay in its sender adapter. Its provider retains REQUEST scope.
 `modules/users/` currently exposes UsersQuery and a REQUEST provider for counts/recipient IDs used by donations
 and broadcasts. Other user functionality, ORM and repository remain legacy; do not treat Users as fully migrated.
 Keep migrated feature code together;
@@ -74,6 +76,8 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
   repository and `PublicationRemover`, while the Telegram adapter handles batching and best-effort failures.
 - Feedback and `/broadcast` are restricted to `Settings.admin_chat_id`. Admins reply to forwarded feedback using
   Telegram's native reply action. `/broadcast` is registered only for that chat and sends to all registered users.
+  Broadcast clears FSM before loading recipients and sends sequentially without retry. TelegramAPIError during
+  delivery skips that recipient; locale lookup failures and unexpected errors abort without a summary.
 - `docs/requisites/` holds `/donate` bank QR images. Filenames provide bank labels. `DonationQrService` reuses
   Telegram file IDs with bounded LRU caching. If runtime data is added under `docs/`, copy its directory in
   `docker/Dockerfile`.

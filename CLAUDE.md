@@ -145,6 +145,9 @@ the same runtime path after relocation. It has no database table or DI provider.
 Donations is now in flat `modules/donations/`, separating file catalog, Telegram QR adapter and application service.
 Its provider retains an APP-scoped LRU cache and REQUEST-scoped service. Public `modules/users/queries.py`
 supplies counts and recipient IDs to donations and broadcast; the rest of Users remains in legacy packages.
+Broadcast is colocated in flat `modules/broadcast/`: REQUEST-scoped SendBroadcast selects recipients through
+UsersQuery and counts delivery results. TelegramBroadcastSender owns locale, HTML and Telegram API errors;
+the router owns authorization, FSM and admin-facing messages.
 `docs/ARCHITECTURE.md` describes the current state; `docs/MIGRATION.md` records stage boundaries and baseline issues.
 
 Under `src/manashelper/`, code is organized by technical layer, mirroring the original Java structure:
@@ -402,7 +405,7 @@ choices, since none of these had an existing pattern to copy:
 Another from-scratch subsystem (no Java precedent), both built around the same single shared
 `Settings.admin_chat_id` and, like the advertising platform, with no per-user admin role — authorization is
 purely "did this update originate from that chat" (`modules/feedback/router.py::_is_admin_chat`,
-`bot/routers/broadcast.py::_is_admin_chat`).
+`modules/broadcast/router.py::_is_admin_chat`).
 
 - **Reply-based correlation, not an in-bot reply UI**: `FeedbackMessage` (`modules/feedback/orm.py`) stores
   the id of the message a feedback submission was forwarded as in the admin chat
@@ -419,11 +422,14 @@ purely "did this update originate from that chat" (`modules/feedback/router.py::
   `advertisement.py::_notify_moderation_chat`.
 - **Broadcast is a plain fan-out to every registered user**, not gated by any per-feature `NotificationSettings`
   toggle (those are for the bot's own recurring notifications, not one-off admin announcements) — see
-  `bot/routers/broadcast.py::on_broadcast_confirmed`, looping `BroadcastService.get_recipient_ids()`
-  (`UserRepository.get_all_ids`) and wrapping the admin's raw text in a locale-appropriate "message from the
-  administration" label per recipient, same per-recipient `i18n.context()`/`i18n.use_locale()` shape as
+  `modules/broadcast/router.py::on_broadcast_confirmed` delegates to `SendBroadcast.execute`, which selects
+  recipient IDs through public UsersQuery and sends sequentially through BroadcastSender. The concrete
+  TelegramBroadcastSender wraps raw text in a locale-appropriate "message from the administration" label,
+  using the same per-recipient `i18n.context()`/`i18n.use_locale()` shape as
   `jobs/food_menu.py`'s broadcasts (this one just runs from a bot command handler instead of a scheduled job,
   since it's an ad-hoc admin action rather than a recurring one).
+  FSM clears before recipient lookup. TelegramAPIError from send skips one recipient without retry;
+  locale lookup failures and unexpected exceptions propagate and prevent the final summary, as before.
 - **`/broadcast` is registered against `BotCommandScopeChat(chat_id=settings.admin_chat_id)`**
   (`services/bot_commands.py::build_admin_commands`, wired up in `bot/commands.py::setup_commands`), not any of the
   "all chats" scopes every other command uses — it shouldn't show up as a suggestion in random group chats the

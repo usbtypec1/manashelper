@@ -469,3 +469,68 @@ Pythonic-результат — разделение смешанного legacy
 Остальные Users-компоненты и Broadcast presentation остаются legacy. Публичный UsersQuery уже обслуживает
 оба сценария, поэтому последующий перенос Broadcast не потребует прямого доступа к UserRepository.
 Автоматический staging трёх перемещённых пар путей снят; исходный Git index был пустым. Коммиты не создавались.
+
+### План следующего этапа: Broadcast
+
+`AGENTS.md` перечитан; используется Index MCP. Стартовая рабочая копия и Git index чистые.
+Run configuration `All Tests` снова отсутствует, поэтому обязательные проверки выполняются через CLI.
+
+Сначала без изменения поведения в плоский `modules/broadcast/` перемещаются router, клавиатура,
+application service и callbacks. REQUEST-provider заменяет регистрацию в общем `di.py`.
+Перед переносом characterization-тесты фиксируют admin chat authorization, `BroadcastForm:message`,
+ключ `body`, payload `broadcast:confirm`/`broadcast:cancel`, preview, caption fallback, повторный confirm,
+очистку FSM, локаль admin-чата и каждого получателя, ошибки Telegram и неожиданные исключения.
+
+После зелёного структурного переноса выделяется application-сценарий `SendBroadcast`: выбор всех ID
+через публичный UsersQuery, последовательная отправка и подсчёт результата. Конкретные Bot/i18n/HTML
+операции остаются в Telegram-адаптере. Протокол sender оправдан реальной внешней границей доставки,
+а не наличием SQLAlchemy repository. Ненужный getter-service заменяется связным сценарием.
+
+Сохраняются порядок callback answer/edit/send, отсутствие retry, продолжение после TelegramAPIError,
+остановка при ошибке локали/неожиданном исключении, очистка FSM до получения адресатов и русская итоговая
+статистика. Команда по-прежнему регистрируется только для admin-чата. Новых текстов, jobs, форматов,
+таблиц и миграций нет. Откат возвращает расположение, DI/dispatcher imports и orchestration в router.
+
+### Выполнено: Broadcast
+
+Перед изменением production-кода добавлены **25 characterization-тестов** в
+`tests/test_broadcast_handlers.py`; они прошли на исходной реализации. Тесты используют настоящий
+aiogram Bot с подменённой сессией, без отправки сообщений в Telegram, и настоящий application-компонент.
+Проверены все пять локалей, HTML, авторизация в admin group, FSM, callback payload, caption fallback,
+пустой ввод, отмена, повторное подтверждение, порядок операций и границы обработки исключений.
+
+**Phase A.** Router, клавиатура и service перенесены средствами Index MCP; callbacks принадлежат feature.
+Добавлен BroadcastProvider с прежним REQUEST scope, удалена legacy-регистрация в `di.py`, обновлены
+dispatcher, root composition и тесты. AST трёх перемещённых реализаций совпал с HEAD, кроме импортов.
+После переноса: **383 passed, 5 skipped**, Ruff lint/format проходят, mypy проверил 205 source files.
+
+**Phase B.** Ненужная обёртка `BroadcastService.get_recipient_ids` заменена связным `SendBroadcast.execute`:
+он получает адресатов через публичный UsersQuery, вызывает sender по порядку и возвращает immutable
+`BroadcastResult(sent, total)`. Протокол BroadcastSender представляет внешнюю границу доставки.
+TelegramBroadcastSender владеет Bot, локалью получателя, gettext, экранированием HTML и обработкой
+TelegramAPIError. Ошибки lookup/форматирования остаются за пределами этого catch; неожиданные исключения
+по-прежнему прерывают обход. Router управляет авторизацией, FSM, preview и итогом в DEFAULT_LOCALE.
+Дополнительные тесты сценария проверяют порядок, подсчёт частичных ошибок, пустой список, остановку при
+неожиданном исключении и REQUEST scope. Проверка с реальным Postgres подтверждает выбор зарегистрированных
+пользователей через UsersQuery, без обращения Broadcast к UserRepository.
+
+Текущий пакет плоский: `router.py`, `keyboards.py`, `callbacks.py`, `service.py`, `sender.py`, `provider.py`.
+У feature нет собственных таблиц, jobs или runtime-файлов. Контейнер `main.py` собирает восемь providers.
+Остальные Users-компоненты остаются legacy; публичный запрос — временная явная application-граница.
+
+Финальные проверки:
+
+- pytest: **388 passed, 5 skipped**; пропуски прежние: необязательный локальный corpus eders и четыре HTTP simulation tests;
+- focused Broadcast/composition: **33 passed**;
+- Ruff lint/format проходят; format проверил **311 файлов**;
+- mypy strict: **206 source files**, без ошибок;
+- Index diagnostics: ошибок в service, sender, provider и router нет;
+- Index search: старые/промежуточные Python imports и BroadcastService отсутствуют;
+- DDL всех **27 таблиц и индексов** совпал с исходным; Alembic: `No new upgrade operations detected.`;
+- импортированы все **205 подмодулей** приложения.
+
+Сохранены payload, FSM state/key, тексты, локали, порядок, последовательная доставка без retry,
+ошибки и существующий дефект финализации request transaction. Реальные Telegram-запросы не выполнялись.
+Обновлены ARCHITECTURE.md, AGENTS.md и CLAUDE.md. Автоматический staging трёх перемещённых пар путей
+снят; начальный index был пустым. Коммиты не создавались. Следующий крупный этап карты — Food menu;
+его перенос в этот этап не включён.

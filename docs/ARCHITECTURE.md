@@ -4,7 +4,7 @@
 репозитории; наличие функции в `features/` само по себе не означает, что она реализована.
 
 Проект находится в процессе постепенного перехода к функциональным модулям. Перенесены `feedback`,
-`advertisements`, `student_questions`, `versions` и `donations`. Код каждой области собран в `modules/`.
+`advertisements`, `student_questions`, `versions`, `donations` и `broadcast`. Код каждой области собран в `modules/`.
 У объявлений также перенесена очистка истёкших публикаций. Versions остаётся набором функций без DI provider.
 Остальные области пока
 сохраняют прежнюю структуру по слоям.
@@ -102,6 +102,7 @@ manashelper/
 │   │   ├── student_questions/     # Плоский модуль: router, keyboards, callbacks, service, repository, orm, provider
 │   │   ├── versions/              # Плоский модуль: history, formatter, keyboards, callbacks, router
 │   │   ├── donations/             # Каталог QR, APP Telegram-кеш, REQUEST service, router, клавиатуры, callback, provider
+│   │   ├── broadcast/             # SendBroadcast, Telegram sender, router, клавиатура, callbacks, REQUEST-provider
 │   │   ├── users/                 # Пока только публичный UsersQuery и REQUEST-provider
 │   │   └── feedback/
 │   │       ├── router.py          # FSM, обращения и ответы admin-чата
@@ -224,7 +225,8 @@ OBIS, столовой и удаления сообщений также нап�
 `PublicationRemover` для очистки передаётся из контекста её entry point. `StudentQuestionsProvider` регистрирует
 репозиторий и сервис опроса в том же REQUEST scope. `UsersProvider` предоставляет публичные запросы
 пользователей. `DonationsProvider` регистрирует QR-адаптер в `APP` и application-сервис в `REQUEST`.
-Семь провайдеров собираются в `main.py`; состояние LRU-кеша сохраняется между request scopes.
+`BroadcastProvider` предоставляет `SendBroadcast` в `REQUEST`; адаптер доставки создаёт обработчик с текущим Bot.
+Восемь провайдеров собираются в `main.py`; состояние LRU-кеша сохраняется между request scopes.
 
 | Область | Объекты | Время жизни |
 | --- | --- | --- |
@@ -362,7 +364,7 @@ presentation использует enum из `domain/enums.py`, не импорт
 | Возможность | Реализация |
 | --- | --- |
 | Обратная связь | `modules/feedback/`: `FeedbackService` сохраняет обращение и связь с сообщением в admin-чате; администратор отвечает штатным reply Telegram |
-| `/broadcast` | Legacy `BroadcastService` получает ID всех пользователей через публичный UsersQuery; доступ проверяется по `admin_chat_id` |
+| `/broadcast` | `modules/broadcast`: SendBroadcast получает все ID через UsersQuery, последовательно вызывает sender и возвращает BroadcastResult; доступ проверяет router по `admin_chat_id` |
 | Опрос студентов | `modules/student_questions/`: `/start student_questions`, FSM-форма и `StudentQuestionsService`; ответы и согласие на beta сохраняются в БД, повторная отправка требует выбора перезаписи |
 | `/donate` | `modules/donations/`: каталог QR из `docs/requisites/`, application-счётчик через UsersQuery и APP-адаптер с LRU до 32 Telegram file ID |
 | `/versions` | `modules/versions/`: чтение Markdown-файлов из `docs/versions/` при каждом вызове; без таблицы версий и отдельного provider |
@@ -567,8 +569,16 @@ Ruff использует длину строки 120 и целевую верс
 `repositories/` и `di.py`. Общая Telegram-навигация, i18n, `LocaleService`, `Settings` и `db.base.Base`
 остаются временными внешними зависимостями перенесённых модулей. Объявления используют `UserContactService`
 через application-поверхность, без доступа к репозиториям Users. Donations и Broadcast используют UsersQuery
-из частично выделенного `modules/users/`. Старые Python-пути Feedback, объявлений, опроса, версий и Donations удалены;
+из частично выделенного `modules/users/`. Старые Python-пути Feedback, объявлений, опроса, версий, Donations и Broadcast удалены;
 адаптеров совместимости для них нет, все потребители в проекте используют новые импорты.
+
+Broadcast остаётся небольшим плоским модулем. `service.py` содержит `SendBroadcast`, immutable dataclass
+`BroadcastResult` и протокол `BroadcastSender`, обозначающий внешнюю границу доставки. Здесь нет типов
+Telegram, gettext, HTML, FSM или прямого доступа к репозиторию пользователей. `sender.py` реализует
+Telegram-доставку: локаль каждого получателя, экранирование текста и продолжение после `TelegramAPIError`.
+Ошибки получения локали и неожиданные ошибки доставки по-прежнему останавливают рассылку без итогового
+сообщения. Router сохраняет авторизацию, preview, очистку FSM до выбора адресатов и русскую статистику.
+Отправка последовательная, без retry; фильтры NotificationSettings для административной рассылки не применяются.
 
 Новый маршрутизатор подключается в `bot/dispatcher.py`, job — в `jobs/scheduler.py`, изменение схемы —
 через модели и Alembic. Перенос моделей Feedback, объявлений и опроса сохранил DDL всех 27 таблиц и индексов, поэтому новой

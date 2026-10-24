@@ -160,12 +160,3 @@ class PhoneNumberActionCallback(CallbackData, prefix="phone_number_action"):
 
 class PhoneNumberDeleteCallback(CallbackData, prefix="phone_number_delete"):
     id: uuid.UUID
-
-
-class BroadcastAction(StrEnum):
-    CONFIRM = "confirm"
-    CANCEL = "cancel"
-
-
-class BroadcastCallback(CallbackData, prefix="broadcast"):
-    action: BroadcastAction

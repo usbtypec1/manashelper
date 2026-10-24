@@ -73,6 +73,7 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
         from manashelper.bot.dispatcher import create_dispatcher
         from manashelper.di import AppProvider, RequestProvider
         from manashelper.modules.advertisements.provider import AdvertisementsProvider
+        from manashelper.modules.broadcast.provider import BroadcastProvider
         from manashelper.modules.donations.provider import DonationsProvider
         from manashelper.modules.feedback.provider import FeedbackProvider
         from manashelper.modules.student_questions.provider import StudentQuestionsProvider
@@ -87,10 +88,12 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
                 StudentQuestionsProvider(),
                 UsersProvider(),
                 DonationsProvider(),
+                BroadcastProvider(),
             ) as container:
                 dispatcher = create_dispatcher(container)
                 names = [router.name for router in dispatcher.sub_routers]
                 assert names.count("feedback") == 1
+                assert names.count("broadcast") == 1
                 assert names.index("student_questions") < names.index("advertisement_contact")
                 assert names.index("advertisement_contact") < names.index("start")
 

@@ -1,7 +1,4 @@
-import logging
-
 from aiogram import Bot, F, Router
-from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -9,16 +6,15 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.callback_data import BroadcastAction, BroadcastCallback
-from manashelper.bot.keyboards.broadcast import build_broadcast_confirm_keyboard
 from manashelper.config import Settings
 from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import DEFAULT_LOCALE
-from manashelper.services.broadcast import BroadcastService
+from manashelper.modules.broadcast.callbacks import BroadcastAction, BroadcastCallback
+from manashelper.modules.broadcast.keyboards import build_broadcast_confirm_keyboard
+from manashelper.modules.broadcast.sender import TelegramBroadcastSender
+from manashelper.modules.broadcast.service import BroadcastSender, SendBroadcast
 from manashelper.services.html_sanitization import escape_html
 from manashelper.services.locale import LocaleService
-
-logger = logging.getLogger(__name__)
 
 router = Router(name="broadcast")
 
@@ -83,7 +79,7 @@ async def on_broadcast_confirmed(
     state: FSMContext,
     bot: Bot,
     settings: FromDishka[Settings],
-    broadcast_service: FromDishka[BroadcastService],
+    send_broadcast: FromDishka[SendBroadcast],
     locale_service: FromDishka[LocaleService],
 ) -> None:
     if not isinstance(callback_query.message, Message) or not _is_admin_chat(callback_query.message.chat.id, settings):
@@ -100,18 +96,9 @@ async def on_broadcast_confirmed(
     with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):
         await callback_query.message.edit_text(_("broadcast.sending"))
 
-    recipient_ids = await broadcast_service.get_recipient_ids()
-    sent_count = 0
-    for user_id in recipient_ids:
-        locale = await locale_service.get_locale(user_id)
-        with i18n.context(), i18n.use_locale(locale.value):
-            text = _("broadcast.admin_message").format(body=escape_html(body))
-        try:
-            await bot.send_message(chat_id=user_id, text=text)
-            sent_count += 1
-        except TelegramAPIError:
-            logger.warning("Failed to deliver broadcast to user %s", user_id, exc_info=True)
+    sender: BroadcastSender = TelegramBroadcastSender(bot, locale_service)
+    result = await send_broadcast.execute(body, sender)
 
     with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):
-        summary_text = _("broadcast.sent").format(sent=sent_count, total=len(recipient_ids))
+        summary_text = _("broadcast.sent").format(sent=result.sent, total=result.total)
     await bot.send_message(chat_id=callback_query.message.chat.id, text=summary_text)

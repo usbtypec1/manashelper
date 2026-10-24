@@ -17,6 +17,7 @@ from manashelper.di import AppProvider, RequestProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.logging_config import configure_logging
 from manashelper.modules.advertisements.provider import AdvertisementsProvider
+from manashelper.modules.broadcast.provider import BroadcastProvider
 from manashelper.modules.donations.provider import DonationsProvider
 from manashelper.modules.feedback.provider import FeedbackProvider
 from manashelper.modules.student_questions.provider import StudentQuestionsProvider
@@ -52,6 +53,7 @@ async def main() -> None:
             StudentQuestionsProvider(),
             UsersProvider(),
             DonationsProvider(),
+            BroadcastProvider(),
         )
         stack.push_async_callback(container.close)
 
