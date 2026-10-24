@@ -18,8 +18,13 @@ router, service, repository, and tests before changing a feature. `features/` ho
 
 Code is organized by layer under `src/manashelper/`: `bot/routers` (handlers), `bot/keyboards`, `bot/middlewares`,
 `bot/callback_data.py`, `services`, `repositories`, `db/models`, `scraping`, `jobs`, `localization`, `config.py`,
-`di.py`, and `main.py`. Keep that layer-based structure. Add routers to the dispatcher in `bot/dispatcher.py` and register
-services/repositories in `di.py`. Router order matters because aiogram uses the first matching handler; the
+`di.py`, and `main.py`. A gradual feature-first migration is in progress: feedback and advertisements now live in
+`modules/feedback/` and `modules/advertisements/`, with their REQUEST-scoped providers composed in `main.py`.
+Advertisements separates presentation, application and infrastructure, with domain enums; feedback stays flat.
+Keep migrated feature code together;
+do not move unrelated legacy areas in the same stage. See `docs/ARCHITECTURE.md` and `docs/MIGRATION.md`.
+Add routers to the dispatcher in `bot/dispatcher.py`; legacy services/repositories remain in `di.py`, while migrated
+features own their providers. Router order matters because aiogram uses the first matching handler; the
 advertisement deep-link router must precede the plain `/start` router. Use typed `CallbackData` classes for inline
 button payloads.
 
@@ -29,8 +34,10 @@ presentation layer. Put pure mapping and formatting helpers at module level. Esc
 text with `services/html_sanitization.py::escape_html` before inserting it into Telegram HTML messages.
 
 `di.py` has an application scope for settings, engine, session factory, clients and shared services, and a request
-scope for sessions, repositories and most services. A request-scoped session commits when its scope succeeds and
-rolls back on exception. New handlers use `FromDishka[...]`; jobs open their own short-lived request scopes with
+scope for sessions, repositories and most services. The session commits on normal finalization and rolls back if
+commit raises. An existing defect is characterized in `tests/test_feedback_composition.py`: Dishka sends a request-body
+exception as the yield value, which the provider ignores, so a body exception alone still leads to commit. Do not
+silently fix this while relocating a feature. New handlers use `FromDishka[...]`; jobs open request scopes with
 `async with container() as request_container`. Keep `setup_dishka(container, dispatcher)` followed by an explicit
 `inject_router(dispatcher)`; `auto_inject=True` conflicts with aiogram startup callbacks in the current versions.
 
@@ -38,7 +45,9 @@ rolls back on exception. New handlers use `FromDishka[...]`; jobs open their own
 state. `RateLimitMiddleware` runs before it. `LocaleMiddleware` runs after Dishka setup so it can use the request
 container. Keep middleware registration order and router filters in mind when adding handlers.
 
-Schema changes go through `db/models` and an Alembic migration in `alembic/versions`. Generate migrations with
+Schema changes go through legacy `db/models` or the owning feature's ORM and an Alembic migration in `alembic/versions`.
+The global model registry still imports migrated models for Alembic. File relocation alone needs no schema migration.
+Generate migrations with
 `uv run alembic revision --autogenerate -m "description"` when a database is available, then review the generated
 operations. `main.py` applies migrations on startup; `uv run alembic upgrade head` applies them manually.
 
@@ -55,6 +64,8 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
   configured channel. Public posts hide contact details behind a `/start ad_<id>` link; contact opens are logged.
   The channel post IDs must remain available for deletion when an ad is removed or expires. The marketplace menu
   is a reply keyboard reached from its main-menu button or `/start market`.
+  Expiry runs through `modules/advertisements/jobs.py` and `ExpireAdvertisements`; the use case depends on its
+  repository and `PublicationRemover`, while the Telegram adapter handles batching and best-effort failures.
 - Feedback and `/broadcast` are restricted to `Settings.admin_chat_id`. Admins reply to forwarded feedback using
   Telegram's native reply action. `/broadcast` is registered only for that chat and sends to all registered users.
 - `docs/requisites/` holds `/donate` bank QR images. Filenames provide bank labels. `DonationQrService` reuses

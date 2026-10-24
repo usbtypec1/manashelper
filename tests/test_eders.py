@@ -320,3 +320,57 @@ async def test_persistent_session_expiry_stops_after_one_retry(monkeypatch: pyte
     with pytest.raises(EdersSessionExpiredError):
         await EdersClient().fetch_snapshot("fake-student", "fake-password")
     assert authenticate == ["fake-student", "fake-student"]
+
+
+@pytest.mark.parametrize(
+    "destination",
+    [
+        "https://example.com/auth/userkey/login.php?key=fake-secret",
+        "http://eders.manas.edu.kg/my/",
+        f"{EDERS_BASE_URL}/login/logout.php?sesskey=fake-secret",
+        f"{EDERS_BASE_URL}/auth/userkey/login.php?key=one&key=two",
+        f"{EDERS_BASE_URL}/auth/userkey/login.php?key=fake-secret&action=submit",
+    ],
+)
+async def test_sso_rejects_unsafe_redirect_without_requesting_destination(destination):
+    requests = []
+
+    def handler(request):
+        requests.append(request)
+        return httpx.Response(302, headers={"location": destination})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        with pytest.raises(EdersUnsafeUrlError) as error:
+            await eders_client._request(client, f"{OBIS_BASE_URL}/site/eders", "sso")
+    assert [request.url.path for request in requests] == ["/site/eders"]
+    assert "fake-secret" not in str(error.value)
+
+
+@pytest.mark.parametrize("path", ["/course/view.php?id=10", "/mod/assign/view.php?id=20", "/mod/quiz/view.php?id=21"])
+async def test_read_redirect_preserves_english_without_allowing_actions(path):
+    requests = []
+
+    def handler(request):
+        requests.append(request)
+        if len(requests) == 1:
+            return httpx.Response(302, headers={"location": f"{path}&lang=en"})
+        return httpx.Response(200, text="Read-only page")
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        response = await eders_client._request(client, f"{EDERS_BASE_URL}{path}", "read")
+    assert response.text == "Read-only page"
+    assert len(requests) == 2
+    assert all(request.url.params.get_list("lang") == ["en"] for request in requests)
+
+
+async def test_read_login_redirect_expires_before_requesting_login_page():
+    paths = []
+
+    def handler(request):
+        paths.append(request.url.path)
+        return httpx.Response(302, headers={"location": "/login/index.php"})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        with pytest.raises(EdersSessionExpiredError):
+            await eders_client._request(client, f"{EDERS_BASE_URL}/user/profile.php", "read")
+    assert paths == ["/user/profile.php"]

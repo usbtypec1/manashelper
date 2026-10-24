@@ -4,13 +4,18 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models import User
-from manashelper.repositories.advertisement_contact_view_repository import AdvertisementContactViewRepository
-from manashelper.repositories.advertisement_repository import AdvertisementRepository
+from manashelper.modules.advertisements.application.advertisement import (
+    AdvertisementNotFoundError,
+    AdvertisementService,
+)
+from manashelper.modules.advertisements.application.advertisement_contact import AdvertisementContactService
+from manashelper.modules.advertisements.application.advertisement_moderation import AdvertisementModerationService
+from manashelper.modules.advertisements.infrastructure.advertisement_contact_view_repository import (
+    AdvertisementContactViewRepository,
+)
+from manashelper.modules.advertisements.infrastructure.advertisement_repository import AdvertisementRepository
 from manashelper.repositories.user_phone_number_repository import UserPhoneNumberRepository
 from manashelper.repositories.user_repository import UserRepository
-from manashelper.services.advertisement import AdvertisementNotFoundError, AdvertisementService
-from manashelper.services.advertisement_contact import AdvertisementContactService
-from manashelper.services.advertisement_moderation import AdvertisementModerationService
 from manashelper.services.user_contact import UserContactService
 
 

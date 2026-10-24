@@ -7,8 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from manashelper.config import Settings, get_settings
 from manashelper.db.base import create_engine, create_session_pool
 from manashelper.repositories.action_log_repository import ActionLogRepository
-from manashelper.repositories.advertisement_contact_view_repository import AdvertisementContactViewRepository
-from manashelper.repositories.advertisement_repository import AdvertisementRepository
 from manashelper.repositories.course_repository import CourseRepository
 from manashelper.repositories.daily_menu_rating_repository import DailyMenuRatingRepository
 from manashelper.repositories.daily_menu_repository import DailyMenuRepository
@@ -16,7 +14,6 @@ from manashelper.repositories.department_repository import DepartmentRepository
 from manashelper.repositories.dish_repository import DishRepository
 from manashelper.repositories.eders_repository import EdersRepository
 from manashelper.repositories.faculty_repository import FacultyRepository
-from manashelper.repositories.feedback_repository import FeedbackRepository
 from manashelper.repositories.food_menu_cleanup_settings_repository import FoodMenuCleanupSettingsRepository
 from manashelper.repositories.food_menu_notification_settings_repository import (
     FoodMenuNotificationSettingsRepository,
@@ -36,9 +33,6 @@ from manashelper.scraping.food_menu_parser import FoodMenuParser
 from manashelper.scraping.obis_client import ObisClient
 from manashelper.scraping.timetable_client import TimetableClient
 from manashelper.services.action_log import ActionLogService
-from manashelper.services.advertisement import AdvertisementService
-from manashelper.services.advertisement_contact import AdvertisementContactService
-from manashelper.services.advertisement_moderation import AdvertisementModerationService
 from manashelper.services.broadcast import BroadcastService
 from manashelper.services.course import CourseService
 from manashelper.services.crypto import CryptoService
@@ -48,7 +42,6 @@ from manashelper.services.donations import DonationQrService, DonationService
 from manashelper.services.eders import EdersService
 from manashelper.services.eders_tracking import EdersTrackingService
 from manashelper.services.faculty import FacultyService
-from manashelper.services.feedback import FeedbackService
 from manashelper.services.food_menu_cleanup_settings import FoodMenuCleanupSettingsService
 from manashelper.services.food_menu_notification_settings import FoodMenuNotificationSettingsService
 from manashelper.services.food_menu_sync import FoodMenuSyncService
@@ -127,9 +120,6 @@ class RequestProvider(Provider):
     food_menu_cleanup_settings_repository = provide(FoodMenuCleanupSettingsRepository)
     action_log_repository = provide(ActionLogRepository)
     user_phone_number_repository = provide(UserPhoneNumberRepository)
-    advertisement_repository = provide(AdvertisementRepository)
-    advertisement_contact_view_repository = provide(AdvertisementContactViewRepository)
-    feedback_repository = provide(FeedbackRepository)
     student_questions_repository = provide(StudentQuestionsRepository)
 
     faculty_service = provide(FacultyService)
@@ -152,10 +142,6 @@ class RequestProvider(Provider):
     food_menu_cleanup_settings_service = provide(FoodMenuCleanupSettingsService)
     action_log_service = provide(ActionLogService)
     user_contact_service = provide(UserContactService)
-    advertisement_service = provide(AdvertisementService)
-    advertisement_moderation_service = provide(AdvertisementModerationService)
-    advertisement_contact_service = provide(AdvertisementContactService)
-    feedback_service = provide(FeedbackService)
     student_questions_service = provide(StudentQuestionsService)
     broadcast_service = provide(BroadcastService)
     donation_service = provide(DonationService)

@@ -4,7 +4,7 @@ Manashelper is a Telegram bot that helps students at Manas University keep track
 their class schedule, the cafeteria menu, and their grades — without having to dig through separate websites.
 You just chat with it on Telegram like you would with a friend, tapping buttons instead of typing commands.
 
-> Looking for how the code works instead? See [`CLAUDE.md`](CLAUDE.md) for the full architecture notes, or jump
+> Looking for how the code works instead? See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the current architecture, or jump
 > to [For developers](#for-developers) below.
 
 ## What the bot can do
@@ -36,8 +36,8 @@ Everything happens directly in the Telegram chat — there's no separate app or 
 
 Built with Python 3.13, [aiogram 3](https://docs.aiogram.dev/) for the Telegram bot layer, SQLAlchemy 2 (async)
 + Postgres for storage, and [Dishka](https://github.com/reagento/dishka) for dependency injection. There is no
-REST API — all interaction happens through Telegram long-polling. See [`CLAUDE.md`](CLAUDE.md) for a deep dive
-into the architecture, package layout, and design decisions.
+REST API — all interaction happens through Telegram long-polling. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+for the current package layout and [`docs/MIGRATION.md`](docs/MIGRATION.md) for the gradual feature-first migration.
 
 ### Requirements
 

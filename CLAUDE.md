@@ -46,21 +46,21 @@ Core capabilities (current):
 - `/start` resolves the user's locale, upserts the Telegram user, and shows the main reply keyboard.
 - **Advertising platform (барахолка)**: reached via the "🛒 Marketplace" main-menu button or a `/start market`
   deep link, both of which show a reply-keyboard sub-menu ("➕ Post an ad" / "📋 My ads" / "◀️ Back to menu",
-  `bot/routers/advertisement.py::send_marketplace_menu`) with a link to the public channel
+  `modules/advertisements/presentation/advertisement.py::send_marketplace_menu`) with a link to the public channel
   (`Settings.advertisement_channel_link`) in the message text. An aiogram FSM collects a title, description,
   optional price/media/expiry, gated by a mandatory-contact check (Telegram username or a saved phone number),
   then submits the ad for moderation to a single shared moderation chat (`Settings.moderation_chat_id`) with
-  Approve/Reject buttons (`bot/routers/advertisement_moderation.py`) — there is no per-user moderator role;
+  Approve/Reject buttons (`modules/advertisements/presentation/advertisement_moderation.py`) — there is no per-user moderator role;
   anyone acting from that configured chat is authorized. Approving publishes the ad to a configured Telegram
   channel (`Settings.advertisement_channel_id`) rather than an in-bot browse feed, with contact details hidden
   behind a `/start ad_<id>` deep link (opens the bot, reveals the seller's contacts, and is logged), and
   rejecting can carry an optional comment shown to the ad's owner. Users manage their own ads (paginated list,
   detail, delete) under "📋 My ads" and their saved phone numbers under "⚙️ Settings → 📱 My phone numbers"; an
-  hourly job (`jobs/advertisement.py::cleanup_expired_advertisements_job`) deletes ads past
+  hourly job (`modules/advertisements/jobs.py::cleanup_expired_advertisements_job`) deletes ads past
   their `expires_at` (chosen from fixed presets, not free text), removing their channel post(s) first — see
   "Advertising platform"
   below.
-- **User feedback**: a "💬 Send feedback" row in the `⚙️ Settings` menu (`bot/routers/feedback.py`) starts an
+- **User feedback**: a "💬 Send feedback" row in the `⚙️ Settings` menu (`modules/feedback/router.py`) starts an
   aiogram FSM that collects a free-text message and forwards it to a single shared `Settings.admin_chat_id` chat;
   an admin answers by using Telegram's native "reply" on that forwarded message, and the bot relays the reply
   text back to the original user in *their* locale — see "Feedback & broadcast" below.
@@ -132,7 +132,13 @@ dangling/untagged images would be cleaned and old version tags would keep accumu
 
 ## Architecture
 
-### Package layout (by layer, not by feature)
+### Package layout (incremental feature-first migration)
+
+Feedback has moved to `modules/feedback/`, including its router, keyboards, callback types, application service,
+repository, ORM and REQUEST-scoped provider. Advertisements has also moved to `modules/advertisements/`, with presentation, application, infrastructure,
+domain enums and its own REQUEST-scoped provider. Its expiry job delegates to `ExpireAdvertisements` through
+a publication-removal protocol and Telegram adapter. Other areas still use the legacy layers described below.
+`docs/ARCHITECTURE.md` describes the current state; `docs/MIGRATION.md` records stage boundaries and baseline issues.
 
 Under `src/manashelper/`, code is organized by technical layer, mirroring the original Java structure:
 `bot/routers` (aiogram handlers), `bot/keyboards` (inline keyboard builders), `bot/middlewares`, `bot/callback_data.py`,
@@ -185,8 +191,11 @@ read-modify-write isn't safe under concurrent access for the same user. This is 
 update, plus repositories/services built on top of it). `setup_dishka(container, dispatcher)` +
 `inject_router(dispatcher)` in `bot/dispatcher.py` wire dependency injection into router handlers via `FromDishka[X]`
 parameter annotations — the analog of Spring's constructor injection into `@Component`/`@Service` beans. The
-`RequestProvider`'s session provider commits on success and rolls back on exception, giving each update
-transactional semantics equivalent to Spring's `@Transactional`.
+`RequestProvider`'s session provider commits on finalization and rolls back if commit raises. The existing
+Dishka integration does not roll back on a request-body exception: it sends the exception as a yield value,
+which the provider ignores. This is characterized in `tests/test_feedback_composition.py` and remains a separate
+transaction-management defect. `FeedbackProvider` and `AdvertisementsProvider` supply feature dependencies in the same REQUEST scope,
+preserving the existing session lifecycle during the feature relocation.
 
 **Do not use `dishka.integrations.aiogram.setup_dishka(..., auto_inject=True)`.** As of dishka 1.10.1 + aiogram
 3.31, it registers its handler-injection pass as a `router.startup` callback via
@@ -272,7 +281,7 @@ auto-detection never falls through to it.
 
 `src/manashelper/jobs/` holds every `AsyncIOScheduler` job function registered in `jobs/scheduler.py`, one module per
 feature area (`jobs/food_menu.py`, `jobs/obis_notification.py`, `jobs/timetable_sync.py`,
-`jobs/scheduled_message_deletion.py`, `jobs/advertisement.py`), plus `jobs/common.py` for cross-cutting helpers
+`jobs/scheduled_message_deletion.py`, `modules/advertisements/jobs.py`), plus `jobs/common.py` for cross-cutting helpers
 shared by more than one job (`get_user_locale`, `send_notification`, `chunk`/`delete_message_batch` for batched
 `deleteMessages` calls). Each job opens its own short-lived Dishka request scope(s)
 (`async with container() as request_container`) rather than reusing one across the whole run, and wraps its body
@@ -313,7 +322,7 @@ choices, since none of these had an existing pattern to copy:
 - **No per-user moderator role.** An earlier revision had a `User.role` column
   (`marketplace_admin`/`superadmin`, assigned by hand in Postgres); that was removed in favor of a single shared
   `Settings.moderation_chat_id`. Authorization for every moderation action is enforced by
-  `bot/routers/advertisement_moderation.py::_is_moderation_chat` checking that the callback/message's
+  `modules/advertisements/presentation/advertisement_moderation.py::_is_moderation_chat` checking that the callback/message's
   `chat.id` matches that configured chat — not by anything stored per-user — so adding/removing moderators is
   purely a matter of who's a member of that Telegram chat.
 - **No in-bot browse feed**: approved ads are published to a Telegram channel
@@ -323,7 +332,7 @@ choices, since none of these had an existing pattern to copy:
 - **SQL-side pagination**: `AdvertisementRepository.get_page_by_user_id` does real `LIMIT`/`OFFSET` pagination for
   "📋 My ads", unlike every other paginated screen in the bot (`versions.py`, `lesson_search.py`), which slices an
   already-fully-fetched in-memory list — a persistent management list needs to reflect deletes immediately.
-- **User-uploaded media**: `bot/routers/advertisement.py`'s `AdvertisementForm.media` state is the only place in
+- **User-uploaded media**: `modules/advertisements/presentation/advertisement.py`'s `AdvertisementForm.media` state is the only place in
   the bot that receives (rather than sends) Telegram photos/videos, storing each `file_id` in
   `AdvertisementMedia` (capped at 10 per ad, tracked in FSM state until submission). Sending a 10-item album
   delivers 10 separate updates, one per photo/video — rather than replying to each one, `_render_media_prompt`
@@ -336,13 +345,13 @@ choices, since none of these had an existing pattern to copy:
   persisted in `UserPhoneNumber` — see `services/user_contact.py`. Users manage their saved numbers (add/delete)
   from `⚙️ Settings → 📱 My phone numbers` (`bot/routers/phone_numbers.py`), which reuses the same
   contact-request keyboard (`bot/keyboards/phone_numbers.py`) as the posting flow.
-- **The marketplace menu is a reply keyboard, not an inline one** (`bot/keyboards/advertisement.py::
+- **The marketplace menu is a reply keyboard, not an inline one** (`modules/advertisements/presentation/keyboards/advertisement.py::
   build_advertisement_menu_keyboard`), unlike almost every other sub-menu in the bot — it needs to stay on
   screen across the whole "post an ad" / "my ads" sub-flow the way the main reply keyboard does, and it's
   reachable two ways: the "🛒 Marketplace" main-menu button, and a `/start market` deep link
-  (`bot/routers/advertisement_contact.py::MARKET_DEEPLINK_PAYLOAD`, handled by the same
+  (`modules/advertisements/presentation/advertisement_contact.py::MARKET_DEEPLINK_PAYLOAD`, handled by the same
   `CommandStart(deep_link=True)` handler as the `ad_<id>` contact-reveal payload) — both call the shared
-  `send_marketplace_menu` in `bot/routers/advertisement.py` so the menu text/keyboard can't drift between the
+  `send_marketplace_menu` in `modules/advertisements/presentation/advertisement.py` so the menu text/keyboard can't drift between the
   two entry points. "◀️ Back to menu" restores the main reply keyboard. A reply-keyboard button's label can't
   carry a URL (unlike an inline button), so the link to the public channel (`Settings.advertisement_channel_link`)
   is instead an `<a href="...">` in the menu message's own text.
@@ -351,7 +360,7 @@ choices, since none of these had an existing pattern to copy:
   `format_advertisement(..., contact=...)`). The channel post instead embeds a bot deep link
   (`format_advertisement(..., contact_deep_link=...)`, built from `bot.get_me()` in
   `advertisement_moderation.py::on_approve` as `https://t.me/<bot>?start=ad_<id>`). Opening it is handled by
-  `bot/routers/advertisement_contact.py` (`CommandStart(deep_link=True)`, registered in `bot/dispatcher.py` *before*
+  `modules/advertisements/presentation/advertisement_contact.py` (`CommandStart(deep_link=True)`, registered in `bot/dispatcher.py` *before*
   `start_router` so a bare `/start` still falls through to the normal welcome flow) via
   `AdvertisementContactService.reveal_contact`, which also logs the open as an `AdvertisementContactView` row
   (never deduplicated — every open is its own row, for counting interest).
@@ -375,9 +384,9 @@ choices, since none of these had an existing pattern to copy:
   (`AdvertisementRepository.count_created_since`) — a data-driven business rule, distinct from the generic
   per-chat token-bucket throttle in `bot/middlewares/rate_limit.py`.
 - **Moderation**: a new ad is sent once to `Settings.moderation_chat_id` with Approve/Reject buttons
-  (`bot/routers/advertisement_moderation.py`); both actions re-check the ad is still `pending` before acting
+  (`modules/advertisements/presentation/advertisement_moderation.py`); both actions re-check the ad is still `pending` before acting
   (`AdvertisementNotPendingError`) so two people tapping at once in that chat can't double-process the same ad.
-- **Expiration cleanup**: `jobs/advertisement.py::cleanup_expired_advertisements_job` (hourly) deletes ads past
+- **Expiration cleanup**: `modules/advertisements/jobs.py::cleanup_expired_advertisements_job` (hourly) deletes ads past
   `expires_at`, removing their channel post(s) first — same outbox-sweep shape as
   `jobs/scheduled_message_deletion.py::cleanup_scheduled_message_deletions_job`.
 
@@ -385,13 +394,13 @@ choices, since none of these had an existing pattern to copy:
 
 Another from-scratch subsystem (no Java precedent), both built around the same single shared
 `Settings.admin_chat_id` and, like the advertising platform, with no per-user admin role — authorization is
-purely "did this update originate from that chat" (`bot/routers/feedback.py::_is_admin_chat`,
+purely "did this update originate from that chat" (`modules/feedback/router.py::_is_admin_chat`,
 `bot/routers/broadcast.py::_is_admin_chat`).
 
-- **Reply-based correlation, not an in-bot reply UI**: `FeedbackMessage` (`db/models/feedback_message.py`) stores
+- **Reply-based correlation, not an in-bot reply UI**: `FeedbackMessage` (`modules/feedback/orm.py`) stores
   the id of the message a feedback submission was forwarded as in the admin chat
   (`admin_chat_message_id`). An admin answers with Telegram's native "reply" feature on that forwarded message;
-  `bot/routers/feedback.py::on_admin_reply` matches on `message.reply_to_message.message_id` against that column
+  `modules/feedback/router.py::on_admin_reply` matches on `message.reply_to_message.message_id` against that column
   (`FeedbackRepository.get_by_admin_chat_message_id`) to find which user to relay the answer to — there's no
   in-bot "answer" button or form. Every feedback submission is independent: there's no back-and-forth threading
   beyond one submit/one reply, so a user who wants to say more just submits feedback again.

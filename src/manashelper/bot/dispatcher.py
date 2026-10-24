@@ -10,13 +10,9 @@ from manashelper.bot.middlewares.i18n import LocaleMiddleware
 from manashelper.bot.middlewares.per_chat_ordering import PerChatOrderingMiddleware
 from manashelper.bot.middlewares.private_chat_only import PrivateChatOnlyMiddleware
 from manashelper.bot.middlewares.rate_limit import RateLimitMiddleware
-from manashelper.bot.routers.advertisement import router as advertisement_router
-from manashelper.bot.routers.advertisement_contact import router as advertisement_contact_router
-from manashelper.bot.routers.advertisement_moderation import router as advertisement_moderation_router
 from manashelper.bot.routers.broadcast import router as broadcast_router
 from manashelper.bot.routers.donations import router as donations_router
 from manashelper.bot.routers.eders import router as eders_router
-from manashelper.bot.routers.feedback import router as feedback_router
 from manashelper.bot.routers.food_menu import router as food_menu_router
 from manashelper.bot.routers.food_menu_cleanup import router as food_menu_cleanup_router
 from manashelper.bot.routers.food_menu_notifications import router as food_menu_notifications_router
@@ -29,6 +25,12 @@ from manashelper.bot.routers.start import router as start_router
 from manashelper.bot.routers.student_questions import router as student_questions_router
 from manashelper.bot.routers.timetable import router as timetable_router
 from manashelper.bot.routers.versions import router as versions_router
+from manashelper.modules.advertisements.presentation.advertisement import router as advertisement_router
+from manashelper.modules.advertisements.presentation.advertisement_contact import router as advertisement_contact_router
+from manashelper.modules.advertisements.presentation.advertisement_moderation import (
+    router as advertisement_moderation_router,
+)
+from manashelper.modules.feedback.router import router as feedback_router
 
 logger = logging.getLogger(__name__)
 

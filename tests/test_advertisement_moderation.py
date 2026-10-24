@@ -2,9 +2,12 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models import User
-from manashelper.repositories.advertisement_repository import AdvertisementRepository
-from manashelper.services.advertisement import AdvertisementService
-from manashelper.services.advertisement_moderation import AdvertisementModerationService, AdvertisementNotPendingError
+from manashelper.modules.advertisements.application.advertisement import AdvertisementService
+from manashelper.modules.advertisements.application.advertisement_moderation import (
+    AdvertisementModerationService,
+    AdvertisementNotPendingError,
+)
+from manashelper.modules.advertisements.infrastructure.advertisement_repository import AdvertisementRepository
 
 
 async def _make_user(session: AsyncSession, user_id: int) -> User:
