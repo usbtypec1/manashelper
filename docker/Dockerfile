@@ -16,7 +16,7 @@ COPY src ./src
 COPY docs/commands ./docs/commands
 COPY docs/requisites ./docs/requisites
 
-# The /versions command reads these on demand at runtime (services/version_history.py resolves the
+# The /versions command reads these on demand at runtime (modules/versions/history.py resolves the
 # path relative to the repo root) — never baked into a Python module or the database.
 COPY docs/versions ./docs/versions
 RUN uv sync --frozen --no-dev

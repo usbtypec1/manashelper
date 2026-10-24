@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.db.models import StudentQuestionsResponse
+from manashelper.modules.student_questions.orm import StudentQuestionsResponse
 
 
 class StudentQuestionsRepository:

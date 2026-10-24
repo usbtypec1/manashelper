@@ -22,7 +22,6 @@ from manashelper.repositories.lesson_history_repository import LessonHistoryRepo
 from manashelper.repositories.lesson_repository import LessonRepository
 from manashelper.repositories.notification_settings_repository import NotificationSettingsRepository
 from manashelper.repositories.scheduled_message_deletion_repository import ScheduledMessageDeletionRepository
-from manashelper.repositories.student_questions_repository import StudentQuestionsRepository
 from manashelper.repositories.user_exam_grade_repository import UserExamGradeRepository
 from manashelper.repositories.user_lesson_attendance_repository import UserLessonAttendanceRepository
 from manashelper.repositories.user_phone_number_repository import UserPhoneNumberRepository
@@ -52,7 +51,6 @@ from manashelper.services.notification_settings import NotificationSettingsServi
 from manashelper.services.obis import ObisService
 from manashelper.services.obis_notification import ObisNotificationService
 from manashelper.services.schedule import ScheduleService
-from manashelper.services.student_questions import StudentQuestionsService
 from manashelper.services.study_week import StudyWeekService
 from manashelper.services.timetable_sync import TimetableSyncService
 from manashelper.services.user_contact import UserContactService
@@ -120,7 +118,6 @@ class RequestProvider(Provider):
     food_menu_cleanup_settings_repository = provide(FoodMenuCleanupSettingsRepository)
     action_log_repository = provide(ActionLogRepository)
     user_phone_number_repository = provide(UserPhoneNumberRepository)
-    student_questions_repository = provide(StudentQuestionsRepository)
 
     faculty_service = provide(FacultyService)
     department_service = provide(DepartmentService)
@@ -142,6 +139,5 @@ class RequestProvider(Provider):
     food_menu_cleanup_settings_service = provide(FoodMenuCleanupSettingsService)
     action_log_service = provide(ActionLogService)
     user_contact_service = provide(UserContactService)
-    student_questions_service = provide(StudentQuestionsService)
     broadcast_service = provide(BroadcastService)
     donation_service = provide(DonationService)

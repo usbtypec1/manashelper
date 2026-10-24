@@ -18,9 +18,11 @@ router, service, repository, and tests before changing a feature. `features/` ho
 
 Code is organized by layer under `src/manashelper/`: `bot/routers` (handlers), `bot/keyboards`, `bot/middlewares`,
 `bot/callback_data.py`, `services`, `repositories`, `db/models`, `scraping`, `jobs`, `localization`, `config.py`,
-`di.py`, and `main.py`. A gradual feature-first migration is in progress: feedback and advertisements now live in
-`modules/feedback/` and `modules/advertisements/`, with their REQUEST-scoped providers composed in `main.py`.
-Advertisements separates presentation, application and infrastructure, with domain enums; feedback stays flat.
+`di.py`, and `main.py`. A gradual feature-first migration is in progress: feedback, advertisements and the survey live in
+`modules/feedback/`, `modules/advertisements/` and `modules/student_questions/`, with REQUEST providers in `main.py`.
+Advertisements separates presentation, application and infrastructure, with domain enums; feedback and the survey stay flat.
+Release history lives in flat `modules/versions/`, with functions and no artificial DI provider. Its runtime
+`docs/versions/` path is tested for both checkout and Docker-like layouts.
 Keep migrated feature code together;
 do not move unrelated legacy areas in the same stage. See `docs/ARCHITECTURE.md` and `docs/MIGRATION.md`.
 Add routers to the dispatcher in `bot/dispatcher.py`; legacy services/repositories remain in `di.py`, while migrated
@@ -150,9 +152,49 @@ line limit; mypy runs in strict mode for `src/manashelper`. If `uv run` cannot r
 sandbox, use the existing `.venv/bin/` executables. Run focused tests while editing and the relevant lint,
 format, type and test checks before finishing a code change.
 
-## IDE integration
+# Tool usage policy
 
-Use the `jetbrains-index` MCP server when available for semantic code operations: `ide_find_references` for usages,
-`ide_find_definition` for navigation, `ide_refactor_rename` for project-wide renames, `ide_type_hierarchy` and
-`ide_find_implementations` for relationships, and `ide_diagnostics` for inspections. The IDE's semantic index is
-preferable to text search for code symbols; use `rg` when the server is unavailable or for plain text searches.
+Prefer IDE MCP tools over shell commands whenever an equivalent MCP tool exists.
+
+For codebase exploration:
+
+- Use Index MCP for symbol lookup, usages, implementations, hierarchy, diagnostics, and semantic navigation.
+- Do not use grep, rg, find, sed, awk, or similar shell commands for code discovery when Index MCP can answer the question.
+- Prefer IDE diagnostics over running ad-hoc compiler or linter commands just to inspect errors.
+
+For IDE operations:
+
+- Use JetBrains MCP for run configurations, debugger operations, IDE actions, and project-aware operations.
+- Prefer IDE run configurations over manually reconstructing the same command in the shell.
+
+Use terminal commands when:
+
+- no suitable MCP tool exists;
+- the MCP tool fails or returns insufficient information;
+- the task inherently requires CLI tooling;
+- running Maven/Gradle/Docker/Git commands is explicitly appropriate.
+
+When falling back from MCP to terminal, briefly state why.
+
+## MCP priority
+
+For code analysis, always try `intellij-index` MCP before using shell-based search.
+
+Preferred order:
+
+1. Index MCP
+2. JetBrains IDE MCP
+3. Native file tools
+4. Shell/terminal as fallback
+
+Do not use `rg`, `grep`, `find`, or filesystem traversal for:
+
+- finding classes;
+- finding methods;
+- finding usages;
+- finding implementations;
+- resolving symbols;
+- inspecting inheritance;
+- checking IDE diagnostics;
+
+when the Index MCP provides an equivalent operation.

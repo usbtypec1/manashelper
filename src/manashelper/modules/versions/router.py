@@ -2,10 +2,10 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message
 
-from manashelper.bot.callback_data import VersionCallback, VersionsPageCallback
-from manashelper.bot.keyboards.versions import build_version_detail_keyboard, build_versions_list_keyboard
-from manashelper.services.version_history import get_page, get_version, total_pages
-from manashelper.services.version_history_formatter import format_version_detail, format_versions_list_header
+from manashelper.modules.versions.callbacks import VersionCallback, VersionsPageCallback
+from manashelper.modules.versions.formatter import format_version_detail, format_versions_list_header
+from manashelper.modules.versions.history import get_page, get_version, total_pages
+from manashelper.modules.versions.keyboards import build_version_detail_keyboard, build_versions_list_keyboard
 
 router = Router(name="versions")
 

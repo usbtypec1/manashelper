@@ -115,29 +115,6 @@ class ObisResultsPageCallback(CallbackData, prefix="obis_results_page"):
     page: int
 
 
-class StudentQuestionsStep(StrEnum):
-    COURSE = "course"
-    SEARCH = "search"
-    FOUND = "found"
-    BETA = "beta"
-
-
-class StudentQuestionsAnswerCallback(CallbackData, prefix="sqa"):
-    session_id: str
-    step: StudentQuestionsStep
-    answer: str
-
-
-class StudentQuestionsControlAction(StrEnum):
-    RESTART = "restart"
-    CANCEL = "cancel"
-
-
-class StudentQuestionsControlCallback(CallbackData, prefix="sqc"):
-    session_id: str
-    action: StudentQuestionsControlAction
-
-
 class EdersPageCallback(CallbackData, prefix="eders"):
     selected: DeadlineFilter
     page: int = 0
@@ -175,15 +152,6 @@ class NotificationSettingCallback(CallbackData, prefix="notification_setting"):
 
 class LocaleCallback(CallbackData, prefix="locale"):
     locale: Locale
-
-
-class VersionsPageCallback(CallbackData, prefix="versions_page"):
-    page: int
-
-
-class VersionCallback(CallbackData, prefix="version"):
-    version: str
-    page: int
 
 
 class PhoneNumberAction(StrEnum):

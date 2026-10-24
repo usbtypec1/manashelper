@@ -9,14 +9,15 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.methods import AnswerCallbackQuery, EditMessageText, SendMessage
 from aiogram.types import CallbackQuery, Chat, Message, Update, User
 
-from manashelper.bot.callback_data import (
+from manashelper.localization.i18n import i18n
+from manashelper.modules.student_questions.callbacks import (
     StudentQuestionsAnswerCallback,
     StudentQuestionsControlAction,
     StudentQuestionsControlCallback,
     StudentQuestionsStep,
 )
-from manashelper.bot.keyboards.student_questions import build_student_questions_keyboard
-from manashelper.bot.routers.student_questions import (
+from manashelper.modules.student_questions.keyboards import build_student_questions_keyboard
+from manashelper.modules.student_questions.router import (
     SESSION_KEY,
     StudentQuestionsForm,
     on_student_questions_answer,
@@ -25,10 +26,28 @@ from manashelper.bot.routers.student_questions import (
     on_student_questions_text,
     router,
 )
-from manashelper.localization.i18n import i18n
-from manashelper.services.student_questions import AlreadySubmittedError, StudentCourse
+from manashelper.modules.student_questions.service import AlreadySubmittedError, StudentCourse
 
 USER_ID = 990_001
+
+
+def test_survey_persisted_fsm_and_callback_contracts() -> None:
+    assert SESSION_KEY == "student_questions_session"
+    assert [state.state for state in StudentQuestionsForm.__all_states__] == [
+        "StudentQuestionsForm:overwrite",
+        "StudentQuestionsForm:course",
+        "StudentQuestionsForm:search",
+        "StudentQuestionsForm:questions",
+        "StudentQuestionsForm:found",
+        "StudentQuestionsForm:sources",
+        "StudentQuestionsForm:beta",
+    ]
+    answer = StudentQuestionsAnswerCallback(session_id="session", step=StudentQuestionsStep.COURSE, answer="1")
+    cancel = StudentQuestionsControlCallback(session_id="session", action=StudentQuestionsControlAction.CANCEL)
+    restart = StudentQuestionsControlCallback(session_id="session", action=StudentQuestionsControlAction.RESTART)
+    assert answer.pack() == "sqa:session:course:1"
+    assert cancel.pack() == "sqc:session:cancel"
+    assert restart.pack() == "sqc:session:restart"
 
 
 @pytest.fixture

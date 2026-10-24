@@ -3,9 +3,10 @@
 Состояние исходного кода и конфигурации на 25 октября 2026 года. Документ описывает реализацию в текущем
 репозитории; наличие функции в `features/` само по себе не означает, что она реализована.
 
-Проект находится в процессе постепенного перехода к функциональным модулям. Перенесены `feedback` и
-`advertisements`: их обработчики, клавиатуры, callback-типы, сервисы, репозитории, ORM и providers собраны
-в `modules/`. У объявлений также перенесена очистка истёкших публикаций. Остальные области пока
+Проект находится в процессе постепенного перехода к функциональным модулям. Перенесены `feedback`,
+`advertisements`, `student_questions` и `versions`. Код каждой области собран в `modules/`.
+У объявлений также перенесена очистка истёкших публикаций. Versions остаётся набором функций без DI provider.
+Остальные области пока
 сохраняют прежнюю структуру по слоям.
 Карта зависимостей, порядок этапов и исходные проблемы проверок описаны в [MIGRATION.md](MIGRATION.md).
 
@@ -96,6 +97,8 @@ manashelper/
 │   │   │   ├── infrastructure/    # Четыре ORM-модели и два репозитория
 │   │   │   ├── jobs.py            # Тонкий scheduler entry point
 │   │   │   └── provider.py        # Зависимости объявлений в Scope.REQUEST
+│   │   ├── student_questions/     # Плоский модуль: router, keyboards, callbacks, service, repository, orm, provider
+│   │   ├── versions/              # Плоский модуль: history, formatter, keyboards, callbacks, router
 │   │   └── feedback/
 │   │       ├── router.py          # FSM, обращения и ответы admin-чата
 │   │       ├── keyboards.py       # Кнопка отмены
@@ -146,7 +149,7 @@ aiogram; слой сервисов целиком не изолирован от
 
 [bot/dispatcher.py](../src/manashelper/bot/dispatcher.py) создаёт `Dispatcher`, подключает middleware и
 регистрирует маршрутизаторы. Обработчики находятся в `bot/routers/`, `modules/feedback/router.py`
-и `modules/advertisements/presentation/`. Они выбирают сценарий по команде, тексту кнопки,
+и presentation перенесённых модулей, включая `modules/student_questions/router.py`. Они выбирают сценарий по команде, тексту кнопки,
 callback-данным или состоянию FSM. Сервисы передаются через `FromDishka[...]`.
 
 Обработчики управляют диалогом и Telegram-операциями: отправляют и редактируют сообщения, отвечают на нажатия,
@@ -161,7 +164,7 @@ callback-данным или состоянию FSM. Сервисы переда
 
 ### Сервисы
 
-`services/`, `modules/feedback/service.py` и `modules/advertisements/application/` содержат бизнес-правила:
+`services/` и application-компоненты перенесённых модулей содержат бизнес-правила:
 подписки на курсы, сравнение снимков, настройки уведомлений,
 проверку владельца объявления, сохранение учётных данных и подготовку результатов для интерфейса.
 Сервисы получают конкретные зависимости через конструктор. Они могут вызывать другие сервисы:
@@ -214,7 +217,8 @@ OBIS, столовой и удаления сообщений также нап�
 Отдельный [FeedbackProvider](../src/manashelper/modules/feedback/provider.py) регистрирует репозиторий и
 сервис обращений. [AdvertisementsProvider](../src/manashelper/modules/advertisements/provider.py)
 регистрирует два репозитория, три сервиса и сценарий очистки. Все feature-зависимости имеют `Scope.REQUEST`;
-`PublicationRemover` для очистки передаётся из контекста её entry point. Четыре провайдера собираются в `main.py`.
+`PublicationRemover` для очистки передаётся из контекста её entry point. `StudentQuestionsProvider` регистрирует
+репозиторий и сервис опроса в том же REQUEST scope. Пять провайдеров собираются в `main.py`.
 
 | Область | Объекты | Время жизни |
 | --- | --- | --- |
@@ -353,16 +357,16 @@ presentation использует enum из `domain/enums.py`, не импорт
 | --- | --- |
 | Обратная связь | `modules/feedback/`: `FeedbackService` сохраняет обращение и связь с сообщением в admin-чате; администратор отвечает штатным reply Telegram |
 | `/broadcast` | `BroadcastService` получает всех зарегистрированных пользователей; доступ проверяется по `admin_chat_id` |
-| Опрос студентов | `/start student_questions`, FSM-форма и `StudentQuestionsService`; ответы и согласие на beta сохраняются в БД, повторная отправка требует выбора перезаписи |
+| Опрос студентов | `modules/student_questions/`: `/start student_questions`, FSM-форма и `StudentQuestionsService`; ответы и согласие на beta сохраняются в БД, повторная отправка требует выбора перезаписи |
 | `/donate` | QR-изображения из `docs/requisites/`; имя файла определяет банк, `DonationQrService` кеширует до 32 Telegram file ID по LRU |
-| `/versions` | Чтение Markdown-файлов из `docs/versions/` во время выполнения, без таблицы версий в БД |
+| `/versions` | `modules/versions/`: чтение Markdown-файлов из `docs/versions/` при каждом вызове; без таблицы версий и отдельного provider |
 | Язык и настройки | `LocaleService`, сервисы общих уведомлений, рассылки меню и очистки сообщений |
 
 ## 8. Постоянные данные
 
-ORM-модели находятся в [db/models/](../src/manashelper/db/models/), `modules/feedback/orm.py`
-и `modules/advertisements/infrastructure/`. Общий `db/models/__init__.py` импортирует и повторно
-экспортирует модели обоих перенесённых модулей, поэтому Alembic
+ORM-модели находятся в [db/models/](../src/manashelper/db/models/), `modules/feedback/orm.py`,
+`modules/student_questions/orm.py` и `modules/advertisements/infrastructure/`. Общий `db/models/__init__.py`
+импортирует и повторно экспортирует модели перенесённых модулей, поэтому Alembic
 продолжает видеть всю metadata. Основные таблицы сгруппированы ниже.
 
 | Область | Таблицы | Содержимое и связи |
@@ -556,10 +560,10 @@ Ruff использует длину строки 120 и целевую верс
 подключается в composition root. Остальные области пока используют `bot/routers/`, `services/`,
 `repositories/` и `di.py`. Общая Telegram-навигация, i18n, `LocaleService`, `Settings` и `db.base.Base`
 остаются временными внешними зависимостями перенесённых модулей. Объявления используют `UserContactService`
-через application-поверхность, без доступа к репозиториям Users. Старые Python-пути Feedback и объявлений удалены;
+через application-поверхность, без доступа к репозиториям Users. Старые Python-пути Feedback, объявлений, опроса и версий удалены;
 адаптеров совместимости для них нет, все потребители в проекте используют новые импорты.
 
 Новый маршрутизатор подключается в `bot/dispatcher.py`, job — в `jobs/scheduler.py`, изменение схемы —
-через модели и Alembic. Перенос моделей Feedback и объявлений сохранил DDL всех 27 таблиц и индексов, поэтому новой
+через модели и Alembic. Перенос моделей Feedback, объявлений и опроса сохранил DDL всех 27 таблиц и индексов, поэтому новой
 миграции нет. Пользовательские строки добавляются во все пять каталогов; новая публичная команда также
 требует записи в соответствующем JSON из `docs/commands/`.

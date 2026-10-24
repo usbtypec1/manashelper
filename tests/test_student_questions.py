@@ -6,8 +6,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models import StudentQuestionsResponse, User
-from manashelper.repositories.student_questions_repository import StudentQuestionsRepository
-from manashelper.services.student_questions import (
+from manashelper.modules.student_questions.repository import StudentQuestionsRepository
+from manashelper.modules.student_questions.service import (
     ANSWER_MAX_LENGTH,
     AlreadySubmittedError,
     StudentCourse,

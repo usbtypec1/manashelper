@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 
-from manashelper.db.models import StudentQuestionsResponse
-from manashelper.repositories.student_questions_repository import StudentQuestionsRepository
+from manashelper.modules.student_questions.orm import StudentQuestionsResponse
+from manashelper.modules.student_questions.repository import StudentQuestionsRepository
 
 ANSWER_MAX_LENGTH = 4000
 

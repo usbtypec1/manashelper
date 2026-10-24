@@ -8,18 +8,18 @@ from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.callback_data import (
+from manashelper.bot.routers.start import build_main_keyboard
+from manashelper.modules.student_questions.callbacks import (
     StudentQuestionsAnswerCallback,
     StudentQuestionsControlAction,
     StudentQuestionsControlCallback,
     StudentQuestionsStep,
 )
-from manashelper.bot.keyboards.student_questions import (
+from manashelper.modules.student_questions.keyboards import (
     build_student_questions_keyboard,
     build_student_questions_overwrite_keyboard,
 )
-from manashelper.bot.routers.start import build_main_keyboard
-from manashelper.services.student_questions import (
+from manashelper.modules.student_questions.service import (
     ANSWER_MAX_LENGTH,
     AlreadySubmittedError,
     StudentCourse,

@@ -18,6 +18,7 @@ from manashelper.jobs.scheduler import create_scheduler
 from manashelper.logging_config import configure_logging
 from manashelper.modules.advertisements.provider import AdvertisementsProvider
 from manashelper.modules.feedback.provider import FeedbackProvider
+from manashelper.modules.student_questions.provider import StudentQuestionsProvider
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,9 @@ async def main() -> None:
         bot = await stack.enter_async_context(
             Bot(token=settings.telegram_bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
         )
-        container = make_async_container(AppProvider(), RequestProvider(), FeedbackProvider(), AdvertisementsProvider())
+        container = make_async_container(
+            AppProvider(), RequestProvider(), FeedbackProvider(), AdvertisementsProvider(), StudentQuestionsProvider()
+        )
         stack.push_async_callback(container.close)
 
         dispatcher = create_dispatcher(container)

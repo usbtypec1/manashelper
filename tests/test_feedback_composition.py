@@ -73,10 +73,15 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
         from manashelper.di import AppProvider, RequestProvider
         from manashelper.modules.advertisements.provider import AdvertisementsProvider
         from manashelper.modules.feedback.provider import FeedbackProvider
+        from manashelper.modules.student_questions.provider import StudentQuestionsProvider
 
         async def check():
             async with make_async_container(
-                AppProvider(), RequestProvider(), FeedbackProvider(), AdvertisementsProvider()
+                AppProvider(),
+                RequestProvider(),
+                FeedbackProvider(),
+                AdvertisementsProvider(),
+                StudentQuestionsProvider(),
             ) as container:
                 dispatcher = create_dispatcher(container)
                 names = [router.name for router in dispatcher.sub_routers]

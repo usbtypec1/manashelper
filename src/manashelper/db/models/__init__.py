@@ -13,7 +13,6 @@ from manashelper.db.models.lesson import Lesson
 from manashelper.db.models.lesson_history import LessonHistory
 from manashelper.db.models.notification_settings import NotificationSettings
 from manashelper.db.models.scheduled_message_deletion import ScheduledMessageDeletion
-from manashelper.db.models.student_questions import StudentQuestionsResponse
 from manashelper.db.models.user import User
 from manashelper.db.models.user_exam_grade import UserExamGrade
 from manashelper.db.models.user_lesson_attendance import UserLessonAttendance
@@ -23,6 +22,7 @@ from manashelper.modules.advertisements.infrastructure.advertisement_channel_mes
 from manashelper.modules.advertisements.infrastructure.advertisement_contact_view import AdvertisementContactView
 from manashelper.modules.advertisements.infrastructure.advertisement_media import AdvertisementMedia
 from manashelper.modules.feedback.orm import FeedbackMessage
+from manashelper.modules.student_questions.orm import StudentQuestionsResponse
 
 __all__ = [
     "ActionLog",

@@ -22,15 +22,15 @@ from manashelper.bot.routers.obis import router as obis_router
 from manashelper.bot.routers.phone_numbers import router as phone_numbers_router
 from manashelper.bot.routers.settings import router as settings_router
 from manashelper.bot.routers.start import router as start_router
-from manashelper.bot.routers.student_questions import router as student_questions_router
 from manashelper.bot.routers.timetable import router as timetable_router
-from manashelper.bot.routers.versions import router as versions_router
 from manashelper.modules.advertisements.presentation.advertisement import router as advertisement_router
 from manashelper.modules.advertisements.presentation.advertisement_contact import router as advertisement_contact_router
 from manashelper.modules.advertisements.presentation.advertisement_moderation import (
     router as advertisement_moderation_router,
 )
 from manashelper.modules.feedback.router import router as feedback_router
+from manashelper.modules.student_questions.router import router as student_questions_router
+from manashelper.modules.versions.router import router as versions_router
 
 logger = logging.getLogger(__name__)
 

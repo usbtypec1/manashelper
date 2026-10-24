@@ -1,6 +1,6 @@
 from aiogram.utils.i18n import gettext as _
 
-from manashelper.services.version_history import VersionDetail
+from manashelper.modules.versions.history import VersionDetail
 
 
 def format_versions_list_header(page: int, total_pages: int) -> str:

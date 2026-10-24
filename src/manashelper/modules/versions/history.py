@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
-# .../src/manashelper/services/version_history.py -> repo root is 3 parents up.
-VERSIONS_DIR = Path(__file__).resolve().parents[3] / "docs" / "versions"
+# .../src/manashelper/modules/versions/history.py -> repo root is 4 parents up.
+VERSIONS_DIR = Path(__file__).resolve().parents[4] / "docs" / "versions"
 VERSIONS_PER_PAGE = 10
 
 

@@ -21,6 +21,8 @@ from manashelper.jobs.eders import poll_eders_job
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import Locale
+from manashelper.modules.student_questions.provider import StudentQuestionsProvider
+from manashelper.modules.student_questions.service import StudentQuestionsService
 from manashelper.scraping.eders_parser import EdersParseError
 from manashelper.services.eders import EdersService
 from manashelper.services.eders_models import (
@@ -35,7 +37,6 @@ from manashelper.services.eders_tracking import EdersEvent, EdersTrackingService
 from manashelper.services.locale import LocaleService
 from manashelper.services.obis import UserHasNoCredentialsError
 from manashelper.services.schedule import NoTrackedCoursesError
-from manashelper.services.student_questions import StudentQuestionsService
 from manashelper.services.study_week import StudyWeekService
 
 
@@ -158,7 +159,7 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
 
 
 async def test_application_resolves_new_services_and_registers_thirty_minute_polling() -> None:
-    container = make_async_container(AppProvider(), RequestProvider())
+    container = make_async_container(AppProvider(), RequestProvider(), StudentQuestionsProvider())
     bot = Bot(token="123456789:test-token")
     try:
         dispatcher = create_dispatcher(container)

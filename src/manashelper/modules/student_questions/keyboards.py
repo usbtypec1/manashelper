@@ -2,13 +2,13 @@ from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from manashelper.bot.callback_data import (
+from manashelper.modules.student_questions.callbacks import (
     StudentQuestionsAnswerCallback,
     StudentQuestionsControlAction,
     StudentQuestionsControlCallback,
     StudentQuestionsStep,
 )
-from manashelper.services.student_questions import StudentCourse
+from manashelper.modules.student_questions.service import StudentCourse
 
 
 def _course_label(course: StudentCourse) -> str:

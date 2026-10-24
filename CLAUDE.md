@@ -138,6 +138,10 @@ Feedback has moved to `modules/feedback/`, including its router, keyboards, call
 repository, ORM and REQUEST-scoped provider. Advertisements has also moved to `modules/advertisements/`, with presentation, application, infrastructure,
 domain enums and its own REQUEST-scoped provider. Its expiry job delegates to `ExpireAdvertisements` through
 a publication-removal protocol and Telegram adapter. Other areas still use the legacy layers described below.
+The student survey is colocated in flat `modules/student_questions/`, including callbacks, FSM router,
+application service, repository, ORM and REQUEST provider. Its deep link, overwrite behavior and stored formats are unchanged.
+Release history is now in flat `modules/versions/`; its functions read `docs/versions/` on demand and keep
+the same runtime path after relocation. It has no database table or DI provider.
 `docs/ARCHITECTURE.md` describes the current state; `docs/MIGRATION.md` records stage boundaries and baseline issues.
 
 Under `src/manashelper/`, code is organized by technical layer, mirroring the original Java structure:
