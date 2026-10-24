@@ -6,8 +6,9 @@
 схемы PostgreSQL, callback payload, имён состояний FSM, переводов и форматов сохранённых данных.
 Этот документ фиксирует анализ до изменения исходников и результаты завершённых этапов.
 
-Актуальный статус на 25 октября 2026 года: перенесены **Feedback**, **Advertisements**, **Student questions** и **Versions**.
-Общий gate зелёный: **332 passed, 5 skipped**, Ruff, mypy и проверка Alembic проходят.
+Актуальный статус на 25 октября 2026 года: перенесены **Feedback**, **Advertisements**, **Student questions**, **Versions** и **Donations**.
+В Users отдельно выделена публичная read-граница; вся область пользователей пока не перенесена.
+Общий gate зелёный: **358 passed, 5 skipped**, Ruff, mypy и проверка Alembic проходят.
 Первоначальные красные результаты ниже оставлены как история baseline и не описывают текущую проверку.
 
 ## Исходное состояние — 24 октября 2026 года
@@ -383,3 +384,88 @@ layout `/app/src/manashelper/...`. Docker COPY runtime-файлов не мен�
 
 Остальные области migration map остаются legacy. Автоматический staging только девяти перемещённых
 пар путей снят; исходное состояние Git index перед этими этапами было пустым. Коммиты не создавались.
+
+### План следующего этапа: публичные Users queries и Donations
+
+`AGENTS.md` перечитан перед продолжением. Сначала отдельным этапом выделяется маленькая публичная
+application-граница `modules/users/queries.py`: подсчёт зарегистрированных пользователей и полный список
+их ID. Два действительных потребителя — пожертвования и административная рассылка. Их текущие сервисы
+переходят с прямого UserRepository на UsersQuery; сам UserRepository, ORM, контакты и локаль пока остаются
+в legacy. Это частичное выделение границы Users, а не завершённая миграция всей области.
+
+Причина изменения порядка: перенос Donations не должен закреплять доступ к внутреннему репозиторию
+чужой области. Query возвращает только int/list[int], не ORM, использует прежние SQL-запросы и REQUEST scope.
+Ни generic repository, ни Protocol для обычного SQLAlchemy repository не добавляется.
+
+После полного зелёного gate отдельно переносится Donations: файловый каталог банков, Telegram QR adapter,
+application-счётчик, router, клавиатуры, callback и provider. Файлы группируются плоско; прежний смешанный
+`services/donations.py` разделяется по фактическим ролям. Кеш Telegram file ID остаётся в APP, application
+service — в REQUEST. Сохраняются LRU на 32 записи, ключ кеша, повторная загрузка изменённого QR,
+bank ID из SHA-256 имени, payload `donate:<id>` и runtime `docs/requisites/` в checkout и Docker layout.
+
+До переноса добавляются characterization-проверки счётчика, handlers, runtime-пути, payload и кеша.
+Изображения, переводы, команда `/donate`, модель пользователя, схема БД и транзакционная семантика не меняются.
+Откат возвращает imports/provider composition и расположение файлов без downgrade БД.
+
+### Users read boundary — этап завершён
+
+Созданы `modules/users/queries.py` и REQUEST-scoped `UsersProvider`. DonationService и BroadcastService
+используют публичный UsersQuery; сам query вызывает прежние `UserRepository.count()` и `get_all_ids()`.
+Возвращаемые значения и SQL не изменились. Это частичное выделение публичной поверхности Users:
+профиль, контакты, локаль, ORM и repository не объявляются перенесёнными.
+
+До изменения зависимостей добавлены четыре проверки счётчика Donations: 0, 1, 2 и 67 пользователей.
+Полный baseline с ними: **336 passed, 5 skipped**. После выделения query добавлена проверка с настоящей
+БД: count и список ID отражают всех пользователей, включая добавленных после первого чтения.
+Все composition-тесты обновлены для нового provider.
+
+Gate этапа: **337 passed, 5 skipped**, Ruff lint/format проходят (**300 файлов**), mypy strict —
+**197 source files** без ошибок. Index diagnostics проверил query/provider и двух потребителей без ошибок.
+Поведение сессии, схема БД, локализация и Telegram-отправки не менялись.
+
+### Donations — этап завершён
+
+Три прежних файла перемещены Index MCP. Сначала сохранена смешанная реализация и проверены профильные
+тесты; затем по отдельным файлам разделены фактические роли:
+
+- `catalog.py`: DonationBank, поддерживаемые расширения, ID банка и чтение `docs/requisites/`;
+- `qr.py`: Telegram-адаптер DonationQrService и bounded LRU file ID;
+- `service.py`: application-счётчик через публичный UsersQuery, без Telegram и UserRepository;
+- `router.py`, `keyboards.py`, `callbacks.py`: presentation и неизменный `donate:<bank_id>`;
+- `provider.py`: DonationQrService в **APP**, DonationService в **REQUEST**.
+
+Старые регистрации удалены из общего `di.py`; root composition собирает UsersProvider и DonationsProvider.
+Пять pre-existing providers сохраняют свои области жизни; в сумме в `main.py` семь providers.
+Для QR создаётся один объект на приложение, повторно используемый в разных request scopes.
+
+До перемещения прошли **28 тестов Donations**. Добавленные characterization-проверки покрывают пять языков,
+наличие/отсутствие QR, settings entry, private flags, неизвестную и исчезнувшую карточку банка,
+inaccessible callback, точный payload, SHA-256 ID, каталог файлов, Docker-like layout, LRU hit refresh,
+пустой photo response и повторное использование кеша между request scopes. После разделения вместе
+с Users/Broadcast/composition/startup прошли **38 тестов**.
+
+Snapshot трёх реализаций до перемещения получен через Index после завершения Users read boundary.
+После перемещения AST совпал, кроме импортов и глубины runtime-пути. После разделения определения
+DonationBank, list_donation_banks, DonationQrService и DonationService совпали со снимком точно;
+router и keyboards — кроме импортов. `REQUISITES_DIR` использует `parents[4]`, сохраняя прежний
+фактический путь. Существующие изображения и Docker COPY не менялись; Docker build не выполнялся.
+
+Финальный gate:
+
+- pytest: **358 passed, 5 skipped**;
+- Ruff lint/format проходят, format проверил **306 файлов**;
+- mypy strict: **202 source files**, без ошибок;
+- Index diagnostics проверил каталог, adapter, service, provider и router без ошибок;
+- Index search не нашёл старых или промежуточных imports Donations;
+- DDL всех 27 таблиц и индексов совпал с исходным, Alembic не обнаружил новых upgrade operations;
+- импортированы все **201 подмодуль** приложения.
+
+Pythonic-результат — разделение смешанного legacy service на функции каталога, конкретный Telegram-адаптер
+и небольшой application service. Новых generic abstractions, Protocol для обычных репозиториев,
+искусственных четырёх слоёв или классов для каждой операции не добавлялось.
+Подписи банков, ключ кеша, граница 32 записи, обработка замены файла, HTML caption и callback payload
+сохранены. Известный дефект финализации request transaction остаётся отдельным зафиксированным поведением.
+
+Остальные Users-компоненты и Broadcast presentation остаются legacy. Публичный UsersQuery уже обслуживает
+оба сценария, поэтому последующий перенос Broadcast не потребует прямого доступа к UserRepository.
+Автоматический staging трёх перемещённых пар путей снят; исходный Git index был пустым. Коммиты не создавались.

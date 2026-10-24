@@ -142,10 +142,6 @@ class SettingsCallback(CallbackData, prefix="settings"):
     action: SettingsAction
 
 
-class DonationBankCallback(CallbackData, prefix="donate"):
-    bank_id: str
-
-
 class NotificationSettingCallback(CallbackData, prefix="notification_setting"):
     setting: NotificationSetting
 

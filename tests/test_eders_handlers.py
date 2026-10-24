@@ -23,6 +23,7 @@ from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import Locale
 from manashelper.modules.student_questions.provider import StudentQuestionsProvider
 from manashelper.modules.student_questions.service import StudentQuestionsService
+from manashelper.modules.users.provider import UsersProvider
 from manashelper.scraping.eders_parser import EdersParseError
 from manashelper.services.eders import EdersService
 from manashelper.services.eders_models import (
@@ -159,7 +160,7 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
 
 
 async def test_application_resolves_new_services_and_registers_thirty_minute_polling() -> None:
-    container = make_async_container(AppProvider(), RequestProvider(), StudentQuestionsProvider())
+    container = make_async_container(AppProvider(), RequestProvider(), StudentQuestionsProvider(), UsersProvider())
     bot = Bot(token="123456789:test-token")
     try:
         dispatcher = create_dispatcher(container)

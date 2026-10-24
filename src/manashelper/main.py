@@ -17,8 +17,10 @@ from manashelper.di import AppProvider, RequestProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.logging_config import configure_logging
 from manashelper.modules.advertisements.provider import AdvertisementsProvider
+from manashelper.modules.donations.provider import DonationsProvider
 from manashelper.modules.feedback.provider import FeedbackProvider
 from manashelper.modules.student_questions.provider import StudentQuestionsProvider
+from manashelper.modules.users.provider import UsersProvider
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,13 @@ async def main() -> None:
             Bot(token=settings.telegram_bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
         )
         container = make_async_container(
-            AppProvider(), RequestProvider(), FeedbackProvider(), AdvertisementsProvider(), StudentQuestionsProvider()
+            AppProvider(),
+            RequestProvider(),
+            FeedbackProvider(),
+            AdvertisementsProvider(),
+            StudentQuestionsProvider(),
+            UsersProvider(),
+            DonationsProvider(),
         )
         stack.push_async_callback(container.close)
 

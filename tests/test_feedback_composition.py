@@ -13,6 +13,7 @@ from manashelper.di import AppProvider, RequestProvider
 from manashelper.modules.feedback.orm import FeedbackMessage
 from manashelper.modules.feedback.provider import FeedbackProvider
 from manashelper.modules.feedback.service import FeedbackService
+from manashelper.modules.users.provider import UsersProvider
 
 
 async def test_feedback_request_scope_preserves_existing_transaction_finalization():
@@ -27,7 +28,7 @@ async def test_feedback_request_scope_preserves_existing_transaction_finalizatio
             return pool
 
     async with make_async_container(
-        AppProvider(), RequestProvider(), FeedbackProvider(), TestSessionProvider()
+        AppProvider(), RequestProvider(), FeedbackProvider(), UsersProvider(), TestSessionProvider()
     ) as container:
         async with container() as request:
             service = await request.get(FeedbackService)
@@ -72,8 +73,10 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
         from manashelper.bot.dispatcher import create_dispatcher
         from manashelper.di import AppProvider, RequestProvider
         from manashelper.modules.advertisements.provider import AdvertisementsProvider
+        from manashelper.modules.donations.provider import DonationsProvider
         from manashelper.modules.feedback.provider import FeedbackProvider
         from manashelper.modules.student_questions.provider import StudentQuestionsProvider
+        from manashelper.modules.users.provider import UsersProvider
 
         async def check():
             async with make_async_container(
@@ -82,6 +85,8 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
                 FeedbackProvider(),
                 AdvertisementsProvider(),
                 StudentQuestionsProvider(),
+                UsersProvider(),
+                DonationsProvider(),
             ) as container:
                 dispatcher = create_dispatcher(container)
                 names = [router.name for router in dispatcher.sub_routers]

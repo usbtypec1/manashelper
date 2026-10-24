@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models import User
+from manashelper.modules.users.queries import UsersQuery
 from manashelper.repositories.user_repository import UserRepository
 from manashelper.services.broadcast import BroadcastService
 
@@ -14,7 +15,7 @@ async def test_get_recipient_ids_returns_every_user(session: AsyncSession) -> No
     )
     await session.flush()
 
-    service = BroadcastService(UserRepository(session))
+    service = BroadcastService(UsersQuery(UserRepository(session)))
     recipient_ids = await service.get_recipient_ids()
 
     assert {950_001, 950_002}.issubset(set(recipient_ids))

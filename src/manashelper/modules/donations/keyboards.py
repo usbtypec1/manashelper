@@ -2,8 +2,9 @@ from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from manashelper.bot.callback_data import DonationBankCallback, SettingsAction, SettingsCallback
-from manashelper.services.donations import DonationBank
+from manashelper.bot.callback_data import SettingsAction, SettingsCallback
+from manashelper.modules.donations.callbacks import DonationBankCallback
+from manashelper.modules.donations.catalog import DonationBank
 
 
 def build_donations_keyboard(banks: list[DonationBank]) -> InlineKeyboardMarkup:

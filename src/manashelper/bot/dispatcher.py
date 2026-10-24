@@ -11,7 +11,6 @@ from manashelper.bot.middlewares.per_chat_ordering import PerChatOrderingMiddlew
 from manashelper.bot.middlewares.private_chat_only import PrivateChatOnlyMiddleware
 from manashelper.bot.middlewares.rate_limit import RateLimitMiddleware
 from manashelper.bot.routers.broadcast import router as broadcast_router
-from manashelper.bot.routers.donations import router as donations_router
 from manashelper.bot.routers.eders import router as eders_router
 from manashelper.bot.routers.food_menu import router as food_menu_router
 from manashelper.bot.routers.food_menu_cleanup import router as food_menu_cleanup_router
@@ -28,6 +27,7 @@ from manashelper.modules.advertisements.presentation.advertisement_contact impor
 from manashelper.modules.advertisements.presentation.advertisement_moderation import (
     router as advertisement_moderation_router,
 )
+from manashelper.modules.donations.router import router as donations_router
 from manashelper.modules.feedback.router import router as feedback_router
 from manashelper.modules.student_questions.router import router as student_questions_router
 from manashelper.modules.versions.router import router as versions_router

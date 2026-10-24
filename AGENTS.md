@@ -23,6 +23,10 @@ Code is organized by layer under `src/manashelper/`: `bot/routers` (handlers), `
 Advertisements separates presentation, application and infrastructure, with domain enums; feedback and the survey stay flat.
 Release history lives in flat `modules/versions/`, with functions and no artificial DI provider. Its runtime
 `docs/versions/` path is tested for both checkout and Docker-like layouts.
+Donations lives in flat `modules/donations/`: catalog, Telegram QR adapter, application service and presentation.
+Its provider keeps DonationQrService in APP for shared bounded caching and DonationService in REQUEST.
+`modules/users/` currently exposes UsersQuery and a REQUEST provider for counts/recipient IDs used by donations
+and broadcasts. Other user functionality, ORM and repository remain legacy; do not treat Users as fully migrated.
 Keep migrated feature code together;
 do not move unrelated legacy areas in the same stage. See `docs/ARCHITECTURE.md` and `docs/MIGRATION.md`.
 Add routers to the dispatcher in `bot/dispatcher.py`; legacy services/repositories remain in `di.py`, while migrated
@@ -73,6 +77,8 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
 - `docs/requisites/` holds `/donate` bank QR images. Filenames provide bank labels. `DonationQrService` reuses
   Telegram file IDs with bounded LRU caching. If runtime data is added under `docs/`, copy its directory in
   `docker/Dockerfile`.
+  The catalogue and QR adapter now live in `modules/donations/catalog.py` and `qr.py`; preserve the runtime
+  directory and the APP scope when changing them. Donation and broadcast counts/IDs use public UsersQuery.
 
 ## Localization and Telegram text
 

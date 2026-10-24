@@ -1,35 +1,12 @@
 from collections import OrderedDict
-from dataclasses import dataclass
-from hashlib import sha256
-from pathlib import Path
 
 from aiogram import Bot
 from aiogram.types import FSInputFile, Message
 
-from manashelper.repositories.user_repository import UserRepository
+from manashelper.modules.donations.catalog import DonationBank
 from manashelper.services.html_sanitization import escape_html
 
-REQUISITES_DIR = Path(__file__).resolve().parents[3] / "docs" / "requisites"
-SUPPORTED_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg"})
 MAX_CACHED_FILE_IDS = 32
-
-
-@dataclass(frozen=True)
-class DonationBank:
-    id: str
-    name: str
-    path: Path
-
-
-def list_donation_banks() -> list[DonationBank]:
-    if not REQUISITES_DIR.is_dir():
-        return []
-    banks = [
-        DonationBank(id=sha256(path.name.encode("utf-8")).hexdigest()[:16], name=path.stem, path=path)
-        for path in REQUISITES_DIR.iterdir()
-        if path.is_file() and path.suffix.lower() in SUPPORTED_EXTENSIONS
-    ]
-    return sorted(banks, key=lambda bank: bank.name.casefold())
 
 
 class DonationQrService:
@@ -57,11 +34,3 @@ class DonationQrService:
             if len(self._file_ids) > MAX_CACHED_FILE_IDS:
                 self._file_ids.popitem(last=False)
         return sent
-
-
-class DonationService:
-    def __init__(self, user_repository: UserRepository) -> None:
-        self._user_repository = user_repository
-
-    async def other_users_count(self) -> int:
-        return max(0, await self._user_repository.count() - 1)

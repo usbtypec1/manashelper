@@ -18,6 +18,7 @@ from manashelper.modules.advertisements.application.advertisement import Adverti
 from manashelper.modules.advertisements.application.expiry import ExpireAdvertisements, PublicationRemover
 from manashelper.modules.advertisements.infrastructure.advertisement_repository import AdvertisementRepository
 from manashelper.modules.advertisements.provider import AdvertisementsProvider
+from manashelper.modules.users.provider import UsersProvider
 
 CHANNEL_ID = -100943001
 
@@ -64,7 +65,7 @@ async def test_expiry_deletes_publications_in_batches_before_removing_rows(sessi
     bot.delete_messages.side_effect = delete_messages
     monkeypatch.setattr(job, "get_settings", lambda: SimpleNamespace(advertisement_channel_id=CHANNEL_ID))
     async with make_async_container(
-        AppProvider(), RequestProvider(), AdvertisementsProvider(), TestSessionProvider()
+        AppProvider(), RequestProvider(), AdvertisementsProvider(), UsersProvider(), TestSessionProvider()
     ) as container:
         await job.cleanup_expired_advertisements_job(container, bot)
 

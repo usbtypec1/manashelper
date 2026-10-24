@@ -142,6 +142,9 @@ The student survey is colocated in flat `modules/student_questions/`, including 
 application service, repository, ORM and REQUEST provider. Its deep link, overwrite behavior and stored formats are unchanged.
 Release history is now in flat `modules/versions/`; its functions read `docs/versions/` on demand and keep
 the same runtime path after relocation. It has no database table or DI provider.
+Donations is now in flat `modules/donations/`, separating file catalog, Telegram QR adapter and application service.
+Its provider retains an APP-scoped LRU cache and REQUEST-scoped service. Public `modules/users/queries.py`
+supplies counts and recipient IDs to donations and broadcast; the rest of Users remains in legacy packages.
 `docs/ARCHITECTURE.md` describes the current state; `docs/MIGRATION.md` records stage boundaries and baseline issues.
 
 Under `src/manashelper/`, code is organized by technical layer, mirroring the original Java structure:
