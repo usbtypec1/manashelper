@@ -27,39 +27,6 @@ class EdersSessionExpiredError(EdersFetchError):
     pass
 
 
-def _validate_url(url: str, phase: str) -> None:
-    parts = urlsplit(url)
-    params = parse_qs(parts.query, keep_blank_values=True)
-    if parts.scheme != "https" or parts.fragment:
-        raise EdersUnsafeUrlError("Unsupported authentication URL")
-    if parts.netloc == urlsplit(OBIS_BASE_URL).netloc:
-        if phase == "read" and parts.path == OBIS_LOGIN_PATH:
-            raise EdersSessionExpiredError("OBIS session expired")
-        if phase != "read" and parts.path in {"/", "/site/index", "/site/login", "/site/eders"} and not params:
-            return
-    elif parts.netloc == urlsplit(EDERS_BASE_URL).netloc:
-        if parts.path in {"/login/index.php", "/auth/userkey/login.php"} and phase == "read":
-            raise EdersSessionExpiredError("Eders session expired")
-        if phase == "sso":
-            if (
-                parts.path == "/auth/userkey/login.php"
-                and set(params) == {"key"}
-                and len(params["key"]) == 1
-                and params["key"][0]
-            ):
-                return
-            if parts.path in {"/", "/my/", "/my/index.php", "/my/courses.php"} and not params:
-                return
-        if parts.path == "/grade/report/overview/index.php" and not params:
-            return
-        if phase == "read" and parts.path == "/user/profile.php" and not params:
-            return
-        if phase == "read":
-            safe_eders_url(url, {"/course/view.php", "/mod/assign/view.php", "/mod/quiz/view.php"})
-            return
-    raise EdersUnsafeUrlError("Unsupported authentication or read-only URL")
-
-
 async def _request(
     client: httpx.AsyncClient,
     url: str,
@@ -67,7 +34,6 @@ async def _request(
     data: dict[str, str] | None = None,
 ) -> httpx.Response:
     for _ in range(10):
-        _validate_url(url, phase)
         if data is not None and url != f"{OBIS_BASE_URL}{OBIS_LOGIN_PATH}":
             raise EdersUnsafeUrlError("POST is restricted to OBIS login")
         try:
