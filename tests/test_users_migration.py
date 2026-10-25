@@ -19,7 +19,6 @@ from manashelper.core.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.db.models import Course, Department, Faculty, UserPhoneNumber
 from manashelper.db.models import User as DbUser
-from manashelper.di import RequestProvider
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale
 from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
@@ -29,6 +28,7 @@ from manashelper.modules.obis.application.polling import PollObisUser
 from manashelper.modules.obis.presentation import sender as obis_sender
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
+from manashelper.modules.study_week.provider import StudyWeekProvider
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.user_contact import (
     InvalidPhoneNumberError,
@@ -257,7 +257,7 @@ async def test_users_provider_scopes_and_orm_registry():
         TelegramPlatformProvider(),
         ObisProvider(),
         EdersProvider(),
-        RequestProvider(),
+        StudyWeekProvider(),
         UsersProvider(),
         ScheduleProvider(),
         NotificationsProvider(),

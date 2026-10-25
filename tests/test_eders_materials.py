@@ -10,11 +10,8 @@ from manashelper.db.models import User
 from manashelper.modules.eders.application.eders import filter_activities
 from manashelper.modules.eders.application.models import ActivityKind, DeadlineFilter, EdersCourse, EdersSnapshot
 from manashelper.modules.eders.application.tracking import EdersEvent, EdersSetting, EdersTrackingService
-from manashelper.modules.eders.infrastructure.parser import (
-    EdersParseError,
-    parse_course_activities,
-    parse_enrolled_courses,
-)
+from manashelper.modules.eders.errors import EdersParseError
+from manashelper.modules.eders.infrastructure.parser import parse_course_activities, parse_enrolled_courses
 from manashelper.modules.eders.infrastructure.repository import EdersRepository
 from manashelper.modules.eders.infrastructure.serialization import deserialize_snapshot, serialize_snapshot
 from manashelper.modules.eders.presentation.formatter import format_material_events

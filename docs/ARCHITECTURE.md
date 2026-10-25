@@ -3,12 +3,10 @@
 Состояние исходного кода и конфигурации на 25 октября 2026 года. Документ описывает реализацию в текущем
 репозитории; наличие функции в `features/` само по себе не означает, что она реализована.
 
-Проект находится в процессе постепенного перехода к функциональным модулям. Перенесены `feedback`,
-`advertisements`, `student_questions`, `versions`, `donations`, `broadcast`, `food_menu`, `schedule`, `notifications`, `users`, `obis` и `eders`.
+План переноса бизнес-областей в функциональные модули выполнен. Перенесены `feedback`,
+`advertisements`, `student_questions`, `versions`, `donations`, `broadcast`, `food_menu`, `schedule`, `notifications`, `users`, `obis`, `eders` и `study_week`.
 Код каждой области собран в `modules/`.
 У объявлений также перенесена очистка истёкших публикаций. Versions остаётся набором функций без DI provider.
-Остальные области пока
-сохраняют прежнюю структуру по слоям.
 В `modules/users/` собраны профиль, локаль и контакты: application-сервисы, ORM/repositories и Telegram
 presentation. Публичный UsersQuery предоставляет count, список ID и проверку существования для потребителей.
 В плоском `modules/notifications/` собраны настройки расписания/оценок/пропусков, запросы получателей,
@@ -16,7 +14,7 @@ ORM, repository и Telegram presentation. Food menu/Eders сохраняют с�
 общая навигация Settings и Telegram-инфраструктура собраны в `platform/telegram/`.
 ObisCredentialsService владеет credentials и предоставляет их Eders через application-границу;
 поля остаются в существующей таблице User. Eders tracking использует UsersQuery.exists; его repository сохраняет
-SQL eligibility и блокировку строки User. Legacy остаётся только orchestration учебной недели.
+SQL eligibility и блокировку строки User. Учебная неделя объединяет публичные application-результаты Eders и Schedule.
 Карта зависимостей, порядок этапов и исходные проблемы проверок описаны в [MIGRATION.md](MIGRATION.md).
 Общая инфраструктура выделена в `core/`: настройки, логирование, Base/фабрики БД и управление ресурсами DI.
 Telegram Platform, аудит и очередь удаления сообщений перенесены; gettext adapter находится в `platform/i18n/`.
@@ -86,7 +84,6 @@ manashelper/
 │   │   ├── database.py            # DeclarativeBase, engine, фабрика сессий
 │   │   ├── logging.py             # Консольные и файловые логи
 │   │   └── provider.py            # Общие APP-ресурсы и REQUEST-сессия
-│   ├── di.py                      # Пока не перенесённые feature-зависимости Dishka
 │   ├── platform/
 │   │   ├── i18n/catalog.py        # CatalogI18n и единый gettext context
 │   │   └── telegram/
@@ -105,10 +102,9 @@ manashelper/
 │   │       ├── audit/             # Service, repository, ORM
 │   │       ├── deletions/         # Service, repository, ORM и тонкая cleanup job
 │   │       └── provider.py        # Четыре REQUEST-зависимости платформы
-│   ├── bot/routers/               # Только legacy Study week
-│   ├── services/                  # Study week и общие time helpers
+│   ├── services/                  # Общие timezone/text helpers
 │   ├── db/
-│   │   └── models/                # Общий registry и пока не перенесённые ORM-модели
+│   │   └── models/                # Общий registry ORM-моделей функциональных модулей
 │   ├── jobs/                      # Регистрация фоновых заданий
 │   ├── modules/
 │   │   ├── advertisements/
@@ -128,6 +124,7 @@ manashelper/
 │   │   ├── users/                 # Профиль, локаль, контакты: application/infrastructure/presentation
 │   │   ├── obis/                  # Credentials, HTTP/parser/crypto, snapshots/polling, presentation, provider/jobs
 │   │   ├── eders/                 # Snapshot/tracking/polling, HTTP/parser/persistence, Telegram, provider/jobs
+│   │   ├── study_week/            # Плоский: GetStudyWeek/DTO, formatter, router, REQUEST-provider
 │   │   └── feedback/
 │   │       ├── router.py          # FSM, обращения и ответы admin-чата
 │   │       ├── keyboards.py       # Кнопка отмены
@@ -197,7 +194,7 @@ callback-данным или состоянию FSM. Сервисы переда
 подписки на курсы, сравнение снимков, настройки уведомлений,
 проверку владельца объявления, сохранение учётных данных и подготовку результатов для интерфейса.
 Сервисы получают конкретные зависимости через конструктор. Они могут вызывать другие сервисы:
-например, `StudyWeekService` объединяет `EdersService` и `ScheduleService`.
+например, `GetStudyWeek` объединяет `EdersService` и `ScheduleService`.
 
 Результаты для обработчиков преимущественно представлены обычными dataclass: `CourseSummary`,
 `DailyMenuModel`, `ScheduleLessonModel`, `AdvertisementSummary`, `EdersSnapshot` и другие.
@@ -263,8 +260,8 @@ labels остаются в localization/. Файлы команд и перев�
 в APP scope и сессией в REQUEST scope. Settings кешируется прежним get_settings; HTTP timeout — 15 секунд,
 session factory сохраняет expire_on_commit=False. Engine и HTTP-клиент закрываются при завершении APP;
 request-сессия выполняет commit перед закрытием. Существующая семантика при ошибке тела scope сохранена.
-CoreProvider работает самостоятельно, без feature-провайдеров. [di.py](../src/manashelper/di.py) содержит
-`RequestProvider` только для StudyWeekService; пустой AppProvider удалён.
+CoreProvider работает самостоятельно, без feature-провайдеров. Последний legacy `di.py` удалён;
+[StudyWeekProvider](../src/manashelper/modules/study_week/provider.py) владеет GetStudyWeek в REQUEST.
 Отдельный [FeedbackProvider](../src/manashelper/modules/feedback/provider.py) регистрирует репозиторий и
 сервис обращений. [AdvertisementsProvider](../src/manashelper/modules/advertisements/provider.py)
 регистрирует два репозитория, три сервиса и сценарий очистки. Их зависимости имеют `Scope.REQUEST`;
@@ -276,7 +273,7 @@ LocaleService, UserContactService и два репозитория пользо�
 `FoodMenuProvider` сохраняет клиент/parser в `APP`, репозитории и сценарии меню — в `REQUEST`.
 `ScheduleProvider` сохраняет TimetableClient в `APP`, каталог, подписки и сценарии — в `REQUEST`.
 `NotificationsProvider` предоставляет NotificationRecipientsQuery, NotificationSettingsService и repository в `REQUEST`.
-`TelegramPlatformProvider` регистрирует audit/deletion services и repositories в REQUEST; в di.py их больше нет.
+`TelegramPlatformProvider` регистрирует audit/deletion services и repositories в REQUEST.
 `ObisProvider` сохраняет ObisClient/CryptoService в APP, семь repository/application зависимостей — в REQUEST.
 Четырнадцать провайдеров собираются в `main.py`; состояние LRU-кеша сохраняется между request scopes.
 
@@ -350,7 +347,7 @@ LocaleService, UserContactService и два репозитория пользо�
 (пять ORM-моделей, association `user_courses`, клиент/parser и шесть репозиториев), provider и jobs.
 CourseTrackingRepository владеет прежним запросом User с selectinload tracked_courses; User ORM принадлежит
 Users, а данные подписок — Schedule. CourseService сохраняет изменения ORM-коллекций и прежние
-ошибки. StudyWeekService зависит от публичных ScheduleService и моделей результатов.
+ошибки. GetStudyWeek зависит от публичных ScheduleService и моделей результатов.
 
 Job сначала читает ID курсов через CourseService в отдельном request scope, затем открывает scope
 на каждый курс. SyncCourseTimetable координирует синхронизацию и выбирает получателей через публичный
@@ -462,14 +459,22 @@ Async iterator возвращает событие после успешного
 до следующей отправки. TelegramAPIError пропускает сообщение без ack; unexpected error прекращает текущего
 пользователя, но job продолжает следующий request scope. Exactly-once между Telegram и БД по-прежнему нет.
 Порядок событий, JSON/legacy defaults, hashes, baseline/account/schema suppression и monotonic snapshots сохранены.
-StudyWeekService пока остаётся legacy orchestration, потребляя application-результаты Eders и Schedule.
+Исключения Eders вынесены в публичный errors.py; Study week не импортирует HTTP/parser implementation.
+
+Плоский `modules/study_week/` содержит application.py, formatter.py, router.py и provider.py. GetStudyWeek.execute
+сначала получает снимок Eders, затем расписание; только NoTrackedCoursesError превращается в пустой timetable.
+Дата начала вычисляется после обоих чтений по текущему времени Bishkek, а не по fetched_at снимка.
+Formatter покрывает семь локальных календарных дней, сохраняет порядок событий, экранирование/ограничение
+динамических строк и chunks по полным HTML-строкам. Все прежние eders.* msgids и private guard сохранены.
+Router `/week` зарегистрирован сразу после Eders, на прежнем месте в порядке command handlers.
+Зависимость направлена Study week→Eders/Schedule; Eders больше не импортирует orchestration feature.
 
 Доступные сценарии:
 
 - `/eders` — задания и тесты с фильтрами по срокам и статусам;
 - `/materials` и `/materials текст` — каталог и текстовый поиск по материалам;
 - `/eders_settings` — напоминания за 24 и 2 часа, открытия, переносы сроков и изменения материалов;
-- `/week` — семь дней расписания, сроки, открытия и впервые обнаруженные материалы через `StudyWeekService`.
+- `/week` — семь дней расписания, сроки, открытия и впервые обнаруженные материалы через `GetStudyWeek`.
 
 Первый снимок аккаунта, появление нового курса и обновление старого формата снимка не вызывают рассылку
 истории материалов. Будущие напоминания при этом создаются. Неопределённые и конфликтующие даты показываются
@@ -703,14 +708,14 @@ Ruff использует длину строки 120 и целевую верс
 - Старые описания могут расходиться с кодом: в текущей реализации пять языков, отсутствуют роли
   пользователей для модерации, а деплой запускается по тегам `v*`.
 
-Для перенесённой feature код и зависимости изменяются внутри `modules/<feature>/`; новый provider
-подключается в composition root. Остальные области пока используют `bot/routers/`, `services/`,
-`repositories/` и `di.py`. Общая Telegram-навигация в `platform/telegram/navigation.py`, i18n, `core.config.Settings` и `core.database.Base`
+Код и зависимости feature изменяются внутри `modules/<feature>/`; новый provider
+подключается в composition root. Общие timezone/text helpers пока остаются в `services/`.
+Общая Telegram-навигация в `platform/telegram/navigation.py`, i18n, `core.config.Settings` и `core.database.Base`
 остаются внешними зависимостями перенесённых модулей. `LocaleService` принадлежит Users.
 Объявления используют `UserContactService`
 через application-поверхность, без доступа к репозиториям Users. Donations и Broadcast используют UsersQuery
 из `modules/users/`. Старые Python-пути Feedback, объявлений, опроса, версий, Donations,
-Broadcast, Food menu, Schedule, Notifications, Users, OBIS и Eders удалены;
+Broadcast, Food menu, Schedule, Notifications, Users, OBIS, Eders и Study week удалены;
 адаптеров совместимости для них нет, все потребители в проекте используют новые импорты.
 
 Broadcast остаётся небольшим плоским модулем. `service.py` содержит `SendBroadcast`, immutable dataclass

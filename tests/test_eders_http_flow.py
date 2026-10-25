@@ -8,8 +8,9 @@ import httpx
 import pytest
 
 from manashelper.db.models import User
+from manashelper.modules.eders.errors import EdersFetchError, EdersSessionExpiredError
 from manashelper.modules.eders.infrastructure import client as eders_client
-from manashelper.modules.eders.infrastructure.client import EdersClient, EdersFetchError, EdersSessionExpiredError
+from manashelper.modules.eders.infrastructure.client import EdersClient
 from manashelper.modules.eders.infrastructure.serialization import serialize_snapshot
 from manashelper.modules.obis.application.credentials import ObisCredentialsService
 from manashelper.modules.obis.application.obis import ObisService

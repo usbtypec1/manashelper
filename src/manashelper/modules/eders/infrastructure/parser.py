@@ -16,12 +16,9 @@ from manashelper.modules.eders.application.models import (
     GradingStatus,
     SubmissionStatus,
 )
-from manashelper.modules.eders.infrastructure.urls import EDERS_BASE_URL, EdersUnsafeUrlError, eders_id, safe_eders_url
+from manashelper.modules.eders.errors import EdersParseError, EdersUnsafeUrlError
+from manashelper.modules.eders.infrastructure.urls import EDERS_BASE_URL, eders_id, safe_eders_url
 from manashelper.services.time_utils import BISHKEK_TZ
-
-
-class EdersParseError(Exception):
-    pass
 
 
 def parse_enrolled_courses(payload: object) -> tuple[list[EdersCourse], int | None]:

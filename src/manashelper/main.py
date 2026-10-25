@@ -13,7 +13,6 @@ from alembic import command
 from manashelper.core.config import get_settings
 from manashelper.core.logging import configure_logging
 from manashelper.core.provider import CoreProvider
-from manashelper.di import RequestProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.modules.advertisements.provider import AdvertisementsProvider
 from manashelper.modules.broadcast.provider import BroadcastProvider
@@ -25,6 +24,7 @@ from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.student_questions.provider import StudentQuestionsProvider
+from manashelper.modules.study_week.provider import StudyWeekProvider
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.telegram.commands import setup_commands
 from manashelper.platform.telegram.dispatcher import create_dispatcher
@@ -57,7 +57,7 @@ async def main() -> None:
             TelegramPlatformProvider(),
             ObisProvider(),
             EdersProvider(),
-            RequestProvider(),
+            StudyWeekProvider(),
             ScheduleProvider(),
             NotificationsProvider(),
             FeedbackProvider(),

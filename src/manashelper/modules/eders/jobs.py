@@ -5,9 +5,7 @@ from dishka import AsyncContainer
 
 from manashelper.modules.eders.application.polling import PollEdersUser
 from manashelper.modules.eders.application.tracking import EdersTrackingService
-from manashelper.modules.eders.infrastructure.client import EdersFetchError
-from manashelper.modules.eders.infrastructure.parser import EdersParseError
-from manashelper.modules.eders.infrastructure.urls import EdersUnsafeUrlError
+from manashelper.modules.eders.errors import EdersFetchError, EdersParseError, EdersUnsafeUrlError
 from manashelper.modules.eders.presentation.sender import TelegramEdersNotificationSender
 from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
 

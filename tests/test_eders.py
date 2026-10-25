@@ -18,23 +18,28 @@ from manashelper.modules.eders.application.models import (
     SubmissionStatus,
 )
 from manashelper.modules.eders.application.tracking import EdersSettings, plan_events
-from manashelper.modules.eders.infrastructure import client as eders_client
-from manashelper.modules.eders.infrastructure.client import EdersClient, EdersFetchError, EdersSessionExpiredError
-from manashelper.modules.eders.infrastructure.parser import (
+from manashelper.modules.eders.errors import (
+    EdersFetchError,
     EdersParseError,
+    EdersSessionExpiredError,
+    EdersUnsafeUrlError,
+)
+from manashelper.modules.eders.infrastructure import client as eders_client
+from manashelper.modules.eders.infrastructure.client import EdersClient
+from manashelper.modules.eders.infrastructure.parser import (
     parse_account_timezone,
     parse_activity_details,
     parse_course_activities,
     parse_courses,
 )
 from manashelper.modules.eders.infrastructure.serialization import deserialize_snapshot, serialize_snapshot
-from manashelper.modules.eders.infrastructure.urls import EDERS_BASE_URL, EdersUnsafeUrlError, safe_eders_url
+from manashelper.modules.eders.infrastructure.urls import EDERS_BASE_URL, safe_eders_url
 from manashelper.modules.eders.presentation.formatter import format_activity_page
 from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL
 from manashelper.modules.schedule.application.schedule import ScheduleLessonModel
+from manashelper.modules.study_week.application import StudyWeek
+from manashelper.modules.study_week.formatter import format_study_week
 from manashelper.platform.i18n.catalog import i18n
-from manashelper.services.study_week import StudyWeek
-from manashelper.services.study_week_formatter import format_study_week
 
 FIXTURES = Path(__file__).parent / "fixtures/eders"
 NOW = datetime(2026, 10, 1, 0, 0, tzinfo=UTC)

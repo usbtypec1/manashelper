@@ -24,6 +24,7 @@ from manashelper.modules.obis.presentation.router import router as obis_router
 from manashelper.modules.schedule.presentation.routers.lesson_search import router as lesson_search_router
 from manashelper.modules.schedule.presentation.routers.timetable import router as timetable_router
 from manashelper.modules.student_questions.router import router as student_questions_router
+from manashelper.modules.study_week.router import router as study_week_router
 from manashelper.modules.users.presentation.routers.locale import router as locale_router
 from manashelper.modules.users.presentation.routers.phone_numbers import router as phone_numbers_router
 from manashelper.modules.versions.router import router as versions_router
@@ -69,6 +70,7 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
         food_menu_cleanup_router,
         obis_router,
         eders_router,
+        study_week_router,
         settings_router,
         notifications_router,
         donations_router,

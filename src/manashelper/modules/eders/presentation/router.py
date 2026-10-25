@@ -11,17 +11,13 @@ from dishka import FromDishka
 from manashelper.modules.eders.application.eders import EdersService, filter_activities
 from manashelper.modules.eders.application.models import DeadlineFilter, EdersSnapshot
 from manashelper.modules.eders.application.tracking import EdersTrackingService
-from manashelper.modules.eders.infrastructure.client import EdersFetchError
-from manashelper.modules.eders.infrastructure.parser import EdersParseError
-from manashelper.modules.eders.infrastructure.urls import EdersUnsafeUrlError
+from manashelper.modules.eders.errors import EdersFetchError, EdersParseError, EdersUnsafeUrlError
 from manashelper.modules.eders.presentation.callbacks import EdersPageCallback, EdersSettingCallback
 from manashelper.modules.eders.presentation.formatter import format_activity_page
 from manashelper.modules.eders.presentation.keyboards import build_eders_keyboard, build_eders_settings_keyboard
 from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
 from manashelper.modules.obis.presentation.keyboards import build_no_credentials_keyboard
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
-from manashelper.services.study_week import StudyWeekService
-from manashelper.services.study_week_formatter import format_study_week
 
 router = Router(name="eders")
 SNAPSHOT_KEY = "eders_snapshot"
@@ -149,27 +145,3 @@ async def on_eders_setting(
             _("eders.settings_header"), reply_markup=build_eders_settings_keyboard(settings)
         )
     await callback.answer()
-
-
-@router.message(Command("week"))
-@flags.private_chat_only
-async def on_week_command(message: Message, week_service: FromDishka[StudyWeekService]) -> None:
-    if message.from_user is None:
-        return
-    await message.answer(_("eders.loading"))
-    try:
-        week = await week_service.get_week(message.from_user.id)
-    except UserNotFoundError:
-        await message.answer(_("common.start_required"))
-        return
-    except UserHasNoCredentialsError:
-        await message.answer(_("obis.credentials_missing"), reply_markup=build_no_credentials_keyboard())
-        return
-    except ObisLoginError:
-        await message.answer(_("obis.credentials_invalid"), reply_markup=build_no_credentials_keyboard())
-        return
-    except (EdersFetchError, EdersParseError, EdersUnsafeUrlError, ObisParseError):
-        await message.answer(_("eders.fetch_failed"))
-        return
-    for text in format_study_week(week):
-        await message.answer(text, link_preview_options=LinkPreviewOptions(is_disabled=True))

@@ -132,12 +132,12 @@ dangling/untagged images would be cleaned and old version tags would keep accumu
 
 ## Architecture
 
-### Package layout (incremental feature-first migration)
+### Package layout (feature modules)
 
 Feedback has moved to `modules/feedback/`, including its router, keyboards, callback types, application service,
 repository, ORM and REQUEST-scoped provider. Advertisements has also moved to `modules/advertisements/`, with presentation, application, infrastructure,
 domain enums and its own REQUEST-scoped provider. Its expiry job delegates to `ExpireAdvertisements` through
-a publication-removal protocol and Telegram adapter. Other areas still use the legacy layers described below.
+a publication-removal protocol and Telegram adapter. The planned migration of business areas to modules is complete.
 The student survey is colocated in flat `modules/student_questions/`, including callbacks, FSM router,
 application service, repository, ORM and REQUEST provider. Its deep link, overwrite behavior and stored formats are unchanged.
 Release history is now in flat `modules/versions/`; its functions read `docs/versions/` on demand and keep
@@ -166,7 +166,7 @@ Shared Settings navigation stays in platform/telegram/. Preserve the characteriz
 Shared weekday labels live in localization/weekdays.py; Bishkek timezone reuses
 services/time_utils.py. Root composition now has fourteen providers, including CoreProvider, TelegramPlatformProvider and ObisProvider.
 Core owns shared config, logging, database factories/Base and resource lifecycle in core/.
-The legacy di.py RequestProvider retains only StudyWeekService; the empty AppProvider was removed. Shared Telegram presentation and
+The last legacy di.py was removed; StudyWeekProvider owns GetStudyWeek in REQUEST. Shared Telegram presentation and
 infrastructure live in platform/telegram/: dispatcher, commands, navigation, filters, middleware, HTML/delivery,
 audit and deletions. TelegramPlatformProvider keeps audit/deletion repositories and services in REQUEST.
 Settings callbacks belong to platform/telegram/callbacks.py; Eders callbacks belong to its presentation package.
@@ -183,6 +183,11 @@ PollEdersUser preserves refresh→locale→pending→send→ack. TelegramEdersNo
 groups materials, skips TelegramAPIError per message and yields successful events for immediate acknowledgement.
 Unexpected failures abort only that user; the next user gets a separate request scope. Snapshot JSON, hashes,
 account/schema baselines, monotonic observations and the one-retry OBIS SSO/AJAX flow are unchanged.
+Eders exceptions are public in modules/eders/errors.py, keeping other features independent of HTTP/parser internals.
+Study week lives in flat modules/study_week/: application.py, formatter.py, router.py and provider.py.
+GetStudyWeek.execute reads Eders then Schedule, suppressing only NoTrackedCoursesError, and starts the seven-day summary
+on the current Bishkek date. Its private /week router follows Eders immediately; Eders no longer imports Study week.
+Sorting, HTML/chunking, source failure behavior and existing eders.* localization keys are unchanged.
 The gettext adapter lives in platform/i18n/catalog.py; Locale/weekday labels stay in localization/.
 Deletion jobs call MessageDeletionService.delete_due with an async delivery callable. The shared delete_messages
 adapter uses itertools.batched, skips TelegramAPIError per batch and lets unexpected errors abort the sweep.
@@ -190,8 +195,8 @@ The same adapter removes advertisement publications. Runtime commands/locales pa
 `docs/ARCHITECTURE.md` describes the current state; `docs/MIGRATION.md` records stage boundaries and baseline issues.
 
 Under `src/manashelper/`, migrated features own their code in `modules/`; shared infrastructure lives in `core/`
-and `platform/`. Only Study week retains its legacy router/service/formatter. `db/models` keeps the global registry,
-`jobs` wires the scheduler, and `di.py` retains the Study week provider until its separate migration.
+and `platform/`. `db/models` keeps the global registry, `jobs` wires the scheduler, and `services/`
+retains shared timezone/text helpers. Business features no longer use the horizontal legacy layers.
 
 **Services return plain dataclasses, never ORM models.** A `service` method called from a `bot/routers` handler
 returns a frozen `dataclass` (e.g. `FacultyModel`, `DepartmentSummary`, `CourseSummary`) or raises, never a
@@ -233,8 +238,8 @@ read-modify-write isn't safe under concurrent access for the same user. This is 
 ### Dependency injection (Dishka)
 
 `core/provider.py` defines CoreProvider: Settings, AsyncEngine, async_sessionmaker and the shared HTTP client
-have APP scope, and AsyncSession has REQUEST scope. `di.py` retains RequestProvider only for
-StudyWeekService. `setup_dishka(container, dispatcher)` +
+have APP scope, and AsyncSession has REQUEST scope. Each feature owns its provider; the old `di.py` was removed.
+`setup_dishka(container, dispatcher)` +
 `inject_router(dispatcher)` in `platform/telegram/dispatcher.py` wire dependency injection into router handlers via `FromDishka[X]`
 parameter annotations — the analog of Spring's constructor injection into `@Component`/`@Service` beans. The
 CoreProvider's session provider commits on finalization and rolls back if commit raises. The existing

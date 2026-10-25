@@ -17,7 +17,6 @@ from dishka import make_async_container
 from manashelper.core.provider import CoreProvider
 from manashelper.db.models import Course, Department, Faculty, NotificationSettings
 from manashelper.db.models import User as DbUser
-from manashelper.di import RequestProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
@@ -37,6 +36,7 @@ from manashelper.modules.schedule.presentation.callbacks import (
 )
 from manashelper.modules.schedule.presentation.routers import lesson_search, timetable
 from manashelper.modules.schedule.provider import ScheduleProvider
+from manashelper.modules.study_week.provider import StudyWeekProvider
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
@@ -207,7 +207,7 @@ async def test_schedule_provider_scopes_and_hourly_job_contract():
         TelegramPlatformProvider(),
         ObisProvider(),
         EdersProvider(),
-        RequestProvider(),
+        StudyWeekProvider(),
         ScheduleProvider(),
         NotificationsProvider(),
         UsersProvider(),

@@ -16,9 +16,9 @@ router, service, repository, and tests before changing a feature. `features/` ho
 
 ## Architecture
 
-Migrated business features live in `modules/`; shared infrastructure lives in `core/` and `platform/`.
-Only Study week orchestration remains legacy in `bot/routers` and `services`; `db/models` keeps the global ORM registry,
-and `jobs` keeps scheduler wiring. A gradual feature-first migration is in progress: feedback, advertisements and the survey live in
+Business features live in `modules/`; shared infrastructure lives in `core/` and `platform/`.
+The planned feature migration is complete. `db/models` keeps the global ORM registry, `jobs` keeps scheduler wiring,
+and `services/` retains shared timezone/text helpers. Feedback, advertisements and the survey live in
 `modules/feedback/`, `modules/advertisements/` and `modules/student_questions/`, with REQUEST providers in `main.py`.
 Advertisements separates presentation, application and infrastructure, with domain enums; feedback and the survey stay flat.
 Release history lives in flat `modules/versions/`, with functions and no artificial DI provider. Its runtime
@@ -33,7 +33,7 @@ the menu/recipients, TelegramFoodMenuSender handles delivery/cleanup, and jobs a
 Schedule lives in `modules/schedule/`: catalog/tracking, timetable/search, sync, presentation, infrastructure and jobs.
 TimetableClient remains APP; services/repositories remain REQUEST. CourseTrackingRepository owns the tracked-course
 query formerly in UserRepository, preserving ORM collections. SyncCourseTimetable uses public NotificationRecipientsQuery;
-its Telegram sender preserves per-recipient locale and delivery behavior. StudyWeekService remains a legacy consumer.
+its Telegram sender preserves per-recipient locale and delivery behavior. GetStudyWeek consumes its public application results.
 Notifications lives in flat `modules/notifications/`: settings, recipient queries, ORM, repository, callbacks,
 keyboard and router. Its provider retains REQUEST scope. Settings checks users through UsersQuery;
 Schedule and OBIS polling select recipients through NotificationRecipientsQuery. Shared Settings navigation
@@ -52,8 +52,8 @@ Eders tracking checks existence through UsersQuery; its repository owns credenti
 Shared Telegram navigation lives in `platform/telegram/navigation.py`; feature routers must not import the start router for it.
 Keep migrated feature code together;
 do not move unrelated legacy areas in the same stage. See `docs/ARCHITECTURE.md` and `docs/MIGRATION.md`.
-Add routers to the dispatcher in `platform/telegram/dispatcher.py`; legacy services/repositories remain in `di.py`, while migrated
-features own their providers. Router order matters because aiogram uses the first matching handler; the
+Add routers to the dispatcher in `platform/telegram/dispatcher.py`; features own their providers in the composition root.
+Router order matters because aiogram uses the first matching handler; the
 advertisement deep-link router must precede the plain `/start` router. Use typed `CallbackData` classes for inline
 button payloads.
 
@@ -63,8 +63,8 @@ presentation layer. Put pure mapping and formatting helpers at module level. Esc
 text with `platform/telegram/html.py::escape_html` before inserting it into Telegram HTML messages.
 
 Core lives in `core/`: config.py, database.py, logging.py and provider.py. CoreProvider owns APP settings,
-engine, session factory and the shared HTTP client, plus the REQUEST session. `di.py` retains only the REQUEST
-StudyWeekService; the empty AppProvider was removed. Keep the single Base from `core/database.py` and model registration in `db/models/`.
+engine, session factory and the shared HTTP client, plus the REQUEST session. The last legacy `di.py` was removed;
+StudyWeekProvider owns its REQUEST use case. Keep the single Base from `core/database.py` and model registration in `db/models/`.
 Telegram Platform lives in `platform/telegram/`: dispatcher, commands/catalog/extractor, navigation,
 Settings callbacks/routers, filters, middleware, HTML/delivery, audit and scheduled message deletions.
 TelegramPlatformProvider owns both audit and deletion repositories/services in REQUEST. Audit records only
@@ -92,6 +92,13 @@ dependencies REQUEST. PollEdersUser preserves refresh→locale→pending→send�
 materials and yields delivered events for immediate acknowledgement. TelegramAPIError skips one message without ack;
 unexpected errors abort only that user. Preserve snapshot JSON, event keys, baseline/account/schema suppression,
 monotonic observations, user-row FOR UPDATE before first state, and the one-retry whole-snapshot SSO flow.
+Eders exceptions are public in `modules/eders/errors.py`; other features must not import them through HTTP/parser modules.
+
+Study week is flat `modules/study_week/`: application.py, formatter.py, router.py and provider.py.
+GetStudyWeek.execute reads Eders first, then Schedule, and derives the start date from the current Bishkek clock.
+Only NoTrackedCoursesError becomes an empty timetable; other source errors propagate. The formatter covers seven local
+calendar days, preserving sorting, HTML escaping, complete-line chunks and existing eders.* translation keys.
+Its private `/week` router follows Eders immediately; Eders must not depend on Study week.
 
 The session commits on normal finalization and rolls back if
 commit raises. An existing defect is characterized in `tests/test_feedback_composition.py`: Dishka sends a request-body
@@ -104,7 +111,7 @@ silently fix this while relocating a feature. New handlers use `FromDishka[...]`
 state. `RateLimitMiddleware` runs before it. `LocaleMiddleware` runs after Dishka setup so it can use the request
 container. Keep middleware registration order and router filters in mind when adding handlers.
 
-Schema changes go through legacy `db/models` or the owning feature's ORM and an Alembic migration in `alembic/versions`.
+Schema changes go through the owning feature's ORM and an Alembic migration in `alembic/versions`.
 The global model registry still imports migrated models for Alembic. File relocation alone needs no schema migration.
 Generate migrations with
 `uv run alembic revision --autogenerate -m "description"` when a database is available, then review the generated

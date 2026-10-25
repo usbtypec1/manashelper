@@ -14,7 +14,6 @@ from aiogram.types import CallbackQuery, Message
 from dishka import make_async_container
 
 from manashelper.core.provider import CoreProvider
-from manashelper.di import RequestProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.localization.locale import Locale
 from manashelper.modules.eders.application.eders import EdersService
@@ -28,7 +27,7 @@ from manashelper.modules.eders.application.models import (
 )
 from manashelper.modules.eders.application.polling import PollEdersUser
 from manashelper.modules.eders.application.tracking import EdersEvent, EdersTrackingService
-from manashelper.modules.eders.infrastructure.parser import EdersParseError
+from manashelper.modules.eders.errors import EdersParseError
 from manashelper.modules.eders.jobs import poll_eders_job
 from manashelper.modules.eders.presentation.callbacks import EdersPageCallback
 from manashelper.modules.eders.presentation.router import SNAPSHOT_KEY, on_eders_command, on_eders_page
@@ -40,11 +39,12 @@ from manashelper.modules.schedule.application.schedule import NoTrackedCoursesEr
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.student_questions.provider import StudentQuestionsProvider
 from manashelper.modules.student_questions.service import StudentQuestionsService
+from manashelper.modules.study_week.application import GetStudyWeek
+from manashelper.modules.study_week.provider import StudyWeekProvider
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.dispatcher import create_dispatcher
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
-from manashelper.services.study_week import StudyWeekService
 
 
 def snapshot() -> EdersSnapshot:
@@ -125,7 +125,7 @@ async def test_week_without_tracked_courses_keeps_eders_dates() -> None:
     eders, schedule = AsyncMock(), AsyncMock()
     eders.get_snapshot.return_value = snapshot()
     schedule.get_user_schedule.side_effect = NoTrackedCoursesError(1)
-    result = await StudyWeekService(eders, schedule).get_week(1)
+    result = await GetStudyWeek(eders, schedule).execute(1)
     assert result.lessons == () and not result.has_tracked_courses
     assert len(result.snapshot.activities) == 1
 
@@ -171,7 +171,7 @@ async def test_application_resolves_new_services_and_registers_thirty_minute_pol
         TelegramPlatformProvider(),
         ObisProvider(),
         EdersProvider(),
-        RequestProvider(),
+        StudyWeekProvider(),
         ScheduleProvider(),
         NotificationsProvider(),
         StudentQuestionsProvider(),
@@ -187,7 +187,7 @@ async def test_application_resolves_new_services_and_registers_thirty_minute_pol
         async with container() as request:
             assert isinstance(await request.get(StudentQuestionsService), StudentQuestionsService)
             assert isinstance(await request.get(EdersService), EdersService)
-            assert isinstance(await request.get(StudyWeekService), StudyWeekService)
+            assert isinstance(await request.get(GetStudyWeek), GetStudyWeek)
         scheduler = create_scheduler(container, bot)
         jobs = [job for job in scheduler.get_jobs() if job.func == poll_eders_job]
         assert len(jobs) == 1 and jobs[0].trigger.interval == timedelta(minutes=30)

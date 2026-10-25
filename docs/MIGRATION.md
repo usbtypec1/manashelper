@@ -7,10 +7,11 @@
 Этот документ фиксирует анализ до изменения исходников и результаты завершённых этапов.
 
 Актуальный статус на 25 октября 2026 года: перенесены **Feedback**, **Advertisements**, **Student questions**,
-**Versions**, **Donations**, **Broadcast**, **Food menu**, **Schedule**, **Notifications**, **Users**, **OBIS** и **Eders**.
-OBIS владеет credentials и предоставляет их Eders через application-границу; legacy остаётся только Study week.
+**Versions**, **Donations**, **Broadcast**, **Food menu**, **Schedule**, **Notifications**, **Users**, **OBIS**, **Eders** и **Study week**.
+План переноса бизнес-областей выполнен. OBIS владеет credentials и предоставляет их Eders через application-границу;
+Study week объединяет application-результаты Eders и Schedule. Общие timezone/text helpers пока остаются в services/.
 Общая инфраструктура выделена в Core, Telegram Platform, аудит и очередь удаления — в platform/.
-Общий gate с локальной OBIS/Eders simulation зелёный: **589 passed, 5 skipped**, Ruff, mypy и Alembic проходят.
+Общий gate с локальной OBIS/Eders simulation зелёный: **613 passed, 5 skipped**, Ruff, mypy и Alembic проходят.
 Первоначальные красные результаты ниже оставлены как история baseline и не описывают текущую проверку.
 
 ## Исходное состояние — 24 октября 2026 года
@@ -982,3 +983,73 @@ scopes, scheduler и transaction/default defects сохранены. Комми�
 Simulation остановлена; IDE auto-staging снят с 36 проверенных task-путей при исходно пустом index.
 Три исходных `.DS_Store` сохранены. Финальная AST-проверка подтвердила неизменность 12 реализаций и пяти
 исходных потребителей без imports; в tracking изменились только constructor/existence boundary, отдельно от job extraction.
+
+### План следующего этапа: Study week
+
+Рабочее дерево чистое кроме трёх исходных `.DS_Store`; сохранён DDL 27 таблиц.
+StudyWeekService/DTO и formatter пока находятся в services/, а `/week` фактически зарегистрирован последним
+handler в Eders router. Отдельного legacy router Study week нет; прежнее описание этого места уточняется.
+
+Phase A собирает небольшой плоский `modules/study_week/`: application.py, formatter.py, router.py, provider.py.
+Provider переносится из последнего legacy di.py, сохраняет REQUEST scope; root/test containers обновляются.
+Handler переносится без изменения тела и private flag, новый router регистрируется сразу после Eders.
+Eders больше не зависит от Study week; orchestration зависит от application-результатов Eders и Schedule.
+
+До переноса фиксируются последовательность Eders→Schedule, отсутствие подписок, propagation ошибок,
+семь календарных дней от текущей даты Bishkek, UTC/local boundaries, стабильный порядок событий,
+HTML escaping/truncation/chunking, сообщения и ошибки `/week`. Phase A сверяется по AST и тем же тестам.
+
+Phase B переименовывает односценарный StudyWeekService.get_week в GetStudyWeek.execute без дополнительной обёртки.
+Ошибки Eders получают публичный errors.py: Study week presentation не должна импортировать HTTP/parser internals.
+Алгоритмы объединения/форматирования, gettext keys, SSO/HTTP, FSM, callbacks, схема и данные не меняются.
+Чистые dataclass/helper-функции сохраняются; новые repository/Protocol/DI abstractions не вводятся.
+
+### Выполнено: Study week
+
+Исходный полный gate без simulations: **580 passed, 14 skipped**. Девять Eders/OBIS HTTP-тестов затем включены
+через существующую локальную Postman simulation. До source edits добавлены 22 characterization-сценария;
+исходный DDL 27 таблиц сохранён. Рабочее дерево было чистым кроме трёх `.DS_Store`.
+
+Phase A собрала плоский `modules/study_week/`: application.py, formatter.py, router.py, provider.py.
+Application/formatter и последний legacy di.py перенесены через Index MCP; provider переименован в StudyWeekProvider.
+`/week` извлечён из конца Eders router и зарегистрирован сразу после него. Тела двух файлов и полного handler
+с декораторами совпали с HEAD по AST без imports. Все root/test containers обновлены, в том числе subprocess composition.
+Полный gate после Phase A: **611 passed, 5 skipped**; mypy strict без ошибок.
+
+Phase B переименовала односценарный StudyWeekService.get_week в GetStudyWeek.execute; лишнего фасада нет.
+StudyWeekProvider сохраняет REQUEST scope. Eders больше не импортирует Study week.
+Четыре прежних exception-класса Eders собраны в публичном errors.py; Study week и остальные потребители
+не импортируют их через HTTP/parser internals. Классы и HTTP/URL/parser algorithms сохранены по AST.
+Отброшенный time-key генератора formatter переименован из `_` в `_time`, чтобы не смешивать его с gettext alias.
+Динамический test clock заменяет module globals через monkeypatch.setitem; PyCharm diagnostics теперь чистые.
+
+Финальная AST-проверка допускает только описанные imports/names; тела сценария, formatter, handler,
+провайдера и exception-классов эквивалентны исходным. NoTrackedCoursesError остаётся единственной подавляемой
+ошибкой источника. Дата берётся после Eders→Schedule из текущего Bishkek clock, не из snapshot.fetched_at.
+Семь локальных дней, sort order, HTML escaping/truncation/chunking, partial delivery failures и eders.* msgids сохранены.
+
+Добавлено **24 теста**: источник/порядок чтений/date/отсутствие подписок, propagation ошибок, UTC/local boundaries,
+submitted/conflict/unverified/material behavior, сортировка, HTML и chunks во всех пяти языках,
+все ожидаемые ошибки `/week`, loading/no-sender/success/unexpected/partial delivery, command/private flag и REQUEST lifecycle.
+Root composition дополнительно фиксирует единственный Study week router сразу после Eders и до Settings.
+
+Финальный gate:
+
+- pytest с EDERS_SIMULATION_PORT=4945: **613 passed, 5 skipped**; четыре Food menu/Timetable HTTP-теста
+  требуют собственных simulations, корпусный Eders тест — приватную выгрузку;
+- целевой gate: **127 passed**;
+- Ruff lint/format: **396 файлов**, mypy strict: **277 source files**, без ошибок;
+- все **276 подмодулей** импортируются; DDL **27 таблиц и индексов** совпал с baseline;
+- Alembic: `No new upgrade operations detected.`;
+- Index diagnostics 14 компонентов без ошибок после уточнения двух имён/динамического clock mock;
+- локальные Markdown link targets существуют; `git diff --check` чист;
+- IDE build сообщает success с ограниченными diagnostics; основное доказательство — CLI gates.
+
+Postman mock/контракт не менялись. Настоящий httpx прошёл локальные OBIS→SSO→AJAX→HTML routes;
+лог подтверждает обычные ответы, AJAX 302/500, OBIS read 500 и session retry. Использованы только fake credentials;
+настоящие university endpoints/accounts не вызывались. Известные transaction/default defects не исправлялись.
+
+Этап Study week и план feature-переноса завершены. Общие timezone/text helpers остаются в services/;
+пустые исторические package initializers не затрагивались. Коммиты, push и deploy не выполнялись.
+Simulation остановлена; IDE auto-staging снят с 10 проверенных task-путей при исходно пустом index.
+Три исходных `.DS_Store` сохранены; изменения остаются в рабочем дереве для review.

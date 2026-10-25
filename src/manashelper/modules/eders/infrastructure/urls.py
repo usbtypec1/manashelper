@@ -1,10 +1,8 @@
 from urllib.parse import parse_qs, urljoin, urlsplit
 
+from manashelper.modules.eders.errors import EdersUnsafeUrlError
+
 EDERS_BASE_URL = "https://eders.manas.edu.kg"
-
-
-class EdersUnsafeUrlError(Exception):
-    """A link is outside the explicitly supported read-only endpoints."""
 
 
 def safe_eders_url(href: str, paths: set[str]) -> str:

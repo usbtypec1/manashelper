@@ -4,8 +4,8 @@ from aiogram.utils.i18n import gettext as _
 
 from manashelper.localization.weekdays import weekday_full
 from manashelper.modules.eders.application.models import ActivityKind
+from manashelper.modules.study_week.application import StudyWeek, week_end
 from manashelper.platform.telegram.html import escape_html
-from manashelper.services.study_week import StudyWeek, week_end
 from manashelper.services.time_utils import BISHKEK_TZ
 
 
@@ -44,7 +44,7 @@ def format_study_week(week: StudyWeek) -> list[str]:
         lines.extend(["", f"<b>{day.strftime('%d.%m')} — {weekday_full(day.isoweekday())}</b>"])
         if deadline_count > 1:
             lines.append(_("eders.week_many_deadlines").format(count=deadline_count))
-        lines.extend(text for _, text in sorted(events))
+        lines.extend(text for _time, text in sorted(events))
         if not events:
             lines.append(_("eders.week_empty_day"))
     lines.extend(["", _("eders.filter_note")])

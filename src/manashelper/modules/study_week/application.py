@@ -19,12 +19,12 @@ class StudyWeek:
     has_tracked_courses: bool
 
 
-class StudyWeekService:
+class GetStudyWeek:
     def __init__(self, eders_service: EdersService, schedule_service: ScheduleService) -> None:
         self._eders = eders_service
         self._schedule = schedule_service
 
-    async def get_week(self, user_id: int) -> StudyWeek:
+    async def execute(self, user_id: int) -> StudyWeek:
         snapshot = await self._eders.get_snapshot(user_id)
         has_courses = True
         try:
