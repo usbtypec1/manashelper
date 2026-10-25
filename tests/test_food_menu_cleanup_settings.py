@@ -2,9 +2,14 @@ from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.repositories.food_menu_cleanup_settings_repository import FoodMenuCleanupSettingsRepository
+from manashelper.modules.food_menu.application.food_menu_cleanup_settings import (
+    FoodMenuCleanupOption,
+    FoodMenuCleanupSettingsService,
+)
+from manashelper.modules.food_menu.infrastructure.repositories.food_menu_cleanup_settings_repository import (
+    FoodMenuCleanupSettingsRepository,
+)
 from manashelper.repositories.scheduled_message_deletion_repository import ScheduledMessageDeletionRepository
-from manashelper.services.food_menu_cleanup_settings import FoodMenuCleanupOption, FoodMenuCleanupSettingsService
 from manashelper.services.message_deletion import MessageDeletionService
 
 

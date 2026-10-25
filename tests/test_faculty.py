@@ -3,8 +3,8 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models import Faculty
-from manashelper.repositories.faculty_repository import FacultyRepository
-from manashelper.services.faculty import FacultyService
+from manashelper.modules.schedule.application.faculty import FacultyService
+from manashelper.modules.schedule.infrastructure.repositories.faculty_repository import FacultyRepository
 
 
 async def test_get_all_faculties_returns_faculties_sorted_by_name(session: AsyncSession) -> None:

@@ -1,0 +1,5 @@
+simulation: eders-local-flow
+routing: header
+mocks:
+  - routeKey: eders
+    path: ../mocks/eders/config.yaml

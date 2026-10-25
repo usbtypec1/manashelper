@@ -4,7 +4,7 @@ Manashelper is a Telegram bot that helps students at Manas University keep track
 their class schedule, the cafeteria menu, and their grades — without having to dig through separate websites.
 You just chat with it on Telegram like you would with a friend, tapping buttons instead of typing commands.
 
-> Looking for how the code works instead? See [`CLAUDE.md`](CLAUDE.md) for the full architecture notes, or jump
+> Looking for how the code works instead? See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the current architecture, or jump
 > to [For developers](#for-developers) below.
 
 ## What the bot can do
@@ -20,6 +20,13 @@ You just chat with it on Telegram like you would with a friend, tapping buttons 
   lesson-attendance/skip budget straight from the chat. The bot can also notify you as soon as a new grade is
   posted or an absence is recorded, without you needing to check manually.
 - ⚙️ **Notification settings** — turn any of the above notifications on or off individually, whenever you like.
+- 📚 **eders deadlines** — `/eders` lists assignments and quizzes with filters; `/eders_settings` configures
+  reminders one day and two hours before a deadline, activity openings and deadline changes. `/week` combines
+  the next seven days of classes, activity dates and newly discovered materials. eders is checked every 30 minutes
+  using the linked OBIS account. `/materials` lists course materials; `/materials text` searches course names,
+  sections and titles. New and renamed materials or changed text blocks are grouped by course in notifications.
+  Folders, links, files, forums and text blocks are supported. Initial syncs are silent for materials.
+  Unverified timezones and conflicting dates are shown explicitly. See [Eders tracking](docs/eders-tracking.md).
 - 🌐 **Multiple languages** — the bot speaks Kyrgyz, Russian, Turkish and English, and picks a language
   automatically based on your Telegram app's language (you can also switch manually at any time).
 
@@ -29,8 +36,8 @@ Everything happens directly in the Telegram chat — there's no separate app or 
 
 Built with Python 3.13, [aiogram 3](https://docs.aiogram.dev/) for the Telegram bot layer, SQLAlchemy 2 (async)
 + Postgres for storage, and [Dishka](https://github.com/reagento/dishka) for dependency injection. There is no
-REST API — all interaction happens through Telegram long-polling. See [`CLAUDE.md`](CLAUDE.md) for a deep dive
-into the architecture, package layout, and design decisions.
+REST API — all interaction happens through Telegram long-polling. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+for the current package layout and [`docs/MIGRATION.md`](docs/MIGRATION.md) for the gradual feature-first migration.
 
 ### Requirements
 
@@ -53,6 +60,7 @@ into the architecture, package layout, and design decisions.
    DATASOURCE_USERNAME=user123
    DATASOURCE_PASSWORD=pass123
    OBIS_ENCRYPTION_KEY=<see below>
+   EDERS_POLL_MINUTES=30
    ```
    Generate a value for `OBIS_ENCRYPTION_KEY` (a base64-encoded 32-byte AES-256 key used to encrypt stored OBIS
    passwords at rest):

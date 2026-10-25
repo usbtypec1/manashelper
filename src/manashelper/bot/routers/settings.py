@@ -7,8 +7,8 @@ from manashelper.bot.callback_data import NotificationSettingCallback, SettingsA
 from manashelper.bot.filters.translated_text import TranslatedText
 from manashelper.bot.keyboards.obis import build_obis_settings_keyboard
 from manashelper.bot.keyboards.settings import build_notifications_keyboard, build_settings_keyboard
-from manashelper.bot.keyboards.timetable import build_faculty_keyboard
-from manashelper.services.faculty import FacultyService
+from manashelper.modules.schedule.application.faculty import FacultyService
+from manashelper.modules.schedule.presentation.keyboards.timetable import build_faculty_keyboard
 from manashelper.services.notification_settings import (
     NotificationSettingsService,
     NotificationSettingsSummary,

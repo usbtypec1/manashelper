@@ -4,9 +4,9 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models import Course, Department, Faculty, User
-from manashelper.repositories.course_repository import CourseRepository
-from manashelper.repositories.user_repository import UserRepository
-from manashelper.services.course import CourseNotFoundError, CourseService, UserNotFoundError
+from manashelper.modules.schedule.application.course import CourseNotFoundError, CourseService, UserNotFoundError
+from manashelper.modules.schedule.infrastructure.repositories.course_repository import CourseRepository
+from manashelper.modules.schedule.infrastructure.repositories.course_tracking_repository import CourseTrackingRepository
 
 
 async def _make_department(session: AsyncSession) -> Department:
@@ -29,7 +29,7 @@ async def test_get_courses_by_department_marks_tracked_courses(session: AsyncSes
     session.add_all([course_a, course_b, user])
     await session.flush()
 
-    service = CourseService(CourseRepository(session), UserRepository(session))
+    service = CourseService(CourseRepository(session), CourseTrackingRepository(session))
     summaries = {s.id: s for s in await service.get_courses_by_department(department.id, user.id)}
 
     assert summaries[course_a.id].is_tracked is True
@@ -43,7 +43,7 @@ async def test_toggle_tracked_course_adds_then_removes(session: AsyncSession) ->
     session.add_all([course, user])
     await session.flush()
 
-    service = CourseService(CourseRepository(session), UserRepository(session))
+    service = CourseService(CourseRepository(session), CourseTrackingRepository(session))
 
     summaries = await service.toggle_tracked_course(course.id, user.id)
     assert next(s for s in summaries if s.id == course.id).is_tracked is True
@@ -57,7 +57,7 @@ async def test_toggle_tracked_course_raises_when_course_missing(session: AsyncSe
     session.add(user)
     await session.flush()
 
-    service = CourseService(CourseRepository(session), UserRepository(session))
+    service = CourseService(CourseRepository(session), CourseTrackingRepository(session))
 
     with pytest.raises(CourseNotFoundError):
         await service.toggle_tracked_course(999_999, user.id)
@@ -69,7 +69,7 @@ async def test_toggle_tracked_course_raises_when_user_missing(session: AsyncSess
     session.add(course)
     await session.flush()
 
-    service = CourseService(CourseRepository(session), UserRepository(session))
+    service = CourseService(CourseRepository(session), CourseTrackingRepository(session))
 
     with pytest.raises(UserNotFoundError):
         await service.toggle_tracked_course(course.id, 999_999)

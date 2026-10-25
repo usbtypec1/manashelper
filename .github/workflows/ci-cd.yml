@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+
   pull_request:
     branches:
       - main
@@ -11,6 +12,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
     services:
       postgres:
         image: postgres:17-alpine
@@ -25,13 +27,17 @@ jobs:
           --health-interval=5s
           --health-timeout=5s
           --health-retries=10
+
     env:
       TELEGRAM_BOT_TOKEN: test-token
+
       DATASOURCE_HOST: localhost
       DATASOURCE_NAME: db123
       DATASOURCE_USERNAME: user123
       DATASOURCE_PASSWORD: pass123
+
       OBIS_ENCRYPTION_KEY: WN99UeaUfixAdP24uN3yBG8Gbbo9hTPf6jlsYrp9KOA=
+
       ADVERTISEMENT_CHANNEL_ID: "-1001234567890"
       ADVERTISEMENT_CHANNEL_LINK: "https://t.me/manashelper_market"
       MODERATION_CHAT_ID: "-1009876543210"
@@ -52,13 +58,13 @@ jobs:
       - name: Compile gettext catalogs
         run: uv run pybabel compile -d src/manashelper/locales
 
-      - name: Lint (ruff)
+      - name: Lint
         run: uv run ruff check .
 
-      - name: Format check (ruff)
+      - name: Format check
         run: uv run ruff format --check .
 
-      - name: Type check (mypy)
+      - name: Type check
         run: uv run mypy src/manashelper
 
       - name: Run migrations
@@ -67,10 +73,16 @@ jobs:
       - name: Run tests
         run: uv run pytest
 
+
   build:
     needs: test
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+
+    # Build only for tags like v1.0.0.
+    # PRs execute only the test job.
+    if: startsWith(github.ref, 'refs/tags/v')
+
     runs-on: ubuntu-latest
+
     outputs:
       version: ${{ steps.version.outputs.version }}
 
@@ -80,7 +92,19 @@ jobs:
 
       - name: Extract version
         id: version
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION="${GITHUB_REF_NAME#v}"
+
+          if [ -z "$VERSION" ]; then
+            echo "Failed to extract version"
+            exit 1
+          fi
+
+          echo "Version: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -93,54 +117,189 @@ jobs:
           docker build \
             -f docker/Dockerfile \
             -t usbtypec1/manashelper:${{ steps.version.outputs.version }} \
-            -t usbtypec1/manashelper:latest .
+            -t usbtypec1/manashelper:latest \
+            .
 
       - name: Push Docker images
         run: |
           docker push usbtypec1/manashelper:${{ steps.version.outputs.version }}
           docker push usbtypec1/manashelper:latest
 
+
   deploy:
     needs: build
+
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Write .env file for deployment
-        run: printf '%s\n' "${{ secrets.ENV_FILE }}" > .env
+      # -------------------------------------------------------
+      # Prepare deployment files on GitHub runner
+      # -------------------------------------------------------
 
-      - name: Ensure remote deploy directory exists
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Prepare deployment files
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Checking docker-compose.yml..."
+
+          if [ ! -f docker-compose.yml ]; then
+            echo "docker-compose.yml not found"
+            exit 1
+          fi
+
+          echo "Checking ENV_FILE secret..."
+
+          if [ -z "${ENV_FILE:-}" ]; then
+            echo "ENV_FILE secret is empty"
+            exit 1
+          fi
+
+          printf '%s\n' "$ENV_FILE" > .env
+          chmod 600 .env
+
+          if [ ! -s .env ]; then
+            echo ".env file was not created or is empty"
+            exit 1
+          fi
+
+          echo "Deployment files prepared:"
+          ls -la docker-compose.yml .env
+
+      # -------------------------------------------------------
+      # Verify SSH before trying SCP
+      # -------------------------------------------------------
+
+      - name: Test SSH connection
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT }}
-          script: mkdir -p /opt/manashelper
+          debug: true
 
-      - name: Copy docker-compose.yml and .env to server
-        uses: appleboy/scp-action@v0.1.7
+          script: |
+            set -e
+
+            echo "SSH connection successful"
+
+            echo "User:"
+            whoami
+
+            echo "User info:"
+            id
+
+            echo "Hostname:"
+            hostname
+
+            echo "Docker:"
+            docker --version
+            docker compose version
+
+            echo "Preparing deployment directory..."
+
+            mkdir -p /opt/manashelper
+
+            if [ ! -w /opt/manashelper ]; then
+              echo "/opt/manashelper is not writable"
+              ls -ld /opt/manashelper
+              exit 1
+            fi
+
+            echo "/opt/manashelper permissions:"
+            ls -ld /opt/manashelper
+
+      # -------------------------------------------------------
+      # Copy compose + env
+      # -------------------------------------------------------
+
+      - name: Copy deployment files
+        uses: appleboy/scp-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT }}
+
           source: "docker-compose.yml,.env"
           target: "/opt/manashelper"
-          strip_components: 0
 
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.0.3
+          overwrite: true
+          debug: true
+
+      # -------------------------------------------------------
+      # Verify files really arrived
+      # -------------------------------------------------------
+
+      - name: Verify deployment files
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT }}
+
           script: |
+            set -e
+
             cd /opt/manashelper
-            export VERSION=${{ needs.build.outputs.version }}
-            docker pull usbtypec1/manashelper:${{ needs.build.outputs.version }}
+
+            echo "Remote deployment directory:"
+            ls -la
+
+            if [ ! -f docker-compose.yml ]; then
+              echo "docker-compose.yml was not copied"
+              exit 1
+            fi
+
+            if [ ! -f .env ]; then
+              echo ".env was not copied"
+              exit 1
+            fi
+
+            chmod 600 .env
+
+      # -------------------------------------------------------
+      # Deploy
+      # -------------------------------------------------------
+
+      - name: Deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+
+          script: |
+            set -e
+
+            cd /opt/manashelper
+
+            VERSION="${{ needs.build.outputs.version }}"
+            export VERSION
+
+            echo "Deploying ManasHelper version: ${VERSION}"
+
+            echo "Validating docker-compose.yml..."
+            docker compose config > /dev/null
+
+            echo "Pulling Docker image..."
+            docker pull "usbtypec1/manashelper:${VERSION}"
+
+            echo "Starting containers..."
             docker compose up -d --remove-orphans
-            docker image prune -af
+
+            echo "Containers:"
+            docker compose ps
+
+            echo "Removing dangling images..."
+            docker image prune -f
+
+            echo "Deployment completed successfully"

@@ -2,9 +2,27 @@ from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from manashelper.bot.callback_data import ObisAction, ObisCallback, SettingsAction, SettingsCallback
+from manashelper.bot.callback_data import (
+    ObisAction,
+    ObisCallback,
+    ObisResultsPageCallback,
+    SettingsAction,
+    SettingsCallback,
+)
 
 TERMS_URL = "https://telegra.ph/Polzovatelskoe-soglashenie-manas-helper-bot-01-13"
+
+
+def build_obis_results_keyboard(page: int, total_pages: int) -> InlineKeyboardMarkup | None:
+    if total_pages <= 1:
+        return None
+    builder = InlineKeyboardBuilder()
+    if page > 0:
+        builder.button(text="⬅️", callback_data=ObisResultsPageCallback(page=page - 1))
+    if page < total_pages - 1:
+        builder.button(text="➡️", callback_data=ObisResultsPageCallback(page=page + 1))
+    builder.adjust(2)
+    return builder.as_markup()
 
 
 def build_obis_settings_keyboard(has_credentials: bool) -> InlineKeyboardMarkup:

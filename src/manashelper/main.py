@@ -16,6 +16,15 @@ from manashelper.config import get_settings
 from manashelper.di import AppProvider, RequestProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.logging_config import configure_logging
+from manashelper.modules.advertisements.provider import AdvertisementsProvider
+from manashelper.modules.broadcast.provider import BroadcastProvider
+from manashelper.modules.donations.provider import DonationsProvider
+from manashelper.modules.feedback.provider import FeedbackProvider
+from manashelper.modules.food_menu.provider import FoodMenuProvider
+from manashelper.modules.notifications.provider import NotificationsProvider
+from manashelper.modules.schedule.provider import ScheduleProvider
+from manashelper.modules.student_questions.provider import StudentQuestionsProvider
+from manashelper.modules.users.provider import UsersProvider
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +48,19 @@ async def main() -> None:
         bot = await stack.enter_async_context(
             Bot(token=settings.telegram_bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
         )
-        container = make_async_container(AppProvider(), RequestProvider())
+        container = make_async_container(
+            AppProvider(),
+            RequestProvider(),
+            ScheduleProvider(),
+            NotificationsProvider(),
+            FeedbackProvider(),
+            AdvertisementsProvider(),
+            StudentQuestionsProvider(),
+            UsersProvider(),
+            DonationsProvider(),
+            BroadcastProvider(),
+            FoodMenuProvider(),
+        )
         stack.push_async_callback(container.close)
 
         dispatcher = create_dispatcher(container)

@@ -4,8 +4,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models import User
-from manashelper.repositories.feedback_repository import FeedbackRepository
-from manashelper.services.feedback import FeedbackNotFoundError, FeedbackService
+from manashelper.modules.feedback.repository import FeedbackRepository
+from manashelper.modules.feedback.service import FeedbackNotFoundError, FeedbackService
 
 
 async def _make_user(session: AsyncSession, user_id: int) -> User:
