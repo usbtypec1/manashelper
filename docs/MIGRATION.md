@@ -11,7 +11,8 @@
 План переноса бизнес-областей выполнен. OBIS владеет credentials и предоставляет их Eders через application-границу;
 Study week объединяет application-результаты Eders и Schedule. Общие timezone/text helpers пока остаются в services/.
 Общая инфраструктура выделена в Core, Telegram Platform, аудит и очередь удаления — в platform/.
-Общий gate с локальной OBIS/Eders simulation зелёный: **613 passed, 5 skipped**, Ruff, mypy и Alembic проходят.
+После отдельного исправления REQUEST-транзакций ошибка/отмена scope вызывает rollback; settings-default defects остаются.
+Общий gate с локальной OBIS/Eders simulation зелёный: **624 passed, 5 skipped**, Ruff, mypy и Alembic проходят.
 Первоначальные красные результаты ниже оставлены как история baseline и не описывают текущую проверку.
 
 ## Исходное состояние — 24 октября 2026 года
@@ -1053,3 +1054,38 @@ Postman mock/контракт не менялись. Настоящий httpx п
 пустые исторические package initializers не затрагивались. Коммиты, push и deploy не выполнялись.
 Simulation остановлена; IDE auto-staging снят с 10 проверенных task-путей при исходно пустом index.
 Три исходных `.DS_Store` сохранены; изменения остаются в рабочем дереве для review.
+
+### Отдельное исправление: rollback при ошибке REQUEST scope
+
+После feature-переносов исправлен ранее сохранённый дефект транзакций. Installed Dishka передаёт exception
+через agen.asend(exception), а не athrow(); прежний yield session игнорировал это значение и выполнял commit.
+Сначала существующий Feedback composition test изменён на ожидаемый rollback и воспроизвёл лишний commit.
+Новые PostgreSQL-тесты подтвердили, что flushed row действительно оставалась после ошибки и отмены тела scope.
+
+CoreProvider.get_session теперь имеет явный AsyncGenerator[AsyncSession, BaseException | None] и учитывает
+полученное исключение. Нормальное завершение выполняет commit, вышедшая из scope ошибка/отмена — rollback.
+Ошибка/отмена самого commit также вызывает rollback с последующим пробросом. Rollback failure не повторяется
+и не скрывается: Dishka сообщает cleanup ExceptionGroup, исходная ошибка тела остаётся в exception context.
+Session закрывается во всех проверенных исходах. Ошибки, пойманные внутри scope, по-прежнему допускают commit.
+
+Добавлено **11 регрессионных тестов**, прежний Feedback composition test теперь проверяет исправленное поведение.
+Покрыты RuntimeError/CancelledError тела, настоящая task.cancel(), caught error, commit error/cancellation,
+rollback failure и порядок rollback→close→aiogram error handler. Три PostgreSQL-сценария используют реальные
+savepoints: отмена/ошибка убирает flushed row, соседние успешные запросы сохраняются, IntegrityError на commit
+откатывает неудачный savepoint и не мешает следующему запросу. Внешняя тестовая транзакция всегда откатывается.
+
+Проверки:
+
+- целевые Core/Feedback проверки: **20 passed**;
+- полный pytest с локальной OBIS/Eders simulation: **624 passed, 5 skipped**;
+  пропуски прежние: четыре Food menu/Timetable HTTP-теста без их simulations и приватный корпус Eders;
+- Ruff lint/format: **397 файлов**, mypy strict: **277 source files**, без ошибок;
+- Alembic: `No new upgrade operations detected.`; ORM, схема и migrations не менялись;
+- Index diagnostics трёх изменённых Python-файлов без ошибок; `git diff --check` чист;
+- IDE build сообщает success с ограниченными diagnostics; основное доказательство — pytest/CLI gates;
+- существующий Postman mock не менялся; лог подтвердил локальный OBIS login/read и Eders SSO/AJAX 200/302/500.
+  Настоящие университетские endpoints/аккаунты не использовались.
+
+Изменение находится только в session provider; feature workflows, middleware order и настройки уведомлений не менялись.
+Документы AGENTS/CLAUDE/ARCHITECTURE теперь описывают исправленный lifecycle; прежние записи выше остаются историей.
+Коммиты, push и deploy не выполнялись. Следующий отдельный дефект — timing defaults первого переключения уведомлений.

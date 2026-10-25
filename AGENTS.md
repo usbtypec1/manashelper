@@ -100,10 +100,12 @@ Only NoTrackedCoursesError becomes an empty timetable; other source errors propa
 calendar days, preserving sorting, HTML escaping, complete-line chunks and existing eders.* translation keys.
 Its private `/week` router follows Eders immediately; Eders must not depend on Study week.
 
-The session commits on normal finalization and rolls back if
-commit raises. An existing defect is characterized in `tests/test_feedback_composition.py`: Dishka sends a request-body
-exception as the yield value, which the provider ignores, so a body exception alone still leads to commit. Do not
-silently fix this while relocating a feature. New handlers use `FromDishka[...]`; jobs open request scopes with
+The session commits only on normal REQUEST finalization. An escaping body exception or cancellation triggers rollback;
+commit failures/cancellation also trigger rollback before propagating. Dishka sends the scope exception as the yield value,
+so CoreProvider must inspect it instead of relying only on except around yield. Caught errors inside a scope still allow commit.
+Tests cover real PostgreSQL savepoints, aiogram's outer error handler, cancellation and cleanup failures in
+`tests/test_core_transactions.py` and feature composition in `tests/test_feedback_composition.py`.
+New handlers use `FromDishka[...]`; jobs open request scopes with
 `async with container() as request_container`. Keep `setup_dishka(container, dispatcher)` followed by an explicit
 `inject_router(dispatcher)`; `auto_inject=True` conflicts with aiogram startup callbacks in the current versions.
 

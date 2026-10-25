@@ -242,11 +242,11 @@ have APP scope, and AsyncSession has REQUEST scope. Each feature owns its provid
 `setup_dishka(container, dispatcher)` +
 `inject_router(dispatcher)` in `platform/telegram/dispatcher.py` wire dependency injection into router handlers via `FromDishka[X]`
 parameter annotations — the analog of Spring's constructor injection into `@Component`/`@Service` beans. The
-CoreProvider's session provider commits on finalization and rolls back if commit raises. The existing
-Dishka integration does not roll back on a request-body exception: it sends the exception as a yield value,
-which the provider ignores. This is characterized in `tests/test_feedback_composition.py` and remains a separate
-transaction-management defect. `FeedbackProvider` and `AdvertisementsProvider` supply feature dependencies in the same REQUEST scope,
-preserving the existing session lifecycle during the feature relocation.
+CoreProvider's session provider commits only on successful finalization. An escaping body exception/cancellation
+or a failed/cancelled commit triggers rollback; the session still closes. Dishka sends the scope exception via
+asend(), so the provider explicitly inspects the yielded value. A handled error inside the scope still permits commit.
+Regression tests in `tests/test_core_transactions.py` cover real PostgreSQL savepoints, cancellation, aiogram error middleware
+and cleanup failures; `tests/test_feedback_composition.py` verifies feature composition. Feature providers share the REQUEST session.
 
 **Do not use `dishka.integrations.aiogram.setup_dishka(..., auto_inject=True)`.** As of dishka 1.10.1 + aiogram
 3.31, it registers its handler-injection pass as a `router.startup` callback via

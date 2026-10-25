@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator, AsyncIterator
 
 import httpx
 from dishka import Provider, Scope, provide
@@ -31,11 +31,18 @@ class CoreProvider(Provider):
             yield http_client
 
     @provide(scope=Scope.REQUEST)
-    async def get_session(self, session_pool: async_sessionmaker[AsyncSession]) -> AsyncIterator[AsyncSession]:
+    async def get_session(
+        self, session_pool: async_sessionmaker[AsyncSession]
+    ) -> AsyncGenerator[AsyncSession, BaseException | None]:
         async with session_pool() as session:
             try:
-                yield session
-                await session.commit()
-            except Exception:
+                # Dishka sends the scope exception via asend(), rather than athrow().
+                exception = yield session
+                if exception is None:
+                    await session.commit()
+            except BaseException:
                 await session.rollback()
                 raise
+            else:
+                if exception is not None:
+                    await session.rollback()

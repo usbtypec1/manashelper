@@ -22,7 +22,7 @@ from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
 
 
-async def test_feedback_request_scope_preserves_existing_transaction_finalization():
+async def test_feedback_request_scope_commits_success_and_rolls_back_failure():
     sessions = [AsyncMock(spec=AsyncSession) for _ in range(3)]
     for session in sessions:
         session.__aenter__.return_value = session
@@ -64,10 +64,8 @@ async def test_feedback_request_scope_preserves_existing_transaction_finalizatio
                 await other_service.submit(941_003, "Roll back this request")
                 raise RuntimeError("rollback requested")
 
-        # Existing behavior: Dishka sends the body exception as the yield value.
-        # CoreProvider ignores that value and commits. Fix separately from relocation.
-        sessions[1].commit.assert_awaited_once()
-        sessions[1].rollback.assert_not_awaited()
+        sessions[1].commit.assert_not_awaited()
+        sessions[1].rollback.assert_awaited_once()
         sessions[1].__aexit__.assert_awaited_once()
 
         sessions[2].commit.side_effect = RuntimeError("commit failed")
