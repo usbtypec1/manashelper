@@ -5,7 +5,11 @@ from aiogram.types import BotCommandScopeAllGroupChats, BotCommandScopeAllPrivat
 
 from manashelper.core.config import Settings
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale
-from manashelper.services.bot_commands import build_admin_commands, build_group_commands, build_private_commands
+from manashelper.platform.telegram.command_catalog import (
+    build_admin_commands,
+    build_group_commands,
+    build_private_commands,
+)
 
 logger = logging.getLogger(__name__)
 

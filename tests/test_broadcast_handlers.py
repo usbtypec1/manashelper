@@ -10,8 +10,6 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.methods import AnswerCallbackQuery, EditMessageText, SendMessage
 from aiogram.types import BotCommandScopeChat, CallbackQuery, Chat, Message, User
 
-from manashelper.bot.commands import setup_commands
-from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import Locale
 from manashelper.modules.broadcast import router as handlers
 from manashelper.modules.broadcast.callbacks import BroadcastAction, BroadcastCallback
@@ -19,6 +17,8 @@ from manashelper.modules.broadcast.keyboards import build_broadcast_confirm_keyb
 from manashelper.modules.broadcast.service import SendBroadcast
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.queries import UsersQuery
+from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.commands import setup_commands
 
 ADMIN_CHAT_ID = -100947000
 ACTOR_ID = 947_001

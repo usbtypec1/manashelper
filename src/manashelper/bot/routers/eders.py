@@ -8,9 +8,10 @@ from aiogram.types import CallbackQuery, LinkPreviewOptions, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.callback_data import EdersPageCallback, EdersSettingCallback, SettingsAction, SettingsCallback
+from manashelper.bot.callback_data import EdersPageCallback, EdersSettingCallback
 from manashelper.bot.keyboards.eders import build_eders_keyboard, build_eders_settings_keyboard
 from manashelper.bot.keyboards.obis import build_no_credentials_keyboard
+from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from manashelper.scraping.eders_client import EdersFetchError
 from manashelper.scraping.eders_parser import EdersParseError
 from manashelper.scraping.eders_urls import EdersUnsafeUrlError

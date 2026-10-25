@@ -5,7 +5,7 @@ from typing import Any
 from aiogram import BaseMiddleware
 from aiogram.types import CallbackQuery, Message, TelegramObject
 
-from manashelper.bot.middlewares.token_bucket import TokenBucket
+from manashelper.platform.telegram.middlewares.token_bucket import TokenBucket
 
 _RATE_LIMIT_TEXT = "⏳ Слишком много запросов подряд. Подождите немного."
 _WARNING_COOLDOWN_SECONDS = 3.0

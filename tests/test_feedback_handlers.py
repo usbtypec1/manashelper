@@ -12,7 +12,6 @@ from aiogram.methods import AnswerCallbackQuery, EditMessageText, SendMessage
 from aiogram.types import CallbackQuery, Chat, Message, User
 
 from manashelper.core.config import Settings
-from manashelper.localization.i18n import i18n
 from manashelper.modules.feedback.callbacks import FeedbackAction, FeedbackCallback
 from manashelper.modules.feedback.router import (
     FeedbackForm,
@@ -24,6 +23,7 @@ from manashelper.modules.feedback.router import (
 )
 from manashelper.modules.feedback.service import BODY_MAX_LENGTH, FeedbackService, FeedbackSummary
 from manashelper.modules.users.application.locale import LocaleService
+from manashelper.platform.i18n.catalog import i18n
 
 USER_ID = 941_001
 ADMIN_CHAT_ID = -100941001

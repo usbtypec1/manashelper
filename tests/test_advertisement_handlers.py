@@ -14,7 +14,6 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.methods import AnswerCallbackQuery, DeleteMessages, EditMessageText, GetMe, SendMediaGroup, SendMessage
 from aiogram.types import CallbackQuery, Chat, Message, User
 
-from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import Locale
 from manashelper.modules.advertisements.application.advertisement import (
     AdvertisementDeletionResult,
@@ -56,6 +55,7 @@ from manashelper.modules.advertisements.presentation.callbacks import (
     AdvertisementModerationCallback,
 )
 from manashelper.modules.users.application.user_contact import ContactStatus
+from manashelper.platform.i18n.catalog import i18n
 
 USER_ID = 942_001
 MODERATION_CHAT_ID = -100942001

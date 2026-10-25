@@ -5,7 +5,6 @@ from aiogram.types import InlineKeyboardMarkup, InputRichBlockButtons, RichMessa
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from manashelper.bot.callback_data import SettingsAction, SettingsCallback
 from manashelper.localization.weekdays import weekday_full
 from manashelper.modules.food_menu.presentation.callbacks import (
     FoodMenuCleanupOpenCallback,
@@ -13,6 +12,7 @@ from manashelper.modules.food_menu.presentation.callbacks import (
     FoodMenuOpenCallback,
     FoodMenuRatingCallback,
 )
+from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 
 _RATING_LABELS = {1: "1️⃣", 2: "2️⃣", 3: "3️⃣", 4: "4️⃣", 5: "5️⃣"}
 

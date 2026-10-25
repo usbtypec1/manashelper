@@ -6,13 +6,13 @@ from aiogram import Bot
 from aiogram.methods import AnswerCallbackQuery, EditMessageText, SendMessage
 from aiogram.types import CallbackQuery, Chat, Message, User
 
-from manashelper.localization.i18n import i18n
 from manashelper.modules.donations import router as handlers
 from manashelper.modules.donations.callbacks import DonationBankCallback
 from manashelper.modules.donations.catalog import DonationBank
 from manashelper.modules.donations.keyboards import build_donations_keyboard
 from manashelper.modules.donations.qr import DonationQrService
 from manashelper.modules.donations.service import DonationService
+from manashelper.platform.i18n.catalog import i18n
 
 USER_ID = 946_001
 

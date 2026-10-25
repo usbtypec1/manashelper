@@ -6,12 +6,12 @@ from unittest.mock import AsyncMock
 import pytest
 from aiogram.types import CallbackQuery, Message
 
-from manashelper.localization.i18n import i18n
 from manashelper.modules.versions import history
 from manashelper.modules.versions import router as handlers
 from manashelper.modules.versions.callbacks import VersionCallback, VersionsPageCallback
 from manashelper.modules.versions.formatter import format_version_detail, format_versions_list_header
 from manashelper.modules.versions.keyboards import build_version_detail_keyboard, build_versions_list_keyboard
+from manashelper.platform.i18n.catalog import i18n
 
 
 @pytest.fixture

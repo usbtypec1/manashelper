@@ -9,7 +9,6 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.methods import AnswerCallbackQuery, EditMessageText, SendMessage
 from aiogram.types import CallbackQuery, Chat, Message, Update, User
 
-from manashelper.localization.i18n import i18n
 from manashelper.modules.student_questions.callbacks import (
     StudentQuestionsAnswerCallback,
     StudentQuestionsControlAction,
@@ -27,6 +26,7 @@ from manashelper.modules.student_questions.router import (
     router,
 )
 from manashelper.modules.student_questions.service import AlreadySubmittedError, StudentCourse
+from manashelper.platform.i18n.catalog import i18n
 
 USER_ID = 990_001
 

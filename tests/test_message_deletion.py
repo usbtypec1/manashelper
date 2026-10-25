@@ -2,8 +2,8 @@ from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.repositories.scheduled_message_deletion_repository import ScheduledMessageDeletionRepository
-from manashelper.services.message_deletion import MessageDeletionService
+from manashelper.platform.telegram.deletions.repository import ScheduledMessageDeletionRepository
+from manashelper.platform.telegram.deletions.service import MessageDeletionService
 
 
 async def test_schedule_deletion_creates_one_row_per_message(session: AsyncSession) -> None:

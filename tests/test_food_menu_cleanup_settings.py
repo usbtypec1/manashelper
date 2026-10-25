@@ -9,8 +9,8 @@ from manashelper.modules.food_menu.application.food_menu_cleanup_settings import
 from manashelper.modules.food_menu.infrastructure.repositories.food_menu_cleanup_settings_repository import (
     FoodMenuCleanupSettingsRepository,
 )
-from manashelper.repositories.scheduled_message_deletion_repository import ScheduledMessageDeletionRepository
-from manashelper.services.message_deletion import MessageDeletionService
+from manashelper.platform.telegram.deletions.repository import ScheduledMessageDeletionRepository
+from manashelper.platform.telegram.deletions.service import MessageDeletionService
 
 
 def _make_service(session: AsyncSession) -> FoodMenuCleanupSettingsService:

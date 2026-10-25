@@ -3,7 +3,6 @@ import logging
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 
-from manashelper.localization.i18n import i18n
 from manashelper.modules.food_menu.application.daily_menu import DailyMenuModel
 from manashelper.modules.food_menu.application.food_menu_cleanup_settings import FoodMenuCleanupSettingsService
 from manashelper.modules.food_menu.presentation.food_menu_formatter import build_daily_menu_rich_message
@@ -12,6 +11,7 @@ from manashelper.modules.food_menu.presentation.keyboards.food_menu import (
     build_menu_rating_buttons,
 )
 from manashelper.modules.users.application.locale import LocaleService
+from manashelper.platform.i18n.catalog import i18n
 
 logger = logging.getLogger(__name__)
 

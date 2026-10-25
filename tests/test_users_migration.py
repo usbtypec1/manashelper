@@ -15,14 +15,12 @@ from aiogram.types import CallbackQuery, Chat, Message, ReplyKeyboardRemove, Use
 from dishka import make_async_container
 from dishka.integrations.aiogram import CONTAINER_NAME
 
-from manashelper.bot.middlewares.i18n import LocaleMiddleware
 from manashelper.core.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.db.models import Course, Department, Faculty, UserPhoneNumber
 from manashelper.db.models import User as DbUser
 from manashelper.di import AppProvider, RequestProvider
 from manashelper.jobs import obis_notification
-from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
@@ -48,6 +46,9 @@ from manashelper.modules.users.presentation.callbacks import (
 from manashelper.modules.users.presentation.routers import locale, phone_numbers
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.modules.users.queries import UsersQuery
+from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
+from manashelper.platform.telegram.provider import TelegramPlatformProvider
 from manashelper.services.obis_notification import ObisNotificationService
 
 
@@ -248,7 +249,13 @@ async def test_users_provider_scopes_and_orm_registry():
     assert Base.metadata.tables["user_phone_numbers"] is OwnedPhoneNumber.__table__
     dependencies = (UsersQuery, LocaleService, UserContactService, UserRepository, UserPhoneNumberRepository)
     async with make_async_container(
-        CoreProvider(), AppProvider(), RequestProvider(), UsersProvider(), ScheduleProvider(), NotificationsProvider()
+        CoreProvider(),
+        TelegramPlatformProvider(),
+        AppProvider(),
+        RequestProvider(),
+        UsersProvider(),
+        ScheduleProvider(),
+        NotificationsProvider(),
     ) as container:
         async with container() as request:
             first = [await request.get(dependency) for dependency in dependencies]

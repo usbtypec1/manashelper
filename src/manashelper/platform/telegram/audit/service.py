@@ -1,4 +1,4 @@
-from manashelper.repositories.action_log_repository import ActionLogRepository
+from manashelper.platform.telegram.audit.repository import ActionLogRepository
 
 
 class ActionLogService:

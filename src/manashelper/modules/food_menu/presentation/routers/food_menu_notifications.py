@@ -3,7 +3,6 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.callback_data import SettingsAction, SettingsCallback
 from manashelper.modules.food_menu.application.food_menu_notification_settings import (
     FoodMenuNotificationSettingsService,
     FoodMenuNotificationSettingsSummary,
@@ -19,6 +18,7 @@ from manashelper.modules.food_menu.presentation.callbacks import (
 from manashelper.modules.food_menu.presentation.keyboards.food_menu_notifications import (
     build_food_menu_notifications_keyboard,
 )
+from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 
 router = Router(name="food_menu_notifications")
 

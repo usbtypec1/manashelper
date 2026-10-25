@@ -12,7 +12,6 @@ from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
 from manashelper.core.config import Settings
-from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import DEFAULT_LOCALE
 from manashelper.modules.advertisements.application.advertisement import (
     AdvertisementNotFoundError,
@@ -35,7 +34,8 @@ from manashelper.modules.advertisements.presentation.keyboards.advertisement_mod
     build_reject_comment_choice_keyboard,
 )
 from manashelper.modules.users.application.locale import LocaleService
-from manashelper.services.html_sanitization import escape_html
+from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.html import escape_html
 
 logger = logging.getLogger(__name__)
 

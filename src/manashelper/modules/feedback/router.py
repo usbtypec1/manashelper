@@ -10,16 +10,16 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.callback_data import SettingsAction, SettingsCallback
-from manashelper.bot.keyboards.settings import build_settings_keyboard
 from manashelper.core.config import Settings
-from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import DEFAULT_LOCALE
 from manashelper.modules.feedback.callbacks import FeedbackAction, FeedbackCallback
 from manashelper.modules.feedback.keyboards import build_feedback_cancel_keyboard
 from manashelper.modules.feedback.service import BODY_MAX_LENGTH, FeedbackService
 from manashelper.modules.users.application.locale import LocaleService
-from manashelper.services.html_sanitization import escape_html
+from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
+from manashelper.platform.telegram.html import escape_html
+from manashelper.platform.telegram.keyboards.settings import build_settings_keyboard
 
 logger = logging.getLogger(__name__)
 

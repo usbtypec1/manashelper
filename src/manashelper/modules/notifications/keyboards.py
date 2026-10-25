@@ -2,9 +2,9 @@ from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from manashelper.bot.callback_data import SettingsAction, SettingsCallback
 from manashelper.modules.notifications.callbacks import NotificationSettingCallback
 from manashelper.modules.notifications.settings import NotificationSetting, NotificationSettingsSummary
+from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 
 
 def _mark(is_enabled: bool) -> str:

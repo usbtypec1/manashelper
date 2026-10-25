@@ -4,12 +4,12 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.callback_data import SettingsAction, SettingsCallback
 from manashelper.modules.donations.callbacks import DonationBankCallback
 from manashelper.modules.donations.catalog import list_donation_banks
 from manashelper.modules.donations.keyboards import build_donations_keyboard
 from manashelper.modules.donations.qr import DonationQrService
 from manashelper.modules.donations.service import DonationService
+from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 
 router = Router(name="donations")
 

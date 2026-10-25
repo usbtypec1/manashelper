@@ -23,7 +23,7 @@ from aiogram.utils.i18n import gettext as _
 
 from manashelper.localization.weekdays import weekday_full
 from manashelper.modules.food_menu.application.daily_menu import DailyMenuModel
-from manashelper.services.html_sanitization import escape_html
+from manashelper.platform.telegram.html import escape_html
 
 MediaGroupItem = InputMediaAudio | InputMediaDocument | InputMediaLivePhoto | InputMediaPhoto | InputMediaVideo
 

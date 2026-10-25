@@ -4,13 +4,13 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models import DailyMenu
-from manashelper.localization.i18n import i18n
 from manashelper.modules.food_menu.application import daily_menu as daily_menu_module
 from manashelper.modules.food_menu.application.daily_menu import DailyMenuService
 from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_rating_repository import (
     DailyMenuRatingRepository,
 )
 from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_repository import DailyMenuRepository
+from manashelper.platform.i18n.catalog import i18n
 from manashelper.services.time_utils import BISHKEK_TZ
 
 

@@ -6,7 +6,6 @@ from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.callback_data import SettingsAction, SettingsCallback
 from manashelper.modules.users.application.user_contact import (
     InvalidPhoneNumberError,
     PhoneNumberForbiddenError,
@@ -23,6 +22,7 @@ from manashelper.modules.users.presentation.keyboards.phone_numbers import (
     build_contact_request_keyboard,
     build_phone_numbers_keyboard,
 )
+from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 
 router = Router(name="phone_numbers")
 

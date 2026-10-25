@@ -4,7 +4,7 @@ from aiogram import Bot
 from aiogram.types import FSInputFile, Message
 
 from manashelper.modules.donations.catalog import DonationBank
-from manashelper.services.html_sanitization import escape_html
+from manashelper.platform.telegram.html import escape_html
 
 MAX_CACHED_FILE_IDS = 32
 

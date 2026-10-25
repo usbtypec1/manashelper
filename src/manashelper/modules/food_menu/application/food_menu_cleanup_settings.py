@@ -8,7 +8,7 @@ from manashelper.modules.food_menu.infrastructure.models.food_menu_cleanup_setti
 from manashelper.modules.food_menu.infrastructure.repositories.food_menu_cleanup_settings_repository import (
     FoodMenuCleanupSettingsRepository,
 )
-from manashelper.services.message_deletion import MessageDeletionService
+from manashelper.platform.telegram.deletions.service import MessageDeletionService
 
 
 class FoodMenuCleanupOption(StrEnum):

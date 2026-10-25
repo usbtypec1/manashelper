@@ -4,9 +4,9 @@ from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from aiogram.utils.i18n import gettext as _
 
-from manashelper.localization.i18n import i18n
 from manashelper.modules.users.application.locale import LocaleService
-from manashelper.services.html_sanitization import escape_html
+from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.html import escape_html
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 import pytest
 
-from manashelper.bot.middlewares import token_bucket as token_bucket_module
-from manashelper.bot.middlewares.token_bucket import TokenBucket
+from manashelper.platform.telegram.middlewares import token_bucket as token_bucket_module
+from manashelper.platform.telegram.middlewares.token_bucket import TokenBucket
 
 
 @pytest.fixture

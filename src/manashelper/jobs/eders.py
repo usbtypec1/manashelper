@@ -6,8 +6,8 @@ from aiogram.exceptions import TelegramAPIError
 from aiogram.types import LinkPreviewOptions
 from dishka import AsyncContainer
 
-from manashelper.localization.i18n import i18n
 from manashelper.modules.users.application.locale import LocaleService
+from manashelper.platform.i18n.catalog import i18n
 from manashelper.scraping.eders_client import EdersFetchError
 from manashelper.scraping.eders_parser import EdersParseError
 from manashelper.scraping.eders_urls import EdersUnsafeUrlError

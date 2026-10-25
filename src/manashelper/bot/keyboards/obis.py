@@ -6,9 +6,8 @@ from manashelper.bot.callback_data import (
     ObisAction,
     ObisCallback,
     ObisResultsPageCallback,
-    SettingsAction,
-    SettingsCallback,
 )
+from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 
 TERMS_URL = "https://telegra.ph/Polzovatelskoe-soglashenie-manas-helper-bot-01-13"
 

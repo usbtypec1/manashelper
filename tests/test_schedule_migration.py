@@ -19,7 +19,6 @@ from manashelper.db.models import Course, Department, Faculty, NotificationSetti
 from manashelper.db.models import User as DbUser
 from manashelper.di import AppProvider, RequestProvider
 from manashelper.jobs.scheduler import create_scheduler
-from manashelper.localization.i18n import i18n
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
 from manashelper.modules.schedule import jobs
@@ -38,6 +37,8 @@ from manashelper.modules.schedule.presentation.routers import lesson_search, tim
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.provider import UsersProvider
+from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.provider import TelegramPlatformProvider
 
 
 @pytest.fixture
@@ -200,7 +201,13 @@ async def test_schedule_recipient_query_preserves_tracking_and_default_opt_in(se
 
 async def test_schedule_provider_scopes_and_hourly_job_contract():
     async with make_async_container(
-        CoreProvider(), AppProvider(), RequestProvider(), ScheduleProvider(), NotificationsProvider(), UsersProvider()
+        CoreProvider(),
+        TelegramPlatformProvider(),
+        AppProvider(),
+        RequestProvider(),
+        ScheduleProvider(),
+        NotificationsProvider(),
+        UsersProvider(),
     ) as container:
         client = await container.get(TimetableClient)
         async with container() as request:

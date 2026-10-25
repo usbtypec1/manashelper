@@ -19,7 +19,7 @@ from manashelper.bot.routers.obis import (
     on_exams_button,
     on_obis_results_page,
 )
-from manashelper.localization.i18n import i18n
+from manashelper.platform.i18n.catalog import i18n
 from manashelper.scraping.obis_client import ObisLoginError
 from manashelper.scraping.obis_parser import ObisParseError
 from manashelper.services.obis import (

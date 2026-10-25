@@ -10,7 +10,7 @@ from manashelper.core.database import Base
 
 class ActionLog(Base):
     """One row per message/callback_query update, written by `ActionLogMiddleware` before the
-    update reaches its handler — see `bot/middlewares/action_log.py`."""
+    update reaches its handler — see `platform/telegram/middlewares/action_log.py`."""
 
     __tablename__ = "action_logs"
 

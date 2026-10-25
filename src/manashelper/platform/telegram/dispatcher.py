@@ -5,15 +5,8 @@ from aiogram.types import ErrorEvent
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import inject_router, setup_dishka
 
-from manashelper.bot.middlewares.action_log import ActionLogMiddleware
-from manashelper.bot.middlewares.i18n import LocaleMiddleware
-from manashelper.bot.middlewares.per_chat_ordering import PerChatOrderingMiddleware
-from manashelper.bot.middlewares.private_chat_only import PrivateChatOnlyMiddleware
-from manashelper.bot.middlewares.rate_limit import RateLimitMiddleware
 from manashelper.bot.routers.eders import router as eders_router
 from manashelper.bot.routers.obis import router as obis_router
-from manashelper.bot.routers.settings import router as settings_router
-from manashelper.bot.routers.start import router as start_router
 from manashelper.modules.advertisements.presentation.advertisement import router as advertisement_router
 from manashelper.modules.advertisements.presentation.advertisement_contact import router as advertisement_contact_router
 from manashelper.modules.advertisements.presentation.advertisement_moderation import (
@@ -34,6 +27,13 @@ from manashelper.modules.student_questions.router import router as student_quest
 from manashelper.modules.users.presentation.routers.locale import router as locale_router
 from manashelper.modules.users.presentation.routers.phone_numbers import router as phone_numbers_router
 from manashelper.modules.versions.router import router as versions_router
+from manashelper.platform.telegram.middlewares.action_log import ActionLogMiddleware
+from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
+from manashelper.platform.telegram.middlewares.per_chat_ordering import PerChatOrderingMiddleware
+from manashelper.platform.telegram.middlewares.private_chat_only import PrivateChatOnlyMiddleware
+from manashelper.platform.telegram.middlewares.rate_limit import RateLimitMiddleware
+from manashelper.platform.telegram.routers.settings import router as settings_router
+from manashelper.platform.telegram.routers.start import router as start_router
 
 logger = logging.getLogger(__name__)
 

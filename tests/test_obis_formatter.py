@@ -1,6 +1,6 @@
 import pytest
 
-from manashelper.localization.i18n import i18n
+from manashelper.platform.i18n.catalog import i18n
 from manashelper.services.obis import ExamModel, LessonAttendanceModel, LessonExamsModel
 from manashelper.services.obis_formatter import (
     MAX_PAGE_BODY_CHARS,

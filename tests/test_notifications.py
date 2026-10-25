@@ -8,13 +8,11 @@ from aiogram.types import User as TelegramUser
 from dishka import make_async_container
 from sqlalchemy import select
 
-from manashelper.bot.callback_data import SettingsAction, SettingsCallback
 from manashelper.core.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.db.models import NotificationSettings, User
 from manashelper.di import AppProvider, RequestProvider
 from manashelper.jobs import obis_notification
-from manashelper.localization.i18n import i18n
 from manashelper.modules.notifications import router
 from manashelper.modules.notifications.callbacks import NotificationSettingCallback
 from manashelper.modules.notifications.keyboards import build_notifications_keyboard
@@ -32,6 +30,9 @@ from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.users.infrastructure.user_repository import UserRepository
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.modules.users.queries import UsersQuery
+from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
+from manashelper.platform.telegram.provider import TelegramPlatformProvider
 
 
 def service(session):
@@ -226,7 +227,13 @@ async def test_notification_provider_preserves_request_scope_and_model_registry(
     assert NotificationSettings is OwnedNotificationSettings
     assert Base.metadata.tables["notification_settings"] is NotificationSettings.__table__
     async with make_async_container(
-        CoreProvider(), AppProvider(), RequestProvider(), ScheduleProvider(), NotificationsProvider(), UsersProvider()
+        CoreProvider(),
+        TelegramPlatformProvider(),
+        AppProvider(),
+        RequestProvider(),
+        ScheduleProvider(),
+        NotificationsProvider(),
+        UsersProvider(),
     ) as container:
         async with container() as request:
             settings = await request.get(NotificationSettingsService)

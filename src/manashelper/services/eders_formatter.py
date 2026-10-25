@@ -1,5 +1,6 @@
 from aiogram.utils.i18n import gettext as _
 
+from manashelper.platform.telegram.html import escape_html
 from manashelper.services.eders_models import (
     ActivityDate,
     ActivityKind,
@@ -8,7 +9,6 @@ from manashelper.services.eders_models import (
     SubmissionStatus,
 )
 from manashelper.services.eders_tracking import EdersEvent
-from manashelper.services.html_sanitization import escape_html
 from manashelper.services.time_utils import BISHKEK_TZ
 
 

@@ -2,7 +2,6 @@ from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from manashelper.bot.callback_data import SettingsAction, SettingsCallback
 from manashelper.localization.weekdays import weekday_abbr
 from manashelper.modules.schedule.application.course import CourseSummary
 from manashelper.modules.schedule.application.department import DepartmentSummary
@@ -15,6 +14,7 @@ from manashelper.modules.schedule.presentation.callbacks import (
     TimetableMenuAction,
     TimetableMenuCallback,
 )
+from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 
 
 def build_timetable_menu_keyboard() -> InlineKeyboardMarkup:

@@ -6,8 +6,8 @@ from aiogram.types import TelegramObject
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import CONTAINER_NAME
 
-from manashelper.localization.i18n import i18n
 from manashelper.modules.users.application.locale import LocaleService
+from manashelper.platform.i18n.catalog import i18n
 
 
 class LocaleMiddleware(BaseMiddleware):

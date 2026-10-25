@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiogram.types import CallbackQuery, Message, TelegramObject
 
-from manashelper.bot.middlewares.rate_limit import RateLimitMiddleware
+from manashelper.platform.telegram.middlewares.rate_limit import RateLimitMiddleware
 
 
 async def _handler(event: TelegramObject, data: dict[str, Any]) -> str:

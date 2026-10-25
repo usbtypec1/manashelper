@@ -6,8 +6,8 @@ from zoneinfo import ZoneInfo
 import httpx
 import pytest
 
-from manashelper.localization.i18n import i18n
 from manashelper.modules.schedule.application.schedule import ScheduleLessonModel
+from manashelper.platform.i18n.catalog import i18n
 from manashelper.scraping import eders_client
 from manashelper.scraping.eders_client import EdersClient, EdersFetchError, EdersSessionExpiredError
 from manashelper.scraping.eders_parser import (

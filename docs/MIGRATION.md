@@ -8,9 +8,9 @@
 
 Актуальный статус на 25 октября 2026 года: перенесены **Feedback**, **Advertisements**, **Student questions**,
 **Versions**, **Donations**, **Broadcast**, **Food menu**, **Schedule**, **Notifications** и **Users**.
-Users сохраняет временных legacy-потребителей credentials в OBIS/Eders; аудит остаётся до Platform/Core.
-Общая инфраструктура выделена в Core; Telegram Platform и аудит ещё предстоят.
-Общий gate зелёный: **493 passed, 9 skipped**, Ruff, mypy и проверка Alembic проходят.
+Users сохраняет временных legacy-потребителей credentials в OBIS/Eders.
+Общая инфраструктура выделена в Core, Telegram Platform, аудит и очередь удаления — в platform/.
+Общий gate зелёный: **514 passed, 9 skipped**, Ruff, mypy и проверка Alembic проходят.
 Первоначальные красные результаты ниже оставлены как история baseline и не описывают текущую проверку.
 
 ## Исходное состояние — 24 октября 2026 года
@@ -791,3 +791,68 @@ Root composition теперь состоит из 12 providers. Дополнит
 сохранены. Telegram Platform, аудит, OBIS, Eders и Study week остаются следующими областями карты.
 Коммиты, push и deploy не выполнялись. IDE auto-staging снят только с известных task-путей;
 исходный index был пуст, три `.DS_Store` сохранены.
+
+### План следующего этапа: Telegram Platform и аудит
+
+Baseline: **493 passed, 9 skipped**. Рабочее дерево чистое, кроме трёх `.DS_Store`; DDL 27 таблиц
+и индексов сохранён. Перенос следует прежнему safe-refactor workflow, без функциональных изменений.
+
+`platform/telegram/` получает dispatcher, команды/каталог/extractor, общую навигацию Settings/Start,
+Settings callbacks, filters, middleware и Telegram HTML/delivery helpers. Аудит и очередь удаления
+сообщений получают плоские подмодули audit/deletions с ORM, repository и application service.
+TelegramPlatformProvider владеет их четырьмя REQUEST-зависимостями; соответствующие регистрации уходят из di.py.
+`platform/i18n/` получает gettext adapter, а чистые Locale/weekday labels остаются в localization/.
+Оставшиеся bot routers/keyboards/callbacks OBIS и Eders не переносятся до своих feature-этапов.
+
+Phase A: точный структурный перенос, включая обновление runtime-путей команд/каталогов и Babel entrypoint.
+До переноса добавляются characterization tests для audit masking/private guard, per-chat ordering,
+batch cleanup/failures, checkout/Docker-like resource paths. Existing command/localization/limiter/FSM tests сохраняются.
+Порядок middleware/routers, masks, flags, callback payload, локали, scopes, SQL/DDL, jobs и транзакции сохраняются.
+
+Phase B: cleanup job делегирует связный сценарий MessageDeletionService, без прямого repository доступа.
+Операция внешнего удаления передаётся как async callable; TelegramAPIError обрабатывает прежний delivery adapter.
+Сохраняются batches по 100, отсутствие retry и удаление обработанных строк после TelegramAPIError;
+неожиданная ошибка останавливает текущий sweep, логируется и не очищает строки.
+
+### Выполнено: Telegram Platform и аудит
+
+Phase A перенесла 25 реализаций и два package initializer через Index MCP. Целевой `platform/telegram/`
+содержит dispatcher, команды/каталог/Babel extractor, navigation, Settings callbacks, routers/keyboards,
+filters/middleware, HTML/delivery, audit и deletions. Gettext adapter находится в `platform/i18n/catalog.py`;
+чистые Locale/weekday labels остаются в localization/. В bot/ осталась только presentation OBIS/Eders.
+
+AST всех 25 реализаций и Settings callbacks до упрощения совпал с baseline, кроме imports и двух
+resource root assignments. Пути команд/переводов сохранены для checkout и Docker-like layouts;
+babel.cfg указывает на новый extractor. Схема моделей audit/deletions и global registry сохранены.
+TelegramPlatformProvider регистрирует четыре зависимости в REQUEST, di.py больше не владеет ими.
+Все композиции обновлены; root теперь содержит 13 providers. После Phase A: **511 passed, 9 skipped**.
+
+Phase B перенесла выбор/группировку/acknowledgement cleanup sweep в MessageDeletionService.delete_due.
+Job открывает request scope и передаёт прежний naive UTC cutoff и async delivery callable.
+Delivery adapter использует стандартный itertools.batched(..., 100, strict=False), продолжает после
+TelegramAPIError и пропускает unexpected errors наружу. Этот же adapter теперь используется удалением
+публикаций объявлений; дублирующие chunk/delete_message_batch удалены. Новых Protocol/интерфейсов нет.
+Порядок batch/chat, удаление строк после API error, отсутствие retry и abort/логирование unexpected errors сохранены.
+
+Добавлен **21 тест**: audit text/caption/mask/callback/отсутствие chat/user, private guard до аудита,
+per-chat ordering с параллельным другим chat, cleanup success/API/transport/load/remove/empty,
+runtime-пути каталога команд/gettext, чтение JSON без рестарта, чистый async delivery use case,
+независимый provider/REQUEST scope/model registry и прежний five-minute scheduler.
+Root composition test дополнительно фиксирует middleware order и отдельные лимитеры/locks для двух
+типов updates; main проверяет единственную регистрацию TelegramPlatformProvider.
+
+Финальный gate:
+
+- pytest: **514 passed, 9 skipped**; прежние восемь HTTP-тестов требуют simulations,
+  корпусный тест — приватную выгрузку Eders;
+- Ruff lint/format: **372 файла**; mypy strict: **256 source files**, без ошибок;
+- все **255 подмодулей** импортируются; DDL **27 таблиц и индексов** совпал с baseline;
+- Alembic: `No new upgrade operations detected.`;
+- Index diagnostics 16 компонентов без ошибок, старых imports/удалённых helper usages нет;
+- в 37 остальных исходных файлах изменились только imports;
+- IDE build сообщает success с ограниченными diagnostics; основное доказательство — CLI gates.
+
+Этап завершён. Команды/scopes/порядок handlers и middleware, FSM/callback payload, audit masks,
+runtime-файлы, jobs и транзакционная семантика сохранены. Известные дефекты defaults/session finalization
+не исправлялись. Далее — OBIS, затем Eders и Study week. Коммиты, push и deploy не выполнялись;
+IDE auto-staging снят только с 64 известных task-путей, исходный index был пуст; `.DS_Store` сохранены.

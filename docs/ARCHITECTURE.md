@@ -13,11 +13,11 @@
 presentation. Публичный UsersQuery предоставляет count, список ID и проверку существования для потребителей.
 В плоском `modules/notifications/` собраны настройки расписания/оценок/пропусков, запросы получателей,
 ORM, repository и Telegram presentation. Food menu/Eders сохраняют собственные настройки;
-общая навигация Settings и Telegram-инфраструктура пока legacy. OBIS/Eders временно используют UserRepository
-для credentials; аудит остаётся в legacy до Platform.
+общая навигация Settings и Telegram-инфраструктура собраны в `platform/telegram/`.
+OBIS/Eders временно используют UserRepository для credentials до собственных этапов.
 Карта зависимостей, порядок этапов и исходные проблемы проверок описаны в [MIGRATION.md](MIGRATION.md).
 Общая инфраструктура выделена в `core/`: настройки, логирование, Base/фабрики БД и управление ресурсами DI.
-Telegram Platform и аудит остаются следующей владельческой границей.
+Telegram Platform, аудит и очередь удаления сообщений перенесены; gettext adapter находится в `platform/i18n/`.
 
 ## 1. Назначение и общий подход
 
@@ -45,7 +45,6 @@ flowchart TD
     CL --> UNI[Расписание, столовая, OBIS, eders]
     RT -->|ответы и публикации| TG
     JB -->|рассылки и удаление сообщений| TG
-    JB -. прямой доступ в части заданий .-> RP
 ```
 
 Основной путь зависимостей: обработчик вызывает сервис, сервис использует репозиторий или HTTP-клиент,
@@ -86,15 +85,28 @@ manashelper/
 │   │   ├── logging.py             # Консольные и файловые логи
 │   │   └── provider.py            # Общие APP-ресурсы и REQUEST-сессия
 │   ├── di.py                      # Пока не перенесённые feature-зависимости Dishka
-│   ├── bot/
-│   │   ├── dispatcher.py          # Middleware, маршрутизаторы, обработчик ошибок
-│   │   ├── commands.py            # Регистрация команд в Telegram
-│   │   ├── navigation.py          # Общая клавиатура и приветствие без зависимости от start router
-│   │   ├── callback_data.py       # Типизированные данные inline-кнопок
-│   │   ├── routers/               # Обработчики команд, сообщений и callback-запросов
-│   │   ├── keyboards/             # Построение клавиатур
-│   │   ├── filters/                # В том числе TranslatedText
-│   │   └── middlewares/           # Лимиты, порядок обработки, локаль, аудит, доступ
+│   ├── platform/
+│   │   ├── i18n/catalog.py        # CatalogI18n и единый gettext context
+│   │   └── telegram/
+│   │       ├── dispatcher.py      # Middleware, маршрутизаторы, обработчик ошибок
+│   │       ├── commands.py        # Регистрация команд
+│   │       ├── command_catalog.py # Runtime JSON и перевод описаний
+│   │       ├── command_extraction.py # Babel extractor
+│   │       ├── navigation.py      # Общая клавиатура и приветствие
+│   │       ├── callbacks.py       # Settings callback payload
+│   │       ├── routers/           # Start/settings orchestration
+│   │       ├── keyboards/         # Общая клавиатура Settings
+│   │       ├── filters/           # TranslatedText
+│   │       ├── middlewares/       # Лимиты, порядок, локаль, аудит, private guard
+│   │       ├── html.py            # Telegram HTML escaping
+│   │       ├── delivery.py        # Отправка и пакетное удаление
+│   │       ├── audit/             # Service, repository, ORM
+│   │       ├── deletions/         # Service, repository, ORM и тонкая cleanup job
+│   │       └── provider.py        # Четыре REQUEST-зависимости платформы
+│   ├── bot/                      # Только оставшаяся presentation OBIS/Eders
+│   │   ├── callback_data.py       # Callback-классы OBIS/Eders
+│   │   ├── routers/
+│   │   └── keyboards/
 │   ├── services/                  # Сценарии, dataclass-модели, форматтеры, утилиты
 │   ├── repositories/              # Запросы и изменения данных через SQLAlchemy
 │   ├── db/
@@ -165,7 +177,7 @@ aiogram; слой сервисов целиком не изолирован от
 
 ### Telegram-слой
 
-[bot/dispatcher.py](../src/manashelper/bot/dispatcher.py) создаёт `Dispatcher`, подключает middleware и
+[platform/telegram/dispatcher.py](../src/manashelper/platform/telegram/dispatcher.py) создаёт `Dispatcher`, подключает middleware и
 регистрирует маршрутизаторы. Обработчики находятся в `bot/routers/`, `modules/feedback/router.py`
 и presentation перенесённых модулей, включая `modules/student_questions/router.py`. Они выбирают сценарий по команде, тексту кнопки,
 callback-данным или состоянию FSM. Сервисы передаются через `FromDishka[...]`.
@@ -219,15 +231,32 @@ Characterization-тест выявил существующий дефект: и
 `REQUEST`, обычно отдельно для курса или пользователя. Ошибки логируются и по возможности изолируются,
 чтобы сбой одного элемента не останавливал весь обход.
 
-Проектное правило направляет jobs к сервисам, однако фактическая реализация смешанная: задания
-OBIS и удаления сообщений также напрямую получают репозитории. `jobs/common.py` содержит общие
-операции отправки, определения локали и пакетного удаления сообщений.
+Задания обращаются к application-сервисам и публичным query, без прямого доступа к репозиториям.
+Координация OBIS/Eders polling пока остаётся в legacy jobs до собственных этапов.
+`platform/telegram/delivery.py` содержит общую отправку и пакетное удаление; локаль читается через Users LocaleService.
 
 Очистка объявлений уже следует целевой границе: `modules/advertisements/jobs.py` открывает request scope,
 передаёт адаптер удаления публикаций и вызывает `ExpireAdvertisements.execute()`. Application-сценарий
 работает со своим репозиторием и протоколом `PublicationRemover`, без aiogram и Telegram HTML.
 Адаптер в `presentation/publications.py` сохраняет пакетное удаление до 100 ID и best-effort обработку
-ошибок Telegram, используя пока общий helper из `jobs/common.py`.
+ошибок Telegram через общий `platform/telegram/delivery.py::delete_messages`.
+
+### Telegram Platform: аудит и удаление сообщений
+
+`platform/telegram/` владеет общими Telegram adapters и presentation. Audit service/repository/ORM находятся
+в плоском `audit/`, а очередь удаления — в `deletions/`. Их REQUEST-зависимости собирает TelegramPlatformProvider.
+Middleware пишет аудит до вызова выбранного handler, после private-chat guard. Сохраняются text/caption,
+callback data, пропуск событий без chat/user и маскирование `[masked]` по флагу обработчика.
+
+Cleanup job открывает прежний request scope и передаёт UTC cutoff и async delivery в MessageDeletionService.delete_due.
+Сервис выбирает группы по chat, вызывает доставку и удаляет обработанные строки после завершения всех групп.
+В delivery adapter стандартный itertools.batched делит ID по 100; TelegramAPIError логируется и пропускает
+batch, а неожиданная ошибка останавливает sweep без удаления строк. Этот adapter также используется объявлениями.
+Расписание — прежние пять минут, retry отсутствует. Существующий transaction-finalization defect не изменён.
+
+`platform/i18n/catalog.py` сохраняет единый gettext adapter, context и English fallback. Чистые Locale/weekday
+labels остаются в localization/. Файлы команд и переводов остались в docs/commands и locales; изменён только
+расчёт относительных путей после перемещения. Checkout/Docker-like layout и чтение команд без перезапуска покрыты тестами.
 
 ## 5. Внедрение зависимостей и запуск
 
@@ -248,7 +277,8 @@ LocaleService, UserContactService и два репозитория пользо�
 `FoodMenuProvider` сохраняет клиент/parser в `APP`, репозитории и сценарии меню — в `REQUEST`.
 `ScheduleProvider` сохраняет TimetableClient в `APP`, каталог, подписки и сценарии — в `REQUEST`.
 `NotificationsProvider` предоставляет NotificationRecipientsQuery, NotificationSettingsService и repository в `REQUEST`.
-Двенадцать провайдеров собираются в `main.py`; состояние LRU-кеша сохраняется между request scopes.
+`TelegramPlatformProvider` регистрирует audit/deletion services и repositories в REQUEST; в di.py их больше нет.
+Тринадцать провайдеров собираются в `main.py`; состояние LRU-кеша сохраняется между request scopes.
 
 | Область | Объекты | Время жизни |
 | --- | --- | --- |
@@ -365,9 +395,9 @@ Telegram-слой строит rich messages с кнопками оценки и
 
 PhoneNumberForm сохраняет прежнее имя состояния, валидацию, порядок номеров по created_at, точный формат
 номера и проверку владельца при удалении. Callback payload `locale:*`, `phone_number_action:add` и
-`phone_number_delete:*` не менялись. Общая навигация выделена в `bot/navigation.py`, поэтому feature
+`phone_number_delete:*` не менялись. Общая навигация выделена в `platform/telegram/navigation.py`, поэтому feature
 presentation больше не импортирует start router ради клавиатуры или приветствия. OBIS polling читает
-локаль через LocaleService; дублирующий helper в `jobs/common.py` удалён.
+локаль через LocaleService; дублирующий helper в `platform/telegram/delivery.py` удалён.
 
 ### OBIS
 
@@ -532,7 +562,7 @@ eders и задания удаления — отдельные прикладн
 
 Доступ к личным сценариям ограничивается флагами обработчиков, к модерации и административным действиям —
 настроенными ID чатов. Проверка владельца объявления и телефонного номера выполняется сервисами.
-Динамический текст для HTML-сообщений экранируется через `services/html_sanitization.py::escape_html`.
+Динамический текст для HTML-сообщений экранируется через `platform/telegram/html.py::escape_html`.
 
 Интеграция eders предназначена для чтения. Она не отправляет формы сдачи работ, запуска тестов или изменения
 профиля. POST к Moodle используется для получения списка курсов. URL для публичных карточек обрабатываются
@@ -556,7 +586,7 @@ Telegram с запасным русским. Для отсутствующих �
 `DEFAULT_LOCALE`, то есть русский.
 
 Списки команд находятся в `docs/commands/private.json`, `group.json` и `admin.json`.
-`services/bot_commands.py` читает JSON и переводит описания, а `bot/commands.py` регистрирует команды
+`platform/telegram/command_catalog.py` читает JSON и переводит описания, а `platform/telegram/commands.py` регистрирует команды
 по языкам и областям чатов. `/broadcast` регистрируется только для `admin_chat_id`; это дополняет
 проверку доступа в обработчике. `babel.cfg` включает извлечение ключей описаний из JSON.
 
@@ -647,7 +677,7 @@ Ruff использует длину строки 120 и целевую верс
 
 Для перенесённой feature код и зависимости изменяются внутри `modules/<feature>/`; новый provider
 подключается в composition root. Остальные области пока используют `bot/routers/`, `services/`,
-`repositories/` и `di.py`. Общая Telegram-навигация в `bot/navigation.py`, i18n, `core.config.Settings` и `core.database.Base`
+`repositories/` и `di.py`. Общая Telegram-навигация в `platform/telegram/navigation.py`, i18n, `core.config.Settings` и `core.database.Base`
 остаются внешними зависимостями перенесённых модулей. `LocaleService` принадлежит Users.
 Объявления используют `UserContactService`
 через application-поверхность, без доступа к репозиториям Users. Donations и Broadcast используют UsersQuery
@@ -663,7 +693,7 @@ Telegram-доставку: локаль каждого получателя, э�
 сообщения. Router сохраняет авторизацию, preview, очистку FSM до выбора адресатов и русскую статистику.
 Отправка последовательная, без retry; фильтры NotificationSettings для административной рассылки не применяются.
 
-Новый маршрутизатор подключается в `bot/dispatcher.py`, job — в `jobs/scheduler.py`, изменение схемы —
+Новый маршрутизатор подключается в `platform/telegram/dispatcher.py`, job — в `jobs/scheduler.py`, изменение схемы —
 через модели и Alembic. Перенос моделей Feedback, объявлений и опроса сохранил DDL всех 27 таблиц и индексов, поэтому новой
 миграции нет. Пользовательские строки добавляются во все пять каталогов; новая публичная команда также
 требует записи в соответствующем JSON из `docs/commands/`.

@@ -23,6 +23,7 @@ from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.users.infrastructure.user_repository import UserRepository
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.modules.users.queries import UsersQuery
+from manashelper.platform.telegram.provider import TelegramPlatformProvider
 
 
 @pytest.mark.parametrize(("users_count", "expected"), [(0, 0), (1, 0), (2, 1), (67, 66)])
@@ -151,6 +152,7 @@ async def test_qr_cache_is_shared_across_request_scopes_while_application_servic
     bot = FakeBot()
     async with make_async_container(
         CoreProvider(),
+        TelegramPlatformProvider(),
         AppProvider(),
         RequestProvider(),
         ScheduleProvider(),

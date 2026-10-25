@@ -1,6 +1,4 @@
-from manashelper.db.models.action_log import ActionLog
 from manashelper.db.models.eders import EdersNotification, EdersState
-from manashelper.db.models.scheduled_message_deletion import ScheduledMessageDeletion
 from manashelper.db.models.user_exam_grade import UserExamGrade
 from manashelper.db.models.user_lesson_attendance import UserLessonAttendance
 from manashelper.modules.advertisements.infrastructure.advertisement import Advertisement
@@ -25,6 +23,8 @@ from manashelper.modules.schedule.infrastructure.models.lesson_history import Le
 from manashelper.modules.student_questions.orm import StudentQuestionsResponse
 from manashelper.modules.users.infrastructure.user import User
 from manashelper.modules.users.infrastructure.user_phone_number import UserPhoneNumber
+from manashelper.platform.telegram.audit.orm import ActionLog
+from manashelper.platform.telegram.deletions.orm import ScheduledMessageDeletion
 
 __all__ = [
     "ActionLog",

@@ -12,10 +12,7 @@ from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message, ReplyKey
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.filters.translated_text import TranslatedText
-from manashelper.bot.navigation import build_main_keyboard
 from manashelper.core.config import Settings
-from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import DEFAULT_LOCALE
 from manashelper.modules.advertisements.application.advertisement import (
     AdvertisementForbiddenError,
@@ -59,6 +56,9 @@ from manashelper.modules.users.application.user_contact import (
     UserNotFoundError,
 )
 from manashelper.modules.users.presentation.keyboards.phone_numbers import build_contact_request_keyboard
+from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.filters.translated_text import TranslatedText
+from manashelper.platform.telegram.navigation import build_main_keyboard
 
 logger = logging.getLogger(__name__)
 

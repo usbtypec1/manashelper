@@ -3,7 +3,7 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram.utils.i18n import gettext as _
 
-from manashelper.bot.navigation import send_welcome
+from manashelper.platform.telegram.navigation import send_welcome
 
 router = Router(name="start")
 

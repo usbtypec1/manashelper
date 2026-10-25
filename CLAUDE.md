@@ -32,7 +32,7 @@ Core capabilities (current):
   line count. The last five multipage results per user are cached in FSM data by message ID, so page changes
   do not re-fetch OBIS or mix results from separate messages. Restarting the bot or clearing FSM data expires
   navigation; the callback asks the user to request fresh data. Scheduled OBIS notifications remain unchanged.
-- **Notification settings**: a `⚙️ Settings` menu (`bot/routers/settings.py`) lets each user toggle five
+- **Notification settings**: a `⚙️ Settings` menu (`platform/telegram/routers/settings.py`) lets each user toggle five
   notification kinds (schedule changes, before-lunch/before-dinner menu pings, exam-grade changes, lesson skips),
   backed by a lazily-created `NotificationSettings` row per user that defaults every toggle to enabled — see
   `services/notification_settings.py`.
@@ -147,8 +147,8 @@ Its provider retains an APP-scoped LRU cache and REQUEST-scoped service. Public 
 supplies counts and recipient IDs to donations and broadcast.
 Users now owns application locale/contact services, profile/phone infrastructure and language/phone presentation
 under modules/users/. All its providers remain REQUEST-scoped. User retains OBIS credential columns and the
-Schedule relationship; legacy OBIS/Eders repository consumers remain until those stages. Audit stays legacy.
-Shared navigation functions live in bot/navigation.py, outside the start router.
+Schedule relationship; legacy OBIS/Eders repository consumers remain until those stages.
+Shared navigation functions live in platform/telegram/navigation.py, outside the start router.
 Broadcast is colocated in flat `modules/broadcast/`: REQUEST-scoped SendBroadcast selects recipients through
 UsersQuery and counts delivery results. TelegramBroadcastSender owns locale, HTML and Telegram API errors;
 the router owns authorization, FSM and admin-facing messages.
@@ -160,15 +160,22 @@ CourseTrackingRepository owns the tracked-course query; User ORM belongs to User
 recipients through public modules/notifications/queries.py, whose provider retains REQUEST scope.
 Notifications now lives in flat modules/notifications/: settings, ORM, repository and Telegram presentation.
 Settings uses UsersQuery.exists; OBIS polling also selects recipients through NotificationRecipientsQuery.
-Shared Settings navigation stays in bot/. Preserve the characterized deferred-default/first-toggle defect.
+Shared Settings navigation stays in platform/telegram/. Preserve the characterized deferred-default/first-toggle defect.
 Shared weekday labels live in localization/weekdays.py; Bishkek timezone reuses
-services/time_utils.py. Root composition now has twelve providers, including CoreProvider.
+services/time_utils.py. Root composition now has thirteen providers, including CoreProvider and TelegramPlatformProvider.
 Core owns shared config, logging, database factories/Base and resource lifecycle in core/.
-The legacy di.py providers now retain only feature dependencies; Telegram platform and audit stay legacy.
+The legacy di.py providers retain only OBIS/Eders/Study week dependencies. Shared Telegram presentation and
+infrastructure live in platform/telegram/: dispatcher, commands, navigation, filters, middleware, HTML/delivery,
+audit and deletions. TelegramPlatformProvider keeps audit/deletion repositories and services in REQUEST.
+Settings callbacks belong to platform/telegram/callbacks.py; bot/callback_data.py retains OBIS/Eders callbacks.
+The gettext adapter lives in platform/i18n/catalog.py; Locale/weekday labels stay in localization/.
+Deletion jobs call MessageDeletionService.delete_due with an async delivery callable. The shared delete_messages
+adapter uses itertools.batched, skips TelegramAPIError per batch and lets unexpected errors abort the sweep.
+The same adapter removes advertisement publications. Runtime commands/locales paths are covered for Docker-like layouts.
 `docs/ARCHITECTURE.md` describes the current state; `docs/MIGRATION.md` records stage boundaries and baseline issues.
 
 Under `src/manashelper/`, code is organized by technical layer, mirroring the original Java structure:
-`bot/routers` (aiogram handlers), `bot/keyboards` (inline keyboard builders), `bot/middlewares`, `bot/callback_data.py`,
+`bot/routers` (remaining OBIS/Eders handlers), `bot/keyboards`, `bot/callback_data.py`,
 `services` (business logic), `repositories` (SQLAlchemy queries), `db/models` (ORM models), `jobs` (`AsyncIOScheduler`
 job functions, one module per feature area — see "Scheduled jobs & change detection" below), `core/`, `di.py`,
 `main.py`. These layers describe the remaining legacy areas; migrated features own their code in `modules/`.
@@ -188,8 +195,8 @@ scraped/ORM object to a dataclass) is a private module-level function, not a `@s
 
 ### Telegram update handling (aiogram routers)
 
-Each feature area is an aiogram `Router` (`bot/routers/start.py`, `modules/schedule/presentation/routers/timetable.py`), included into the
-`Dispatcher` in `bot/dispatcher.py`. Unlike the old Java chain-of-responsibility (`shouldHandle`/`handle` over a flat handler
+Each feature area is an aiogram `Router` (`platform/telegram/routers/start.py`, `modules/schedule/presentation/routers/timetable.py`), included into the
+`Dispatcher` in `platform/telegram/dispatcher.py`. Unlike the old Java chain-of-responsibility (`shouldHandle`/`handle` over a flat handler
 list, first match wins), aiogram matches each incoming update against filters declared on `@router.message(...)` /
 `@router.callback_query(...)` decorators — still effectively first-match-wins across included routers, so keep
 filters mutually exclusive the same way the Java handlers' `shouldHandle` predicates had to be.
@@ -204,7 +211,7 @@ parameter.
 
 aiogram's `Dispatcher.start_polling` dispatches each update as its own `asyncio` task by default
 (`handle_as_tasks=True`), so two updates from the *same* chat could run concurrently unless something serializes
-them. `bot/middlewares/per_chat_ordering.py::PerChatOrderingMiddleware` (registered as an outer middleware on both
+them. `platform/telegram/middlewares/per_chat_ordering.py::PerChatOrderingMiddleware` (registered as an outer middleware on both
 `dispatcher.message` and `dispatcher.callback_query`) holds one `asyncio.Lock` per chat id so a chat's updates
 process strictly in order — this matters because `CourseService.toggle_tracked_course`'s tracked-courses
 read-modify-write isn't safe under concurrent access for the same user. This is the Python analog of the Java
@@ -215,7 +222,7 @@ read-modify-write isn't safe under concurrent access for the same user. This is 
 `core/provider.py` defines CoreProvider: Settings, AsyncEngine, async_sessionmaker and the shared HTTP client
 have APP scope, and AsyncSession has REQUEST scope. `di.py` retains AppProvider/RequestProvider only for
 legacy feature dependencies. `setup_dishka(container, dispatcher)` +
-`inject_router(dispatcher)` in `bot/dispatcher.py` wire dependency injection into router handlers via `FromDishka[X]`
+`inject_router(dispatcher)` in `platform/telegram/dispatcher.py` wire dependency injection into router handlers via `FromDishka[X]`
 parameter annotations — the analog of Spring's constructor injection into `@Component`/`@Service` beans. The
 CoreProvider's session provider commits on finalization and rolls back if commit raises. The existing
 Dishka integration does not roll back on a request-body exception: it sends the exception as a yield value,
@@ -229,7 +236,7 @@ preserving the existing session lifecycle during the feature relocation.
 `router=self` kwarg into every startup callback — colliding with the partial's bound `router` kwarg and raising
 `TypeError: inject_router() got multiple values for argument 'router'`. Instead call
 `setup_dishka(container, dispatcher)` (no `auto_inject`) followed by an explicit `inject_router(dispatcher)`, as
-done in `bot/dispatcher.py` — confirmed working end-to-end against a real dispatcher, including through to a genuine
+done in `platform/telegram/dispatcher.py` — confirmed working end-to-end against a real dispatcher, including through to a genuine
 Telegram API call.
 
 ### Data layer
@@ -281,9 +288,9 @@ includes those when extraction runs from the repository root with `.` as its inp
 and are gitignored (compiled by `docker/Dockerfile` and by CI — see Commands above — anyone running the bot or
 test suite locally must run `pybabel compile` after cloning or after editing a `.po` file).
 
-`localization/locale.py::Locale` is the supported-locale enum (`ky`/`ru`/`en`/`tr`/`zh`); `localization/i18n.py` holds
+`localization/locale.py::Locale` is the supported-locale enum (`ky`/`ru`/`en`/`tr`/`zh`); `platform/i18n/catalog.py` holds
 the single process-wide `I18n` instance. `User.locale` (nullable `String(2)`) persists a user's resolved locale.
-`bot/middlewares/i18n.py::LocaleMiddleware` (registered *after* `setup_dishka` in `bot/dispatcher.py`, so it can use the
+`platform/telegram/middlewares/i18n.py::LocaleMiddleware` (registered *after* `setup_dishka` in `platform/telegram/dispatcher.py`, so it can use the
 request-scoped container) runs on every update: it upserts the user via `modules/users/application/locale.py::LocaleService`,
 which returns the saved locale if there is one, otherwise auto-detects one from
 `message.from_user.language_code` (`localization/locale.py::resolve_from_language_code`), falling back to
@@ -291,7 +298,7 @@ which returns the saved locale if there is one, otherwise auto-detects one from
 so there is no picker shown on this path. The middleware then enters `i18n.context()` / `i18n.use_locale(...)`
 and calls the handler inside it, so every `_()`/`ngettext()` call made anywhere during that update — filters,
 handlers, keyboards, formatters — resolves against the right locale via the contextvar aiogram's `I18n` keeps,
-with no `Translator`/locale parameter threaded through call signatures. `bot/filters/translated_text.py`
+with no `Translator`/locale parameter threaded through call signatures. `platform/telegram/filters/translated_text.py`
 (`TranslatedText`) exists because a reply-keyboard button's label is only known once translated, so matching the
 incoming message text against a hardcoded string (`F.text == "..."`) can't work across locales.
 
@@ -299,16 +306,16 @@ Jobs (the `jobs/` package) run outside any Telegram update, so there's no ambien
 context; each per-recipient send there looks up that user's `Locale` and wraps its own `format_...(...)` call in
 `with i18n.context(), i18n.use_locale(locale.value): ...` explicitly. A user can still change their locale
 explicitly at any time via `/language` or the "🌐 Language" row in Settings (`modules/users/presentation/routers/locale.py`), which
-shows the 5-language picker (`bot/keyboards/locale.py`) with names rendered from each language's own catalog —
+shows the 5-language picker (`modules/users/presentation/keyboards/locale.py`) with names rendered from each language's own catalog —
 the only place that picker is shown, now that
 auto-detection never falls through to it.
 
 ### Scheduled jobs & change detection
 
-`src/manashelper/jobs/` holds every `AsyncIOScheduler` job function registered in `jobs/scheduler.py`, one module per
+`jobs/scheduler.py` registers the `AsyncIOScheduler` job functions from their owning modules, one module per
 feature area (`modules/food_menu/jobs.py`, `jobs/obis_notification.py`, `modules/schedule/jobs.py`,
-`jobs/scheduled_message_deletion.py`, `modules/advertisements/jobs.py`), plus `jobs/common.py` for cross-cutting helpers
-shared by more than one job (`send_notification`, `chunk`/`delete_message_batch` for batched
+`platform/telegram/deletions/jobs.py`, `modules/advertisements/jobs.py`), plus `platform/telegram/delivery.py` for cross-cutting helpers
+shared by more than one job (`send_notification`, `delete_messages` for batched
 `deleteMessages` calls). Each job opens its own short-lived Dishka request scope(s)
 (`async with container() as request_container`) rather than reusing one across the whole run, and wraps its body
 in a broad `except Exception: logger.exception(...)` so one failure (a bad HTML page, a dead OBIS login, a user
@@ -369,8 +376,8 @@ choices, since none of these had an existing pattern to copy:
   API call is needed); phone numbers are collected inline at the start of the posting flow (reply-keyboard
   `request_contact` button or manual entry, validated by `UserContactService.is_valid_phone_number`) and
 persisted in `UserPhoneNumber` — see `modules/users/application/user_contact.py`. Users manage their saved numbers (add/delete)
-  from `⚙️ Settings → 📱 My phone numbers` (`bot/routers/phone_numbers.py`), which reuses the same
-  contact-request keyboard (`bot/keyboards/phone_numbers.py`) as the posting flow.
+  from `⚙️ Settings → 📱 My phone numbers` (`modules/users/presentation/routers/phone_numbers.py`), which reuses the same
+  contact-request keyboard (`modules/users/presentation/keyboards/phone_numbers.py`) as the posting flow.
 - **The marketplace menu is a reply keyboard, not an inline one** (`modules/advertisements/presentation/keyboards/advertisement.py::
   build_advertisement_menu_keyboard`), unlike almost every other sub-menu in the bot — it needs to stay on
   screen across the whole "post an ad" / "my ads" sub-flow the way the main reply keyboard does, and it's
@@ -386,13 +393,13 @@ persisted in `UserPhoneNumber` — see `modules/users/application/user_contact.p
   `format_advertisement(..., contact=...)`). The channel post instead embeds a bot deep link
   (`format_advertisement(..., contact_deep_link=...)`, built from `bot.get_me()` in
   `advertisement_moderation.py::on_approve` as `https://t.me/<bot>?start=ad_<id>`). Opening it is handled by
-  `modules/advertisements/presentation/advertisement_contact.py` (`CommandStart(deep_link=True)`, registered in `bot/dispatcher.py` *before*
+  `modules/advertisements/presentation/advertisement_contact.py` (`CommandStart(deep_link=True)`, registered in `platform/telegram/dispatcher.py` *before*
   `start_router` so a bare `/start` still falls through to the normal welcome flow) via
   `AdvertisementContactService.reveal_contact`, which also logs the open as an `AdvertisementContactView` row
   (never deduplicated — every open is its own row, for counting interest).
 - **Expiration is chosen from fixed presets** (45 minutes / 6 hours / 24 hours / 7 days / no expiration —
   `AdvertisementExpiryCallback`), not free-text date entry.
-- **HTML escaping**: `services/html_sanitization.py::escape_html` (a thin wrapper over aiogram's
+- **HTML escaping**: `platform/telegram/html.py::escape_html` (a thin wrapper over aiogram's
   `html_decoration.quote`) is applied to every user-supplied field — title, description, rejection comment,
   contact username/phone — wherever it's interpolated into a message sent with the bot's default
   `ParseMode.HTML`. This is a correctness fix as much as a safety one: an unescaped bare `&`/`<`/`>` makes
@@ -408,13 +415,13 @@ persisted in `UserPhoneNumber` — see `modules/users/application/user_contact.p
   (`advertisement.py::_notify_moderation_chat`, `advertisement_moderation.py::on_approve`).
 - **Rate limiting**: `AdvertisementService.assert_can_post` caps a user at 5 ads/hour
   (`AdvertisementRepository.count_created_since`) — a data-driven business rule, distinct from the generic
-  per-chat token-bucket throttle in `bot/middlewares/rate_limit.py`.
+  per-chat token-bucket throttle in `platform/telegram/middlewares/rate_limit.py`.
 - **Moderation**: a new ad is sent once to `Settings.moderation_chat_id` with Approve/Reject buttons
   (`modules/advertisements/presentation/advertisement_moderation.py`); both actions re-check the ad is still `pending` before acting
   (`AdvertisementNotPendingError`) so two people tapping at once in that chat can't double-process the same ad.
 - **Expiration cleanup**: `modules/advertisements/jobs.py::cleanup_expired_advertisements_job` (hourly) deletes ads past
   `expires_at`, removing their channel post(s) first — same outbox-sweep shape as
-  `jobs/scheduled_message_deletion.py::cleanup_scheduled_message_deletions_job`.
+  `platform/telegram/deletions/jobs.py::cleanup_scheduled_message_deletions_job`.
 
 ### Feedback & broadcast
 
@@ -447,11 +454,11 @@ purely "did this update originate from that chat" (`modules/feedback/router.py::
   FSM clears before recipient lookup. TelegramAPIError from send skips one recipient without retry;
   locale lookup failures and unexpected exceptions propagate and prevent the final summary, as before.
 - **`/broadcast` is registered against `BotCommandScopeChat(chat_id=settings.admin_chat_id)`**
-  (`services/bot_commands.py::build_admin_commands`, wired up in `bot/commands.py::setup_commands`), not any of the
+  (`platform/telegram/command_catalog.py::build_admin_commands`, wired up in `platform/telegram/commands.py::setup_commands`), not any of the
   "all chats" scopes every other command uses — it shouldn't show up as a suggestion in random group chats the
   bot happens to be added to, only in the one chat where it's actually authorized.
 - **HTML escaping**: both the admin's broadcast text and feedback bodies/replies go through
-  `services/html_sanitization.py::escape_html` before being interpolated into an HTML-parse-mode message, same
+  `platform/telegram/html.py::escape_html` before being interpolated into an HTML-parse-mode message, same
   correctness reasoning as the advertising platform (an unescaped bare `&`/`<`/`>` makes Telegram reject the
   whole `sendMessage` call).
 

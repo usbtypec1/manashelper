@@ -1,10 +1,10 @@
 from aiogram import Bot
 
-from manashelper.jobs.common import send_notification
-from manashelper.localization.i18n import i18n
 from manashelper.modules.schedule.application.timetable_sync import LessonChange
 from manashelper.modules.schedule.presentation.timetable_formatter import format_lesson_changes
 from manashelper.modules.users.application.locale import LocaleService
+from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.delivery import send_notification
 
 
 class TelegramScheduleChangeSender:

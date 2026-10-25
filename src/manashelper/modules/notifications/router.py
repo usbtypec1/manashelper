@@ -3,7 +3,6 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.callback_data import SettingsAction, SettingsCallback
 from manashelper.modules.notifications.callbacks import NotificationSettingCallback
 from manashelper.modules.notifications.keyboards import build_notifications_keyboard
 from manashelper.modules.notifications.settings import (
@@ -11,6 +10,7 @@ from manashelper.modules.notifications.settings import (
     NotificationSettingsSummary,
     UserNotFoundError,
 )
+from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 
 router = Router(name="notifications")
 

@@ -7,7 +7,7 @@ from aiogram.types import CallbackQuery, Message, TelegramObject
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import CONTAINER_NAME
 
-from manashelper.services.action_log import ActionLogService
+from manashelper.platform.telegram.audit.service import ActionLogService
 
 MASK_LOGGED_MESSAGE_FLAG = "mask_logged_message"
 _MASKED_MESSAGE_TEXT = "[masked]"

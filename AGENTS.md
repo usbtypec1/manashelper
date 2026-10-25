@@ -16,9 +16,9 @@ router, service, repository, and tests before changing a feature. `features/` ho
 
 ## Architecture
 
-Code is organized by layer under `src/manashelper/`: `bot/routers` (handlers), `bot/keyboards`, `bot/middlewares`,
-`bot/callback_data.py`, `services`, `repositories`, `db/models`, `scraping`, `jobs`, `localization`, `core`,
-`di.py`, and `main.py`. A gradual feature-first migration is in progress: feedback, advertisements and the survey live in
+Migrated business features live in `modules/`; shared infrastructure lives in `core/` and `platform/`.
+Remaining legacy areas use `bot/routers`, `bot/keyboards`, `bot/callback_data.py`, `services`, `repositories`,
+`db/models`, `scraping` and `jobs`. A gradual feature-first migration is in progress: feedback, advertisements and the survey live in
 `modules/feedback/`, `modules/advertisements/` and `modules/student_questions/`, with REQUEST providers in `main.py`.
 Advertisements separates presentation, application and infrastructure, with domain enums; feedback and the survey stay flat.
 Release history lives in flat `modules/versions/`, with functions and no artificial DI provider. Its runtime
@@ -37,7 +37,7 @@ its Telegram sender preserves per-recipient locale and delivery behavior. StudyW
 Notifications lives in flat `modules/notifications/`: settings, recipient queries, ORM, repository, callbacks,
 keyboard and router. Its provider retains REQUEST scope. Settings checks users through UsersQuery;
 Schedule and OBIS polling select recipients through NotificationRecipientsQuery. Shared Settings navigation
-stays in `bot/`; Food menu/Eders preferences and OBIS polling remain owned by their features.
+stays in `platform/telegram/`; Food menu/Eders preferences and OBIS polling remain owned by their features.
 Preserve the characterized deferred-default defect: a new unflushed settings row exposes None values,
 and its first toggle enables the selected flag. Missing rows still opt recipients into all notifications.
 Shared weekday labels live in `localization/weekdays.py`; reuse `services/time_utils.py::BISHKEK_TZ` instead of a feature's timezone.
@@ -46,11 +46,11 @@ repositories, presentation language/phone routers, keyboards and callbacks. User
 scope for all its dependencies, including public UsersQuery (counts, IDs, existence). LocaleService is the
 shared user-locale boundary for middleware and delivery; UserContactService supplies plain contact models.
 User keeps OBIS credential columns and the Schedule tracked_courses relationship without schema changes.
-Legacy OBIS/Eders still use UserRepository for credentials until their own stages; action logging remains legacy.
-Shared Telegram navigation lives in `bot/navigation.py`; feature routers must not import the start router for it.
+Legacy OBIS/Eders still use UserRepository for credentials until their own stages.
+Shared Telegram navigation lives in `platform/telegram/navigation.py`; feature routers must not import the start router for it.
 Keep migrated feature code together;
 do not move unrelated legacy areas in the same stage. See `docs/ARCHITECTURE.md` and `docs/MIGRATION.md`.
-Add routers to the dispatcher in `bot/dispatcher.py`; legacy services/repositories remain in `di.py`, while migrated
+Add routers to the dispatcher in `platform/telegram/dispatcher.py`; legacy services/repositories remain in `di.py`, while migrated
 features own their providers. Router order matters because aiogram uses the first matching handler; the
 advertisement deep-link router must precede the plain `/start` router. Use typed `CallbackData` classes for inline
 button payloads.
@@ -58,11 +58,20 @@ button payloads.
 Routers and jobs depend on services, not repositories or `AsyncSession`. Services hold injected collaborators and
 business logic; repositories handle persistence. Services return plain dataclasses, not ORM instances, to the
 presentation layer. Put pure mapping and formatting helpers at module level. Escape user-provided and other dynamic
-text with `services/html_sanitization.py::escape_html` before inserting it into Telegram HTML messages.
+text with `platform/telegram/html.py::escape_html` before inserting it into Telegram HTML messages.
 
 Core lives in `core/`: config.py, database.py, logging.py and provider.py. CoreProvider owns APP settings,
 engine, session factory and the shared HTTP client, plus the REQUEST session. `di.py` retains only legacy
 feature APP/REQUEST dependencies. Keep the single Base from `core/database.py` and model registration in `db/models/`.
+Telegram Platform lives in `platform/telegram/`: dispatcher, commands/catalog/extractor, navigation,
+Settings callbacks/routers, filters, middleware, HTML/delivery, audit and scheduled message deletions.
+TelegramPlatformProvider owns both audit and deletion repositories/services in REQUEST. Audit records only
+matched/allowed updates, masks password text with `[masked]`, and stays after the private-chat guard.
+Cleanup jobs use MessageDeletionService.delete_due with async delivery; delete_messages batches by 100,
+continues after TelegramAPIError and propagates unexpected errors. Rows are acknowledged after all chats;
+an unexpected sweep failure logs and leaves them queued. Preserve the five-minute schedule and no retry.
+The gettext adapter lives in `platform/i18n/catalog.py`; pure Locale/weekday labels stay in `localization/`.
+Command JSON and .mo runtime directories are unchanged, with checkout/Docker-like path tests.
 The session commits on normal finalization and rolls back if
 commit raises. An existing defect is characterized in `tests/test_feedback_composition.py`: Dishka sends a request-body
 exception as the yield value, which the provider ignores, so a body exception alone still leads to commit. Do not
@@ -118,7 +127,7 @@ Use stable message keys with literal `_("menu.settings")` or `ngettext(...)` arg
 f-strings are not extractable by Babel. Store all user-facing text in the English, Russian, Kyrgyz, Turkish and
 Chinese (`zh`, simplified Chinese) `.po` catalogs under `src/manashelper/locales/`. English is the fallback
 for missing translations; it must have a compiled catalog too. Preserve formatting placeholders in every translation. Use
-`bot/filters/translated_text.py::TranslatedText` for reply-keyboard text filters rather than matching one
+`platform/telegram/filters/translated_text.py::TranslatedText` for reply-keyboard text filters rather than matching one
 language's label directly.
 
 `LocaleMiddleware` chooses a user's saved or Telegram-detected locale and falls back to Russian. Code sending a
@@ -139,7 +148,7 @@ appropriate:
 For a new private command, update `docs/commands/private.json` with its description's message key and add the
 description to all five catalogs. `babel.cfg` includes a custom extractor for these JSON keys, so extraction
 must run from the repository root with `.` as its input directory.
-Check command definitions in `services/bot_commands.py` and registration in `bot/commands.py` as well as the handler.
+Check command definitions in `platform/telegram/command_catalog.py` and registration in `platform/telegram/commands.py` as well as the handler.
 
 ## Run and verify
 

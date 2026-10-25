@@ -20,9 +20,7 @@ from aiogram.types import User as TelegramUser
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.bot.callback_data import SettingsAction, SettingsCallback
 from manashelper.db.models import DailyMenu, DailyMenuRating, Dish, User
-from manashelper.localization.i18n import i18n
 from manashelper.modules.food_menu.application.daily_menu import DailyMenuModel, DailyMenuService, DishModel
 from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_rating_repository import (
     DailyMenuRatingRepository,
@@ -40,6 +38,8 @@ from manashelper.modules.food_menu.presentation.keyboards.food_menu import (
 from manashelper.modules.food_menu.presentation.routers.food_menu import _send_daily_menu, on_food_menu_rating_callback
 from manashelper.modules.food_menu.presentation.sender import TelegramFoodMenuSender
 from manashelper.modules.users.application.locale import LocaleService
+from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 
 
 def _service(session: AsyncSession) -> DailyMenuService:

@@ -1,7 +1,7 @@
 from aiogram import Bot
 
 from manashelper.core.config import Settings
-from manashelper.jobs.common import TELEGRAM_DELETE_MESSAGES_BATCH_SIZE, chunk, delete_message_batch
+from manashelper.platform.telegram.delivery import delete_messages
 
 
 class TelegramPublicationRemover:
@@ -10,5 +10,4 @@ class TelegramPublicationRemover:
         self._channel_id = settings.advertisement_channel_id
 
     async def delete_publications(self, message_ids: list[int]) -> None:
-        for batch in chunk(message_ids, TELEGRAM_DELETE_MESSAGES_BATCH_SIZE):
-            await delete_message_batch(self._bot, self._channel_id, batch)
+        await delete_messages(self._bot, self._channel_id, message_ids)

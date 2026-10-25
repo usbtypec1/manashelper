@@ -14,13 +14,11 @@ from aiogram.types import CallbackQuery, Message
 from dishka import make_async_container
 
 from manashelper.bot.callback_data import EdersPageCallback
-from manashelper.bot.dispatcher import create_dispatcher
 from manashelper.bot.routers.eders import SNAPSHOT_KEY, on_eders_command, on_eders_page
 from manashelper.core.provider import CoreProvider
 from manashelper.di import AppProvider, RequestProvider
 from manashelper.jobs.eders import poll_eders_job
 from manashelper.jobs.scheduler import create_scheduler
-from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import Locale
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.schedule.application.schedule import NoTrackedCoursesError
@@ -29,6 +27,9 @@ from manashelper.modules.student_questions.provider import StudentQuestionsProvi
 from manashelper.modules.student_questions.service import StudentQuestionsService
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.provider import UsersProvider
+from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.dispatcher import create_dispatcher
+from manashelper.platform.telegram.provider import TelegramPlatformProvider
 from manashelper.scraping.eders_parser import EdersParseError
 from manashelper.services.eders import EdersService
 from manashelper.services.eders_models import (
@@ -165,6 +166,7 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
 async def test_application_resolves_new_services_and_registers_thirty_minute_polling() -> None:
     container = make_async_container(
         CoreProvider(),
+        TelegramPlatformProvider(),
         AppProvider(),
         RequestProvider(),
         ScheduleProvider(),
@@ -237,11 +239,12 @@ async def test_job_groups_new_materials_and_acknowledges_all_events_only_on_succ
 
 
 async def test_eders_settings_open_from_notifications_and_keep_return_path_after_toggle() -> None:
-    from manashelper.bot.callback_data import EdersSettingCallback, SettingsAction, SettingsCallback
-    from manashelper.bot.keyboards.settings import build_settings_keyboard
+    from manashelper.bot.callback_data import EdersSettingCallback
     from manashelper.bot.routers.eders import on_eders_setting, on_open_eders_settings
     from manashelper.modules.notifications.keyboards import build_notifications_keyboard
     from manashelper.modules.notifications.settings import NotificationSettingsSummary
+    from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
+    from manashelper.platform.telegram.keyboards.settings import build_settings_keyboard
     from manashelper.services.eders_tracking import EdersSetting, EdersSettings
 
     main = build_settings_keyboard()

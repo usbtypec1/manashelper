@@ -7,14 +7,14 @@ from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
 from manashelper.core.config import Settings
-from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import DEFAULT_LOCALE
 from manashelper.modules.broadcast.callbacks import BroadcastAction, BroadcastCallback
 from manashelper.modules.broadcast.keyboards import build_broadcast_confirm_keyboard
 from manashelper.modules.broadcast.sender import TelegramBroadcastSender
 from manashelper.modules.broadcast.service import BroadcastSender, SendBroadcast
 from manashelper.modules.users.application.locale import LocaleService
-from manashelper.services.html_sanitization import escape_html
+from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.html import escape_html
 
 router = Router(name="broadcast")
 

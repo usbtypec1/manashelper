@@ -36,4 +36,4 @@ class CatalogI18n(I18n):
         return super().gettext(singular, plural, n, resolved_locale)
 
 
-i18n = CatalogI18n(path=Path(__file__).resolve().parent.parent / "locales", default_locale=DEFAULT_LOCALE.value)
+i18n = CatalogI18n(path=Path(__file__).resolve().parents[2] / "locales", default_locale=DEFAULT_LOCALE.value)

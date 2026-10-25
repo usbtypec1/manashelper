@@ -43,6 +43,7 @@ from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.infrastructure.user_repository import UserRepository
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.modules.users.queries import UsersQuery
+from manashelper.platform.telegram.provider import TelegramPlatformProvider
 
 
 async def test_notification_defaults_weekday_meal_and_bulk_toggles(session):
@@ -187,6 +188,7 @@ async def test_sync_normalized_names_preserve_existing_dishes_and_replace_change
 async def test_food_menu_provider_preserves_app_and_request_lifetimes():
     async with make_async_container(
         CoreProvider(),
+        TelegramPlatformProvider(),
         AppProvider(),
         RequestProvider(),
         ScheduleProvider(),

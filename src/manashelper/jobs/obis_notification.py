@@ -3,10 +3,10 @@ import logging
 from aiogram import Bot
 from dishka import AsyncContainer
 
-from manashelper.jobs.common import send_notification
-from manashelper.localization.i18n import i18n
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
 from manashelper.modules.users.application.locale import LocaleService
+from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.delivery import send_notification
 from manashelper.scraping.obis_client import ObisLoginError
 from manashelper.scraping.obis_parser import ObisParseError
 from manashelper.services.obis import UserHasNoCredentialsError

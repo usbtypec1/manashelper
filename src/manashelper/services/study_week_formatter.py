@@ -3,8 +3,8 @@ from datetime import timedelta
 from aiogram.utils.i18n import gettext as _
 
 from manashelper.localization.weekdays import weekday_full
+from manashelper.platform.telegram.html import escape_html
 from manashelper.services.eders_models import ActivityKind
-from manashelper.services.html_sanitization import escape_html
 from manashelper.services.study_week import StudyWeek, week_end
 from manashelper.services.time_utils import BISHKEK_TZ
 

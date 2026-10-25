@@ -10,8 +10,6 @@ from alembic.config import Config
 from dishka import make_async_container
 
 from alembic import command
-from manashelper.bot.commands import setup_commands
-from manashelper.bot.dispatcher import create_dispatcher
 from manashelper.core.config import get_settings
 from manashelper.core.logging import configure_logging
 from manashelper.core.provider import CoreProvider
@@ -26,6 +24,9 @@ from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.student_questions.provider import StudentQuestionsProvider
 from manashelper.modules.users.provider import UsersProvider
+from manashelper.platform.telegram.commands import setup_commands
+from manashelper.platform.telegram.dispatcher import create_dispatcher
+from manashelper.platform.telegram.provider import TelegramPlatformProvider
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,7 @@ async def main() -> None:
         )
         container = make_async_container(
             CoreProvider(),
+            TelegramPlatformProvider(),
             AppProvider(),
             RequestProvider(),
             ScheduleProvider(),

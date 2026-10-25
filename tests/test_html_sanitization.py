@@ -1,4 +1,4 @@
-from manashelper.services.html_sanitization import escape_html
+from manashelper.platform.telegram.html import escape_html
 
 
 def test_escape_html_escapes_tags_and_ampersand() -> None:

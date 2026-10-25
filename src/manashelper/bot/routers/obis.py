@@ -13,7 +13,6 @@ from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
 from manashelper.bot.callback_data import ObisAction, ObisCallback, ObisResultsPageCallback
-from manashelper.bot.filters.translated_text import TranslatedText
 from manashelper.bot.keyboards.obis import (
     build_cancel_keyboard,
     build_confirm_clear_credentials_keyboard,
@@ -22,6 +21,7 @@ from manashelper.bot.keyboards.obis import (
     build_obis_settings_keyboard,
     build_terms_keyboard,
 )
+from manashelper.platform.telegram.filters.translated_text import TranslatedText
 from manashelper.scraping.obis_client import ObisLoginError
 from manashelper.scraping.obis_parser import ObisParseError
 from manashelper.services.obis import ObisService, UserHasNoCredentialsError, UserNotFoundError

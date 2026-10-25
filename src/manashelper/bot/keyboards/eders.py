@@ -2,7 +2,8 @@ from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from manashelper.bot.callback_data import EdersPageCallback, EdersSettingCallback, SettingsAction, SettingsCallback
+from manashelper.bot.callback_data import EdersPageCallback, EdersSettingCallback
+from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from manashelper.services.eders_models import DeadlineFilter
 from manashelper.services.eders_tracking import EdersSetting, EdersSettings
 

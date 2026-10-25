@@ -22,6 +22,7 @@ from manashelper.modules.advertisements.provider import AdvertisementsProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.users.provider import UsersProvider
+from manashelper.platform.telegram.provider import TelegramPlatformProvider
 
 CHANNEL_ID = -100943001
 
@@ -69,6 +70,7 @@ async def test_expiry_deletes_publications_in_batches_before_removing_rows(sessi
     monkeypatch.setattr(job, "get_settings", lambda: SimpleNamespace(advertisement_channel_id=CHANNEL_ID))
     async with make_async_container(
         CoreProvider(),
+        TelegramPlatformProvider(),
         AppProvider(),
         RequestProvider(),
         ScheduleProvider(),

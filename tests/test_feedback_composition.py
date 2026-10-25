@@ -17,6 +17,7 @@ from manashelper.modules.feedback.service import FeedbackService
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.users.provider import UsersProvider
+from manashelper.platform.telegram.provider import TelegramPlatformProvider
 
 
 async def test_feedback_request_scope_preserves_existing_transaction_finalization():
@@ -32,6 +33,7 @@ async def test_feedback_request_scope_preserves_existing_transaction_finalizatio
 
     async with make_async_container(
         CoreProvider(),
+        TelegramPlatformProvider(),
         AppProvider(),
         RequestProvider(),
         ScheduleProvider(),
@@ -80,8 +82,9 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
     script = dedent("""\
         import asyncio
         from dishka import make_async_container
-        from manashelper.bot.dispatcher import create_dispatcher
+        from manashelper.platform.telegram.dispatcher import create_dispatcher
         from manashelper.core.provider import CoreProvider
+        from manashelper.platform.telegram.provider import TelegramPlatformProvider
         from manashelper.di import AppProvider, RequestProvider
         from manashelper.modules.schedule.provider import ScheduleProvider
         from manashelper.modules.notifications.provider import NotificationsProvider
@@ -95,7 +98,7 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
 
         async def check():
             async with make_async_container(
-                CoreProvider(), AppProvider(),
+                CoreProvider(), TelegramPlatformProvider(), AppProvider(),
                 RequestProvider(),
                 ScheduleProvider(),
                 NotificationsProvider(),
@@ -108,6 +111,18 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
                 FoodMenuProvider(),
             ) as container:
                 dispatcher = create_dispatcher(container)
+                for observer in (dispatcher.message, dispatcher.callback_query):
+                    assert [type(item).__name__ for item in observer.outer_middleware] == [
+                        "RateLimitMiddleware", "PerChatOrderingMiddleware", "ContainerMiddleware", "LocaleMiddleware"
+                    ]
+                    assert [type(item).__name__ for item in observer.middleware] == [
+                        "PrivateChatOnlyMiddleware", "ActionLogMiddleware"
+                    ]
+                for index in (0, 1):
+                    assert (
+                        dispatcher.message.outer_middleware[index]
+                        is not dispatcher.callback_query.outer_middleware[index]
+                    )
                 names = [router.name for router in dispatcher.sub_routers]
                 assert names.count("feedback") == 1
                 assert names.count("broadcast") == 1

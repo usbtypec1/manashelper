@@ -4,8 +4,8 @@ from typing import NotRequired, TypedDict, cast
 
 from aiogram.types import BotCommand
 
-from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import Locale
+from manashelper.platform.i18n.catalog import i18n
 
 
 class _CommandConfig(TypedDict):
@@ -14,8 +14,8 @@ class _CommandConfig(TypedDict):
     is_ephemeral: NotRequired[bool]
 
 
-# .../src/manashelper/services/bot_commands.py -> repo root is 3 parents up.
-COMMANDS_DIR = Path(__file__).resolve().parents[3] / "docs" / "commands"
+# .../src/manashelper/platform/telegram/command_catalog.py -> checkout/Docker root.
+COMMANDS_DIR = Path(__file__).resolve().parents[4] / "docs" / "commands"
 
 
 def _load_command_configs(filename: str) -> list[_CommandConfig]:

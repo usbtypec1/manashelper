@@ -9,7 +9,6 @@ from aiogram.filters import CommandObject
 from aiogram.methods import EditEphemeralMessageText, GetChatMember, SendMessage, SendRichMessage
 from aiogram.types import CallbackQuery, Chat, Message, RichMessage, User
 
-from manashelper.localization.i18n import i18n
 from manashelper.modules.food_menu.application.daily_menu import (
     DailyMenuAvailability,
     DailyMenuModel,
@@ -31,6 +30,7 @@ from manashelper.modules.food_menu.presentation.routers.food_menu import (
     on_food_menu_open_callback,
     on_food_menu_rating_callback,
 )
+from manashelper.platform.i18n.catalog import i18n
 
 USER = User(id=900_001, is_bot=False, first_name="Tester")
 CHAT_ID = -900_001

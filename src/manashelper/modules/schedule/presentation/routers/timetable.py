@@ -5,7 +5,6 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.filters.translated_text import TranslatedText
 from manashelper.modules.schedule.application.course import CourseNotFoundError, CourseService, UserNotFoundError
 from manashelper.modules.schedule.application.department import DepartmentService
 from manashelper.modules.schedule.application.schedule import NoTrackedCoursesError, ScheduleService
@@ -25,6 +24,7 @@ from manashelper.modules.schedule.presentation.keyboards.timetable import (
     build_timetable_menu_keyboard,
 )
 from manashelper.modules.schedule.presentation.timetable_formatter import format_day_schedule
+from manashelper.platform.telegram.filters.translated_text import TranslatedText
 from manashelper.services.time_utils import BISHKEK_TZ
 
 router = Router(name="timetable")
