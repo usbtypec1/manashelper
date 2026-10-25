@@ -5,11 +5,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models import Course, Department, Faculty, Lesson, LessonHistory
-from manashelper.repositories.lesson_history_repository import LessonHistoryRepository
-from manashelper.repositories.lesson_repository import LessonRepository
-from manashelper.scraping.timetable_parser import ScrapedLessonSlot, ScrapedTimeSlot
-from manashelper.services import timetable_sync
-from manashelper.services.timetable_sync import TimetableSyncService
+from manashelper.modules.schedule.application import timetable_sync
+from manashelper.modules.schedule.application.timetable_sync import TimetableSyncService
+from manashelper.modules.schedule.infrastructure.repositories.lesson_history_repository import LessonHistoryRepository
+from manashelper.modules.schedule.infrastructure.repositories.lesson_repository import LessonRepository
+from manashelper.modules.schedule.infrastructure.timetable_parser import ScrapedLessonSlot, ScrapedTimeSlot
 
 
 class _FakeTimetableClient:

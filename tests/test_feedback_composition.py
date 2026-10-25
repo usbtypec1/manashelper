@@ -13,6 +13,8 @@ from manashelper.di import AppProvider, RequestProvider
 from manashelper.modules.feedback.orm import FeedbackMessage
 from manashelper.modules.feedback.provider import FeedbackProvider
 from manashelper.modules.feedback.service import FeedbackService
+from manashelper.modules.notifications.provider import NotificationsProvider
+from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.users.provider import UsersProvider
 
 
@@ -28,7 +30,13 @@ async def test_feedback_request_scope_preserves_existing_transaction_finalizatio
             return pool
 
     async with make_async_container(
-        AppProvider(), RequestProvider(), FeedbackProvider(), UsersProvider(), TestSessionProvider()
+        AppProvider(),
+        RequestProvider(),
+        ScheduleProvider(),
+        NotificationsProvider(),
+        FeedbackProvider(),
+        UsersProvider(),
+        TestSessionProvider(),
     ) as container:
         async with container() as request:
             service = await request.get(FeedbackService)
@@ -72,10 +80,13 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
         from dishka import make_async_container
         from manashelper.bot.dispatcher import create_dispatcher
         from manashelper.di import AppProvider, RequestProvider
+        from manashelper.modules.schedule.provider import ScheduleProvider
+        from manashelper.modules.notifications.provider import NotificationsProvider
         from manashelper.modules.advertisements.provider import AdvertisementsProvider
         from manashelper.modules.broadcast.provider import BroadcastProvider
         from manashelper.modules.donations.provider import DonationsProvider
         from manashelper.modules.feedback.provider import FeedbackProvider
+        from manashelper.modules.food_menu.provider import FoodMenuProvider
         from manashelper.modules.student_questions.provider import StudentQuestionsProvider
         from manashelper.modules.users.provider import UsersProvider
 
@@ -83,17 +94,23 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
             async with make_async_container(
                 AppProvider(),
                 RequestProvider(),
+                ScheduleProvider(),
+                NotificationsProvider(),
                 FeedbackProvider(),
                 AdvertisementsProvider(),
                 StudentQuestionsProvider(),
                 UsersProvider(),
                 DonationsProvider(),
                 BroadcastProvider(),
+                FoodMenuProvider(),
             ) as container:
                 dispatcher = create_dispatcher(container)
                 names = [router.name for router in dispatcher.sub_routers]
                 assert names.count("feedback") == 1
                 assert names.count("broadcast") == 1
+                assert names.count("timetable") == 1
+                assert names.count("lesson_search") == 1
+                assert names.count("food_menu") == 1
                 assert names.index("student_questions") < names.index("advertisement_contact")
                 assert names.index("advertisement_contact") < names.index("start")
 

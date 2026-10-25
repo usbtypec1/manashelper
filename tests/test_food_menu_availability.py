@@ -5,10 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models import DailyMenu
 from manashelper.localization.i18n import i18n
-from manashelper.repositories.daily_menu_rating_repository import DailyMenuRatingRepository
-from manashelper.repositories.daily_menu_repository import DailyMenuRepository
-from manashelper.services import daily_menu as daily_menu_module
-from manashelper.services.daily_menu import BISHKEK_TZ, DailyMenuService
+from manashelper.modules.food_menu.application import daily_menu as daily_menu_module
+from manashelper.modules.food_menu.application.daily_menu import DailyMenuService
+from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_rating_repository import (
+    DailyMenuRatingRepository,
+)
+from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_repository import DailyMenuRepository
+from manashelper.services.time_utils import BISHKEK_TZ
 
 
 class _Clock(datetime):
@@ -45,8 +48,8 @@ async def test_availability_is_empty_when_no_menu_is_published(session: AsyncSes
 
 
 def test_all_seven_day_buttons_contain_fixed_dates_and_fit_callback_limit() -> None:
-    from manashelper.bot.callback_data import FoodMenuDateCallback
-    from manashelper.bot.keyboards.food_menu import build_menu_day_buttons
+    from manashelper.modules.food_menu.presentation.callbacks import FoodMenuDateCallback
+    from manashelper.modules.food_menu.presentation.keyboards.food_menu import build_menu_day_buttons
 
     today = _Clock.now().date()
     dates = [today + timedelta(days=offset) for offset in range(7)]

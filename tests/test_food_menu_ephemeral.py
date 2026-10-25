@@ -9,24 +9,28 @@ from aiogram.filters import CommandObject
 from aiogram.methods import EditEphemeralMessageText, GetChatMember, SendMessage, SendRichMessage
 from aiogram.types import CallbackQuery, Chat, Message, RichMessage, User
 
-from manashelper.bot.callback_data import (
+from manashelper.localization.i18n import i18n
+from manashelper.modules.food_menu.application.daily_menu import (
+    DailyMenuAvailability,
+    DailyMenuModel,
+    DailyMenuNotFoundError,
+)
+from manashelper.modules.food_menu.presentation.callbacks import (
     FoodMenuCallback,
     FoodMenuDateCallback,
     FoodMenuDay,
     FoodMenuOpenCallback,
     FoodMenuRatingCallback,
 )
-from manashelper.bot.keyboards.food_menu import build_menu_rating_buttons
-from manashelper.bot.routers.food_menu import (
+from manashelper.modules.food_menu.presentation.food_menu_formatter import build_daily_menu_rich_message
+from manashelper.modules.food_menu.presentation.keyboards.food_menu import build_menu_rating_buttons
+from manashelper.modules.food_menu.presentation.routers.food_menu import (
     cmd_yemek,
     on_food_menu_date_callback,
     on_food_menu_day_callback,
     on_food_menu_open_callback,
     on_food_menu_rating_callback,
 )
-from manashelper.localization.i18n import i18n
-from manashelper.services.daily_menu import DailyMenuAvailability, DailyMenuModel, DailyMenuNotFoundError
-from manashelper.services.food_menu_formatter import build_daily_menu_rich_message
 
 USER = User(id=900_001, is_bot=False, first_name="Tester")
 CHAT_ID = -900_001

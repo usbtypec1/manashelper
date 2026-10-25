@@ -1,0 +1,5 @@
+simulation: timetable-refactor
+routing: header
+mocks:
+  - routeKey: timetable
+    path: ../mocks/timetable/config.yaml

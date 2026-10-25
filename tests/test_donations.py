@@ -17,6 +17,8 @@ from manashelper.modules.donations.catalog import DonationBank
 from manashelper.modules.donations.provider import DonationsProvider
 from manashelper.modules.donations.qr import DonationQrService
 from manashelper.modules.donations.service import DonationService
+from manashelper.modules.notifications.provider import NotificationsProvider
+from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.modules.users.queries import UsersQuery
 from manashelper.repositories.user_repository import UserRepository
@@ -147,7 +149,12 @@ async def test_qr_cache_is_shared_across_request_scopes_while_application_servic
     bank = DonationBank("bank", "Bank", path)
     bot = FakeBot()
     async with make_async_container(
-        AppProvider(), RequestProvider(), UsersProvider(), DonationsProvider()
+        AppProvider(),
+        RequestProvider(),
+        ScheduleProvider(),
+        NotificationsProvider(),
+        UsersProvider(),
+        DonationsProvider(),
     ) as container:
         qr = await container.get(DonationQrService)
         async with container() as request:

@@ -148,14 +148,21 @@ supplies counts and recipient IDs to donations and broadcast; the rest of Users 
 Broadcast is colocated in flat `modules/broadcast/`: REQUEST-scoped SendBroadcast selects recipients through
 UsersQuery and counts delivery results. TelegramBroadcastSender owns locale, HTML and Telegram API errors;
 the router owns authorization, FSM and admin-facing messages.
+Food menu lives in modules/food_menu/: application services, Telegram presentation, infrastructure and thin jobs.
+Its provider retains APP client/parser and REQUEST services. BroadcastFoodMenu uses a Telegram sender boundary;
+notification settings check users through UsersQuery.exists. Preserve the characterized first-toggle ORM-default defect.
+Schedule now lives in modules/schedule/ with catalog/tracking, timetable/search, infrastructure and thin jobs.
+CourseTrackingRepository owns the tracked-course query; User ORM remains legacy. SyncCourseTimetable selects
+recipients through public modules/notifications/queries.py, whose provider retains REQUEST scope. Notifications
+is only partially migrated. Shared weekday labels live in localization/weekdays.py; Bishkek timezone reuses
+services/time_utils.py. Root composition now has eleven providers.
 `docs/ARCHITECTURE.md` describes the current state; `docs/MIGRATION.md` records stage boundaries and baseline issues.
 
 Under `src/manashelper/`, code is organized by technical layer, mirroring the original Java structure:
 `bot/routers` (aiogram handlers), `bot/keyboards` (inline keyboard builders), `bot/middlewares`, `bot/callback_data.py`,
 `services` (business logic), `repositories` (SQLAlchemy queries), `db/models` (ORM models), `jobs` (`AsyncIOScheduler`
 job functions, one module per feature area — see "Scheduled jobs & change detection" below), `config.py`, `di.py`,
-`main.py`. As with the Java version, expect this to stay flat-by-layer rather than gaining per-feature
-subpackages as more of the roadmap gets ported.
+`main.py`. These layers describe the remaining legacy areas; migrated features own their code in `modules/`.
 
 **Services return plain dataclasses, never ORM models.** A `service` method called from a `bot/routers` handler
 returns a frozen `dataclass` (e.g. `FacultyModel`, `DepartmentSummary`, `CourseSummary`) or raises, never a
@@ -172,7 +179,7 @@ scraped/ORM object to a dataclass) is a private module-level function, not a `@s
 
 ### Telegram update handling (aiogram routers)
 
-Each feature area is an aiogram `Router` (`bot/routers/start.py`, `bot/routers/timetable.py`), included into the
+Each feature area is an aiogram `Router` (`bot/routers/start.py`, `modules/schedule/presentation/routers/timetable.py`), included into the
 `Dispatcher` in `bot/dispatcher.py`. Unlike the old Java chain-of-responsibility (`shouldHandle`/`handle` over a flat handler
 list, first match wins), aiogram matches each incoming update against filters declared on `@router.message(...)` /
 `@router.callback_query(...)` decorators — still effectively first-match-wins across included routers, so keep
@@ -290,7 +297,7 @@ auto-detection never falls through to it.
 ### Scheduled jobs & change detection
 
 `src/manashelper/jobs/` holds every `AsyncIOScheduler` job function registered in `jobs/scheduler.py`, one module per
-feature area (`jobs/food_menu.py`, `jobs/obis_notification.py`, `jobs/timetable_sync.py`,
+feature area (`modules/food_menu/jobs.py`, `jobs/obis_notification.py`, `modules/schedule/jobs.py`,
 `jobs/scheduled_message_deletion.py`, `modules/advertisements/jobs.py`), plus `jobs/common.py` for cross-cutting helpers
 shared by more than one job (`get_user_locale`, `send_notification`, `chunk`/`delete_message_batch` for batched
 `deleteMessages` calls). Each job opens its own short-lived Dishka request scope(s)
@@ -305,8 +312,8 @@ Three notification-producing jobs all follow one pattern: keep a Postgres table 
 notify on an actual difference (never on the first-ever observation, so enabling a setting doesn't dump a user's
 entire history at them):
 
-- **Timetable sync** (`services/timetable_sync.py`, hourly): `scraping/timetable_client.py` +
-  `scraping/timetable_parser.py` scrape `http://timetable.manas.edu.kg/department-printer/{course_id}` (plain
+- **Timetable sync** (`modules/schedule/application/timetable_sync.py`, hourly): `modules/schedule/infrastructure/timetable_client.py` +
+  `modules/schedule/infrastructure/timetable_parser.py` scrape `http://timetable.manas.edu.kg/department-printer/{course_id}` (plain
   HTTP, no auth — the site has no HTTPS listener) for every `Course.id`, parsed into one `Lesson` row per
   (course, weekday, time slot) holding a normalized "code name — teacher, room" string; a changed/added/removed
   slot notifies every tracker with `schedule_changes_enabled`.
@@ -315,7 +322,7 @@ entire history at them):
   diffing against `UserExamGrade` (per user+lesson_code+exam_name) and `UserLessonAttendance` (per
   user+lesson_code) rows; a user with no saved OBIS credentials is skipped cheaply (a local DB check) before any
   network call, so polling every user hourly is safe.
-- **Daily menu broadcast** (`jobs/food_menu.py::broadcast_lunch_menu_job`/`broadcast_dinner_menu_job`, cron
+- **Daily menu broadcast** (`modules/food_menu/jobs.py::broadcast_lunch_menu_job`/`broadcast_dinner_menu_job`, cron
   11:00/17:00 `Asia/Bishkek`): sends the same rich message with embedded menu rating buttons used for `/yemek` to
   every user with `before_lunch_enabled`/`before_dinner_enabled`.
 
@@ -426,7 +433,7 @@ purely "did this update originate from that chat" (`modules/feedback/router.py::
   recipient IDs through public UsersQuery and sends sequentially through BroadcastSender. The concrete
   TelegramBroadcastSender wraps raw text in a locale-appropriate "message from the administration" label,
   using the same per-recipient `i18n.context()`/`i18n.use_locale()` shape as
-  `jobs/food_menu.py`'s broadcasts (this one just runs from a bot command handler instead of a scheduled job,
+  `modules/food_menu/jobs.py`'s broadcasts (this one just runs from a bot command handler instead of a scheduled job,
   since it's an ad-hoc admin action rather than a recurring one).
   FSM clears before recipient lookup. TelegramAPIError from send skips one recipient without retry;
   locale lookup failures and unexpected exceptions propagate and prevent the final summary, as before.

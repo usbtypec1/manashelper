@@ -12,3 +12,6 @@ class UsersQuery:
 
     async def get_all_ids(self) -> list[int]:
         return await self._users.get_all_ids()
+
+    async def exists(self, user_id: int) -> bool:
+        return await self._users.get_by_id(user_id) is not None

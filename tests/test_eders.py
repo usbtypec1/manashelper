@@ -7,6 +7,7 @@ import httpx
 import pytest
 
 from manashelper.localization.i18n import i18n
+from manashelper.modules.schedule.application.schedule import ScheduleLessonModel
 from manashelper.scraping import eders_client
 from manashelper.scraping.eders_client import EdersClient, EdersFetchError, EdersSessionExpiredError
 from manashelper.scraping.eders_parser import (
@@ -32,7 +33,6 @@ from manashelper.services.eders_models import (
 )
 from manashelper.services.eders_serialization import deserialize_snapshot, serialize_snapshot
 from manashelper.services.eders_tracking import EdersSettings, plan_events
-from manashelper.services.schedule import ScheduleLessonModel
 from manashelper.services.study_week import StudyWeek
 from manashelper.services.study_week_formatter import format_study_week
 

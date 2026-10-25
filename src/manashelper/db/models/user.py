@@ -6,10 +6,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from manashelper.db.base import Base
-from manashelper.db.models.associations import user_courses
+from manashelper.modules.schedule.infrastructure.models.associations import user_courses
 
 if TYPE_CHECKING:
-    from manashelper.db.models.course import Course
+    from manashelper.modules.schedule.infrastructure.models.course import Course
 
 
 class User(Base):

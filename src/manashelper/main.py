@@ -20,6 +20,9 @@ from manashelper.modules.advertisements.provider import AdvertisementsProvider
 from manashelper.modules.broadcast.provider import BroadcastProvider
 from manashelper.modules.donations.provider import DonationsProvider
 from manashelper.modules.feedback.provider import FeedbackProvider
+from manashelper.modules.food_menu.provider import FoodMenuProvider
+from manashelper.modules.notifications.provider import NotificationsProvider
+from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.student_questions.provider import StudentQuestionsProvider
 from manashelper.modules.users.provider import UsersProvider
 
@@ -48,12 +51,15 @@ async def main() -> None:
         container = make_async_container(
             AppProvider(),
             RequestProvider(),
+            ScheduleProvider(),
+            NotificationsProvider(),
             FeedbackProvider(),
             AdvertisementsProvider(),
             StudentQuestionsProvider(),
             UsersProvider(),
             DonationsProvider(),
             BroadcastProvider(),
+            FoodMenuProvider(),
         )
         stack.push_async_callback(container.close)
 

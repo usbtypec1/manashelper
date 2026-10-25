@@ -20,21 +20,26 @@ from aiogram.types import User as TelegramUser
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.bot.callback_data import (
-    FoodMenuCleanupOpenCallback,
-    FoodMenuRatingCallback,
-    SettingsAction,
-    SettingsCallback,
-)
-from manashelper.bot.keyboards.food_menu import build_food_menu_settings_buttons, build_menu_rating_buttons
-from manashelper.bot.routers.food_menu import _send_daily_menu, on_food_menu_rating_callback
+from manashelper.bot.callback_data import SettingsAction, SettingsCallback
 from manashelper.db.models import DailyMenu, DailyMenuRating, Dish, User
-from manashelper.jobs.food_menu import _send_daily_menu_broadcast
 from manashelper.localization.i18n import i18n
-from manashelper.repositories.daily_menu_rating_repository import DailyMenuRatingRepository
-from manashelper.repositories.daily_menu_repository import DailyMenuRepository
-from manashelper.services.daily_menu import DailyMenuModel, DailyMenuService, DishModel
-from manashelper.services.food_menu_formatter import build_daily_menu_rich_message, refresh_daily_menu_rating
+from manashelper.modules.food_menu.application.daily_menu import DailyMenuModel, DailyMenuService, DishModel
+from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_rating_repository import (
+    DailyMenuRatingRepository,
+)
+from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_repository import DailyMenuRepository
+from manashelper.modules.food_menu.presentation.callbacks import FoodMenuCleanupOpenCallback, FoodMenuRatingCallback
+from manashelper.modules.food_menu.presentation.food_menu_formatter import (
+    build_daily_menu_rich_message,
+    refresh_daily_menu_rating,
+)
+from manashelper.modules.food_menu.presentation.keyboards.food_menu import (
+    build_food_menu_settings_buttons,
+    build_menu_rating_buttons,
+)
+from manashelper.modules.food_menu.presentation.routers.food_menu import _send_daily_menu, on_food_menu_rating_callback
+from manashelper.modules.food_menu.presentation.sender import TelegramFoodMenuSender
+from manashelper.services.locale import LocaleService
 
 
 def _service(session: AsyncSession) -> DailyMenuService:
@@ -259,7 +264,7 @@ async def test_menu_delivery_and_broadcast_schedule_one_rich_message_for_cleanup
     users = AsyncMock()
     users.get_by_id.return_value.locale = "ru"
     cleanup.reset_mock()
-    await _send_daily_menu_broadcast(bot, users, cleanup, menu, [900_001])
+    await TelegramFoodMenuSender(bot, LocaleService(users), cleanup).send(menu, 900_001)
     cleanup.schedule_cleanup.assert_awaited_once_with(900_001, [43])
     rich = bot.send_rich_message.call_args.kwargs["rich_message"]
     assert "Меню" in rich.blocks[0].text

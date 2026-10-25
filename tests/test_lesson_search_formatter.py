@@ -1,8 +1,12 @@
 import pytest
 
 from manashelper.localization.i18n import i18n
-from manashelper.services.lesson_search import LessonSearchResult
-from manashelper.services.lesson_search_formatter import GROUPS_PER_PAGE, format_lesson_search_page, total_page_count
+from manashelper.modules.schedule.application.lesson_search import LessonSearchResult
+from manashelper.modules.schedule.presentation.lesson_search_formatter import (
+    GROUPS_PER_PAGE,
+    format_lesson_search_page,
+    total_page_count,
+)
 
 
 @pytest.fixture(autouse=True)

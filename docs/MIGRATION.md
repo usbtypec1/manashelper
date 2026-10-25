@@ -534,3 +534,108 @@ TelegramAPIError. Ошибки lookup/форматирования остают�
 Обновлены ARCHITECTURE.md, AGENTS.md и CLAUDE.md. Автоматический staging трёх перемещённых пар путей
 снят; начальный index был пустым. Коммиты не создавались. Следующий крупный этап карты — Food menu;
 его перенос в этот этап не включён.
+
+## Следующие этапы: Food menu, затем Schedule
+
+По запросу пользователя после завершения Food menu выполняется следующий этап Schedule.
+Стартовая рабочая копия и index чистые; baseline: 388 passed, 5 skipped, Ruff и mypy (206 файлов) проходят.
+AGENTS.md перечитан, навигация и перемещения выполняются Index MCP. IDE run configuration All Tests
+недоступна; обязательные проверки запускаются CLI.
+
+Food menu сначала переносится без изменения тел реализаций: application-сервисы, три router, клавиатуры,
+callbacks, formatter, пять ORM-моделей, пять репозиториев, HTTP-клиент, parser и jobs. Feature provider
+сохраняет APP для клиента/parser и REQUEST для остальных зависимостей. Общие MessageDeletionService,
+очередь удаления, LocaleService и Users остаются внешними областями.
+После зелёной Phase A jobs отделяются от выбора меню/получателей, Telegram-доставка остаётся адаптером;
+чистый helper настроек становится функцией. Расписание запусков, scopes, callback payload, ephemeral/rich
+messages, рейтинг, SQL defaults, отсутствие retry и границы catch должны сохраниться.
+
+Добавлены 20 characterization-тестов настроек, получателей, jobs, доставки и синхронизации;
+они проходят до production-изменений. Обнаружено и сохранено существующее поведение: первое переключение
+обеда для нового дня остаётся True, поскольку `not None` выполняется до flush Python-defaults ORM.
+Это отдельный дефект, не исправляемый структурным переносом.
+Ещё два теста реального HTTP-клиента/parser проходят против локальной Postman simulation (200 и 500).
+Mock основан на текущем selector contract parser и синтетическом обезличенном HTML, без проверки
+реального сайта или поиска опубликованного mock университета. Production URL и HTTP-поведение не меняются.
+
+Откат этапа возвращает файлы, composition imports и orchestration в jobs; схема БД не должна измениться.
+
+### Выполнено: Food menu
+
+Phase A перенесла 24 модуля средствами Index. AST всех тел совпал с HEAD, исключая imports;
+callback-классы и значения перенесены в presentation/callbacks.py. Исправлен оставшийся локальный import
+в тесте доступности, затем полный suite: **410 passed, 5 skipped** с активной HTTP simulation.
+FoodMenuProvider заменяет legacy-регистрации, сохраняя APP/REQUEST. Global ORM registry импортирует
+все пять моделей feature и association table для Alembic.
+
+Phase B выделила BroadcastFoodMenu и внешний протокол FoodMenuSender: выбор меню/получателей и последовательный
+обход больше не находятся в jobs. TelegramFoodMenuSender сохраняет i18n/rich message/cleanup и прежнюю
+границу catch. Повторяющиеся lunch/dinner entry points используют общий тонкий helper с request scope.
+LocaleService заменяет эквивалентный helper чтения locale через repository. UsersQuery.exists заменяет
+прямой доступ сервиса настроек к UserRepository. Чистый _is_meal_enabled стал функцией модуля.
+
+Финальный gate: **412 passed, 5 skipped**, Ruff lint/format (326 файлов), mypy strict (218 source files).
+При выключенной Food menu simulation два новых HTTP-теста пропускаются. В реальном HTTP-прогоне member
+food-menu обслужил GET /menu с 200 и 500; результат проверен и до, и после переноса. Реальный сайт не проверялся.
+Index diagnostics пяти изменённых компонентов без ошибок, старых imports нет. DDL 27 таблиц/индексов
+не изменился, Alembic не нашёл upgrade operations; импортированы 217 подмодулей. Добавлены проверки
+APP/REQUEST и прежних cron 11:00/17:00 Bishkek, sync каждые 10 минут.
+Существующие дефекты request finalization и первого переключения настройки сохранены. Обновлены архитектурные
+документы и инструкции. Этап завершён; далее по прямому запросу пользователя выполняется Schedule.
+
+### План Schedule
+
+Baseline после Food menu: 412 passed, 5 skipped. До переноса Schedule добавлены и пройдены 23 теста
+callback/FSM/search, ошибок показа расписания, числовой сортировки времени, request scopes по курсам,
+изоляции ошибок и реального HTTP-клиента/parser против синтетического Postman mock (200/500).
+
+Phase A собирает в modules/schedule каталог Faculty/Department/Course, подписки user_courses,
+ScheduleService, LessonSearchService, TimetableSyncService, formatter/keyboards/callbacks, два router,
+клиент/parser, пять ORM-моделей с association table, пять репозиториев и job. TimetableClient остаётся APP,
+остальные зависимости REQUEST. StudyWeekService и settings продолжают использовать публичные application-сервисы.
+
+Phase B отделяет orchestration синхронизации/получателей от Telegram job. Чтение/изменение подписок
+принадлежит Schedule; запрос с selectinload переносится из UserRepository в конкретный репозиторий подписок
+без изменения SQL и ORM-коллекций. NotificationRecipientsQuery даёт узкую публичную границу с ещё legacy
+Notifications; остальная область не переносится. LocaleService заменяет эквивалентный job helper.
+Общие названия дней недели и Bishkek timezone получают фактических общих владельцев, устраняя зависимости
+Schedule от Food menu и Food menu от formatter расписания. Публичные payload, FSM cache keys, нормализация,
+первый sync без уведомлений, история изменений, отсутствие retry, scopes и транзакции сохраняются.
+
+### Выполнено: Schedule
+
+Phase A перенесла 26 модулей через Index MCP. Тела всех реализаций совпали с HEAD по AST, кроме imports.
+После исправления import alias в characterization-тесте полный suite: **435 passed, 5 skipped**;
+Ruff lint/format (338 файлов) и mypy strict (228 source files) проходят. Callback-классы принадлежат
+presentation, global model registry сохраняет все ORM и user_courses для Alembic. Scope клиента — APP,
+сервисов/репозиториев — REQUEST; root composition и её тестовые контейнеры используют ScheduleProvider.
+
+Phase B выделила SyncCourseTimetable и протокол внешней доставки ScheduleChangeSender. Job читает ID
+через CourseService, сохраняет отдельный request scope для списка и каждого курса, а Telegram-адаптер
+получает locale через LocaleService и использует прежний send_notification. TelegramAPIError пропускает
+получателя; неожиданные ошибки останавливают текущий курс, но не следующий. Прямых repository-зависимостей
+в Schedule jobs больше нет. NotificationRecipientsQuery с собственным REQUEST-provider — узкая публичная
+граница с Notifications; это не полная миграция настроек уведомлений.
+
+Запрос подписок с selectinload перенесён из UserRepository в CourseTrackingRepository. AST метода совпал
+точно; CourseService/ScheduleService используют владельца подписок, без смены SQL, association table или
+ORM mutation semantics. User ORM и его relationship остаются в legacy до этапа Users. Общие функции
+weekday_abbr/full переехали в localization/weekdays.py с точным совпадением AST. Для timezone переиспользован
+уже существовавший services/time_utils.py, без новой копии или нового инфраструктурного слоя.
+Food menu и Schedule больше не зависят от formatter/timezone друг друга.
+
+Финальный gate с обеими локальными HTTP simulations:
+
+- pytest: **437 passed, 5 skipped**; без переменных simulations четыре новых HTTP-теста пропускаются;
+- Ruff lint/format: **346 файлов**; mypy strict: **235 source files**, без ошибок;
+- Index diagnostics девяти изменённых компонентов без ошибок; старых/промежуточных imports нет;
+- все **234 подмодуля** импортируются, DDL всех **27 таблиц и индексов** совпадает с исходным;
+- Alembic: `No new upgrade operations detected.`;
+- timetable member обслужил GET /department-printer/123 с 200/500 до и после переноса; Food menu member
+  также обслужил свои HTTP-тесты. Проверены локальные fixtures, реальные университетские сайты не вызывались;
+- дополнительные тесты подтверждают default opt-in, фильтрацию по подпискам, APP/REQUEST и прежний hourly job.
+
+Два заказанных этапа завершены. Callback payload/FSM, история/нормализация, first-sync suppression,
+расписания jobs, scopes, transaction defect и Food menu first-toggle defect сохранены.
+Архитектурные документы и инструкции обновлены. Автоматический staging перемещений снят только с известных
+пар путей; исходный index был пустым. Коммиты не создавались. Следующий этап карты — Users/Notifications/Platform/Core.

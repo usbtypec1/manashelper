@@ -4,12 +4,15 @@
 репозитории; наличие функции в `features/` само по себе не означает, что она реализована.
 
 Проект находится в процессе постепенного перехода к функциональным модулям. Перенесены `feedback`,
-`advertisements`, `student_questions`, `versions`, `donations` и `broadcast`. Код каждой области собран в `modules/`.
+`advertisements`, `student_questions`, `versions`, `donations`, `broadcast`, `food_menu` и `schedule`.
+Код каждой области собран в `modules/`.
 У объявлений также перенесена очистка истёкших публикаций. Versions остаётся набором функций без DI provider.
 Остальные области пока
 сохраняют прежнюю структуру по слоям.
-В `modules/users/` пока выделены только публичный UsersQuery и REQUEST-provider: count и список ID
-используются пожертвованиями и рассылкой. Остальной код пользователей остаётся в legacy-пакетах.
+В `modules/users/` пока выделены только публичный UsersQuery и REQUEST-provider: count, список ID
+и проверка существования используются пожертвованиями, рассылкой и Food menu. Остальной код пользователей остаётся legacy.
+В `modules/notifications/` выделен только NotificationRecipientsQuery с REQUEST-provider для выбора
+получателей изменений расписания. Остальные Notifications, User ORM и общая инфраструктура пока legacy.
 Карта зависимостей, порядок этапов и исходные проблемы проверок описаны в [MIGRATION.md](MIGRATION.md).
 
 ## 1. Назначение и общий подход
@@ -103,6 +106,9 @@ manashelper/
 │   │   ├── versions/              # Плоский модуль: history, formatter, keyboards, callbacks, router
 │   │   ├── donations/             # Каталог QR, APP Telegram-кеш, REQUEST service, router, клавиатуры, callback, provider
 │   │   ├── broadcast/             # SendBroadcast, Telegram sender, router, клавиатура, callbacks, REQUEST-provider
+│   │   ├── food_menu/             # application, presentation, infrastructure, тонкие jobs, APP/REQUEST-provider
+│   │   ├── schedule/              # Каталог, подписки, расписание, поиск, sync; application/presentation/infrastructure
+│   │   ├── notifications/         # Пока только публичный запрос получателей и REQUEST-provider
 │   │   ├── users/                 # Пока только публичный UsersQuery и REQUEST-provider
 │   │   └── feedback/
 │   │       ├── router.py          # FSM, обращения и ответы admin-чата
@@ -206,8 +212,8 @@ Characterization-тест выявил существующий дефект: и
 `REQUEST`, обычно отдельно для курса или пользователя. Ошибки логируются и по возможности изолируются,
 чтобы сбой одного элемента не останавливал весь обход.
 
-Проектное правило направляет jobs к сервисам, однако фактическая реализация смешанная: задания расписания,
-OBIS, столовой и удаления сообщений также напрямую получают репозитории. `jobs/common.py` содержит общие
+Проектное правило направляет jobs к сервисам, однако фактическая реализация смешанная: задания
+OBIS и удаления сообщений также напрямую получают репозитории. `jobs/common.py` содержит общие
 операции отправки, определения локали и пакетного удаления сообщений.
 
 Очистка объявлений уже следует целевой границе: `modules/advertisements/jobs.py` открывает request scope,
@@ -226,7 +232,10 @@ OBIS, столовой и удаления сообщений также нап�
 репозиторий и сервис опроса в том же REQUEST scope. `UsersProvider` предоставляет публичные запросы
 пользователей. `DonationsProvider` регистрирует QR-адаптер в `APP` и application-сервис в `REQUEST`.
 `BroadcastProvider` предоставляет `SendBroadcast` в `REQUEST`; адаптер доставки создаёт обработчик с текущим Bot.
-Восемь провайдеров собираются в `main.py`; состояние LRU-кеша сохраняется между request scopes.
+`FoodMenuProvider` сохраняет клиент/parser в `APP`, репозитории и сценарии меню — в `REQUEST`.
+`ScheduleProvider` сохраняет TimetableClient в `APP`, каталог, подписки и сценарии — в `REQUEST`.
+`NotificationsProvider` предоставляет пока только NotificationRecipientsQuery в `REQUEST`.
+Одиннадцать провайдеров собираются в `main.py`; состояние LRU-кеша сохраняется между request scopes.
 
 | Область | Объекты | Время жизни |
 | --- | --- | --- |
@@ -293,15 +302,42 @@ OBIS, столовой и удаления сообщений также нап�
 занятиям; `normalized_content` и нормализация турецких букв помогают сопоставлению текста.
 Форматтеры группируют соседние занятия и выделяют текущий или следующий блок.
 
+Эта область собрана в `modules/schedule/`: application (каталог, tracking, чтение расписания, поиск,
+синхронизация), presentation (два router, callbacks, клавиатуры, formatter и sender), infrastructure
+(пять ORM-моделей, association `user_courses`, клиент/parser и шесть репозиториев), provider и jobs.
+CourseTrackingRepository владеет прежним запросом User с selectinload tracked_courses; User ORM остаётся
+legacy, а данные подписок принадлежат Schedule. CourseService сохраняет изменения ORM-коллекций и прежние
+ошибки. StudyWeekService зависит от публичных ScheduleService и моделей результатов.
+
+Job сначала читает ID курсов через CourseService в отдельном request scope, затем открывает scope
+на каждый курс. SyncCourseTimetable координирует синхронизацию и выбирает получателей через публичный
+NotificationRecipientsQuery. TelegramScheduleChangeSender определяет локаль и форматирует сообщение;
+TelegramAPIError доставки пропускает получателя, неожиданная ошибка или ошибка локали прерывает текущий
+курс. Job логирует ошибку и продолжает следующий курс. Первый sync по-прежнему не создаёт уведомлений
+и истории. Повторной отправки нет; интервал job остаётся один час с немедленным первым запуском.
+
+Названия дней недели вынесены без изменения функций в `localization/weekdays.py`, где их используют
+Food menu, Schedule и Study week. Все используют существующий `services/time_utils.py::BISHKEK_TZ`;
+дублирующая константа Food menu удалена. Между Food menu и Schedule больше нет этих взаимных зависимостей.
+
 ### Столовая
 
 `FoodMenuSyncService` получает меню сайта и сохраняет дни и блюда. `DailyMenuService` возвращает доступные
 даты, блюда, фотографии, калорийность, просмотры и оценки. Оценка меню имеет диапазон 1–5.
 Telegram-слой строит rich messages с кнопками оценки и настроек.
 
+Область собрана в `modules/food_menu/`: application-сервисы, presentation (три router, callbacks,
+клавиатуры, formatter, sender), infrastructure (клиент, parser, модели и репозитории), provider и jobs.
+`BroadcastFoodMenu` выбирает сегодняшнее меню и получателей по дню/приёму пищи. Его Telegram-адаптер
+получает локаль через LocaleService, отправляет rich message и планирует очистку. TelegramAPIError
+внутри доставки пропускает одного получателя; неожиданное исключение прерывает обход и логируется job.
+Функции scheduler больше не обращаются к репозиториям. Проверка пользователя в настройках идёт через UsersQuery.exists.
+
 Рассылка меню учитывает день недели и отдельные настройки обеда и ужина. Автоудаление сообщений настраивается
 на уровне чата, включая группы: 15 минут, 45 минут, 3 часа, сутки или отключение. Значение по умолчанию —
 3 часа. `MessageDeletionService` записывает задания в БД, а отдельная job удаляет просроченные сообщения.
+Сохранён существующий дефект первого переключения обеда для дня без строки настроек: значение остаётся
+включённым до повторного нажатия. Это следствие ORM-default до flush; characterization-тест фиксирует его отдельно.
 
 ### OBIS
 
@@ -569,7 +605,8 @@ Ruff использует длину строки 120 и целевую верс
 `repositories/` и `di.py`. Общая Telegram-навигация, i18n, `LocaleService`, `Settings` и `db.base.Base`
 остаются временными внешними зависимостями перенесённых модулей. Объявления используют `UserContactService`
 через application-поверхность, без доступа к репозиториям Users. Donations и Broadcast используют UsersQuery
-из частично выделенного `modules/users/`. Старые Python-пути Feedback, объявлений, опроса, версий, Donations и Broadcast удалены;
+из частично выделенного `modules/users/`. Старые Python-пути Feedback, объявлений, опроса, версий, Donations,
+Broadcast, Food menu и Schedule удалены;
 адаптеров совместимости для них нет, все потребители в проекте используют новые импорты.
 
 Broadcast остаётся небольшим плоским модулем. `service.py` содержит `SendBroadcast`, immutable dataclass

@@ -27,8 +27,17 @@ Donations lives in flat `modules/donations/`: catalog, Telegram QR adapter, appl
 Its provider keeps DonationQrService in APP for shared bounded caching and DonationService in REQUEST.
 Broadcast lives in flat `modules/broadcast/`: SendBroadcast uses UsersQuery and a delivery protocol;
 Telegram localization, HTML and API errors stay in its sender adapter. Its provider retains REQUEST scope.
-`modules/users/` currently exposes UsersQuery and a REQUEST provider for counts/recipient IDs used by donations
-and broadcasts. Other user functionality, ORM and repository remain legacy; do not treat Users as fully migrated.
+Food menu lives in `modules/food_menu/` with application, presentation, infrastructure, jobs and provider.
+Its client/parser retain APP scope; repositories and services retain REQUEST. BroadcastFoodMenu selects
+the menu/recipients, TelegramFoodMenuSender handles delivery/cleanup, and jobs are thin request-scope entry points.
+Schedule lives in `modules/schedule/`: catalog/tracking, timetable/search, sync, presentation, infrastructure and jobs.
+TimetableClient remains APP; services/repositories remain REQUEST. CourseTrackingRepository owns the tracked-course
+query formerly in UserRepository, preserving ORM collections. SyncCourseTimetable uses public NotificationRecipientsQuery;
+its Telegram sender preserves per-recipient locale and delivery behavior. StudyWeekService remains a legacy consumer.
+`modules/notifications/` is partial: only the recipient query and REQUEST provider have moved; settings/ORM/repository remain legacy.
+Shared weekday labels live in `localization/weekdays.py`; reuse `services/time_utils.py::BISHKEK_TZ` instead of a feature's timezone.
+`modules/users/` currently exposes UsersQuery and a REQUEST provider for counts, recipient IDs and existence
+checks used by donations, broadcasts and Food menu. Other user functionality, ORM and repository remain legacy.
 Keep migrated feature code together;
 do not move unrelated legacy areas in the same stage. See `docs/ARCHITECTURE.md` and `docs/MIGRATION.md`.
 Add routers to the dispatcher in `bot/dispatcher.py`; legacy services/repositories remain in `di.py`, while migrated
@@ -61,6 +70,10 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
 
 ## Feature-specific conventions
 
+- Food menu keeps rich/ephemeral message behavior, fixed-date callbacks, per-chat cleanup and weekday meal
+  notification settings. A characterized existing defect makes the first lunch toggle on an absent settings
+  row remain enabled until another toggle; do not silently fix ORM-default timing during relocation.
+
 - OBIS credentials are verified with a real login before storage and encrypted with AES-GCM through
   `CryptoService`. The credentials form uses aiogram FSM and in-process `MemoryStorage`. OBIS fetches authenticate
   per call; do not assume a persistent browser session.
@@ -68,6 +81,9 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
   failures per item or recipient, and log unexpected exceptions so one failure does not stop a batch. Grade,
   attendance and timetable notifications compare a new snapshot with persisted last-known state and do not notify
   on the first observation. Users without a `NotificationSettings` row have all toggles enabled.
+  Migrated Food menu and Schedule jobs live in their modules. Schedule loads course IDs in one request scope,
+  then opens another per course. TelegramAPIError skips a recipient; unexpected delivery/locale errors abort
+  that course, are logged, and do not prevent the next course. Keep this boundary and the hourly schedule.
 - Marketplace moderation is authorized by `Settings.moderation_chat_id`, not a user role. Approved ads go to the
   configured channel. Public posts hide contact details behind a `/start ad_<id>` link; contact opens are logged.
   The channel post IDs must remain available for deletion when an ad is removed or expires. The marketplace menu

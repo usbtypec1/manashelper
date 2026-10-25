@@ -3,8 +3,8 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models import Course, Department, Faculty, Lesson
-from manashelper.repositories.lesson_repository import LessonRepository
-from manashelper.services.lesson_search import LessonSearchService
+from manashelper.modules.schedule.application.lesson_search import LessonSearchService
+from manashelper.modules.schedule.infrastructure.repositories.lesson_repository import LessonRepository
 from manashelper.services.text_normalization import fold_turkish
 
 
