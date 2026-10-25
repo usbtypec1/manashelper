@@ -1,7 +1,8 @@
 # AGENTS.md
 
-Guidance for Codex in this repository. This is the working reference for the current Python bot. `CLAUDE.md`
-contains more feature history and implementation rationale; check the code when the two documents differ.
+Shared repository instructions for coding agents. Keep instructions here; `CLAUDE.md` imports this file for Claude Code.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for implementation details and rationale,
+and [docs/BACKLOG.md](docs/BACKLOG.md) for deferred work. Check the code when documentation differs.
 
 ## Project
 
@@ -52,8 +53,8 @@ OBIS owns credential access through ObisCredentialsRepository on the unchanged U
 EdersService reads plain credentials and an opaque marker through ObisCredentialsService; it no longer reads ORM/ciphertext.
 Eders tracking checks existence through UsersQuery; its repository owns credential eligibility SQL and the user-row lock.
 Shared Telegram navigation lives in `platform/telegram/navigation.py`; feature routers must not import the start router for it.
-Keep migrated feature code together;
-do not move unrelated legacy areas in the same stage. See `docs/ARCHITECTURE.md` and `docs/MIGRATION.md`.
+Keep feature code with its owner and limit changes to the requested scope. See `docs/ARCHITECTURE.md`
+for current boundaries, `docs/MIGRATION.md` for the completed refactor and `docs/BACKLOG.md` for deferred work.
 Add routers to the dispatcher in `platform/telegram/dispatcher.py`; features own their providers in the composition root.
 Router order matters because aiogram uses the first matching handler; the
 advertisement deep-link router must precede the plain `/start` router. Use typed `CallbackData` classes for inline
@@ -90,7 +91,8 @@ PollObisUser handles expected auth/parse errors; Telegram sender owns locale/HTM
 Unexpected errors abort that user and are logged by the job, without stopping the next user.
 Preserve two characterized behaviors: first nonempty grades notify immediately; attendance's first row is silent.
 Saving assigns student_number before encryption, so an encryption error leaves that in-memory assignment changed.
-Do not silently fix these during relocation. Hourly scheduling, FSM, password masking and encryption format are unchanged.
+Treat changes to these behaviors as separate fixes; see `docs/BACKLOG.md`. Preserve hourly scheduling, FSM,
+password masking and encryption format.
 
 Eders lives in `modules/eders/`: application snapshot/filter/tracking/polling, infrastructure client/parser/URL validation,
 serialization/repository/ORM, Telegram presentation, jobs and provider. EdersProvider keeps the client APP and other
@@ -134,10 +136,13 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
 - OBIS credentials are verified with a real login before storage and encrypted with AES-GCM through
   `CryptoService`. The credentials form uses aiogram FSM and in-process `MemoryStorage`. OBIS fetches authenticate
   per call; do not assume a persistent browser session.
+  Grade/attendance pages use FSM caches keyed by message ID; page navigation must not re-fetch OBIS or mix results
+  from different messages. Preserve expired-navigation handling after FSM data is cleared.
 - All jobs are registered in `jobs/scheduler.py`. They use independent request scopes, catch
   failures per item or recipient, and log unexpected exceptions so one failure does not stop a batch. Grade,
   attendance and timetable notifications compare new snapshots with persisted last-known state.
-  Attendance/timetable first observations are silent; OBIS's first nonempty grade currently notifies (characterized defect).
+  Attendance/timetable first observations are silent; OBIS's first nonempty grade currently notifies.
+  A decision about changing that behavior is deferred in `docs/BACKLOG.md`.
   Users without a `NotificationSettings` row have all toggles enabled.
   Food menu, Schedule, OBIS and Eders jobs live in their modules. Schedule loads course IDs in one request scope,
   then opens another per course. TelegramAPIError skips a recipient; unexpected delivery/locale errors abort
@@ -148,6 +153,11 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
   is a reply keyboard reached from its main-menu button or `/start market`.
   Expiry runs through `modules/advertisements/jobs.py` and `ExpireAdvertisements`; the use case depends on its
   repository and `PublicationRemover`, while the Telegram adapter handles batching and best-effort failures.
+  Preserve the contact gate, five-ads/hour limit, ten-media limit and pending-status checks for moderation.
+  My ads uses SQL pagination; uploaded albums update one tracked prompt instead of replying to each item.
+- The student survey requires explicit confirmation before replacing a completed response. Persist the replacement
+  only after the new survey finishes; cancellation leaves the old response intact. Callback session IDs reject stale
+  buttons. Its deep-link router must precede the advertisement deep-link router, which claims other start payloads.
 - Feedback and `/broadcast` are restricted to `Settings.admin_chat_id`. Admins reply to forwarded feedback using
   Telegram's native reply action. `/broadcast` is registered only for that chat and sends to all registered users.
   Broadcast clears FSM before loading recipients and sends sequentially without retry. TelegramAPIError during
@@ -171,6 +181,8 @@ language's label directly.
 message to another user must format it inside that recipient's `i18n.use_locale(...)` context; jobs must also
 establish `i18n.context()` because they run outside update middleware. Shared moderation/admin chats and the
 advertisement channel render in `DEFAULT_LOCALE`.
+Evaluate translation calls and message builders inside the recipient's locale context; wrapping an already-built
+string cannot change its language.
 
 After editing a catalog, compile it with `.venv/bin/pybabel compile -d src/manashelper/locales`. The `.po` files
 are committed; generated `.mo` files are ignored by Git. When adding msgids, use the extract/update workflow if
