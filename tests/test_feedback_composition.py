@@ -10,7 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from manashelper.core.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.db.models import FeedbackMessage as RegisteredFeedbackMessage
-from manashelper.di import AppProvider, RequestProvider
+from manashelper.di import RequestProvider
+from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.feedback.orm import FeedbackMessage
 from manashelper.modules.feedback.provider import FeedbackProvider
 from manashelper.modules.feedback.service import FeedbackService
@@ -36,7 +37,7 @@ async def test_feedback_request_scope_preserves_existing_transaction_finalizatio
         CoreProvider(),
         TelegramPlatformProvider(),
         ObisProvider(),
-        AppProvider(),
+        EdersProvider(),
         RequestProvider(),
         ScheduleProvider(),
         NotificationsProvider(),
@@ -88,7 +89,8 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
         from manashelper.core.provider import CoreProvider
         from manashelper.platform.telegram.provider import TelegramPlatformProvider
         from manashelper.modules.obis.provider import ObisProvider
-        from manashelper.di import AppProvider, RequestProvider
+        from manashelper.di import RequestProvider
+        from manashelper.modules.eders.provider import EdersProvider
         from manashelper.modules.schedule.provider import ScheduleProvider
         from manashelper.modules.notifications.provider import NotificationsProvider
         from manashelper.modules.advertisements.provider import AdvertisementsProvider
@@ -101,7 +103,7 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
 
         async def check():
             async with make_async_container(
-                CoreProvider(), TelegramPlatformProvider(), ObisProvider(), AppProvider(),
+                CoreProvider(), TelegramPlatformProvider(), ObisProvider(), EdersProvider(),
                 RequestProvider(),
                 ScheduleProvider(),
                 NotificationsProvider(),

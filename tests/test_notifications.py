@@ -11,7 +11,8 @@ from sqlalchemy import select
 from manashelper.core.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.db.models import NotificationSettings, User
-from manashelper.di import AppProvider, RequestProvider
+from manashelper.di import RequestProvider
+from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.notifications import router
 from manashelper.modules.notifications.callbacks import NotificationSettingCallback
 from manashelper.modules.notifications.keyboards import build_notifications_keyboard
@@ -231,7 +232,7 @@ async def test_notification_provider_preserves_request_scope_and_model_registry(
         CoreProvider(),
         TelegramPlatformProvider(),
         ObisProvider(),
-        AppProvider(),
+        EdersProvider(),
         RequestProvider(),
         ScheduleProvider(),
         NotificationsProvider(),

@@ -1,7 +1,7 @@
 from aiogram.filters.callback_data import CallbackData
 
-from manashelper.services.eders_models import DeadlineFilter
-from manashelper.services.eders_tracking import EdersSetting
+from manashelper.modules.eders.application.models import DeadlineFilter
+from manashelper.modules.eders.application.tracking import EdersSetting
 
 
 class EdersPageCallback(CallbackData, prefix="eders"):

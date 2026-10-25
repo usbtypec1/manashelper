@@ -6,22 +6,8 @@ from zoneinfo import ZoneInfo
 import httpx
 import pytest
 
-from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL
-from manashelper.modules.schedule.application.schedule import ScheduleLessonModel
-from manashelper.platform.i18n.catalog import i18n
-from manashelper.scraping import eders_client
-from manashelper.scraping.eders_client import EdersClient, EdersFetchError, EdersSessionExpiredError
-from manashelper.scraping.eders_parser import (
-    EdersParseError,
-    parse_account_timezone,
-    parse_activity_details,
-    parse_course_activities,
-    parse_courses,
-)
-from manashelper.scraping.eders_urls import EDERS_BASE_URL, EdersUnsafeUrlError, safe_eders_url
-from manashelper.services.eders import filter_activities
-from manashelper.services.eders_formatter import format_activity_page
-from manashelper.services.eders_models import (
+from manashelper.modules.eders.application.eders import filter_activities
+from manashelper.modules.eders.application.models import (
     ActivityDate,
     ActivityKind,
     DeadlineFilter,
@@ -31,8 +17,22 @@ from manashelper.services.eders_models import (
     GradingStatus,
     SubmissionStatus,
 )
-from manashelper.services.eders_serialization import deserialize_snapshot, serialize_snapshot
-from manashelper.services.eders_tracking import EdersSettings, plan_events
+from manashelper.modules.eders.application.tracking import EdersSettings, plan_events
+from manashelper.modules.eders.infrastructure import client as eders_client
+from manashelper.modules.eders.infrastructure.client import EdersClient, EdersFetchError, EdersSessionExpiredError
+from manashelper.modules.eders.infrastructure.parser import (
+    EdersParseError,
+    parse_account_timezone,
+    parse_activity_details,
+    parse_course_activities,
+    parse_courses,
+)
+from manashelper.modules.eders.infrastructure.serialization import deserialize_snapshot, serialize_snapshot
+from manashelper.modules.eders.infrastructure.urls import EDERS_BASE_URL, EdersUnsafeUrlError, safe_eders_url
+from manashelper.modules.eders.presentation.formatter import format_activity_page
+from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL
+from manashelper.modules.schedule.application.schedule import ScheduleLessonModel
+from manashelper.platform.i18n.catalog import i18n
 from manashelper.services.study_week import StudyWeek
 from manashelper.services.study_week_formatter import format_study_week
 

@@ -13,12 +13,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.core.provider import CoreProvider
 from manashelper.db.models import Advertisement, AdvertisementChannelMessage, User
-from manashelper.di import AppProvider, RequestProvider
+from manashelper.di import RequestProvider
 from manashelper.modules.advertisements import jobs as job
 from manashelper.modules.advertisements.application.advertisement import AdvertisementService
 from manashelper.modules.advertisements.application.expiry import ExpireAdvertisements, PublicationRemover
 from manashelper.modules.advertisements.infrastructure.advertisement_repository import AdvertisementRepository
 from manashelper.modules.advertisements.provider import AdvertisementsProvider
+from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
@@ -73,7 +74,7 @@ async def test_expiry_deletes_publications_in_batches_before_removing_rows(sessi
         CoreProvider(),
         TelegramPlatformProvider(),
         ObisProvider(),
-        AppProvider(),
+        EdersProvider(),
         RequestProvider(),
         ScheduleProvider(),
         NotificationsProvider(),

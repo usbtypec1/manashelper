@@ -19,8 +19,9 @@ from manashelper.core.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.db.models import Course, Department, Faculty, UserPhoneNumber
 from manashelper.db.models import User as DbUser
-from manashelper.di import AppProvider, RequestProvider
+from manashelper.di import RequestProvider
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale
+from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis import jobs
 from manashelper.modules.obis.application.notification import ObisNotificationService
@@ -255,7 +256,7 @@ async def test_users_provider_scopes_and_orm_registry():
         CoreProvider(),
         TelegramPlatformProvider(),
         ObisProvider(),
-        AppProvider(),
+        EdersProvider(),
         RequestProvider(),
         UsersProvider(),
         ScheduleProvider(),

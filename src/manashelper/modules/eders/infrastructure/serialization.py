@@ -3,7 +3,7 @@ from dataclasses import asdict
 from datetime import datetime
 from typing import Any
 
-from manashelper.services.eders_models import (
+from manashelper.modules.eders.application.models import (
     ActivityDate,
     ActivityKind,
     EdersActivity,

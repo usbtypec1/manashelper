@@ -3,12 +3,12 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 from enum import StrEnum
 
-from manashelper.db.models.eders import EdersNotification
+from manashelper.modules.eders.application.models import ActivityKind, EdersActivity, EdersSnapshot, SubmissionStatus
+from manashelper.modules.eders.infrastructure.orm import EdersNotification
+from manashelper.modules.eders.infrastructure.repository import EdersRepository
+from manashelper.modules.eders.infrastructure.serialization import deserialize_snapshot, serialize_snapshot
 from manashelper.modules.obis.errors import UserNotFoundError
-from manashelper.modules.users.infrastructure.user_repository import UserRepository
-from manashelper.repositories.eders_repository import EdersRepository
-from manashelper.services.eders_models import ActivityKind, EdersActivity, EdersSnapshot, SubmissionStatus
-from manashelper.services.eders_serialization import deserialize_snapshot, serialize_snapshot
+from manashelper.modules.users.queries import UsersQuery
 
 
 class EdersSetting(StrEnum):
@@ -101,12 +101,12 @@ def plan_events(snapshot: EdersSnapshot, previous: EdersSnapshot | None, setting
 
 
 class EdersTrackingService:
-    def __init__(self, eders_repository: EdersRepository, user_repository: UserRepository) -> None:
+    def __init__(self, eders_repository: EdersRepository, users: UsersQuery) -> None:
         self._repository = eders_repository
-        self._users = user_repository
+        self._users = users
 
     async def get_settings(self, user_id: int) -> EdersSettings:
-        if await self._users.get_by_id(user_id) is None:
+        if not await self._users.exists(user_id):
             raise UserNotFoundError(user_id)
         state = await self._repository.get_state(user_id)
         return EdersSettings(*(getattr(state, item.value) for item in EdersSetting))

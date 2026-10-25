@@ -1,9 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from manashelper.modules.obis.application.credentials import ObisCredentialsService
-from manashelper.modules.obis.errors import DecryptionError, UserHasNoCredentialsError
-from manashelper.scraping.eders_client import EdersClient
-from manashelper.services.eders_models import (
+from manashelper.modules.eders.application.models import (
     ActivityKind,
     DeadlineFilter,
     EdersActivity,
@@ -11,7 +8,10 @@ from manashelper.services.eders_models import (
     GradingStatus,
     SubmissionStatus,
 )
-from manashelper.services.eders_tracking import EdersTrackingService
+from manashelper.modules.eders.application.tracking import EdersTrackingService
+from manashelper.modules.eders.infrastructure.client import EdersClient
+from manashelper.modules.obis.application.credentials import ObisCredentialsService
+from manashelper.modules.obis.errors import DecryptionError, UserHasNoCredentialsError
 from manashelper.services.time_utils import BISHKEK_TZ
 
 

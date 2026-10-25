@@ -7,10 +7,10 @@
 Этот документ фиксирует анализ до изменения исходников и результаты завершённых этапов.
 
 Актуальный статус на 25 октября 2026 года: перенесены **Feedback**, **Advertisements**, **Student questions**,
-**Versions**, **Donations**, **Broadcast**, **Food menu**, **Schedule**, **Notifications**, **Users** и **OBIS**.
-OBIS владеет credentials и предоставляет их Eders через application-границу; tracking/eligibility Eders ещё legacy.
+**Versions**, **Donations**, **Broadcast**, **Food menu**, **Schedule**, **Notifications**, **Users**, **OBIS** и **Eders**.
+OBIS владеет credentials и предоставляет их Eders через application-границу; legacy остаётся только Study week.
 Общая инфраструктура выделена в Core, Telegram Platform, аудит и очередь удаления — в platform/.
-Общий gate с локальной OBIS/Eders simulation зелёный: **558 passed, 5 skipped**, Ruff, mypy и Alembic проходят.
+Общий gate с локальной OBIS/Eders simulation зелёный: **589 passed, 5 skipped**, Ruff, mypy и Alembic проходят.
 Первоначальные красные результаты ниже оставлены как история baseline и не описывают текущую проверку.
 
 ## Исходное состояние — 24 октября 2026 года
@@ -921,3 +921,64 @@ login-denied/csrf-missing/HTTP500. Базовые Eders routes не меняли
 Этап завершён. Далее — Eders и Study week. Simulation остановлена, временные логи оставлены вне repository;
 IDE auto-staging снят только с известных task-путей, исходный index был пуст. Коммиты, push и deploy не выполнялись.
 Три исходных `.DS_Store` сохранены.
+
+### План следующего этапа: Eders
+
+Baseline: **558 passed, 5 skipped** с локальной OBIS/Eders simulation; DDL 27 таблиц сохранён.
+Phase A переносит 14 реализаций: application facade/tracking и модели снимка, persistence serialization,
+HTTP/parser/URL validation, repository/ORM, Telegram router/keyboards/callbacks/formatter и polling job.
+EdersProvider сохраняет APP client и REQUEST repository/services. Пустой legacy AppProvider удаляется;
+RequestProvider пока сохраняет StudyWeekService. Старые import paths обновляются без compatibility wrappers.
+
+Сохраняются OBIS→SSO→sesskey→AJAX, retry всего снимка ровно один раз, URL validation, JSON/defaults,
+user-row FOR UPDATE до первого state, monotonic snapshots, account/schema baselines, event hashes,
+порядок материала/напоминаний, ack только после успешного сообщения и per-user failure isolation.
+Перед переносом дополняются characterization tests; AST Phase A сравнивается без imports.
+
+Phase B отделяет PollEdersUser от Telegram sender: application координирует refresh/pending/ack,
+adapter сохраняет locale lookup после refresh, форматирование всех сообщений до первой отправки,
+группировку и TelegramAPIError per message. Job остаётся владельцем request scopes и per-user logging.
+Tracking existence check использует публичный UsersQuery.exists; алгоритм observe/plan_events не переписывается.
+Study week остаётся отдельным следующим этапом. Схема, каталоги переводов и HTTP-контракт не меняются.
+
+### Выполнено: Eders
+
+Phase A перенесла 14 реализаций средствами Index MCP в `modules/eders/`: application facade/filter/tracking/models,
+infrastructure client/parser/URLs/serialization/repository/ORM, Telegram presentation и polling job.
+До упрощения AST всех 14 тел совпал с HEAD, исключая imports. EdersProvider сохранил APP client и REQUEST
+repository/services; пустой AppProvider удалён, legacy RequestProvider оставлен только для StudyWeekService.
+Все root/test compositions обновлены. Полный gate после Phase A: **582 passed, 5 skipped**.
+
+Phase B выделила PollEdersUser и TelegramEdersNotificationSender. Application сохраняет refresh→locale→pending,
+затем отмечает каждый event сразу после успешного сообщения. Async iterator на внешней sender-границе позволяет
+сохранить ack до следующей отправки и остановку при ack failure. Telegram adapter сначала форматирует все сообщения,
+группирует материалы и пропускает TelegramAPIError без ack. Неожиданная ошибка прекращает пользователя, job логирует
+её и продолжает следующий отдельный request scope. Получение списка ID также осталось в отдельном scope.
+Tracking проверяет пользователя через существующий UsersQuery.exists; он выполняет прежний get_by_id.
+Алгоритмы observe/plan_events, JSON, hashes, SQL locks/eligibility, default timing и HTTP/parser не менялись.
+
+Добавлен **31 тест**: state lock/lookup/flush, формат JSON и legacy defaults, callback payloads всех значений,
+monotonic observations, refresh/locale/pending failures и scopes, load failure, UsersQuery rejection,
+credential eligibility, частичный success/API/transport/ack failures, eager formatting, локаль и APP/REQUEST/model registry.
+Existing tests продолжают проверять deduplication, pending retry, account/schema baselines, группировку и Settings return path.
+
+Финальный gate:
+
+- pytest с EDERS_SIMULATION_PORT=4945: **589 passed, 5 skipped**; четыре Food menu/Timetable HTTP-теста
+  требуют своих simulations, корпусный тест — приватную выгрузку Eders;
+- Ruff lint/format: **392 файла**; mypy strict: **274 source files**, без ошибок;
+- все **273 подмодуля** импортируются; DDL **27 таблиц и индексов** совпал с baseline;
+- Alembic: `No new upgrade operations detected.`;
+- Index diagnostics 20 компонентов без ошибок; старых Python imports и AppProvider usages нет;
+- IDE build сообщает success с ограниченными diagnostics; основное доказательство — CLI gates.
+
+Существующая локальная Postman simulation переиспользована без изменения mock/HTTP-контракта.
+Реальный httpx прошёл OBIS login→SSO→profile→AJAX pagination→course/details; проверены HTTP500,
+invalid JSON и session-expired retry. Лог подтвердил эти запросы до и после переноса, включая AJAX 200/302/500.
+Использовались только fake credentials, настоящие university endpoints/accounts не вызывались.
+
+Этап завершён; далее — отдельный Study week. Схема и данные, публичные команды, callback/FSM, локали,
+scopes, scheduler и transaction/default defects сохранены. Коммиты, push и deploy не выполнялись.
+Simulation остановлена; IDE auto-staging снят с 36 проверенных task-путей при исходно пустом index.
+Три исходных `.DS_Store` сохранены. Финальная AST-проверка подтвердила неизменность 12 реализаций и пяти
+исходных потребителей без imports; в tracking изменились только constructor/existence boundary, отдельно от job extraction.

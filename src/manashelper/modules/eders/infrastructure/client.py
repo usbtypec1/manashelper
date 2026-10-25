@@ -6,15 +6,15 @@ from urllib.parse import parse_qs, urljoin, urlsplit
 import httpx
 from bs4 import BeautifulSoup
 
-from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL, OBIS_LOGIN_PATH, login, new_http_client
-from manashelper.scraping.eders_parser import (
+from manashelper.modules.eders.application.models import ActivityKind, EdersCourse, EdersSnapshot
+from manashelper.modules.eders.infrastructure.parser import (
     parse_account_timezone,
     parse_activity_details,
     parse_course_activities,
     parse_enrolled_courses,
 )
-from manashelper.scraping.eders_urls import EDERS_BASE_URL, EdersUnsafeUrlError, safe_eders_url
-from manashelper.services.eders_models import ActivityKind, EdersCourse, EdersSnapshot
+from manashelper.modules.eders.infrastructure.urls import EDERS_BASE_URL, EdersUnsafeUrlError, safe_eders_url
+from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL, OBIS_LOGIN_PATH, login, new_http_client
 
 COURSES_METHOD = "core_course_get_enrolled_courses_by_timeline_classification"
 

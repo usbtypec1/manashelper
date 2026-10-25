@@ -148,7 +148,8 @@ supplies counts and recipient IDs to donations and broadcast.
 Users now owns application locale/contact services, profile/phone infrastructure and language/phone presentation
 under modules/users/. All its providers remain REQUEST-scoped. User retains OBIS credential columns and the
 Schedule relationship; OBIS now owns credential persistence on that unchanged row.
-EdersService reads credentials through ObisCredentialsService; legacy tracking/eligibility queries remain until Eders migration.
+EdersService reads credentials through ObisCredentialsService; tracking checks existence through UsersQuery.
+EdersRepository retains credential eligibility SQL and the user-row lock protecting first observations.
 Shared navigation functions live in platform/telegram/navigation.py, outside the start router.
 Broadcast is colocated in flat `modules/broadcast/`: REQUEST-scoped SendBroadcast selects recipients through
 UsersQuery and counts delivery results. TelegramBroadcastSender owns locale, HTML and Telegram API errors;
@@ -165,10 +166,10 @@ Shared Settings navigation stays in platform/telegram/. Preserve the characteriz
 Shared weekday labels live in localization/weekdays.py; Bishkek timezone reuses
 services/time_utils.py. Root composition now has fourteen providers, including CoreProvider, TelegramPlatformProvider and ObisProvider.
 Core owns shared config, logging, database factories/Base and resource lifecycle in core/.
-The legacy di.py providers retain only Eders/Study week dependencies. Shared Telegram presentation and
+The legacy di.py RequestProvider retains only StudyWeekService; the empty AppProvider was removed. Shared Telegram presentation and
 infrastructure live in platform/telegram/: dispatcher, commands, navigation, filters, middleware, HTML/delivery,
 audit and deletions. TelegramPlatformProvider keeps audit/deletion repositories and services in REQUEST.
-Settings callbacks belong to platform/telegram/callbacks.py; bot/callback_data.py retains only Eders callbacks.
+Settings callbacks belong to platform/telegram/callbacks.py; Eders callbacks belong to its presentation package.
 OBIS lives in modules/obis/: credentials/facade/notification/polling application code, infrastructure, presentation and jobs.
 ObisProvider keeps client/crypto APP and repositories/services REQUEST. ObisCredentialsService is the public
 read boundary for Eders, returning secrets with repr disabled and the unchanged SHA-256 ciphertext marker.
@@ -176,17 +177,21 @@ Shared OBIS login/new_http_client stay reused by Eders; no persistent session or
 PollObisUser delegates delivery through a real sender boundary; locale/HTML/API errors stay in the Telegram adapter.
 First nonempty grades currently notify; first attendance rows remain silent. Encryption failures keep the pre-existing
 student-number assignment order. Both behaviors are characterized and deliberately preserved in this refactor.
+Eders lives in modules/eders/: application snapshot/filter/tracking/polling, infrastructure client/parser/URLs,
+serialization/repository/ORM, Telegram presentation, jobs and provider. EdersProvider keeps client APP and other objects REQUEST.
+PollEdersUser preserves refresh→locale→pending→send→ack. TelegramEdersNotificationSender formats all messages before sending,
+groups materials, skips TelegramAPIError per message and yields successful events for immediate acknowledgement.
+Unexpected failures abort only that user; the next user gets a separate request scope. Snapshot JSON, hashes,
+account/schema baselines, monotonic observations and the one-retry OBIS SSO/AJAX flow are unchanged.
 The gettext adapter lives in platform/i18n/catalog.py; Locale/weekday labels stay in localization/.
 Deletion jobs call MessageDeletionService.delete_due with an async delivery callable. The shared delete_messages
 adapter uses itertools.batched, skips TelegramAPIError per batch and lets unexpected errors abort the sweep.
 The same adapter removes advertisement publications. Runtime commands/locales paths are covered for Docker-like layouts.
 `docs/ARCHITECTURE.md` describes the current state; `docs/MIGRATION.md` records stage boundaries and baseline issues.
 
-Under `src/manashelper/`, code is organized by technical layer, mirroring the original Java structure:
-`bot/routers` (remaining Eders handlers), `bot/keyboards`, `bot/callback_data.py`,
-`services` (business logic), `repositories` (SQLAlchemy queries), `db/models` (ORM models), `jobs` (`AsyncIOScheduler`
-job functions, one module per feature area — see "Scheduled jobs & change detection" below), `core/`, `di.py`,
-`main.py`. These layers describe the remaining legacy areas; migrated features own their code in `modules/`.
+Under `src/manashelper/`, migrated features own their code in `modules/`; shared infrastructure lives in `core/`
+and `platform/`. Only Study week retains its legacy router/service/formatter. `db/models` keeps the global registry,
+`jobs` wires the scheduler, and `di.py` retains the Study week provider until its separate migration.
 
 **Services return plain dataclasses, never ORM models.** A `service` method called from a `bot/routers` handler
 returns a frozen `dataclass` (e.g. `FacultyModel`, `DepartmentSummary`, `CourseSummary`) or raises, never a
@@ -228,8 +233,8 @@ read-modify-write isn't safe under concurrent access for the same user. This is 
 ### Dependency injection (Dishka)
 
 `core/provider.py` defines CoreProvider: Settings, AsyncEngine, async_sessionmaker and the shared HTTP client
-have APP scope, and AsyncSession has REQUEST scope. `di.py` retains AppProvider/RequestProvider only for
-legacy feature dependencies. `setup_dishka(container, dispatcher)` +
+have APP scope, and AsyncSession has REQUEST scope. `di.py` retains RequestProvider only for
+StudyWeekService. `setup_dishka(container, dispatcher)` +
 `inject_router(dispatcher)` in `platform/telegram/dispatcher.py` wire dependency injection into router handlers via `FromDishka[X]`
 parameter annotations — the analog of Spring's constructor injection into `@Component`/`@Service` beans. The
 CoreProvider's session provider commits on finalization and rolls back if commit raises. The existing

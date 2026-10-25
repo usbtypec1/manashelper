@@ -8,18 +8,18 @@ from aiogram.types import CallbackQuery, LinkPreviewOptions, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.callback_data import EdersPageCallback, EdersSettingCallback
-from manashelper.bot.keyboards.eders import build_eders_keyboard, build_eders_settings_keyboard
+from manashelper.modules.eders.application.eders import EdersService, filter_activities
+from manashelper.modules.eders.application.models import DeadlineFilter, EdersSnapshot
+from manashelper.modules.eders.application.tracking import EdersTrackingService
+from manashelper.modules.eders.infrastructure.client import EdersFetchError
+from manashelper.modules.eders.infrastructure.parser import EdersParseError
+from manashelper.modules.eders.infrastructure.urls import EdersUnsafeUrlError
+from manashelper.modules.eders.presentation.callbacks import EdersPageCallback, EdersSettingCallback
+from manashelper.modules.eders.presentation.formatter import format_activity_page
+from manashelper.modules.eders.presentation.keyboards import build_eders_keyboard, build_eders_settings_keyboard
 from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
 from manashelper.modules.obis.presentation.keyboards import build_no_credentials_keyboard
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
-from manashelper.scraping.eders_client import EdersFetchError
-from manashelper.scraping.eders_parser import EdersParseError
-from manashelper.scraping.eders_urls import EdersUnsafeUrlError
-from manashelper.services.eders import EdersService, filter_activities
-from manashelper.services.eders_formatter import format_activity_page
-from manashelper.services.eders_models import DeadlineFilter, EdersSnapshot
-from manashelper.services.eders_tracking import EdersTrackingService
 from manashelper.services.study_week import StudyWeekService
 from manashelper.services.study_week_formatter import format_study_week
 

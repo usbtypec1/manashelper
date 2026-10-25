@@ -20,6 +20,7 @@ from manashelper.core.provider import CoreProvider
 from manashelper.db.models import User as DbUser
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.localization.locale import Locale
+from manashelper.modules.eders.application.eders import EdersService
 from manashelper.modules.obis import jobs
 from manashelper.modules.obis.application.credentials import ObisCredentialsService
 from manashelper.modules.obis.application.notification import (
@@ -49,7 +50,6 @@ from manashelper.modules.obis.presentation.formatter import format_exam_grade_ch
 from manashelper.modules.obis.presentation.sender import TelegramObisNotificationSender
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.platform.i18n.catalog import i18n
-from manashelper.services.eders import EdersService
 
 KEY = bytes(range(32))
 

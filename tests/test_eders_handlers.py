@@ -13,28 +13,12 @@ from aiogram.methods import SendMessage
 from aiogram.types import CallbackQuery, Message
 from dishka import make_async_container
 
-from manashelper.bot.callback_data import EdersPageCallback
-from manashelper.bot.routers.eders import SNAPSHOT_KEY, on_eders_command, on_eders_page
 from manashelper.core.provider import CoreProvider
-from manashelper.di import AppProvider, RequestProvider
-from manashelper.jobs.eders import poll_eders_job
+from manashelper.di import RequestProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.localization.locale import Locale
-from manashelper.modules.notifications.provider import NotificationsProvider
-from manashelper.modules.obis.errors import UserHasNoCredentialsError
-from manashelper.modules.obis.provider import ObisProvider
-from manashelper.modules.schedule.application.schedule import NoTrackedCoursesError
-from manashelper.modules.schedule.provider import ScheduleProvider
-from manashelper.modules.student_questions.provider import StudentQuestionsProvider
-from manashelper.modules.student_questions.service import StudentQuestionsService
-from manashelper.modules.users.application.locale import LocaleService
-from manashelper.modules.users.provider import UsersProvider
-from manashelper.platform.i18n.catalog import i18n
-from manashelper.platform.telegram.dispatcher import create_dispatcher
-from manashelper.platform.telegram.provider import TelegramPlatformProvider
-from manashelper.scraping.eders_parser import EdersParseError
-from manashelper.services.eders import EdersService
-from manashelper.services.eders_models import (
+from manashelper.modules.eders.application.eders import EdersService
+from manashelper.modules.eders.application.models import (
     ActivityDate,
     ActivityKind,
     DeadlineFilter,
@@ -42,7 +26,24 @@ from manashelper.services.eders_models import (
     EdersCourse,
     EdersSnapshot,
 )
-from manashelper.services.eders_tracking import EdersEvent, EdersTrackingService
+from manashelper.modules.eders.application.polling import PollEdersUser
+from manashelper.modules.eders.application.tracking import EdersEvent, EdersTrackingService
+from manashelper.modules.eders.infrastructure.parser import EdersParseError
+from manashelper.modules.eders.jobs import poll_eders_job
+from manashelper.modules.eders.presentation.callbacks import EdersPageCallback
+from manashelper.modules.eders.presentation.router import SNAPSHOT_KEY, on_eders_command, on_eders_page
+from manashelper.modules.eders.provider import EdersProvider
+from manashelper.modules.notifications.provider import NotificationsProvider
+from manashelper.modules.obis.errors import UserHasNoCredentialsError
+from manashelper.modules.obis.provider import ObisProvider
+from manashelper.modules.schedule.application.schedule import NoTrackedCoursesError
+from manashelper.modules.schedule.provider import ScheduleProvider
+from manashelper.modules.student_questions.provider import StudentQuestionsProvider
+from manashelper.modules.student_questions.service import StudentQuestionsService
+from manashelper.modules.users.provider import UsersProvider
+from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.dispatcher import create_dispatcher
+from manashelper.platform.telegram.provider import TelegramPlatformProvider
 from manashelper.services.study_week import StudyWeekService
 
 
@@ -147,7 +148,7 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
     locales.get_locale.side_effect = recipient_locale
     tracking.pending_events.return_value = [event]
     bot.send_message.side_effect = [TelegramBadRequest(SendMessage(chat_id=1, text="test"), "test failure"), None]
-    dependencies = {EdersService: service, EdersTrackingService: tracking, LocaleService: locales}
+    dependencies = {EdersTrackingService: tracking, PollEdersUser: PollEdersUser(service, tracking, locales)}
 
     class Request:
         async def get(self, dependency):
@@ -169,7 +170,7 @@ async def test_application_resolves_new_services_and_registers_thirty_minute_pol
         CoreProvider(),
         TelegramPlatformProvider(),
         ObisProvider(),
-        AppProvider(),
+        EdersProvider(),
         RequestProvider(),
         ScheduleProvider(),
         NotificationsProvider(),
@@ -223,7 +224,7 @@ async def test_job_groups_new_materials_and_acknowledges_all_events_only_on_succ
     second = EdersEvent("second", snapshot().activities[0], "material_changed", now, now)
     tracking.pending_events.return_value = [first, second]
     locales.get_locale.return_value = Locale.EN
-    dependencies = {EdersService: service, EdersTrackingService: tracking, LocaleService: locales}
+    dependencies = {EdersTrackingService: tracking, PollEdersUser: PollEdersUser(service, tracking, locales)}
 
     @asynccontextmanager
     async def scope():
@@ -241,13 +242,13 @@ async def test_job_groups_new_materials_and_acknowledges_all_events_only_on_succ
 
 
 async def test_eders_settings_open_from_notifications_and_keep_return_path_after_toggle() -> None:
-    from manashelper.bot.callback_data import EdersSettingCallback
-    from manashelper.bot.routers.eders import on_eders_setting, on_open_eders_settings
+    from manashelper.modules.eders.application.tracking import EdersSetting, EdersSettings
+    from manashelper.modules.eders.presentation.callbacks import EdersSettingCallback
+    from manashelper.modules.eders.presentation.router import on_eders_setting, on_open_eders_settings
     from manashelper.modules.notifications.keyboards import build_notifications_keyboard
     from manashelper.modules.notifications.settings import NotificationSettingsSummary
     from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
     from manashelper.platform.telegram.keyboards.settings import build_settings_keyboard
-    from manashelper.services.eders_tracking import EdersSetting, EdersSettings
 
     main = build_settings_keyboard()
     assert any(
@@ -287,7 +288,7 @@ async def test_eders_settings_open_from_notifications_and_keep_return_path_after
 
 
 async def test_open_eders_settings_for_unknown_user_shows_alert() -> None:
-    from manashelper.bot.routers.eders import on_open_eders_settings
+    from manashelper.modules.eders.presentation.router import on_open_eders_settings
     from manashelper.modules.obis.errors import UserNotFoundError
 
     callback = AsyncMock(spec=CallbackQuery)

@@ -13,11 +13,12 @@ from alembic import command
 from manashelper.core.config import get_settings
 from manashelper.core.logging import configure_logging
 from manashelper.core.provider import CoreProvider
-from manashelper.di import AppProvider, RequestProvider
+from manashelper.di import RequestProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.modules.advertisements.provider import AdvertisementsProvider
 from manashelper.modules.broadcast.provider import BroadcastProvider
 from manashelper.modules.donations.provider import DonationsProvider
+from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.feedback.provider import FeedbackProvider
 from manashelper.modules.food_menu.provider import FoodMenuProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
@@ -55,7 +56,7 @@ async def main() -> None:
             CoreProvider(),
             TelegramPlatformProvider(),
             ObisProvider(),
-            AppProvider(),
+            EdersProvider(),
             RequestProvider(),
             ScheduleProvider(),
             NotificationsProvider(),

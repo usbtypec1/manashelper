@@ -1,8 +1,8 @@
-from manashelper.db.models.eders import EdersNotification, EdersState
 from manashelper.modules.advertisements.infrastructure.advertisement import Advertisement
 from manashelper.modules.advertisements.infrastructure.advertisement_channel_message import AdvertisementChannelMessage
 from manashelper.modules.advertisements.infrastructure.advertisement_contact_view import AdvertisementContactView
 from manashelper.modules.advertisements.infrastructure.advertisement_media import AdvertisementMedia
+from manashelper.modules.eders.infrastructure.orm import EdersNotification, EdersState
 from manashelper.modules.feedback.orm import FeedbackMessage
 from manashelper.modules.food_menu.infrastructure.models.daily_menu import DailyMenu, daily_menu_dishes
 from manashelper.modules.food_menu.infrastructure.models.daily_menu_rating import DailyMenuRating

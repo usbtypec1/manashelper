@@ -6,11 +6,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models import User
-from manashelper.modules.obis.errors import UserHasNoCredentialsError
-from manashelper.modules.users.infrastructure.user_repository import UserRepository
-from manashelper.repositories.eders_repository import EdersRepository
-from manashelper.services.eders import EdersService
-from manashelper.services.eders_models import (
+from manashelper.modules.eders.application.eders import EdersService
+from manashelper.modules.eders.application.models import (
     ActivityDate,
     ActivityKind,
     EdersActivity,
@@ -18,7 +15,11 @@ from manashelper.services.eders_models import (
     EdersSnapshot,
     SubmissionStatus,
 )
-from manashelper.services.eders_tracking import EdersSetting, EdersTrackingService
+from manashelper.modules.eders.application.tracking import EdersSetting, EdersTrackingService
+from manashelper.modules.eders.infrastructure.repository import EdersRepository
+from manashelper.modules.obis.errors import UserHasNoCredentialsError
+from manashelper.modules.users.infrastructure.user_repository import UserRepository
+from manashelper.modules.users.queries import UsersQuery
 
 NOW = datetime(2026, 10, 1, tzinfo=UTC)
 
@@ -27,7 +28,7 @@ NOW = datetime(2026, 10, 1, tzinfo=UTC)
 async def tracking(session: AsyncSession):
     session.add(User(id=980_001, full_name="Test", username=None))
     await session.flush()
-    return EdersTrackingService(EdersRepository(session), UserRepository(session))
+    return EdersTrackingService(EdersRepository(session), UsersQuery(UserRepository(session)))
 
 
 def item(**changes):
@@ -152,3 +153,12 @@ async def test_repeated_deadline_change_is_a_new_notification(tracking):
         events = await tracking.pending_events(980_001, observed)
         assert len(events) == 1 and events[0].event_type == "changed"
         await tracking.mark_sent(980_001, events[0].key, observed)
+
+
+@pytest.mark.parametrize("delta", [timedelta(), timedelta(minutes=-1)])
+async def test_older_or_equal_snapshot_cannot_replace_persisted_observation(tracking, delta):
+    baseline = EdersSnapshot((item(),), NOW)
+    stored = await tracking.observe(980_001, "a", baseline)
+    incoming = EdersSnapshot((), NOW + delta)
+    assert await tracking.observe(980_001, "a", incoming) == stored
+    assert await tracking.pending_events(980_001, NOW) == []

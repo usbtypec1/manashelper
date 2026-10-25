@@ -4,7 +4,7 @@
 репозитории; наличие функции в `features/` само по себе не означает, что она реализована.
 
 Проект находится в процессе постепенного перехода к функциональным модулям. Перенесены `feedback`,
-`advertisements`, `student_questions`, `versions`, `donations`, `broadcast`, `food_menu`, `schedule`, `notifications`, `users` и `obis`.
+`advertisements`, `student_questions`, `versions`, `donations`, `broadcast`, `food_menu`, `schedule`, `notifications`, `users`, `obis` и `eders`.
 Код каждой области собран в `modules/`.
 У объявлений также перенесена очистка истёкших публикаций. Versions остаётся набором функций без DI provider.
 Остальные области пока
@@ -15,7 +15,8 @@ presentation. Публичный UsersQuery предоставляет count, с
 ORM, repository и Telegram presentation. Food menu/Eders сохраняют собственные настройки;
 общая навигация Settings и Telegram-инфраструктура собраны в `platform/telegram/`.
 ObisCredentialsService владеет credentials и предоставляет их Eders через application-границу;
-поля остаются в существующей таблице User. Legacy Eders tracking/eligibility queries остаются до его этапа.
+поля остаются в существующей таблице User. Eders tracking использует UsersQuery.exists; его repository сохраняет
+SQL eligibility и блокировку строки User. Legacy остаётся только orchestration учебной недели.
 Карта зависимостей, порядок этапов и исходные проблемы проверок описаны в [MIGRATION.md](MIGRATION.md).
 Общая инфраструктура выделена в `core/`: настройки, логирование, Base/фабрики БД и управление ресурсами DI.
 Telegram Platform, аудит и очередь удаления сообщений перенесены; gettext adapter находится в `platform/i18n/`.
@@ -104,16 +105,11 @@ manashelper/
 │   │       ├── audit/             # Service, repository, ORM
 │   │       ├── deletions/         # Service, repository, ORM и тонкая cleanup job
 │   │       └── provider.py        # Четыре REQUEST-зависимости платформы
-│   ├── bot/                      # Только оставшаяся presentation Eders
-│   │   ├── callback_data.py       # Callback-классы Eders
-│   │   ├── routers/
-│   │   └── keyboards/
-│   ├── services/                  # Сценарии, dataclass-модели, форматтеры, утилиты
-│   ├── repositories/              # Запросы и изменения данных через SQLAlchemy
+│   ├── bot/routers/               # Только legacy Study week
+│   ├── services/                  # Study week и общие time helpers
 │   ├── db/
 │   │   └── models/                # Общий registry и пока не перенесённые ORM-модели
-│   ├── scraping/                  # HTTP-клиенты, HTML-парсеры, проверка URL eders
-│   ├── jobs/                      # Фоновые задания и их расписание
+│   ├── jobs/                      # Регистрация фоновых заданий
 │   ├── modules/
 │   │   ├── advertisements/
 │   │   │   ├── presentation/      # Три router, formatter, callbacks, клавиатуры, Telegram adapter
@@ -131,6 +127,7 @@ manashelper/
 │   │   ├── notifications/         # Настройки, запросы получателей, ORM, Telegram и REQUEST-provider
 │   │   ├── users/                 # Профиль, локаль, контакты: application/infrastructure/presentation
 │   │   ├── obis/                  # Credentials, HTTP/parser/crypto, snapshots/polling, presentation, provider/jobs
+│   │   ├── eders/                 # Snapshot/tracking/polling, HTTP/parser/persistence, Telegram, provider/jobs
 │   │   └── feedback/
 │   │       ├── router.py          # FSM, обращения и ответы admin-чата
 │   │       ├── keyboards.py       # Кнопка отмены
@@ -234,7 +231,7 @@ Characterization-тест выявил существующий дефект: и
 чтобы сбой одного элемента не останавливал весь обход.
 
 Задания обращаются к application-сервисам и публичным query, без прямого доступа к репозиториям.
-Координация Eders polling пока остаётся в legacy jobs до его этапа. OBIS jobs делегируют per-user сценарий PollObisUser.
+Eders и OBIS jobs делегируют per-user сценарии PollEdersUser и PollObisUser.
 `platform/telegram/delivery.py` содержит общую отправку и пакетное удаление; локаль читается через Users LocaleService.
 
 Очистка объявлений уже следует целевой границе: `modules/advertisements/jobs.py` открывает request scope,
@@ -267,7 +264,7 @@ labels остаются в localization/. Файлы команд и перев�
 session factory сохраняет expire_on_commit=False. Engine и HTTP-клиент закрываются при завершении APP;
 request-сессия выполняет commit перед закрытием. Существующая семантика при ошибке тела scope сохранена.
 CoreProvider работает самостоятельно, без feature-провайдеров. [di.py](../src/manashelper/di.py) содержит
-`AppProvider` и `RequestProvider` только для ещё не перенесённых feature-зависимостей.
+`RequestProvider` только для StudyWeekService; пустой AppProvider удалён.
 Отдельный [FeedbackProvider](../src/manashelper/modules/feedback/provider.py) регистрирует репозиторий и
 сервис обращений. [AdvertisementsProvider](../src/manashelper/modules/advertisements/provider.py)
 регистрирует два репозитория, три сервиса и сценарий очистки. Их зависимости имеют `Scope.REQUEST`;
@@ -444,6 +441,12 @@ Callback payload `notification_setting:*`, `settings:open_notifications` и `set
 
 ### Eders и учебная неделя
 
+Eders собран в `modules/eders/`: application facade/filter/tracking/polling и immutable snapshot-модели,
+infrastructure HTTP/parser/URL validation, persistence serialization/repository/ORM, Telegram presentation и jobs/provider.
+EdersProvider сохраняет APP client и REQUEST repository/services/PollEdersUser.
+Tracking проверяет наличие пользователя через публичный UsersQuery.exists. Repository сохраняет SQL выбор
+аккаунтов с обоими credential columns и блокировку User перед state lookup/flush, включая первое наблюдение.
+
 `EdersService` получает учётные данные через ObisCredentialsService. `EdersClient` выполняет вход OBIS и переход
 в eders через SSO с одной cookie jar. Затем получает список курсов через Moodle AJAX с пагинацией,
 читает страницы курсов и подробности заданий и тестов. При истечении сессии весь снимок повторяется один раз;
@@ -451,7 +454,15 @@ Callback payload `notification_setting:*`, `settings:open_notifications` и `set
 
 Парсер поддерживает задания, тесты, файлы, папки, ссылки, форумы и текстовые блоки. `EdersTrackingService`
 сравнивает персональные снимки, планирует события и сохраняет их в очередь PostgreSQL. Снимки сериализуются
-модулем `eders_serialization.py`. Состояние включает маркер учётных данных и настройки отслеживания.
+модулем `serialization.py`. Состояние включает маркер учётных данных и настройки отслеживания.
+
+PollEdersUser выполняет refresh, чтение локали, выбор pending events и ack. TelegramEdersNotificationSender
+сначала форматирует все сообщения в локали получателя, группирует материалы, затем отправляет последовательно.
+Async iterator возвращает событие после успешного сообщения, поэтому application отмечает каждый event сразу,
+до следующей отправки. TelegramAPIError пропускает сообщение без ack; unexpected error прекращает текущего
+пользователя, но job продолжает следующий request scope. Exactly-once между Telegram и БД по-прежнему нет.
+Порядок событий, JSON/legacy defaults, hashes, baseline/account/schema suppression и monotonic snapshots сохранены.
+StudyWeekService пока остаётся legacy orchestration, потребляя application-результаты Eders и Schedule.
 
 Доступные сценарии:
 
@@ -583,8 +594,8 @@ eders и задания удаления — отдельные прикладн
 
 Интеграция eders предназначена для чтения. Она не отправляет формы сдачи работ, запуска тестов или изменения
 профиля. POST к Moodle используется для получения списка курсов. URL для публичных карточек обрабатываются
-через `eders_urls.py`; ключи сессии не должны попадать в сохранённые публичные ссылки и сообщения.
-`EdersClient._request` проверяет разрешённый адрес перед каждым HTTP-запросом, включая redirect-цели.
+через `urls.py`; ключи сессии не должны попадать в сохранённые публичные ссылки и сообщения.
+`modules/eders/infrastructure/client.py::_request` проверяет разрешённый адрес перед каждым HTTP-запросом, включая redirect-цели.
 SSO и чтение имеют разные списки разрешённых адресов; небезопасные действия блокируются до обращения к ним.
 
 ## 11. Локализация и команды
@@ -699,7 +710,7 @@ Ruff использует длину строки 120 и целевую верс
 Объявления используют `UserContactService`
 через application-поверхность, без доступа к репозиториям Users. Donations и Broadcast используют UsersQuery
 из `modules/users/`. Старые Python-пути Feedback, объявлений, опроса, версий, Donations,
-Broadcast, Food menu, Schedule, Notifications и Users удалены;
+Broadcast, Food menu, Schedule, Notifications, Users, OBIS и Eders удалены;
 адаптеров совместимости для них нет, все потребители в проекте используют новые импорты.
 
 Broadcast остаётся небольшим плоским модулем. `service.py` содержит `SendBroadcast`, immutable dataclass

@@ -8,8 +8,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from manashelper.scraping.eders_urls import EDERS_BASE_URL, EdersUnsafeUrlError, eders_id, safe_eders_url
-from manashelper.services.eders_models import (
+from manashelper.modules.eders.application.models import (
     ActivityDate,
     ActivityKind,
     EdersActivity,
@@ -17,6 +16,7 @@ from manashelper.services.eders_models import (
     GradingStatus,
     SubmissionStatus,
 )
+from manashelper.modules.eders.infrastructure.urls import EDERS_BASE_URL, EdersUnsafeUrlError, eders_id, safe_eders_url
 from manashelper.services.time_utils import BISHKEK_TZ
 
 

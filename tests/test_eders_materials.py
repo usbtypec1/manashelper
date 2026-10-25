@@ -7,22 +7,27 @@ import pytest
 from test_eders_tracking import NOW, item
 
 from manashelper.db.models import User
+from manashelper.modules.eders.application.eders import filter_activities
+from manashelper.modules.eders.application.models import ActivityKind, DeadlineFilter, EdersCourse, EdersSnapshot
+from manashelper.modules.eders.application.tracking import EdersEvent, EdersSetting, EdersTrackingService
+from manashelper.modules.eders.infrastructure.parser import (
+    EdersParseError,
+    parse_course_activities,
+    parse_enrolled_courses,
+)
+from manashelper.modules.eders.infrastructure.repository import EdersRepository
+from manashelper.modules.eders.infrastructure.serialization import deserialize_snapshot, serialize_snapshot
+from manashelper.modules.eders.presentation.formatter import format_material_events
 from manashelper.modules.users.infrastructure.user_repository import UserRepository
+from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
-from manashelper.repositories.eders_repository import EdersRepository
-from manashelper.scraping.eders_parser import EdersParseError, parse_course_activities, parse_enrolled_courses
-from manashelper.services.eders import filter_activities
-from manashelper.services.eders_formatter import format_material_events
-from manashelper.services.eders_models import ActivityKind, DeadlineFilter, EdersCourse, EdersSnapshot
-from manashelper.services.eders_serialization import deserialize_snapshot, serialize_snapshot
-from manashelper.services.eders_tracking import EdersEvent, EdersSetting, EdersTrackingService
 
 
 @pytest.fixture
 async def tracking(session):
     session.add(User(id=980_001, full_name="Test", username=None))
     await session.flush()
-    return EdersTrackingService(EdersRepository(session), UserRepository(session))
+    return EdersTrackingService(EdersRepository(session), UsersQuery(UserRepository(session)))
 
 
 async def test_new_material_is_pending_until_sent_and_not_repeated(tracking):
@@ -129,7 +134,7 @@ def test_actual_theme_turkish_dates_labels_and_folders():
 
 
 def test_today_uses_bishkek_date_and_unsubmitted_excludes_unknown():
-    from manashelper.services.eders_models import ActivityDate, SubmissionStatus
+    from manashelper.modules.eders.application.models import ActivityDate, SubmissionStatus
 
     now = datetime(2026, 10, 1, 20, tzinfo=UTC)  # Already October 2 in Bishkek.
     due = item(closes=ActivityDate(datetime(2026, 10, 1, 23, tzinfo=UTC)), submission=SubmissionStatus.DRAFT)
@@ -141,12 +146,12 @@ def test_today_uses_bishkek_date_and_unsubmitted_excludes_unknown():
 def test_activity_details_effective_timezone_overrides_profile_fallback():
     from zoneinfo import ZoneInfo
 
-    from manashelper.scraping.eders_parser import parse_activity_details
+    from manashelper.modules.eders.infrastructure.parser import parse_activity_details
 
     html = """<html><head><script>M.cfg={"usertimezone":"Asia/Bishkek"}</script></head>
     <body id="page-mod-assign-view"><main id="region-main"><div data-region="activity-dates">
     <div><strong>Due:</strong> Friday, 2 October 2026, 1:00 AM</div></div></main></body></html>"""
-    from manashelper.services.eders_models import ActivityDate
+    from manashelper.modules.eders.application.models import ActivityDate
 
     result = parse_activity_details(html, item(closes=ActivityDate()), ZoneInfo("Europe/Istanbul"))
     assert result.closes.instant.hour == 1

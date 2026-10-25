@@ -8,16 +8,16 @@ import httpx
 import pytest
 
 from manashelper.db.models import User
+from manashelper.modules.eders.infrastructure import client as eders_client
+from manashelper.modules.eders.infrastructure.client import EdersClient, EdersFetchError, EdersSessionExpiredError
+from manashelper.modules.eders.infrastructure.serialization import serialize_snapshot
 from manashelper.modules.obis.application.credentials import ObisCredentialsService
 from manashelper.modules.obis.application.obis import ObisService
 from manashelper.modules.obis.errors import ObisLoginError, ObisParseError
-from manashelper.modules.obis.infrastructure import client
+from manashelper.modules.obis.infrastructure import client as obis_client
 from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL, ObisClient
 from manashelper.modules.obis.infrastructure.credentials_repository import ObisCredentialsRepository
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
-from manashelper.scraping import eders_client
-from manashelper.scraping.eders_client import EdersClient, EdersFetchError, EdersSessionExpiredError
-from manashelper.services.eders_serialization import serialize_snapshot
 
 PORT = os.environ.get("EDERS_SIMULATION_PORT")
 pytestmark = pytest.mark.skipif(
@@ -92,7 +92,7 @@ async def test_http_expired_session_retries_once(monkeypatch):
 
 def install_obis_client(monkeypatch, mode="normal"):
     transports = install_client(monkeypatch, mode)
-    monkeypatch.setattr(client, "new_http_client", eders_client.new_http_client)
+    monkeypatch.setattr(obis_client, "new_http_client", eders_client.new_http_client)
     return transports
 
 

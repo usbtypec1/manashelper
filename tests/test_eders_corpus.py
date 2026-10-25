@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 from lxml import html as lhtml
 
-from manashelper.scraping.eders_parser import parse_account_timezone, parse_course_activities
-from manashelper.services.eders_models import ActivityKind, EdersCourse, EdersSnapshot
-from manashelper.services.eders_serialization import deserialize_snapshot, serialize_snapshot
+from manashelper.modules.eders.application.models import ActivityKind, EdersCourse, EdersSnapshot
+from manashelper.modules.eders.infrastructure.parser import parse_account_timezone, parse_course_activities
+from manashelper.modules.eders.infrastructure.serialization import deserialize_snapshot, serialize_snapshot
 
 
 def test_saved_course_html_corpus():

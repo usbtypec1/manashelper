@@ -11,9 +11,10 @@ from dishka import make_async_container
 
 from manashelper.core.provider import CoreProvider
 from manashelper.db.models import User
-from manashelper.di import AppProvider, RequestProvider
+from manashelper.di import RequestProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.localization.locale import Locale
+from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.food_menu import jobs
 from manashelper.modules.food_menu.application import broadcast as broadcast_module
 from manashelper.modules.food_menu.application.broadcast import BroadcastFoodMenu
@@ -191,7 +192,7 @@ async def test_food_menu_provider_preserves_app_and_request_lifetimes():
         CoreProvider(),
         TelegramPlatformProvider(),
         ObisProvider(),
-        AppProvider(),
+        EdersProvider(),
         RequestProvider(),
         ScheduleProvider(),
         NotificationsProvider(),

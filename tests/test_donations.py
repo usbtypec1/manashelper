@@ -11,13 +11,14 @@ from aiogram.types import FSInputFile
 from dishka import make_async_container
 
 from manashelper.core.provider import CoreProvider
-from manashelper.di import AppProvider, RequestProvider
+from manashelper.di import RequestProvider
 from manashelper.modules.donations import catalog as donations
 from manashelper.modules.donations import qr as qr_adapter
 from manashelper.modules.donations.catalog import DonationBank
 from manashelper.modules.donations.provider import DonationsProvider
 from manashelper.modules.donations.qr import DonationQrService
 from manashelper.modules.donations.service import DonationService
+from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
@@ -155,7 +156,7 @@ async def test_qr_cache_is_shared_across_request_scopes_while_application_servic
         CoreProvider(),
         TelegramPlatformProvider(),
         ObisProvider(),
-        AppProvider(),
+        EdersProvider(),
         RequestProvider(),
         ScheduleProvider(),
         NotificationsProvider(),

@@ -17,8 +17,8 @@ router, service, repository, and tests before changing a feature. `features/` ho
 ## Architecture
 
 Migrated business features live in `modules/`; shared infrastructure lives in `core/` and `platform/`.
-Remaining legacy Eders/Study week areas use `bot/routers`, `bot/keyboards`, `bot/callback_data.py`, `services`, `repositories`,
-`db/models`, `scraping` and `jobs`. A gradual feature-first migration is in progress: feedback, advertisements and the survey live in
+Only Study week orchestration remains legacy in `bot/routers` and `services`; `db/models` keeps the global ORM registry,
+and `jobs` keeps scheduler wiring. A gradual feature-first migration is in progress: feedback, advertisements and the survey live in
 `modules/feedback/`, `modules/advertisements/` and `modules/student_questions/`, with REQUEST providers in `main.py`.
 Advertisements separates presentation, application and infrastructure, with domain enums; feedback and the survey stay flat.
 Release history lives in flat `modules/versions/`, with functions and no artificial DI provider. Its runtime
@@ -48,7 +48,7 @@ shared user-locale boundary for middleware and delivery; UserContactService supp
 User keeps OBIS credential columns and the Schedule tracked_courses relationship without schema changes.
 OBIS owns credential access through ObisCredentialsRepository on the unchanged User row.
 EdersService reads plain credentials and an opaque marker through ObisCredentialsService; it no longer reads ORM/ciphertext.
-Legacy Eders tracking still uses UserRepository for existence, and its repository filters eligible accounts until that stage.
+Eders tracking checks existence through UsersQuery; its repository owns credential eligibility SQL and the user-row lock.
 Shared Telegram navigation lives in `platform/telegram/navigation.py`; feature routers must not import the start router for it.
 Keep migrated feature code together;
 do not move unrelated legacy areas in the same stage. See `docs/ARCHITECTURE.md` and `docs/MIGRATION.md`.
@@ -63,8 +63,8 @@ presentation layer. Put pure mapping and formatting helpers at module level. Esc
 text with `platform/telegram/html.py::escape_html` before inserting it into Telegram HTML messages.
 
 Core lives in `core/`: config.py, database.py, logging.py and provider.py. CoreProvider owns APP settings,
-engine, session factory and the shared HTTP client, plus the REQUEST session. `di.py` retains only legacy
-feature APP/REQUEST dependencies. Keep the single Base from `core/database.py` and model registration in `db/models/`.
+engine, session factory and the shared HTTP client, plus the REQUEST session. `di.py` retains only the REQUEST
+StudyWeekService; the empty AppProvider was removed. Keep the single Base from `core/database.py` and model registration in `db/models/`.
 Telegram Platform lives in `platform/telegram/`: dispatcher, commands/catalog/extractor, navigation,
 Settings callbacks/routers, filters, middleware, HTML/delivery, audit and scheduled message deletions.
 TelegramPlatformProvider owns both audit and deletion repositories/services in REQUEST. Audit records only
@@ -85,6 +85,14 @@ Unexpected errors abort that user and are logged by the job, without stopping th
 Preserve two characterized behaviors: first nonempty grades notify immediately; attendance's first row is silent.
 Saving assigns student_number before encryption, so an encryption error leaves that in-memory assignment changed.
 Do not silently fix these during relocation. Hourly scheduling, FSM, password masking and encryption format are unchanged.
+
+Eders lives in `modules/eders/`: application snapshot/filter/tracking/polling, infrastructure client/parser/URL validation,
+serialization/repository/ORM, Telegram presentation, jobs and provider. EdersProvider keeps the client APP and other
+dependencies REQUEST. PollEdersUser preserves refresh→locale→pending→send→ack ordering; its Telegram sender groups
+materials and yields delivered events for immediate acknowledgement. TelegramAPIError skips one message without ack;
+unexpected errors abort only that user. Preserve snapshot JSON, event keys, baseline/account/schema suppression,
+monotonic observations, user-row FOR UPDATE before first state, and the one-retry whole-snapshot SSO flow.
+
 The session commits on normal finalization and rolls back if
 commit raises. An existing defect is characterized in `tests/test_feedback_composition.py`: Dishka sends a request-body
 exception as the yield value, which the provider ignores, so a body exception alone still leads to commit. Do not
@@ -111,12 +119,12 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
 - OBIS credentials are verified with a real login before storage and encrypted with AES-GCM through
   `CryptoService`. The credentials form uses aiogram FSM and in-process `MemoryStorage`. OBIS fetches authenticate
   per call; do not assume a persistent browser session.
-- Remaining Eders jobs live in `jobs/`; all jobs are registered in `jobs/scheduler.py`. They use independent request scopes, catch
+- All jobs are registered in `jobs/scheduler.py`. They use independent request scopes, catch
   failures per item or recipient, and log unexpected exceptions so one failure does not stop a batch. Grade,
   attendance and timetable notifications compare new snapshots with persisted last-known state.
   Attendance/timetable first observations are silent; OBIS's first nonempty grade currently notifies (characterized defect).
   Users without a `NotificationSettings` row have all toggles enabled.
-  Migrated Food menu, Schedule and OBIS jobs live in their modules. Schedule loads course IDs in one request scope,
+  Food menu, Schedule, OBIS and Eders jobs live in their modules. Schedule loads course IDs in one request scope,
   then opens another per course. TelegramAPIError skips a recipient; unexpected delivery/locale errors abort
   that course, are logged, and do not prevent the next course. Keep this boundary and the hourly schedule.
 - Marketplace moderation is authorized by `Settings.moderation_chat_id`, not a user role. Approved ads go to the

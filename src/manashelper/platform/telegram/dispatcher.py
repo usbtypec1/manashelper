@@ -5,7 +5,6 @@ from aiogram.types import ErrorEvent
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import inject_router, setup_dishka
 
-from manashelper.bot.routers.eders import router as eders_router
 from manashelper.modules.advertisements.presentation.advertisement import router as advertisement_router
 from manashelper.modules.advertisements.presentation.advertisement_contact import router as advertisement_contact_router
 from manashelper.modules.advertisements.presentation.advertisement_moderation import (
@@ -13,6 +12,7 @@ from manashelper.modules.advertisements.presentation.advertisement_moderation im
 )
 from manashelper.modules.broadcast.router import router as broadcast_router
 from manashelper.modules.donations.router import router as donations_router
+from manashelper.modules.eders.presentation.router import router as eders_router
 from manashelper.modules.feedback.router import router as feedback_router
 from manashelper.modules.food_menu.presentation.routers.food_menu import router as food_menu_router
 from manashelper.modules.food_menu.presentation.routers.food_menu_cleanup import router as food_menu_cleanup_router

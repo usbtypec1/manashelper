@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
+from manashelper.modules.eders.application.eders import EdersService
+from manashelper.modules.eders.application.models import EdersSnapshot
 from manashelper.modules.schedule.application.schedule import (
     NoTrackedCoursesError,
     ScheduleLessonModel,
     ScheduleService,
 )
-from manashelper.services.eders import EdersService
-from manashelper.services.eders_models import EdersSnapshot
 from manashelper.services.time_utils import BISHKEK_TZ
 
 
