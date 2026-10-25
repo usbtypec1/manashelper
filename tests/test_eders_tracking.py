@@ -6,6 +6,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models import User
+from manashelper.modules.obis.errors import UserHasNoCredentialsError
 from manashelper.modules.users.infrastructure.user_repository import UserRepository
 from manashelper.repositories.eders_repository import EdersRepository
 from manashelper.services.eders import EdersService
@@ -18,7 +19,6 @@ from manashelper.services.eders_models import (
     SubmissionStatus,
 )
 from manashelper.services.eders_tracking import EdersSetting, EdersTrackingService
-from manashelper.services.obis import UserHasNoCredentialsError
 
 NOW = datetime(2026, 10, 1, tzinfo=UTC)
 
@@ -133,7 +133,11 @@ async def test_after_outage_only_nearest_deadline_reminder_is_sent(tracking):
 
 async def test_missing_credentials_do_not_make_network_requests(session, tracking):
     client, crypto = AsyncMock(), AsyncMock()
-    service = EdersService(UserRepository(session), client, crypto, tracking)
+    from manashelper.modules.obis.application.credentials import ObisCredentialsService
+    from manashelper.modules.obis.infrastructure.credentials_repository import ObisCredentialsRepository
+
+    account = ObisCredentialsService(ObisCredentialsRepository(session), AsyncMock(), crypto)
+    service = EdersService(account, client, tracking)
     with pytest.raises(UserHasNoCredentialsError):
         await service.get_snapshot(980_001)
     client.fetch_snapshot.assert_not_awaited()

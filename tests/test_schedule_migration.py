@@ -21,6 +21,7 @@ from manashelper.di import AppProvider, RequestProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
+from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule import jobs
 from manashelper.modules.schedule.application.course import CourseService, UserNotFoundError
 from manashelper.modules.schedule.application.lesson_search import LessonSearchResult
@@ -203,6 +204,7 @@ async def test_schedule_provider_scopes_and_hourly_job_contract():
     async with make_async_container(
         CoreProvider(),
         TelegramPlatformProvider(),
+        ObisProvider(),
         AppProvider(),
         RequestProvider(),
         ScheduleProvider(),

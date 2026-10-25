@@ -21,6 +21,7 @@ from manashelper.modules.donations.provider import DonationsProvider
 from manashelper.modules.feedback.provider import FeedbackProvider
 from manashelper.modules.food_menu.provider import FoodMenuProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
+from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.student_questions.provider import StudentQuestionsProvider
 from manashelper.modules.users.provider import UsersProvider
@@ -53,6 +54,7 @@ async def main() -> None:
         container = make_async_container(
             CoreProvider(),
             TelegramPlatformProvider(),
+            ObisProvider(),
             AppProvider(),
             RequestProvider(),
             ScheduleProvider(),

@@ -25,8 +25,8 @@ Core capabilities (current):
   button; clicking it opens an ephemeral day selector. Private menus and broadcasts retain cleanup controls.
 - **OBIS integration**: an aiogram FSM conversation collects a student's OBIS credentials, verifies them against
   the real OBIS login before saving (AES-GCM encrypted at rest), and lets the user fetch their current exam
-  grades and lesson-attendance/skip-budget summary on demand — see `services/obis.py`,
-  `scraping/obis_client.py`, `scraping/obis_parser.py`, `bot/routers/obis.py`.
+  grades and lesson-attendance/skip-budget summary on demand — see `modules/obis/application/obis.py`,
+  `modules/obis/infrastructure/client.py`, `modules/obis/infrastructure/parser.py`, `modules/obis/presentation/router.py`.
   User-requested grades and attendance send a regular loading message, then edit it into compact plain-text
   pages with standard inline navigation. Pages contain up to two subjects and are bounded by text length and
   line count. The last five multipage results per user are cached in FSM data by message ID, so page changes
@@ -147,7 +147,8 @@ Its provider retains an APP-scoped LRU cache and REQUEST-scoped service. Public 
 supplies counts and recipient IDs to donations and broadcast.
 Users now owns application locale/contact services, profile/phone infrastructure and language/phone presentation
 under modules/users/. All its providers remain REQUEST-scoped. User retains OBIS credential columns and the
-Schedule relationship; legacy OBIS/Eders repository consumers remain until those stages.
+Schedule relationship; OBIS now owns credential persistence on that unchanged row.
+EdersService reads credentials through ObisCredentialsService; legacy tracking/eligibility queries remain until Eders migration.
 Shared navigation functions live in platform/telegram/navigation.py, outside the start router.
 Broadcast is colocated in flat `modules/broadcast/`: REQUEST-scoped SendBroadcast selects recipients through
 UsersQuery and counts delivery results. TelegramBroadcastSender owns locale, HTML and Telegram API errors;
@@ -162,12 +163,19 @@ Notifications now lives in flat modules/notifications/: settings, ORM, repositor
 Settings uses UsersQuery.exists; OBIS polling also selects recipients through NotificationRecipientsQuery.
 Shared Settings navigation stays in platform/telegram/. Preserve the characterized deferred-default/first-toggle defect.
 Shared weekday labels live in localization/weekdays.py; Bishkek timezone reuses
-services/time_utils.py. Root composition now has thirteen providers, including CoreProvider and TelegramPlatformProvider.
+services/time_utils.py. Root composition now has fourteen providers, including CoreProvider, TelegramPlatformProvider and ObisProvider.
 Core owns shared config, logging, database factories/Base and resource lifecycle in core/.
-The legacy di.py providers retain only OBIS/Eders/Study week dependencies. Shared Telegram presentation and
+The legacy di.py providers retain only Eders/Study week dependencies. Shared Telegram presentation and
 infrastructure live in platform/telegram/: dispatcher, commands, navigation, filters, middleware, HTML/delivery,
 audit and deletions. TelegramPlatformProvider keeps audit/deletion repositories and services in REQUEST.
-Settings callbacks belong to platform/telegram/callbacks.py; bot/callback_data.py retains OBIS/Eders callbacks.
+Settings callbacks belong to platform/telegram/callbacks.py; bot/callback_data.py retains only Eders callbacks.
+OBIS lives in modules/obis/: credentials/facade/notification/polling application code, infrastructure, presentation and jobs.
+ObisProvider keeps client/crypto APP and repositories/services REQUEST. ObisCredentialsService is the public
+read boundary for Eders, returning secrets with repr disabled and the unchanged SHA-256 ciphertext marker.
+Shared OBIS login/new_http_client stay reused by Eders; no persistent session or new authentication flow is introduced.
+PollObisUser delegates delivery through a real sender boundary; locale/HTML/API errors stay in the Telegram adapter.
+First nonempty grades currently notify; first attendance rows remain silent. Encryption failures keep the pre-existing
+student-number assignment order. Both behaviors are characterized and deliberately preserved in this refactor.
 The gettext adapter lives in platform/i18n/catalog.py; Locale/weekday labels stay in localization/.
 Deletion jobs call MessageDeletionService.delete_due with an async delivery callable. The shared delete_messages
 adapter uses itertools.batched, skips TelegramAPIError per batch and lets unexpected errors abort the sweep.
@@ -175,7 +183,7 @@ The same adapter removes advertisement publications. Runtime commands/locales pa
 `docs/ARCHITECTURE.md` describes the current state; `docs/MIGRATION.md` records stage boundaries and baseline issues.
 
 Under `src/manashelper/`, code is organized by technical layer, mirroring the original Java structure:
-`bot/routers` (remaining OBIS/Eders handlers), `bot/keyboards`, `bot/callback_data.py`,
+`bot/routers` (remaining Eders handlers), `bot/keyboards`, `bot/callback_data.py`,
 `services` (business logic), `repositories` (SQLAlchemy queries), `db/models` (ORM models), `jobs` (`AsyncIOScheduler`
 job functions, one module per feature area — see "Scheduled jobs & change detection" below), `core/`, `di.py`,
 `main.py`. These layers describe the remaining legacy areas; migrated features own their code in `modules/`.
@@ -263,12 +271,12 @@ as long as ids don't collide) without polluting the dev database. Tests run agai
 
 ### OBIS integration notes
 
-`ObisClient` (`scraping/obis_client.py`) opens a fresh `httpx.AsyncClient` per call (base URL
+`ObisClient` (`modules/obis/infrastructure/client.py`) opens a fresh `httpx.AsyncClient` per call (base URL
 `https://obistest.manas.edu.kg`, `follow_redirects=True`) rather than keeping a persistent per-chat session like
 the Java `ObisSession`/`ObisSessionManager` did — OBIS is re-authenticated on every attendance/exam-grade fetch
 anyway (see `ObisService`), so there is no session reuse to preserve, and this avoids an unbounded
 `dict[chat_id, session]` growing for the process lifetime. Credentials are collected via an aiogram FSM
-(`bot/routers/obis.py::ObisCredentialsForm`, `MemoryStorage` — fine for a single-process deployment; move to
+(`modules/obis/presentation/router.py::ObisCredentialsForm`, `MemoryStorage` — fine for a single-process deployment; move to
 `RedisStorage` if the bot ever runs multi-worker) rather than the Java version's external Telegram WebApp form,
 and are verified against a real OBIS login before being persisted. Passwords are encrypted at rest with AES-GCM
 (`CryptoService`) instead of the Java version's raw AES-ECB.
@@ -313,7 +321,7 @@ auto-detection never falls through to it.
 ### Scheduled jobs & change detection
 
 `jobs/scheduler.py` registers the `AsyncIOScheduler` job functions from their owning modules, one module per
-feature area (`modules/food_menu/jobs.py`, `jobs/obis_notification.py`, `modules/schedule/jobs.py`,
+feature area (`modules/food_menu/jobs.py`, `modules/obis/jobs.py`, `modules/schedule/jobs.py`,
 `platform/telegram/deletions/jobs.py`, `modules/advertisements/jobs.py`), plus `platform/telegram/delivery.py` for cross-cutting helpers
 shared by more than one job (`send_notification`, `delete_messages` for batched
 `deleteMessages` calls). Each job opens its own short-lived Dishka request scope(s)
@@ -325,15 +333,15 @@ the same reason.
 
 Three notification-producing jobs all follow one pattern: keep a Postgres table of the *last known state* per
 (user or course, item), diff a freshly scraped/fetched snapshot against it, persist the new state, and only
-notify on an actual difference (never on the first-ever observation, so enabling a setting doesn't dump a user's
-entire history at them):
+notify on changes. Timetable/attendance first observations are silent; the existing OBIS grade behavior is an
+exception: a first nonempty score already notifies, as the characterization tests record.
 
 - **Timetable sync** (`modules/schedule/application/timetable_sync.py`, hourly): `modules/schedule/infrastructure/timetable_client.py` +
   `modules/schedule/infrastructure/timetable_parser.py` scrape `http://timetable.manas.edu.kg/department-printer/{course_id}` (plain
   HTTP, no auth — the site has no HTTPS listener) for every `Course.id`, parsed into one `Lesson` row per
   (course, weekday, time slot) holding a normalized "code name — teacher, room" string; a changed/added/removed
   slot notifies every tracker with `schedule_changes_enabled`.
-- **OBIS exam grades & lesson skips** (`services/obis_notification.py`, hourly, one poll per user):
+- **OBIS exam grades & lesson skips** (`modules/obis/application/notification.py`, hourly, one poll per user):
   reuses `ObisService.get_exam_grades`/`get_attendance` (so it's re-login-per-poll like every other OBIS call),
   diffing against `UserExamGrade` (per user+lesson_code+exam_name) and `UserLessonAttendance` (per
   user+lesson_code) rows; a user with no saved OBIS credentials is skipped cheaply (a local DB check) before any

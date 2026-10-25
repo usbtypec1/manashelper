@@ -15,6 +15,7 @@ from manashelper.modules.feedback.orm import FeedbackMessage
 from manashelper.modules.feedback.provider import FeedbackProvider
 from manashelper.modules.feedback.service import FeedbackService
 from manashelper.modules.notifications.provider import NotificationsProvider
+from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
@@ -34,6 +35,7 @@ async def test_feedback_request_scope_preserves_existing_transaction_finalizatio
     async with make_async_container(
         CoreProvider(),
         TelegramPlatformProvider(),
+        ObisProvider(),
         AppProvider(),
         RequestProvider(),
         ScheduleProvider(),
@@ -85,6 +87,7 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
         from manashelper.platform.telegram.dispatcher import create_dispatcher
         from manashelper.core.provider import CoreProvider
         from manashelper.platform.telegram.provider import TelegramPlatformProvider
+        from manashelper.modules.obis.provider import ObisProvider
         from manashelper.di import AppProvider, RequestProvider
         from manashelper.modules.schedule.provider import ScheduleProvider
         from manashelper.modules.notifications.provider import NotificationsProvider
@@ -98,7 +101,7 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
 
         async def check():
             async with make_async_container(
-                CoreProvider(), TelegramPlatformProvider(), AppProvider(),
+                CoreProvider(), TelegramPlatformProvider(), ObisProvider(), AppProvider(),
                 RequestProvider(),
                 ScheduleProvider(),
                 NotificationsProvider(),
@@ -132,6 +135,8 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
                 assert names.count("notifications") == 1
                 assert names.count("locale") == 1
                 assert names.count("phone_numbers") == 1
+                assert names.count("obis") == 1
+                assert names.index("food_menu_cleanup") < names.index("obis") < names.index("eders")
                 assert names.index("start") < names.index("locale") < names.index("timetable")
                 assert names.index("donations") < names.index("phone_numbers") < names.index("versions")
                 assert names.index("settings") < names.index("notifications") < names.index("donations")

@@ -1,9 +1,8 @@
-import hashlib
 from datetime import UTC, datetime, timedelta
 
-from manashelper.modules.users.infrastructure.user_repository import UserRepository
+from manashelper.modules.obis.application.credentials import ObisCredentialsService
+from manashelper.modules.obis.errors import DecryptionError, UserHasNoCredentialsError
 from manashelper.scraping.eders_client import EdersClient
-from manashelper.services.crypto import CryptoService, DecryptionError
 from manashelper.services.eders_models import (
     ActivityKind,
     DeadlineFilter,
@@ -13,7 +12,6 @@ from manashelper.services.eders_models import (
     SubmissionStatus,
 )
 from manashelper.services.eders_tracking import EdersTrackingService
-from manashelper.services.obis import UserHasNoCredentialsError, UserNotFoundError
 from manashelper.services.time_utils import BISHKEK_TZ
 
 
@@ -66,27 +64,19 @@ def filter_activities(
 class EdersService:
     def __init__(
         self,
-        user_repository: UserRepository,
+        credentials: ObisCredentialsService,
         eders_client: EdersClient,
-        crypto_service: CryptoService,
         eders_tracking_service: EdersTrackingService,
     ) -> None:
-        self._users = user_repository
+        self._credentials = credentials
         self._client = eders_client
-        self._crypto = crypto_service
         self._tracking = eders_tracking_service
 
     async def get_snapshot(self, user_id: int) -> EdersSnapshot:
         await self._tracking.get_settings(user_id)
-        user = await self._users.get_by_id(user_id)
-        if user is None:
-            raise UserNotFoundError(user_id)
-        if user.student_number is None or user.encrypted_password is None:
-            raise UserHasNoCredentialsError(user_id)
         try:
-            password = self._crypto.decrypt(user.encrypted_password)
+            credentials = await self._credentials.get_credentials(user_id)
         except DecryptionError:
             raise UserHasNoCredentialsError(user_id) from None
-        snapshot = await self._client.fetch_snapshot(user.student_number, password)
-        marker = hashlib.sha256(user.encrypted_password.encode()).hexdigest()
-        return await self._tracking.observe(user_id, marker, snapshot)
+        snapshot = await self._client.fetch_snapshot(credentials.student_number, credentials.plain_password)
+        return await self._tracking.observe(user_id, credentials.credential_marker, snapshot)

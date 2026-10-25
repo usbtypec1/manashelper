@@ -7,10 +7,10 @@
 Этот документ фиксирует анализ до изменения исходников и результаты завершённых этапов.
 
 Актуальный статус на 25 октября 2026 года: перенесены **Feedback**, **Advertisements**, **Student questions**,
-**Versions**, **Donations**, **Broadcast**, **Food menu**, **Schedule**, **Notifications** и **Users**.
-Users сохраняет временных legacy-потребителей credentials в OBIS/Eders.
+**Versions**, **Donations**, **Broadcast**, **Food menu**, **Schedule**, **Notifications**, **Users** и **OBIS**.
+OBIS владеет credentials и предоставляет их Eders через application-границу; tracking/eligibility Eders ещё legacy.
 Общая инфраструктура выделена в Core, Telegram Platform, аудит и очередь удаления — в platform/.
-Общий gate зелёный: **514 passed, 9 skipped**, Ruff, mypy и проверка Alembic проходят.
+Общий gate с локальной OBIS/Eders simulation зелёный: **558 passed, 5 skipped**, Ruff, mypy и Alembic проходят.
 Первоначальные красные результаты ниже оставлены как история baseline и не описывают текущую проверку.
 
 ## Исходное состояние — 24 октября 2026 года
@@ -856,3 +856,68 @@ Root composition test дополнительно фиксирует middleware o
 runtime-файлы, jobs и транзакционная семантика сохранены. Известные дефекты defaults/session finalization
 не исправлялись. Далее — OBIS, затем Eders и Study week. Коммиты, push и deploy не выполнялись;
 IDE auto-staging снят только с 64 известных task-путей, исходный index был пуст; `.DS_Store` сохранены.
+
+### План следующего этапа: OBIS
+
+Baseline: **514 passed, 9 skipped**, исходное дерево чистое кроме `.DS_Store`; сохранён DDL 27 таблиц.
+Phase A переносит presentation, service/notification logic, AES-GCM, HTTP/parser, два snapshot repository/ORM
+и polling job в modules/obis/. Provider сохраняет APP CryptoService/ObisClient и REQUEST остальных зависимостей.
+Callback payload, FSM, format/HTML/plain-text pagination, scopes, HTTP/CSRF/redirect/timeout, snapshot SQL
+и encryption serialization не меняются. HTTP проверяется локальной существующей Eders/OBIS simulation.
+
+Phase B выделяет ObisCredentialsService с публичным dataclass-результатом для OBIS и Eders, чтобы Eders
+не читал ORM/ciphertext и не расшифровывал пароль самостоятельно. Короткий repository OBIS владеет
+credential columns существующего User без schema migration; get через AsyncSession сохраняет identity map.
+Маркер Eders остаётся SHA-256 от ciphertext. Общий login/client factory получает публичные имена без
+нового HTTP flow или persistent session. Polling получает application use case и Telegram sender boundary.
+
+Обнаруженное расхождение с прежним описанием: первая непустая оценка уже порождает событие;
+первая запись посещаемости остаётся silent baseline. Это фиксируется тестами, без bug fix в рефакторинге.
+
+### Выполнено: OBIS
+
+Phase A перенесла 13 реализаций в modules/obis/ через Index MCP. AST всех реализаций и callback-классов
+совпал с baseline, кроме imports. ObisProvider сохраняет APP client/crypto и REQUEST остальных объектов;
+root composition и тестовые контейнеры обновлены. Callback payload/FSM/password mask/plain-text pagination
+не изменились. Целевой gate: **55 passed**, mypy strict. Полный gate после переноса: **542 passed, 5 skipped**
+с включённой локальной OBIS/Eders simulation.
+
+Phase B выделила ObisCredentialsRepository и ObisCredentialsService на неизменённой таблице User.
+Facade ObisService сохранил публичные save/has/clear/get методы, делегируя credentials владельцу.
+EdersService получает frozen read model с repr-disabled секретами и непрозрачным SHA-256(ciphertext) marker;
+больше не читает ORM/ciphertext и не расшифровывает пароль. Два прежних способа exception chaining при
+decryption failure сохранены: facade сохраняет cause, Eders подавляет его. Публичные ошибки — в errors.py.
+Общие login/new_http_client функции публичны; их алгоритм, cookie flow, CSRF, redirects и 15s timeout прежние.
+
+PollObisUser владеет per-user polling use case и suppress ожидаемых auth/parse ошибок. Реальный внешний
+sender protocol отделяет Telegram locale/formatting/delivery. Job сохраняет recipient union, отдельные scopes,
+locale lookup до fetch, порядок grades→attendance, hourly schedule и per-user failure boundary.
+TelegramAPIError пропускается без retry; unexpected error aborts user, но не batch.
+
+Добавлено **35 unit/DB/FSM/lifecycle тестов** и **5 HTTP-тестов**. Проверены verify-before-store, отсутствие
+внешних вызовов без credentials, AES-GCM legacy format/random nonce, сохранность marker и secrets repr,
+ошибки/exception chaining, первая оценка/attendance baseline, FSM/mask/password deletion, locale/API failures,
+APP/REQUEST/model registry и scheduler. Existing first-nonempty-grade notification и assignment student_number
+до encryption error зафиксированы; они не исправлены. Defaults/session-finalization defects также сохранены.
+
+Локальный Postman mock переиспользован из postman/mocks/eders; две OBIS HTML fixtures построены из существующего
+parser contract и содержат только синтетические данные. Mock дополнен read-only grades/attendance и режимами
+login-denied/csrf-missing/HTTP500. Базовые Eders routes не менялись. Настоящий httpx client отправлял HTTP
+в simulation на 127.0.0.1:4945; лог подтвердил OBIS login/read и Eders SSO/AJAX до и после переноса.
+Использовались только fake credentials; реальный университетский сервис/аккаунты не вызывались.
+
+Финальный gate:
+
+- pytest с EDERS_SIMULATION_PORT=4945: **558 passed, 5 skipped**; пропущены четыре Food menu/Timetable HTTP-теста
+  без их simulations и корпусный тест без приватной выгрузки Eders;
+- целевой gate после Phase B: **114 passed**;
+- Ruff lint/format: **384 файла**, mypy strict: **267 source files**, без ошибок;
+- все **266 подмодулей** импортируются; DDL **27 таблиц и индексов** совпал с baseline;
+- Alembic: `No new upgrade operations detected.`;
+- Index diagnostics 17 компонентов без ошибок; старых/промежуточных imports и private factory usages нет;
+- семь остальных исходных потребителей изменены только в imports; EdersService/client изменены на описанных границах;
+- IDE build сообщает success с ограниченными diagnostics; основное доказательство — CLI gates и HTTP log.
+
+Этап завершён. Далее — Eders и Study week. Simulation остановлена, временные логи оставлены вне repository;
+IDE auto-staging снят только с известных task-путей, исходный index был пуст. Коммиты, push и deploy не выполнялись.
+Три исходных `.DS_Store` сохранены.

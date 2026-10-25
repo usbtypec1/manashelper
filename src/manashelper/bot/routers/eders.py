@@ -10,18 +10,16 @@ from dishka import FromDishka
 
 from manashelper.bot.callback_data import EdersPageCallback, EdersSettingCallback
 from manashelper.bot.keyboards.eders import build_eders_keyboard, build_eders_settings_keyboard
-from manashelper.bot.keyboards.obis import build_no_credentials_keyboard
+from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
+from manashelper.modules.obis.presentation.keyboards import build_no_credentials_keyboard
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from manashelper.scraping.eders_client import EdersFetchError
 from manashelper.scraping.eders_parser import EdersParseError
 from manashelper.scraping.eders_urls import EdersUnsafeUrlError
-from manashelper.scraping.obis_client import ObisLoginError
-from manashelper.scraping.obis_parser import ObisParseError
 from manashelper.services.eders import EdersService, filter_activities
 from manashelper.services.eders_formatter import format_activity_page
 from manashelper.services.eders_models import DeadlineFilter, EdersSnapshot
 from manashelper.services.eders_tracking import EdersTrackingService
-from manashelper.services.obis import UserHasNoCredentialsError, UserNotFoundError
 from manashelper.services.study_week import StudyWeekService
 from manashelper.services.study_week_formatter import format_study_week
 

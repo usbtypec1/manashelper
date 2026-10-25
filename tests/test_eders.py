@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 import httpx
 import pytest
 
+from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL
 from manashelper.modules.schedule.application.schedule import ScheduleLessonModel
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.scraping import eders_client
@@ -18,7 +19,6 @@ from manashelper.scraping.eders_parser import (
     parse_courses,
 )
 from manashelper.scraping.eders_urls import EDERS_BASE_URL, EdersUnsafeUrlError, safe_eders_url
-from manashelper.scraping.obis_client import OBIS_BASE_URL
 from manashelper.services.eders import filter_activities
 from manashelper.services.eders_formatter import format_activity_page
 from manashelper.services.eders_models import (
@@ -270,7 +270,7 @@ async def test_client_authenticates_once_and_retries_expired_snapshot(monkeypatc
         clients.append(client)
         return client
 
-    monkeypatch.setattr(eders_client, "_new_http_client", factory)
+    monkeypatch.setattr(eders_client, "new_http_client", factory)
     result = await EdersClient().fetch_snapshot("fake-student", "fake-password")
     assert len(result.activities) == 3
     assert all(client.is_closed for client in clients)
@@ -315,7 +315,7 @@ async def test_persistent_session_expiry_stops_after_one_retry(monkeypatch: pyte
 
     monkeypatch.setattr(EdersClient, "login", login)
     monkeypatch.setattr(
-        eders_client, "_new_http_client", lambda: httpx.AsyncClient(transport=httpx.MockTransport(handler))
+        eders_client, "new_http_client", lambda: httpx.AsyncClient(transport=httpx.MockTransport(handler))
     )
     with pytest.raises(EdersSessionExpiredError):
         await EdersClient().fetch_snapshot("fake-student", "fake-password")

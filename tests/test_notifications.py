@@ -12,7 +12,6 @@ from manashelper.core.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.db.models import NotificationSettings, User
 from manashelper.di import AppProvider, RequestProvider
-from manashelper.jobs import obis_notification
 from manashelper.modules.notifications import router
 from manashelper.modules.notifications.callbacks import NotificationSettingCallback
 from manashelper.modules.notifications.keyboards import build_notifications_keyboard
@@ -26,6 +25,8 @@ from manashelper.modules.notifications.settings import (
     NotificationSettingsSummary,
     UserNotFoundError,
 )
+from manashelper.modules.obis import jobs
+from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.users.infrastructure.user_repository import UserRepository
 from manashelper.modules.users.provider import UsersProvider
@@ -178,9 +179,9 @@ async def test_obis_poll_keeps_recipient_union_flags_and_load_failure_boundary(m
         yield SimpleNamespace(get=AsyncMock(side_effect={NotificationRecipientsQuery: recipients}.__getitem__))
 
     poll = AsyncMock()
-    monkeypatch.setattr(obis_notification, "_poll_user_obis_notifications", poll)
+    monkeypatch.setattr(jobs, "_poll_user_obis_notifications", poll)
     bot = object()
-    await obis_notification.poll_obis_notifications_job(container, bot)
+    await jobs.poll_obis_notifications_job(container, bot)
     assert len(opened) == 1
     recipients.for_exam_grades.assert_awaited_once_with()
     recipients.for_lesson_skips.assert_awaited_once_with()
@@ -229,6 +230,7 @@ async def test_notification_provider_preserves_request_scope_and_model_registry(
     async with make_async_container(
         CoreProvider(),
         TelegramPlatformProvider(),
+        ObisProvider(),
         AppProvider(),
         RequestProvider(),
         ScheduleProvider(),

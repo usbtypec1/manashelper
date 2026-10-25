@@ -3,8 +3,8 @@ from collections.abc import Iterator
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.i18n import ngettext
 
-from manashelper.services.obis import LessonAttendanceModel, LessonExamsModel
-from manashelper.services.obis_notification import ExamGradeChange, LessonSkipChange, SkipType
+from manashelper.modules.obis.application.notification import ExamGradeChange, LessonSkipChange, SkipType
+from manashelper.modules.obis.application.obis import LessonAttendanceModel, LessonExamsModel
 
 SUBJECTS_PER_PAGE = 2
 MAX_PAGE_BODY_CHARS = 1600

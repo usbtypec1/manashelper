@@ -38,6 +38,7 @@ from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notific
 from manashelper.modules.food_menu.presentation.sender import TelegramFoodMenuSender
 from manashelper.modules.food_menu.provider import FoodMenuProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
+from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.infrastructure.user_repository import UserRepository
@@ -189,6 +190,7 @@ async def test_food_menu_provider_preserves_app_and_request_lifetimes():
     async with make_async_container(
         CoreProvider(),
         TelegramPlatformProvider(),
+        ObisProvider(),
         AppProvider(),
         RequestProvider(),
         ScheduleProvider(),

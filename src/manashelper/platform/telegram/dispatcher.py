@@ -6,7 +6,6 @@ from dishka import AsyncContainer
 from dishka.integrations.aiogram import inject_router, setup_dishka
 
 from manashelper.bot.routers.eders import router as eders_router
-from manashelper.bot.routers.obis import router as obis_router
 from manashelper.modules.advertisements.presentation.advertisement import router as advertisement_router
 from manashelper.modules.advertisements.presentation.advertisement_contact import router as advertisement_contact_router
 from manashelper.modules.advertisements.presentation.advertisement_moderation import (
@@ -21,6 +20,7 @@ from manashelper.modules.food_menu.presentation.routers.food_menu_notifications 
     router as food_menu_notifications_router,
 )
 from manashelper.modules.notifications.router import router as notifications_router
+from manashelper.modules.obis.presentation.router import router as obis_router
 from manashelper.modules.schedule.presentation.routers.lesson_search import router as lesson_search_router
 from manashelper.modules.schedule.presentation.routers.timetable import router as timetable_router
 from manashelper.modules.student_questions.router import router as student_questions_router

@@ -3,14 +3,14 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.keyboards.obis import build_obis_settings_keyboard
+from manashelper.modules.obis.application.obis import ObisService
+from manashelper.modules.obis.errors import UserNotFoundError as ObisUserNotFoundError
+from manashelper.modules.obis.presentation.keyboards import build_obis_settings_keyboard
 from manashelper.modules.schedule.application.faculty import FacultyService
 from manashelper.modules.schedule.presentation.keyboards.timetable import build_faculty_keyboard
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
 from manashelper.platform.telegram.keyboards.settings import build_settings_keyboard
-from manashelper.services.obis import ObisService
-from manashelper.services.obis import UserNotFoundError as ObisUserNotFoundError
 
 router = Router(name="settings")
 

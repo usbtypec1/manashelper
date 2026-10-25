@@ -2,7 +2,7 @@ from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from manashelper.bot.callback_data import (
+from manashelper.modules.obis.presentation.callbacks import (
     ObisAction,
     ObisCallback,
     ObisResultsPageCallback,

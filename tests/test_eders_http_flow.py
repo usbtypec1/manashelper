@@ -1,13 +1,22 @@
 """Run with the local Postman simulation; never contacts real student accounts."""
 
+import base64
 import os
+from types import SimpleNamespace
 
 import httpx
 import pytest
 
+from manashelper.db.models import User
+from manashelper.modules.obis.application.credentials import ObisCredentialsService
+from manashelper.modules.obis.application.obis import ObisService
+from manashelper.modules.obis.errors import ObisLoginError, ObisParseError
+from manashelper.modules.obis.infrastructure import client
+from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL, ObisClient
+from manashelper.modules.obis.infrastructure.credentials_repository import ObisCredentialsRepository
+from manashelper.modules.obis.infrastructure.crypto import CryptoService
 from manashelper.scraping import eders_client
 from manashelper.scraping.eders_client import EdersClient, EdersFetchError, EdersSessionExpiredError
-from manashelper.scraping.obis_client import OBIS_BASE_URL
 from manashelper.services.eders_serialization import serialize_snapshot
 
 PORT = os.environ.get("EDERS_SIMULATION_PORT")
@@ -53,7 +62,7 @@ def install_client(monkeypatch, mode="normal"):
             timeout=5,
         )
 
-    monkeypatch.setattr(eders_client, "_new_http_client", factory)
+    monkeypatch.setattr(eders_client, "new_http_client", factory)
     return transports
 
 
@@ -79,3 +88,50 @@ async def test_http_expired_session_retries_once(monkeypatch):
     with pytest.raises(EdersSessionExpiredError):
         await EdersClient().fetch_snapshot("fake-student", "fake-password")
     assert len(transports) == 2
+
+
+def install_obis_client(monkeypatch, mode="normal"):
+    transports = install_client(monkeypatch, mode)
+    monkeypatch.setattr(client, "new_http_client", eders_client.new_http_client)
+    return transports
+
+
+async def test_obis_http_verification_uses_a_fresh_login_for_each_call(monkeypatch):
+    transports = install_obis_client(monkeypatch)
+    client = ObisClient()
+    await client.verify_credentials("fake-student", "fake-password")
+    await client.verify_credentials("fake-student", "fake-password")
+    assert len(transports) == 2
+    assert all(
+        transport.paths == [("GET", "/site/login"), ("POST", "/site/login"), ("GET", "/")] for transport in transports
+    )
+
+
+async def test_obis_http_credentials_grades_and_attendance_run_through_real_client(session, monkeypatch):
+    transports = install_obis_client(monkeypatch)
+    crypto = CryptoService(SimpleNamespace(obis_encryption_key=base64.b64encode(bytes(range(32))).decode()))
+    user = User(id=975101, full_name="Fixture student")
+    session.add(user)
+    await session.flush()
+    obis = ObisClient()
+    account = ObisCredentialsService(ObisCredentialsRepository(session), obis, crypto)
+    service = ObisService(account, obis)
+    await service.save_credentials(user.id, "fake-student", "fake-password")
+    assert user.encrypted_password != "fake-password" and crypto.decrypt(user.encrypted_password) == "fake-password"
+    grades = await service.get_exam_grades(user.id)
+    attendance = await service.get_attendance(user.id)
+    assert grades[0].exams[0].score == "80" and grades[0].lesson_code == "MATH"
+    assert attendance[0].theory_skips_percentage == 12.5 and attendance[0].practice_skips_percentage == 6.25
+    assert len(transports) == 3
+    assert transports[1].paths[-1] == ("GET", "/vs-ders/taken-grades")
+    assert transports[2].paths[-1] == ("GET", "/vs-ders/taken-lessons")
+
+
+@pytest.mark.parametrize(
+    "mode,error",
+    [("login-denied", ObisLoginError), ("csrf-missing", ObisParseError), ("html-error", httpx.HTTPStatusError)],
+)
+async def test_obis_http_failure_preserves_error_type(monkeypatch, mode, error):
+    install_obis_client(monkeypatch, mode)
+    with pytest.raises(error):
+        await ObisClient().fetch_exam_grades_html("fake-student", "fake-password")

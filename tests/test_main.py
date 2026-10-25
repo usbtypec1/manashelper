@@ -51,6 +51,7 @@ async def test_resources_close_on_exit_and_failures(failure: str | None, monkeyp
 
     container.close.assert_awaited_once()
     assert sum(isinstance(provider, app.CoreProvider) for provider in app.make_async_container.call_args.args) == 1
+    assert sum(isinstance(provider, app.ObisProvider) for provider in app.make_async_container.call_args.args) == 1
     assert (
         sum(isinstance(provider, app.TelegramPlatformProvider) for provider in app.make_async_container.call_args.args)
         == 1

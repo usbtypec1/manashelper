@@ -1,6 +1,4 @@
 from manashelper.db.models.eders import EdersNotification, EdersState
-from manashelper.db.models.user_exam_grade import UserExamGrade
-from manashelper.db.models.user_lesson_attendance import UserLessonAttendance
 from manashelper.modules.advertisements.infrastructure.advertisement import Advertisement
 from manashelper.modules.advertisements.infrastructure.advertisement_channel_message import AdvertisementChannelMessage
 from manashelper.modules.advertisements.infrastructure.advertisement_contact_view import AdvertisementContactView
@@ -14,6 +12,8 @@ from manashelper.modules.food_menu.infrastructure.models.food_menu_notification_
     FoodMenuNotificationSettings,
 )
 from manashelper.modules.notifications.orm import NotificationSettings
+from manashelper.modules.obis.infrastructure.user_exam_grade import UserExamGrade
+from manashelper.modules.obis.infrastructure.user_lesson_attendance import UserLessonAttendance
 from manashelper.modules.schedule.infrastructure.models.associations import user_courses
 from manashelper.modules.schedule.infrastructure.models.course import Course
 from manashelper.modules.schedule.infrastructure.models.department import Department

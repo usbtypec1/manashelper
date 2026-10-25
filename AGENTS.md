@@ -17,7 +17,7 @@ router, service, repository, and tests before changing a feature. `features/` ho
 ## Architecture
 
 Migrated business features live in `modules/`; shared infrastructure lives in `core/` and `platform/`.
-Remaining legacy areas use `bot/routers`, `bot/keyboards`, `bot/callback_data.py`, `services`, `repositories`,
+Remaining legacy Eders/Study week areas use `bot/routers`, `bot/keyboards`, `bot/callback_data.py`, `services`, `repositories`,
 `db/models`, `scraping` and `jobs`. A gradual feature-first migration is in progress: feedback, advertisements and the survey live in
 `modules/feedback/`, `modules/advertisements/` and `modules/student_questions/`, with REQUEST providers in `main.py`.
 Advertisements separates presentation, application and infrastructure, with domain enums; feedback and the survey stay flat.
@@ -46,7 +46,9 @@ repositories, presentation language/phone routers, keyboards and callbacks. User
 scope for all its dependencies, including public UsersQuery (counts, IDs, existence). LocaleService is the
 shared user-locale boundary for middleware and delivery; UserContactService supplies plain contact models.
 User keeps OBIS credential columns and the Schedule tracked_courses relationship without schema changes.
-Legacy OBIS/Eders still use UserRepository for credentials until their own stages.
+OBIS owns credential access through ObisCredentialsRepository on the unchanged User row.
+EdersService reads plain credentials and an opaque marker through ObisCredentialsService; it no longer reads ORM/ciphertext.
+Legacy Eders tracking still uses UserRepository for existence, and its repository filters eligible accounts until that stage.
 Shared Telegram navigation lives in `platform/telegram/navigation.py`; feature routers must not import the start router for it.
 Keep migrated feature code together;
 do not move unrelated legacy areas in the same stage. See `docs/ARCHITECTURE.md` and `docs/MIGRATION.md`.
@@ -72,6 +74,17 @@ continues after TelegramAPIError and propagates unexpected errors. Rows are ackn
 an unexpected sweep failure logs and leaves them queued. Preserve the five-minute schedule and no retry.
 The gettext adapter lives in `platform/i18n/catalog.py`; pure Locale/weekday labels stay in `localization/`.
 Command JSON and .mo runtime directories are unchanged, with checkout/Docker-like path tests.
+OBIS lives in `modules/obis/`: application facade/credentials/snapshot comparison/polling, HTTP/parser/crypto,
+credential and snapshot repositories/ORM, Telegram presentation, provider and jobs. ObisProvider keeps
+ObisClient/CryptoService in APP and all other dependencies in REQUEST. Public errors live in errors.py.
+ObisService retains save/has/clear/get methods; ObisCredentialsService owns verification/storage/decryption.
+Its frozen read model hides secrets in repr; Eders marker stays SHA-256 of ciphertext, not plaintext.
+The shared login/new_http_client functions are public OBIS infrastructure reused by Eders with the same cookies.
+PollObisUser handles expected auth/parse errors; Telegram sender owns locale/HTML and skips TelegramAPIError.
+Unexpected errors abort that user and are logged by the job, without stopping the next user.
+Preserve two characterized behaviors: first nonempty grades notify immediately; attendance's first row is silent.
+Saving assigns student_number before encryption, so an encryption error leaves that in-memory assignment changed.
+Do not silently fix these during relocation. Hourly scheduling, FSM, password masking and encryption format are unchanged.
 The session commits on normal finalization and rolls back if
 commit raises. An existing defect is characterized in `tests/test_feedback_composition.py`: Dishka sends a request-body
 exception as the yield value, which the provider ignores, so a body exception alone still leads to commit. Do not
@@ -98,11 +111,12 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
 - OBIS credentials are verified with a real login before storage and encrypted with AES-GCM through
   `CryptoService`. The credentials form uses aiogram FSM and in-process `MemoryStorage`. OBIS fetches authenticate
   per call; do not assume a persistent browser session.
-- Notification jobs live in `jobs/` and are registered in `jobs/scheduler.py`. They use independent request scopes, catch
+- Remaining Eders jobs live in `jobs/`; all jobs are registered in `jobs/scheduler.py`. They use independent request scopes, catch
   failures per item or recipient, and log unexpected exceptions so one failure does not stop a batch. Grade,
-  attendance and timetable notifications compare a new snapshot with persisted last-known state and do not notify
-  on the first observation. Users without a `NotificationSettings` row have all toggles enabled.
-  Migrated Food menu and Schedule jobs live in their modules. Schedule loads course IDs in one request scope,
+  attendance and timetable notifications compare new snapshots with persisted last-known state.
+  Attendance/timetable first observations are silent; OBIS's first nonempty grade currently notifies (characterized defect).
+  Users without a `NotificationSettings` row have all toggles enabled.
+  Migrated Food menu, Schedule and OBIS jobs live in their modules. Schedule loads course IDs in one request scope,
   then opens another per course. TelegramAPIError skips a recipient; unexpected delivery/locale errors abort
   that course, are logged, and do not prevent the next course. Keep this boundary and the hourly schedule.
 - Marketplace moderation is authorized by `Settings.moderation_chat_id`, not a user role. Approved ads go to the

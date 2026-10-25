@@ -6,17 +6,15 @@ from aiogram.exceptions import TelegramAPIError
 from aiogram.types import LinkPreviewOptions
 from dishka import AsyncContainer
 
+from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.scraping.eders_client import EdersFetchError
 from manashelper.scraping.eders_parser import EdersParseError
 from manashelper.scraping.eders_urls import EdersUnsafeUrlError
-from manashelper.scraping.obis_client import ObisLoginError
-from manashelper.scraping.obis_parser import ObisParseError
 from manashelper.services.eders import EdersService
 from manashelper.services.eders_formatter import format_eders_event, format_material_events
 from manashelper.services.eders_tracking import EdersTrackingService
-from manashelper.services.obis import UserHasNoCredentialsError, UserNotFoundError
 
 logger = logging.getLogger(__name__)
 

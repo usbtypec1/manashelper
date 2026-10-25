@@ -6,6 +6,7 @@ from urllib.parse import parse_qs, urljoin, urlsplit
 import httpx
 from bs4 import BeautifulSoup
 
+from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL, OBIS_LOGIN_PATH, login, new_http_client
 from manashelper.scraping.eders_parser import (
     parse_account_timezone,
     parse_activity_details,
@@ -13,7 +14,6 @@ from manashelper.scraping.eders_parser import (
     parse_enrolled_courses,
 )
 from manashelper.scraping.eders_urls import EDERS_BASE_URL, EdersUnsafeUrlError, safe_eders_url
-from manashelper.scraping.obis_client import OBIS_BASE_URL, OBIS_LOGIN_PATH, _login, _new_http_client
 from manashelper.services.eders_models import ActivityKind, EdersCourse, EdersSnapshot
 
 COURSES_METHOD = "core_course_get_enrolled_courses_by_timeline_classification"
@@ -119,7 +119,7 @@ class EdersClient:
         logging.getLogger("httpx").setLevel(logging.WARNING)
         logging.getLogger("httpcore").setLevel(logging.WARNING)
         try:
-            await _login(client, student_number, plain_password)
+            await login(client, student_number, plain_password)
             response = await _request(client, f"{OBIS_BASE_URL}/site/eders", "sso")
             # Some deployments render the SSO link rather than redirecting.
             if response.url.host == urlsplit(OBIS_BASE_URL).hostname:
@@ -188,7 +188,7 @@ class EdersClient:
         # Partial results must not be treated as a successful observation.
         for attempt in range(2):
             try:
-                async with _new_http_client() as client:
+                async with new_http_client() as client:
                     sesskey = await self.login(client, student_number, plain_password)
                     profile = await _request(client, f"{EDERS_BASE_URL}/user/profile.php", "read")
                     timezone = parse_account_timezone(profile.text)

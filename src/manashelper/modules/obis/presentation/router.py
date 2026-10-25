@@ -12,8 +12,11 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.callback_data import ObisAction, ObisCallback, ObisResultsPageCallback
-from manashelper.bot.keyboards.obis import (
+from manashelper.modules.obis.application.obis import ObisService
+from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
+from manashelper.modules.obis.presentation.callbacks import ObisAction, ObisCallback, ObisResultsPageCallback
+from manashelper.modules.obis.presentation.formatter import format_attendance_pages, format_exam_grades_pages
+from manashelper.modules.obis.presentation.keyboards import (
     build_cancel_keyboard,
     build_confirm_clear_credentials_keyboard,
     build_no_credentials_keyboard,
@@ -22,10 +25,6 @@ from manashelper.bot.keyboards.obis import (
     build_terms_keyboard,
 )
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
-from manashelper.scraping.obis_client import ObisLoginError
-from manashelper.scraping.obis_parser import ObisParseError
-from manashelper.services.obis import ObisService, UserHasNoCredentialsError, UserNotFoundError
-from manashelper.services.obis_formatter import format_attendance_pages, format_exam_grades_pages
 
 router = Router(name="obis")
 logger = logging.getLogger(__name__)

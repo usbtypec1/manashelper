@@ -4,7 +4,7 @@
 репозитории; наличие функции в `features/` само по себе не означает, что она реализована.
 
 Проект находится в процессе постепенного перехода к функциональным модулям. Перенесены `feedback`,
-`advertisements`, `student_questions`, `versions`, `donations`, `broadcast`, `food_menu`, `schedule`, `notifications` и `users`.
+`advertisements`, `student_questions`, `versions`, `donations`, `broadcast`, `food_menu`, `schedule`, `notifications`, `users` и `obis`.
 Код каждой области собран в `modules/`.
 У объявлений также перенесена очистка истёкших публикаций. Versions остаётся набором функций без DI provider.
 Остальные области пока
@@ -14,7 +14,8 @@ presentation. Публичный UsersQuery предоставляет count, с
 В плоском `modules/notifications/` собраны настройки расписания/оценок/пропусков, запросы получателей,
 ORM, repository и Telegram presentation. Food menu/Eders сохраняют собственные настройки;
 общая навигация Settings и Telegram-инфраструктура собраны в `platform/telegram/`.
-OBIS/Eders временно используют UserRepository для credentials до собственных этапов.
+ObisCredentialsService владеет credentials и предоставляет их Eders через application-границу;
+поля остаются в существующей таблице User. Legacy Eders tracking/eligibility queries остаются до его этапа.
 Карта зависимостей, порядок этапов и исходные проблемы проверок описаны в [MIGRATION.md](MIGRATION.md).
 Общая инфраструктура выделена в `core/`: настройки, логирование, Base/фабрики БД и управление ресурсами DI.
 Telegram Platform, аудит и очередь удаления сообщений перенесены; gettext adapter находится в `platform/i18n/`.
@@ -103,8 +104,8 @@ manashelper/
 │   │       ├── audit/             # Service, repository, ORM
 │   │       ├── deletions/         # Service, repository, ORM и тонкая cleanup job
 │   │       └── provider.py        # Четыре REQUEST-зависимости платформы
-│   ├── bot/                      # Только оставшаяся presentation OBIS/Eders
-│   │   ├── callback_data.py       # Callback-классы OBIS/Eders
+│   ├── bot/                      # Только оставшаяся presentation Eders
+│   │   ├── callback_data.py       # Callback-классы Eders
 │   │   ├── routers/
 │   │   └── keyboards/
 │   ├── services/                  # Сценарии, dataclass-модели, форматтеры, утилиты
@@ -129,6 +130,7 @@ manashelper/
 │   │   ├── schedule/              # Каталог, подписки, расписание, поиск, sync; application/presentation/infrastructure
 │   │   ├── notifications/         # Настройки, запросы получателей, ORM, Telegram и REQUEST-provider
 │   │   ├── users/                 # Профиль, локаль, контакты: application/infrastructure/presentation
+│   │   ├── obis/                  # Credentials, HTTP/parser/crypto, snapshots/polling, presentation, provider/jobs
 │   │   └── feedback/
 │   │       ├── router.py          # FSM, обращения и ответы admin-чата
 │   │       ├── keyboards.py       # Кнопка отмены
@@ -232,7 +234,7 @@ Characterization-тест выявил существующий дефект: и
 чтобы сбой одного элемента не останавливал весь обход.
 
 Задания обращаются к application-сервисам и публичным query, без прямого доступа к репозиториям.
-Координация OBIS/Eders polling пока остаётся в legacy jobs до собственных этапов.
+Координация Eders polling пока остаётся в legacy jobs до его этапа. OBIS jobs делегируют per-user сценарий PollObisUser.
 `platform/telegram/delivery.py` содержит общую отправку и пакетное удаление; локаль читается через Users LocaleService.
 
 Очистка объявлений уже следует целевой границе: `modules/advertisements/jobs.py` открывает request scope,
@@ -278,7 +280,8 @@ LocaleService, UserContactService и два репозитория пользо�
 `ScheduleProvider` сохраняет TimetableClient в `APP`, каталог, подписки и сценарии — в `REQUEST`.
 `NotificationsProvider` предоставляет NotificationRecipientsQuery, NotificationSettingsService и repository в `REQUEST`.
 `TelegramPlatformProvider` регистрирует audit/deletion services и repositories в REQUEST; в di.py их больше нет.
-Тринадцать провайдеров собираются в `main.py`; состояние LRU-кеша сохраняется между request scopes.
+`ObisProvider` сохраняет ObisClient/CryptoService в APP, семь repository/application зависимостей — в REQUEST.
+Четырнадцать провайдеров собираются в `main.py`; состояние LRU-кеша сохраняется между request scopes.
 
 | Область | Объекты | Время жизни |
 | --- | --- | --- |
@@ -401,16 +404,30 @@ presentation больше не импортирует start router ради кл
 
 ### OBIS
 
-Форма подключения собирает номер студента и пароль. `ObisService.save_credentials()` сначала выполняет
-реальный вход через `ObisClient`, затем шифрует пароль с помощью `CryptoService` и сохраняет его у пользователя.
+`modules/obis/` содержит application facade, credentials, сравнение снимков и polling use case;
+infrastructure — HTTP/parser/crypto, credential repository и две пары snapshot ORM/repository;
+presentation — router, callbacks, клавиатуры, formatter и sender. Provider сохраняет APP/REQUEST scopes.
+Форма подключения собирает номер студента и пароль. `ObisService.save_credentials()` делегирует
+ObisCredentialsService: сначала вход через ObisClient, затем шифрование CryptoService и сохранение в User.
 При запросе оценок или посещаемости пароль расшифровывается, создаётся новая HTTP-сессия и выполняется вход.
-`obis_parser.py` разбирает страницы, а сервис возвращает модели результатов.
+`infrastructure/parser.py` разбирает страницы, а facade возвращает прежние dataclass-модели результатов.
+ObisCredentialsRepository читает тот же User через AsyncSession.get, сохраняя identity map и schema.
+Публичный ObisCredentialsService.get_credentials возвращает frozen dataclass с отключённым repr секретных полей,
+student number, plain password и непрозрачным credential marker. EdersService больше не читает ORM/ciphertext
+и не расшифровывает пароль сам; marker остаётся SHA-256 от сохранённого ciphertext. Ошибки определены в errors.py.
+Общие функции infrastructure/client.py::login/new_http_client публичны и используются Eders с прежней cookie jar.
+Порядок присваиваний при сохранении сохранён: student_number меняется до encryption; ошибка шифрования
+оставляет это присваивание выполненным. Это отдельный characterized defect, не исправленный переносом.
 
-`ObisNotificationService` сравнивает результаты с сохранёнными оценками и посещаемостью. Первое наблюдение
-создаёт исходное состояние без уведомлений. Общие переключатели расписания, оценок и пропусков находятся
+`ObisNotificationService` сравнивает результаты с сохранёнными оценками и посещаемостью. Первая запись
+посещаемости silent; первая непустая оценка уже вызывает событие. Это зафиксированное отличие от старого
+описания, сохранённое без bug fix. Общие переключатели расписания, оценок и пропусков находятся
 в `modules/notifications/orm.py::NotificationSettings`; отсутствие строки означает, что все три включены.
 OBIS job выбирает ID через публичный `NotificationRecipientsQuery`, сохраняя отдельные наборы оценок/пропусков
-и их объединение. Polling, сравнение снимков и доставка остаются в OBIS.
+и их объединение. Отдельный request scope на каждого пользователя сохраняется. PollObisUser подавляет
+прежние ожидаемые auth/parse errors; TelegramObisNotificationSender форматирует в локали получателя и
+пропускает TelegramAPIError. Неожиданная ошибка останавливает текущего пользователя, логируется job и
+не мешает следующему. Grade отправляется раньше attendance, расписание остаётся hourly, retry отсутствует.
 
 ### Настройки уведомлений
 
@@ -427,7 +444,7 @@ Callback payload `notification_setting:*`, `settings:open_notifications` и `set
 
 ### Eders и учебная неделя
 
-`EdersService` использует сохранённые учётные данные OBIS. `EdersClient` выполняет вход OBIS и переход
+`EdersService` получает учётные данные через ObisCredentialsService. `EdersClient` выполняет вход OBIS и переход
 в eders через SSO с одной cookie jar. Затем получает список курсов через Moodle AJAX с пагинацией,
 читает страницы курсов и подробности заданий и тестов. При истечении сессии весь снимок повторяется один раз;
 частичный результат не возвращается как успешный снимок.

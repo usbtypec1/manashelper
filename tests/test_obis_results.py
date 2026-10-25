@@ -11,8 +11,10 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.methods import AnswerCallbackQuery, EditMessageText, SendMessage
 from aiogram.types import CallbackQuery, Chat, Message, User
 
-from manashelper.bot.callback_data import ObisResultsPageCallback
-from manashelper.bot.routers.obis import (
+from manashelper.modules.obis.application.obis import ExamModel, LessonAttendanceModel, LessonExamsModel
+from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
+from manashelper.modules.obis.presentation.callbacks import ObisResultsPageCallback
+from manashelper.modules.obis.presentation.router import (
     MAX_SAVED_RESULTS,
     RESULTS_KEY,
     on_attendance_button,
@@ -20,15 +22,6 @@ from manashelper.bot.routers.obis import (
     on_obis_results_page,
 )
 from manashelper.platform.i18n.catalog import i18n
-from manashelper.scraping.obis_client import ObisLoginError
-from manashelper.scraping.obis_parser import ObisParseError
-from manashelper.services.obis import (
-    ExamModel,
-    LessonAttendanceModel,
-    LessonExamsModel,
-    UserHasNoCredentialsError,
-    UserNotFoundError,
-)
 
 USER_ID = 900_001
 

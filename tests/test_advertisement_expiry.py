@@ -20,6 +20,7 @@ from manashelper.modules.advertisements.application.expiry import ExpireAdvertis
 from manashelper.modules.advertisements.infrastructure.advertisement_repository import AdvertisementRepository
 from manashelper.modules.advertisements.provider import AdvertisementsProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
+from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
@@ -71,6 +72,7 @@ async def test_expiry_deletes_publications_in_batches_before_removing_rows(sessi
     async with make_async_container(
         CoreProvider(),
         TelegramPlatformProvider(),
+        ObisProvider(),
         AppProvider(),
         RequestProvider(),
         ScheduleProvider(),

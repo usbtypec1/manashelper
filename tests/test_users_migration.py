@@ -20,9 +20,13 @@ from manashelper.core.provider import CoreProvider
 from manashelper.db.models import Course, Department, Faculty, UserPhoneNumber
 from manashelper.db.models import User as DbUser
 from manashelper.di import AppProvider, RequestProvider
-from manashelper.jobs import obis_notification
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale
 from manashelper.modules.notifications.provider import NotificationsProvider
+from manashelper.modules.obis import jobs
+from manashelper.modules.obis.application.notification import ObisNotificationService
+from manashelper.modules.obis.application.polling import PollObisUser
+from manashelper.modules.obis.presentation import sender as obis_sender
+from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.user_contact import (
@@ -49,7 +53,6 @@ from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
-from manashelper.services.obis_notification import ObisNotificationService
 
 
 @pytest.fixture
@@ -213,7 +216,7 @@ async def test_obis_user_poll_keeps_locale_fallback_and_failure_isolation(monkey
     service = AsyncMock(spec=ObisNotificationService)
     service.check_exam_grade_changes.return_value = [object()]
     service.check_lesson_skip_changes.return_value = [object()]
-    dependencies = {LocaleService: LocaleService(users), ObisNotificationService: service}
+    dependencies = {LocaleService: LocaleService(users), PollObisUser: PollObisUser(service)}
     opened = []
 
     @asynccontextmanager
@@ -221,12 +224,12 @@ async def test_obis_user_poll_keeps_locale_fallback_and_failure_isolation(monkey
         opened.append(object())
         yield SimpleNamespace(get=AsyncMock(side_effect=dependencies.__getitem__))
 
-    monkeypatch.setattr(obis_notification, "format_exam_grade_change", lambda _: i18n.gettext("menu.grades"))
-    monkeypatch.setattr(obis_notification, "format_lesson_skip_change", lambda _: i18n.gettext("menu.attendance"))
+    monkeypatch.setattr(obis_sender, "format_exam_grade_change", lambda _: i18n.gettext("menu.grades"))
+    monkeypatch.setattr(obis_sender, "format_lesson_skip_change", lambda _: i18n.gettext("menu.attendance"))
     send = AsyncMock()
-    monkeypatch.setattr(obis_notification, "send_notification", send)
+    monkeypatch.setattr(obis_sender, "send_notification", send)
     bot = object()
-    await obis_notification._poll_user_obis_notifications(container, bot, 973001, True, True)
+    await jobs._poll_user_obis_notifications(container, bot, 973001, True, True)
     assert len(opened) == 1
     users.get_by_id.assert_awaited_once_with(973001)
     if saved in ("xx", "read_failure"):
@@ -251,6 +254,7 @@ async def test_users_provider_scopes_and_orm_registry():
     async with make_async_container(
         CoreProvider(),
         TelegramPlatformProvider(),
+        ObisProvider(),
         AppProvider(),
         RequestProvider(),
         UsersProvider(),

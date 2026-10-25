@@ -1,13 +1,13 @@
 import pytest
 
-from manashelper.platform.i18n.catalog import i18n
-from manashelper.services.obis import ExamModel, LessonAttendanceModel, LessonExamsModel
-from manashelper.services.obis_formatter import (
+from manashelper.modules.obis.application.obis import ExamModel, LessonAttendanceModel, LessonExamsModel
+from manashelper.modules.obis.presentation.formatter import (
     MAX_PAGE_BODY_CHARS,
     MAX_PAGE_BODY_LINES,
     format_attendance_pages,
     format_exam_grades_pages,
 )
+from manashelper.platform.i18n.catalog import i18n
 
 
 @pytest.fixture(autouse=True)

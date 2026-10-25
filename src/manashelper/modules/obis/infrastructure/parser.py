@@ -3,9 +3,7 @@ from dataclasses import dataclass
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-
-class ObisParseError(Exception):
-    pass
+from manashelper.modules.obis.errors import ObisParseError
 
 
 @dataclass(frozen=True, slots=True)

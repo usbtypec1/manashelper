@@ -21,6 +21,8 @@ from manashelper.jobs.eders import poll_eders_job
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.localization.locale import Locale
 from manashelper.modules.notifications.provider import NotificationsProvider
+from manashelper.modules.obis.errors import UserHasNoCredentialsError
+from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.application.schedule import NoTrackedCoursesError
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.student_questions.provider import StudentQuestionsProvider
@@ -41,7 +43,6 @@ from manashelper.services.eders_models import (
     EdersSnapshot,
 )
 from manashelper.services.eders_tracking import EdersEvent, EdersTrackingService
-from manashelper.services.obis import UserHasNoCredentialsError
 from manashelper.services.study_week import StudyWeekService
 
 
@@ -167,6 +168,7 @@ async def test_application_resolves_new_services_and_registers_thirty_minute_pol
     container = make_async_container(
         CoreProvider(),
         TelegramPlatformProvider(),
+        ObisProvider(),
         AppProvider(),
         RequestProvider(),
         ScheduleProvider(),
@@ -286,7 +288,7 @@ async def test_eders_settings_open_from_notifications_and_keep_return_path_after
 
 async def test_open_eders_settings_for_unknown_user_shows_alert() -> None:
     from manashelper.bot.routers.eders import on_open_eders_settings
-    from manashelper.services.obis import UserNotFoundError
+    from manashelper.modules.obis.errors import UserNotFoundError
 
     callback = AsyncMock(spec=CallbackQuery)
     callback.from_user = SimpleNamespace(id=42)

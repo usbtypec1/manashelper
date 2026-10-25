@@ -6,9 +6,9 @@ from dishka import AsyncContainer
 
 from manashelper.core.config import get_settings
 from manashelper.jobs.eders import poll_eders_job
-from manashelper.jobs.obis_notification import poll_obis_notifications_job
 from manashelper.modules.advertisements.jobs import cleanup_expired_advertisements_job
 from manashelper.modules.food_menu.jobs import broadcast_dinner_menu_job, broadcast_lunch_menu_job, sync_daily_menus_job
+from manashelper.modules.obis.jobs import poll_obis_notifications_job
 from manashelper.modules.schedule.jobs import sync_timetable_job
 from manashelper.platform.telegram.deletions.jobs import cleanup_scheduled_message_deletions_job
 from manashelper.services.time_utils import BISHKEK_TZ

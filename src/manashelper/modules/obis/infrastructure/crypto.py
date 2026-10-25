@@ -4,12 +4,9 @@ import os
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from manashelper.core.config import Settings
+from manashelper.modules.obis.errors import DecryptionError
 
 _NONCE_LENGTH = 12
-
-
-class DecryptionError(Exception):
-    pass
 
 
 class CryptoService:
