@@ -12,15 +12,15 @@ from babel.messages.frontend import parse_mapping_cfg
 from babel.messages.mofile import write_mo
 from babel.messages.pofile import read_po
 
-from manashelper.bot.callback_data import LocaleCallback
 from manashelper.bot.commands import setup_commands
 from manashelper.bot.filters.translated_text import TranslatedText
-from manashelper.bot.keyboards.locale import build_locale_keyboard, native_language_name
-from manashelper.bot.routers.start import build_main_keyboard
+from manashelper.bot.navigation import build_main_keyboard
 from manashelper.localization.i18n import CatalogI18n, i18n
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale, resolve_from_language_code
+from manashelper.modules.users.application.locale import LocaleService
+from manashelper.modules.users.presentation.callbacks import LocaleCallback
+from manashelper.modules.users.presentation.keyboards.locale import build_locale_keyboard, native_language_name
 from manashelper.services.bot_commands import build_admin_commands, build_group_commands, build_private_commands
-from manashelper.services.locale import LocaleService
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCALES_DIR = ROOT / "src/manashelper/locales"

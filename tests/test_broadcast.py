@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from manashelper.db.models import User
 from manashelper.modules.broadcast.provider import BroadcastProvider
 from manashelper.modules.broadcast.service import BroadcastResult, BroadcastSender, SendBroadcast
+from manashelper.modules.users.infrastructure.user_repository import UserRepository
 from manashelper.modules.users.queries import UsersQuery
-from manashelper.repositories.user_repository import UserRepository
 
 
 async def test_broadcast_reaches_every_registered_user(session: AsyncSession) -> None:

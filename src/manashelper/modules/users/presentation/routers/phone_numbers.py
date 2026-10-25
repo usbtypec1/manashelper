@@ -6,20 +6,22 @@ from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.callback_data import (
-    PhoneNumberAction,
-    PhoneNumberActionCallback,
-    PhoneNumberDeleteCallback,
-    SettingsAction,
-    SettingsCallback,
-)
-from manashelper.bot.keyboards.phone_numbers import build_contact_request_keyboard, build_phone_numbers_keyboard
-from manashelper.services.user_contact import (
+from manashelper.bot.callback_data import SettingsAction, SettingsCallback
+from manashelper.modules.users.application.user_contact import (
     InvalidPhoneNumberError,
     PhoneNumberForbiddenError,
     PhoneNumberNotFoundError,
     UserContactService,
     UserNotFoundError,
+)
+from manashelper.modules.users.presentation.callbacks import (
+    PhoneNumberAction,
+    PhoneNumberActionCallback,
+    PhoneNumberDeleteCallback,
+)
+from manashelper.modules.users.presentation.keyboards.phone_numbers import (
+    build_contact_request_keyboard,
+    build_phone_numbers_keyboard,
 )
 
 router = Router(name="phone_numbers")

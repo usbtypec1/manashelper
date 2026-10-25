@@ -7,7 +7,7 @@ from manashelper.modules.advertisements.infrastructure.advertisement_contact_vie
     AdvertisementContactViewRepository,
 )
 from manashelper.modules.advertisements.infrastructure.advertisement_repository import AdvertisementRepository
-from manashelper.services.user_contact import ContactStatus, UserContactService
+from manashelper.modules.users.application.user_contact import ContactStatus, UserContactService
 
 
 @dataclass(frozen=True, slots=True)

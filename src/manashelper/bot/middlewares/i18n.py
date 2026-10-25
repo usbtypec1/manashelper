@@ -7,7 +7,7 @@ from dishka import AsyncContainer
 from dishka.integrations.aiogram import CONTAINER_NAME
 
 from manashelper.localization.i18n import i18n
-from manashelper.services.locale import LocaleService
+from manashelper.modules.users.application.locale import LocaleService
 
 
 class LocaleMiddleware(BaseMiddleware):
@@ -19,7 +19,7 @@ class LocaleMiddleware(BaseMiddleware):
     The locale is always resolved: a saved locale wins, otherwise it's auto-detected from the
     Telegram client's language, falling back to `DEFAULT_LOCALE` (see
     `localization/locale.py::resolve_from_language_code`) — there's no picker shown here, only
-    via the explicit `/language` command/setting (`bot/routers/locale.py`).
+    via the explicit `/language` command/setting in Users presentation.
 
     Must be registered *after* `setup_dishka` on the same observers, so `data[CONTAINER_NAME]`
     is already a request-scoped container by the time this runs — see bot/dispatcher.py.

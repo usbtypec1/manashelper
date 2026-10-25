@@ -11,7 +11,7 @@ from manashelper.modules.food_menu.presentation.keyboards.food_menu import (
     build_food_menu_settings_buttons,
     build_menu_rating_buttons,
 )
-from manashelper.services.locale import LocaleService
+from manashelper.modules.users.application.locale import LocaleService
 
 logger = logging.getLogger(__name__)
 

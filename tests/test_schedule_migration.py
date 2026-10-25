@@ -35,8 +35,8 @@ from manashelper.modules.schedule.presentation.callbacks import (
 )
 from manashelper.modules.schedule.presentation.routers import lesson_search, timetable
 from manashelper.modules.schedule.provider import ScheduleProvider
+from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.provider import UsersProvider
-from manashelper.services.locale import LocaleService
 
 
 @pytest.fixture

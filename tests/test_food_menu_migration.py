@@ -38,10 +38,10 @@ from manashelper.modules.food_menu.presentation.sender import TelegramFoodMenuSe
 from manashelper.modules.food_menu.provider import FoodMenuProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
+from manashelper.modules.users.application.locale import LocaleService
+from manashelper.modules.users.infrastructure.user_repository import UserRepository
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.modules.users.queries import UsersQuery
-from manashelper.repositories.user_repository import UserRepository
-from manashelper.services.locale import LocaleService
 
 
 async def test_notification_defaults_weekday_meal_and_bulk_toggles(session):

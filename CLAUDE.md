@@ -144,7 +144,11 @@ Release history is now in flat `modules/versions/`; its functions read `docs/ver
 the same runtime path after relocation. It has no database table or DI provider.
 Donations is now in flat `modules/donations/`, separating file catalog, Telegram QR adapter and application service.
 Its provider retains an APP-scoped LRU cache and REQUEST-scoped service. Public `modules/users/queries.py`
-supplies counts and recipient IDs to donations and broadcast; the rest of Users remains in legacy packages.
+supplies counts and recipient IDs to donations and broadcast.
+Users now owns application locale/contact services, profile/phone infrastructure and language/phone presentation
+under modules/users/. All its providers remain REQUEST-scoped. User retains OBIS credential columns and the
+Schedule relationship; legacy OBIS/Eders repository consumers remain until those stages. Audit stays legacy.
+Shared navigation functions live in bot/navigation.py, outside the start router.
 Broadcast is colocated in flat `modules/broadcast/`: REQUEST-scoped SendBroadcast selects recipients through
 UsersQuery and counts delivery results. TelegramBroadcastSender owns locale, HTML and Telegram API errors;
 the router owns authorization, FSM and admin-facing messages.
@@ -152,7 +156,7 @@ Food menu lives in modules/food_menu/: application services, Telegram presentati
 Its provider retains APP client/parser and REQUEST services. BroadcastFoodMenu uses a Telegram sender boundary;
 notification settings check users through UsersQuery.exists. Preserve the characterized first-toggle ORM-default defect.
 Schedule now lives in modules/schedule/ with catalog/tracking, timetable/search, infrastructure and thin jobs.
-CourseTrackingRepository owns the tracked-course query; User ORM remains legacy. SyncCourseTimetable selects
+CourseTrackingRepository owns the tracked-course query; User ORM belongs to Users. SyncCourseTimetable selects
 recipients through public modules/notifications/queries.py, whose provider retains REQUEST scope.
 Notifications now lives in flat modules/notifications/: settings, ORM, repository and Telegram presentation.
 Settings uses UsersQuery.exists; OBIS polling also selects recipients through NotificationRecipientsQuery.
@@ -278,7 +282,7 @@ test suite locally must run `pybabel compile` after cloning or after editing a `
 `localization/locale.py::Locale` is the supported-locale enum (`ky`/`ru`/`en`/`tr`/`zh`); `localization/i18n.py` holds
 the single process-wide `I18n` instance. `User.locale` (nullable `String(2)`) persists a user's resolved locale.
 `bot/middlewares/i18n.py::LocaleMiddleware` (registered *after* `setup_dishka` in `bot/dispatcher.py`, so it can use the
-request-scoped container) runs on every update: it upserts the user via `services/locale.py::LocaleService`,
+request-scoped container) runs on every update: it upserts the user via `modules/users/application/locale.py::LocaleService`,
 which returns the saved locale if there is one, otherwise auto-detects one from
 `message.from_user.language_code` (`localization/locale.py::resolve_from_language_code`), falling back to
 `DEFAULT_LOCALE` (Russian) when that language code is missing or unsupported — the resolution always succeeds,
@@ -292,7 +296,7 @@ incoming message text against a hardcoded string (`F.text == "..."`) can't work 
 Jobs (the `jobs/` package) run outside any Telegram update, so there's no ambient middleware to set the gettext
 context; each per-recipient send there looks up that user's `Locale` and wraps its own `format_...(...)` call in
 `with i18n.context(), i18n.use_locale(locale.value): ...` explicitly. A user can still change their locale
-explicitly at any time via `/language` or the "🌐 Language" row in Settings (`bot/routers/locale.py`), which
+explicitly at any time via `/language` or the "🌐 Language" row in Settings (`modules/users/presentation/routers/locale.py`), which
 shows the 5-language picker (`bot/keyboards/locale.py`) with names rendered from each language's own catalog —
 the only place that picker is shown, now that
 auto-detection never falls through to it.
@@ -302,7 +306,7 @@ auto-detection never falls through to it.
 `src/manashelper/jobs/` holds every `AsyncIOScheduler` job function registered in `jobs/scheduler.py`, one module per
 feature area (`modules/food_menu/jobs.py`, `jobs/obis_notification.py`, `modules/schedule/jobs.py`,
 `jobs/scheduled_message_deletion.py`, `modules/advertisements/jobs.py`), plus `jobs/common.py` for cross-cutting helpers
-shared by more than one job (`get_user_locale`, `send_notification`, `chunk`/`delete_message_batch` for batched
+shared by more than one job (`send_notification`, `chunk`/`delete_message_batch` for batched
 `deleteMessages` calls). Each job opens its own short-lived Dishka request scope(s)
 (`async with container() as request_container`) rather than reusing one across the whole run, and wraps its body
 in a broad `except Exception: logger.exception(...)` so one failure (a bad HTML page, a dead OBIS login, a user
@@ -362,7 +366,7 @@ choices, since none of these had an existing pattern to copy:
   read live off `User.username` (already kept fresh by `LocaleMiddleware`'s per-update upsert, so no extra Bot
   API call is needed); phone numbers are collected inline at the start of the posting flow (reply-keyboard
   `request_contact` button or manual entry, validated by `UserContactService.is_valid_phone_number`) and
-  persisted in `UserPhoneNumber` — see `services/user_contact.py`. Users manage their saved numbers (add/delete)
+persisted in `UserPhoneNumber` — see `modules/users/application/user_contact.py`. Users manage their saved numbers (add/delete)
   from `⚙️ Settings → 📱 My phone numbers` (`bot/routers/phone_numbers.py`), which reuses the same
   contact-request keyboard (`bot/keyboards/phone_numbers.py`) as the posting flow.
 - **The marketplace menu is a reply keyboard, not an inline one** (`modules/advertisements/presentation/keyboards/advertisement.py::

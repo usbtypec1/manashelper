@@ -18,8 +18,8 @@ from manashelper.localization.locale import DEFAULT_LOCALE
 from manashelper.modules.feedback.callbacks import FeedbackAction, FeedbackCallback
 from manashelper.modules.feedback.keyboards import build_feedback_cancel_keyboard
 from manashelper.modules.feedback.service import BODY_MAX_LENGTH, FeedbackService
+from manashelper.modules.users.application.locale import LocaleService
 from manashelper.services.html_sanitization import escape_html
-from manashelper.services.locale import LocaleService
 
 logger = logging.getLogger(__name__)
 

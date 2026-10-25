@@ -4,15 +4,15 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models import User
-from manashelper.repositories.user_phone_number_repository import UserPhoneNumberRepository
-from manashelper.repositories.user_repository import UserRepository
-from manashelper.services.user_contact import (
+from manashelper.modules.users.application.user_contact import (
     InvalidPhoneNumberError,
     PhoneNumberForbiddenError,
     PhoneNumberNotFoundError,
     UserContactService,
     UserNotFoundError,
 )
+from manashelper.modules.users.infrastructure.user_phone_number_repository import UserPhoneNumberRepository
+from manashelper.modules.users.infrastructure.user_repository import UserRepository
 
 
 async def test_get_contact_status_reflects_username(session: AsyncSession) -> None:

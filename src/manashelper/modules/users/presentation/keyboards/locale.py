@@ -1,9 +1,9 @@
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from manashelper.bot.callback_data import LocaleCallback
 from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import Locale
+from manashelper.modules.users.presentation.callbacks import LocaleCallback
 
 
 def native_language_name(locale: Locale) -> str:

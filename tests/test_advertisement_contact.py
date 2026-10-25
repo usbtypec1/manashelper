@@ -14,9 +14,9 @@ from manashelper.modules.advertisements.infrastructure.advertisement_contact_vie
     AdvertisementContactViewRepository,
 )
 from manashelper.modules.advertisements.infrastructure.advertisement_repository import AdvertisementRepository
-from manashelper.repositories.user_phone_number_repository import UserPhoneNumberRepository
-from manashelper.repositories.user_repository import UserRepository
-from manashelper.services.user_contact import UserContactService
+from manashelper.modules.users.application.user_contact import UserContactService
+from manashelper.modules.users.infrastructure.user_phone_number_repository import UserPhoneNumberRepository
+from manashelper.modules.users.infrastructure.user_repository import UserRepository
 
 
 async def _make_user(session: AsyncSession, user_id: int) -> User:

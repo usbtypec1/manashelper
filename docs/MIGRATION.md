@@ -7,9 +7,9 @@
 Этот документ фиксирует анализ до изменения исходников и результаты завершённых этапов.
 
 Актуальный статус на 25 октября 2026 года: перенесены **Feedback**, **Advertisements**, **Student questions**,
-**Versions**, **Donations**, **Broadcast**, **Food menu**, **Schedule** и **Notifications**.
-В Users отдельно выделена публичная read-граница; вся область пользователей пока не перенесена.
-Общий gate зелёный: **461 passed, 9 skipped**, Ruff, mypy и проверка Alembic проходят.
+**Versions**, **Donations**, **Broadcast**, **Food menu**, **Schedule**, **Notifications** и **Users**.
+Users сохраняет временных legacy-потребителей credentials в OBIS/Eders; аудит остаётся до Platform/Core.
+Общий gate зелёный: **486 passed, 9 skipped**, Ruff, mypy и проверка Alembic проходят.
 Первоначальные красные результаты ниже оставлены как история baseline и не описывают текущую проверку.
 
 ## Исходное состояние — 24 октября 2026 года
@@ -686,3 +686,57 @@ deferred defaults, default opt-in и фильтрация адресатов, к
 
 Этап завершён. Users, Platform/Core, OBIS, Eders и Study week остаются следующими областями карты.
 Коммиты, push и deploy не выполнялись; исходные `.DS_Store` не изменялись.
+
+### План следующего этапа: Users
+
+Baseline: **461 passed, 9 skipped**. Рабочее дерево чистое, кроме трёх исходных `.DS_Store`.
+Сохранён PostgreSQL DDL всех 27 таблиц и индексов. Используется прежний workflow safe-refactor.
+
+Phase A собирает Users: `application/locale.py`, `application/user_contact.py`, инфраструктуру профиля и
+телефонов, presentation выбора языка и управления телефонами. UsersQuery остаётся публичным query API;
+UsersProvider получает все REQUEST-зависимости. User ORM сохраняет поля OBIS, association table Schedule,
+relationships, defaults и строковые имена. Locale enum/i18n остаются общими, аудит — до Platform/Core.
+Start/settings остаются общей Telegram-навигацией. Callback payload, PhoneNumberForm, валидация/порядок
+телефонов, ошибки и локализация не меняются; перед переносом добавляются characterization tests.
+
+Phase B выделяет общие build_main_keyboard/send_welcome из start router в bot/navigation.py и заменяет
+единственного потребителя jobs/common.get_user_locale на существующий LocaleService. Legacy OBIS/Eders
+пока используют UserRepository для сохранённых credentials: эта временная связь требует отдельного
+этапа OBIS, а не нового API для шифротекста в Users. HTTP, шифрование и транзакции здесь не меняются.
+
+### Выполнено: Users
+
+Phase A перенесла 10 исходных файлов через Index MCP: application locale/contact services, профиль/телефоны,
+репозитории, два router и две клавиатуры. Callback-классы теперь принадлежат Users presentation.
+AST всех десяти файлов и callback-деклараций совпал с исходным, кроме imports. UsersProvider регистрирует
+два repository, LocaleService, UserContactService и UsersQuery в REQUEST; регистрация в общем di.py удалена.
+Целевые проверки: **70 passed**, mypy strict; полный suite до Phase B: **477 passed, 9 skipped**.
+
+Phase B выделила build_main_keyboard/send_welcome в `bot/navigation.py` с точным совпадением AST.
+Все feature-потребители обновлены: импортировать start router ради общей навигации больше не требуется.
+OBIS job читает локаль через LocaleService вместо прямого UserRepository/helper; порядок запросов,
+fallback, ValueError при некорректной сохранённой локали, отправка и per-user error boundary сохранены.
+
+Добавлено **25 тестов**: сохранность локали/credentials/подписок при profile refresh, отсутствие регистрации
+при чтении/смене локали неизвестного пользователя, некорректная сохранённая локаль, порядок/формат телефонов,
+payload/FSM/private flags, подтверждение и приветствие на выбранном языке, phone validation/deletion errors,
+OBIS locale/failure isolation, REQUEST scopes, registry и LocaleMiddleware. Root composition test дополнен
+проверкой расположения обоих router. Два теста запускают импорт Users в отдельном процессе: прямой импорт
+только User ORM не загружал Course mapper. Поэтому сохранён прежний импорт моделей через общий db.models
+registry в обоих репозиториях; mapper registration не зависит от предварительных импортов тестового suite.
+
+Финальный gate:
+
+- pytest: **486 passed, 9 skipped**; как в baseline, пропущены восемь HTTP-тестов без simulations
+  и корпусный тест без приватной выгрузки Eders;
+- Ruff lint/format: **359 файлов**, mypy strict: **245 source files**, без ошибок;
+- Index diagnostics 16 компонентов без ошибок; старых Python imports не найдено;
+- все **244 подмодуля** импортируются, DDL всех **27 таблиц и индексов** совпал с baseline;
+- Alembic: `No new upgrade operations detected.`;
+- IDE build сообщает success с ограничением сбора build diagnostics; основная проверка — CLI gates выше.
+
+Профиль, локаль и контакты перенесены полностью. User сохраняет credential columns OBIS и relationship
+Schedule; legacy OBIS/Eders пока используют перенесённый UserRepository. Аудит, Platform/Core и дальнейшие
+этапы OBIS, Eders, Study week остаются вне этой итерации. Известные дефекты defaults и request transaction
+finalization не исправлялись. IDE auto-staging снят только с 28 известных task-путей; исходный index был пуст.
+Коммиты, push и deploy не выполнялись; `.DS_Store` сохранены.

@@ -34,8 +34,8 @@ from manashelper.modules.advertisements.presentation.callbacks import (
 from manashelper.modules.advertisements.presentation.keyboards.advertisement_moderation import (
     build_reject_comment_choice_keyboard,
 )
+from manashelper.modules.users.application.locale import LocaleService
 from manashelper.services.html_sanitization import escape_html
-from manashelper.services.locale import LocaleService
 
 logger = logging.getLogger(__name__)
 

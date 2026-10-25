@@ -6,7 +6,7 @@ from dishka import AsyncContainer
 from manashelper.modules.schedule.application.course import CourseService
 from manashelper.modules.schedule.application.sync_course import ScheduleChangeSender, SyncCourseTimetable
 from manashelper.modules.schedule.presentation.sender import TelegramScheduleChangeSender
-from manashelper.services.locale import LocaleService
+from manashelper.modules.users.application.locale import LocaleService
 
 logger = logging.getLogger(__name__)
 

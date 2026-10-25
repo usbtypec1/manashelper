@@ -8,8 +8,8 @@ from manashelper.db.base import Base
 from manashelper.modules.schedule.infrastructure.models.associations import user_courses
 
 if TYPE_CHECKING:
-    from manashelper.db.models.user import User
     from manashelper.modules.schedule.infrastructure.models.department import Department
+    from manashelper.modules.users.infrastructure.user import User
 
 
 class Course(Base):

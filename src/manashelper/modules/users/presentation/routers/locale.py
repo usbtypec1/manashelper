@@ -4,11 +4,12 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.callback_data import LocaleCallback, SettingsAction, SettingsCallback
-from manashelper.bot.keyboards.locale import build_locale_keyboard, native_language_name
-from manashelper.bot.routers.start import send_welcome
+from manashelper.bot.callback_data import SettingsAction, SettingsCallback
+from manashelper.bot.navigation import send_welcome
 from manashelper.localization.i18n import i18n
-from manashelper.services.locale import LocaleService
+from manashelper.modules.users.application.locale import LocaleService
+from manashelper.modules.users.presentation.callbacks import LocaleCallback
+from manashelper.modules.users.presentation.keyboards.locale import build_locale_keyboard, native_language_name
 
 router = Router(name="locale")
 

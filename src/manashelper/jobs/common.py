@@ -4,19 +4,9 @@ from collections.abc import Iterable
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 
-from manashelper.localization.locale import DEFAULT_LOCALE, Locale
-from manashelper.repositories.user_repository import UserRepository
-
 logger = logging.getLogger(__name__)
 
 TELEGRAM_DELETE_MESSAGES_BATCH_SIZE = 100
-
-
-async def get_user_locale(user_repository: UserRepository, user_id: int) -> Locale:
-    user = await user_repository.get_by_id(user_id)
-    if user is not None and user.locale is not None:
-        return Locale(user.locale)
-    return DEFAULT_LOCALE
 
 
 async def send_notification(bot: Bot, user_id: int, text: str) -> None:

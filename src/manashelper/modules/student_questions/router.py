@@ -8,7 +8,7 @@ from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.routers.start import build_main_keyboard
+from manashelper.bot.navigation import build_main_keyboard
 from manashelper.modules.student_questions.callbacks import (
     StudentQuestionsAnswerCallback,
     StudentQuestionsControlAction,

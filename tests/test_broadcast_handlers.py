@@ -17,8 +17,8 @@ from manashelper.modules.broadcast import router as handlers
 from manashelper.modules.broadcast.callbacks import BroadcastAction, BroadcastCallback
 from manashelper.modules.broadcast.keyboards import build_broadcast_confirm_keyboard
 from manashelper.modules.broadcast.service import SendBroadcast
+from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.queries import UsersQuery
-from manashelper.services.locale import LocaleService
 
 ADMIN_CHAT_ID = -100947000
 ACTOR_ID = 947_001

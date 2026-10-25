@@ -22,7 +22,7 @@ class User(Base):
     encrypted_password: Mapped[str | None] = mapped_column(String(255))
     # Stores a Locale.value (e.g. "ru"). NULL means the locale couldn't be auto-detected from
     # the Telegram client yet and the user hasn't picked one either — see
-    # bot/middlewares/i18n.py.
+    # bot/middlewares/i18n.py; locale selection lives in Users presentation.
     locale: Mapped[str | None] = mapped_column(String(2))
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())

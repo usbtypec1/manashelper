@@ -3,10 +3,10 @@ import logging
 from aiogram import Bot
 from dishka import AsyncContainer
 
-from manashelper.jobs.common import get_user_locale, send_notification
+from manashelper.jobs.common import send_notification
 from manashelper.localization.i18n import i18n
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
-from manashelper.repositories.user_repository import UserRepository
+from manashelper.modules.users.application.locale import LocaleService
 from manashelper.scraping.obis_client import ObisLoginError
 from manashelper.scraping.obis_parser import ObisParseError
 from manashelper.services.obis import UserHasNoCredentialsError
@@ -43,8 +43,8 @@ async def _poll_user_obis_notifications(
     try:
         async with container() as request_container:
             obis_notification_service = await request_container.get(ObisNotificationService)
-            user_repository = await request_container.get(UserRepository)
-            locale = await get_user_locale(user_repository, user_id)
+            locales = await request_container.get(LocaleService)
+            locale = await locales.get_locale(user_id)
 
             if check_exam_grades:
                 grade_changes = await _check_exam_grade_changes(obis_notification_service, user_id)

@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models.eders import EdersNotification, EdersState
-from manashelper.db.models.user import User
+from manashelper.modules.users.infrastructure.user import User
 
 
 class EdersRepository:

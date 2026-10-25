@@ -1,7 +1,7 @@
 import hashlib
 from datetime import UTC, datetime, timedelta
 
-from manashelper.repositories.user_repository import UserRepository
+from manashelper.modules.users.infrastructure.user_repository import UserRepository
 from manashelper.scraping.eders_client import EdersClient
 from manashelper.services.crypto import CryptoService, DecryptionError
 from manashelper.services.eders_models import (

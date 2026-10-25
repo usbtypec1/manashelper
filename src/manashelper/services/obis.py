@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from manashelper.repositories.user_repository import UserRepository
+from manashelper.modules.users.infrastructure.user_repository import UserRepository
 from manashelper.scraping.obis_client import ObisClient
 from manashelper.scraping.obis_parser import (
     ScrapedLessonAttendance,

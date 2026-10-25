@@ -112,6 +112,10 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
                 assert names.count("lesson_search") == 1
                 assert names.count("food_menu") == 1
                 assert names.count("notifications") == 1
+                assert names.count("locale") == 1
+                assert names.count("phone_numbers") == 1
+                assert names.index("start") < names.index("locale") < names.index("timetable")
+                assert names.index("donations") < names.index("phone_numbers") < names.index("versions")
                 assert names.index("settings") < names.index("notifications") < names.index("donations")
                 assert names.index("student_questions") < names.index("advertisement_contact")
                 assert names.index("advertisement_contact") < names.index("start")

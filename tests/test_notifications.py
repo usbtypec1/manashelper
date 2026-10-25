@@ -28,9 +28,9 @@ from manashelper.modules.notifications.settings import (
     UserNotFoundError,
 )
 from manashelper.modules.schedule.provider import ScheduleProvider
+from manashelper.modules.users.infrastructure.user_repository import UserRepository
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.modules.users.queries import UsersQuery
-from manashelper.repositories.user_repository import UserRepository
 
 
 def service(session):

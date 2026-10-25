@@ -4,16 +4,17 @@
 репозитории; наличие функции в `features/` само по себе не означает, что она реализована.
 
 Проект находится в процессе постепенного перехода к функциональным модулям. Перенесены `feedback`,
-`advertisements`, `student_questions`, `versions`, `donations`, `broadcast`, `food_menu`, `schedule` и `notifications`.
+`advertisements`, `student_questions`, `versions`, `donations`, `broadcast`, `food_menu`, `schedule`, `notifications` и `users`.
 Код каждой области собран в `modules/`.
 У объявлений также перенесена очистка истёкших публикаций. Versions остаётся набором функций без DI provider.
 Остальные области пока
 сохраняют прежнюю структуру по слоям.
-В `modules/users/` пока выделены только публичный UsersQuery и REQUEST-provider: count, список ID
-и проверка существования используются пожертвованиями, рассылкой, Food menu и Notifications. Остальной код пользователей остаётся legacy.
+В `modules/users/` собраны профиль, локаль и контакты: application-сервисы, ORM/repositories и Telegram
+presentation. Публичный UsersQuery предоставляет count, список ID и проверку существования для потребителей.
 В плоском `modules/notifications/` собраны настройки расписания/оценок/пропусков, запросы получателей,
 ORM, repository и Telegram presentation. Food menu/Eders сохраняют собственные настройки;
-общая навигация Settings, User ORM и общая инфраструктура пока legacy.
+общая навигация Settings и общая инфраструктура пока legacy. OBIS/Eders временно используют UserRepository
+для credentials; аудит остаётся в legacy до Platform/Core.
 Карта зависимостей, порядок этапов и исходные проблемы проверок описаны в [MIGRATION.md](MIGRATION.md).
 
 ## 1. Назначение и общий подход
@@ -83,6 +84,7 @@ manashelper/
 │   ├── bot/
 │   │   ├── dispatcher.py          # Middleware, маршрутизаторы, обработчик ошибок
 │   │   ├── commands.py            # Регистрация команд в Telegram
+│   │   ├── navigation.py          # Общая клавиатура и приветствие без зависимости от start router
 │   │   ├── callback_data.py       # Типизированные данные inline-кнопок
 │   │   ├── routers/               # Обработчики команд, сообщений и callback-запросов
 │   │   ├── keyboards/             # Построение клавиатур
@@ -110,7 +112,7 @@ manashelper/
 │   │   ├── food_menu/             # application, presentation, infrastructure, тонкие jobs, APP/REQUEST-provider
 │   │   ├── schedule/              # Каталог, подписки, расписание, поиск, sync; application/presentation/infrastructure
 │   │   ├── notifications/         # Настройки, запросы получателей, ORM, Telegram и REQUEST-provider
-│   │   ├── users/                 # Пока только публичный UsersQuery и REQUEST-provider
+│   │   ├── users/                 # Профиль, локаль, контакты: application/infrastructure/presentation
 │   │   └── feedback/
 │   │       ├── router.py          # FSM, обращения и ответы admin-чата
 │   │       ├── keyboards.py       # Кнопка отмены
@@ -230,8 +232,9 @@ OBIS и удаления сообщений также напрямую полу
 сервис обращений. [AdvertisementsProvider](../src/manashelper/modules/advertisements/provider.py)
 регистрирует два репозитория, три сервиса и сценарий очистки. Их зависимости имеют `Scope.REQUEST`;
 `PublicationRemover` для очистки передаётся из контекста её entry point. `StudentQuestionsProvider` регистрирует
-репозиторий и сервис опроса в том же REQUEST scope. `UsersProvider` предоставляет публичные запросы
-пользователей. `DonationsProvider` регистрирует QR-адаптер в `APP` и application-сервис в `REQUEST`.
+репозиторий и сервис опроса в том же REQUEST scope. `UsersProvider` предоставляет UsersQuery,
+LocaleService, UserContactService и два репозитория пользователей в `REQUEST`.
+`DonationsProvider` регистрирует QR-адаптер в `APP` и application-сервис в `REQUEST`.
 `BroadcastProvider` предоставляет `SendBroadcast` в `REQUEST`; адаптер доставки создаёт обработчик с текущим Bot.
 `FoodMenuProvider` сохраняет клиент/parser в `APP`, репозитории и сценарии меню — в `REQUEST`.
 `ScheduleProvider` сохраняет TimetableClient в `APP`, каталог, подписки и сценарии — в `REQUEST`.
@@ -306,8 +309,8 @@ OBIS и удаления сообщений также напрямую полу
 Эта область собрана в `modules/schedule/`: application (каталог, tracking, чтение расписания, поиск,
 синхронизация), presentation (два router, callbacks, клавиатуры, formatter и sender), infrastructure
 (пять ORM-моделей, association `user_courses`, клиент/parser и шесть репозиториев), provider и jobs.
-CourseTrackingRepository владеет прежним запросом User с selectinload tracked_courses; User ORM остаётся
-legacy, а данные подписок принадлежат Schedule. CourseService сохраняет изменения ORM-коллекций и прежние
+CourseTrackingRepository владеет прежним запросом User с selectinload tracked_courses; User ORM принадлежит
+Users, а данные подписок — Schedule. CourseService сохраняет изменения ORM-коллекций и прежние
 ошибки. StudyWeekService зависит от публичных ScheduleService и моделей результатов.
 
 Job сначала читает ID курсов через CourseService в отдельном request scope, затем открывает scope
@@ -339,6 +342,23 @@ Telegram-слой строит rich messages с кнопками оценки и
 3 часа. `MessageDeletionService` записывает задания в БД, а отдельная job удаляет просроченные сообщения.
 Сохранён существующий дефект первого переключения обеда для дня без строки настроек: значение остаётся
 включённым до повторного нажатия. Это следствие ORM-default до flush; characterization-тест фиксирует его отдельно.
+
+### Users
+
+`modules/users/` владеет User и UserPhoneNumber, двумя репозиториями, application-сервисами локали и
+контактов, публичным UsersQuery и presentation выбора языка/телефонов. Общий registry `db/models/`
+по-прежнему регистрирует обе модели для Alembic. Репозитории импортируют модели через этот registry:
+это сохраняет регистрацию связанных мапперов Schedule даже при отдельном импорте Users.
+Все зависимости Users имеют REQUEST scope.
+Обновление имени/username сохраняет локаль, credentials и ORM-коллекцию подписок. LocaleService читает
+локаль без регистрации пользователя, а resolve обновляет профиль и сохраняет выбранный/определённый язык.
+Некорректное сохранённое значение по-прежнему вызывает ValueError; неизвестный язык Telegram даёт русский.
+
+PhoneNumberForm сохраняет прежнее имя состояния, валидацию, порядок номеров по created_at, точный формат
+номера и проверку владельца при удалении. Callback payload `locale:*`, `phone_number_action:add` и
+`phone_number_delete:*` не менялись. Общая навигация выделена в `bot/navigation.py`, поэтому feature
+presentation больше не импортирует start router ради клавиатуры или приветствия. OBIS polling читает
+локаль через LocaleService; дублирующий helper в `jobs/common.py` удалён.
 
 ### OBIS
 
@@ -618,11 +638,12 @@ Ruff использует длину строки 120 и целевую верс
 
 Для перенесённой feature код и зависимости изменяются внутри `modules/<feature>/`; новый provider
 подключается в composition root. Остальные области пока используют `bot/routers/`, `services/`,
-`repositories/` и `di.py`. Общая Telegram-навигация, i18n, `LocaleService`, `Settings` и `db.base.Base`
-остаются временными внешними зависимостями перенесённых модулей. Объявления используют `UserContactService`
+`repositories/` и `di.py`. Общая Telegram-навигация в `bot/navigation.py`, i18n, `Settings` и `db.base.Base`
+остаются внешними зависимостями перенесённых модулей. `LocaleService` принадлежит Users.
+Объявления используют `UserContactService`
 через application-поверхность, без доступа к репозиториям Users. Donations и Broadcast используют UsersQuery
-из частично выделенного `modules/users/`. Старые Python-пути Feedback, объявлений, опроса, версий, Donations,
-Broadcast, Food menu, Schedule и Notifications удалены;
+из `modules/users/`. Старые Python-пути Feedback, объявлений, опроса, версий, Donations,
+Broadcast, Food menu, Schedule, Notifications и Users удалены;
 адаптеров совместимости для них нет, все потребители в проекте используют новые импорты.
 
 Broadcast остаётся небольшим плоским модулем. `service.py` содержит `SendBroadcast`, immutable dataclass

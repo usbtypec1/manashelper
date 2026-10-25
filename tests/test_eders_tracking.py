@@ -6,8 +6,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.db.models import User
+from manashelper.modules.users.infrastructure.user_repository import UserRepository
 from manashelper.repositories.eders_repository import EdersRepository
-from manashelper.repositories.user_repository import UserRepository
 from manashelper.services.eders import EdersService
 from manashelper.services.eders_models import (
     ActivityDate,

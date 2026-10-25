@@ -8,7 +8,7 @@ from manashelper.modules.food_menu.application.food_menu_cleanup_settings import
 from manashelper.modules.food_menu.application.food_menu_notification_settings import FoodMenuMeal
 from manashelper.modules.food_menu.application.food_menu_sync import FoodMenuSyncService
 from manashelper.modules.food_menu.presentation.sender import TelegramFoodMenuSender
-from manashelper.services.locale import LocaleService
+from manashelper.modules.users.application.locale import LocaleService
 
 logger = logging.getLogger(__name__)
 

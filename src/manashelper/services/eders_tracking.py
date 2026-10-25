@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 
 from manashelper.db.models.eders import EdersNotification
+from manashelper.modules.users.infrastructure.user_repository import UserRepository
 from manashelper.repositories.eders_repository import EdersRepository
-from manashelper.repositories.user_repository import UserRepository
 from manashelper.services.eders_models import ActivityKind, EdersActivity, EdersSnapshot, SubmissionStatus
 from manashelper.services.eders_serialization import deserialize_snapshot, serialize_snapshot
 from manashelper.services.obis import UserNotFoundError

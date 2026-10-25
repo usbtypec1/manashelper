@@ -7,6 +7,7 @@ from aiogram.types import LinkPreviewOptions
 from dishka import AsyncContainer
 
 from manashelper.localization.i18n import i18n
+from manashelper.modules.users.application.locale import LocaleService
 from manashelper.scraping.eders_client import EdersFetchError
 from manashelper.scraping.eders_parser import EdersParseError
 from manashelper.scraping.eders_urls import EdersUnsafeUrlError
@@ -15,7 +16,6 @@ from manashelper.scraping.obis_parser import ObisParseError
 from manashelper.services.eders import EdersService
 from manashelper.services.eders_formatter import format_eders_event, format_material_events
 from manashelper.services.eders_tracking import EdersTrackingService
-from manashelper.services.locale import LocaleService
 from manashelper.services.obis import UserHasNoCredentialsError, UserNotFoundError
 
 logger = logging.getLogger(__name__)

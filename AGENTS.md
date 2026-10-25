@@ -41,8 +41,13 @@ stays in `bot/`; Food menu/Eders preferences and OBIS polling remain owned by th
 Preserve the characterized deferred-default defect: a new unflushed settings row exposes None values,
 and its first toggle enables the selected flag. Missing rows still opt recipients into all notifications.
 Shared weekday labels live in `localization/weekdays.py`; reuse `services/time_utils.py::BISHKEK_TZ` instead of a feature's timezone.
-`modules/users/` currently exposes UsersQuery and a REQUEST provider for counts, recipient IDs and existence
-checks used by donations, broadcasts, Food menu and Notifications. Other user functionality, ORM and repository remain legacy.
+Users lives in `modules/users/`: application locale/contact services, infrastructure profile/phone ORM and
+repositories, presentation language/phone routers, keyboards and callbacks. UsersProvider retains REQUEST
+scope for all its dependencies, including public UsersQuery (counts, IDs, existence). LocaleService is the
+shared user-locale boundary for middleware and delivery; UserContactService supplies plain contact models.
+User keeps OBIS credential columns and the Schedule tracked_courses relationship without schema changes.
+Legacy OBIS/Eders still use UserRepository for credentials until their own stages; action logging remains legacy.
+Shared Telegram navigation lives in `bot/navigation.py`; feature routers must not import the start router for it.
 Keep migrated feature code together;
 do not move unrelated legacy areas in the same stage. See `docs/ARCHITECTURE.md` and `docs/MIGRATION.md`.
 Add routers to the dispatcher in `bot/dispatcher.py`; legacy services/repositories remain in `di.py`, while migrated

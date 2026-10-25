@@ -2,14 +2,13 @@ from aiogram.types import InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMar
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from manashelper.bot.callback_data import (
+from manashelper.bot.callback_data import SettingsAction, SettingsCallback
+from manashelper.modules.users.application.user_contact import PhoneNumberSummary
+from manashelper.modules.users.presentation.callbacks import (
     PhoneNumberAction,
     PhoneNumberActionCallback,
     PhoneNumberDeleteCallback,
-    SettingsAction,
-    SettingsCallback,
 )
-from manashelper.services.user_contact import PhoneNumberSummary
 
 
 def build_contact_request_keyboard() -> ReplyKeyboardMarkup:

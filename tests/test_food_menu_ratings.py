@@ -39,7 +39,7 @@ from manashelper.modules.food_menu.presentation.keyboards.food_menu import (
 )
 from manashelper.modules.food_menu.presentation.routers.food_menu import _send_daily_menu, on_food_menu_rating_callback
 from manashelper.modules.food_menu.presentation.sender import TelegramFoodMenuSender
-from manashelper.services.locale import LocaleService
+from manashelper.modules.users.application.locale import LocaleService
 
 
 def _service(session: AsyncSession) -> DailyMenuService:

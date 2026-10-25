@@ -8,8 +8,8 @@ from test_eders_tracking import NOW, item
 
 from manashelper.db.models import User
 from manashelper.localization.i18n import i18n
+from manashelper.modules.users.infrastructure.user_repository import UserRepository
 from manashelper.repositories.eders_repository import EdersRepository
-from manashelper.repositories.user_repository import UserRepository
 from manashelper.scraping.eders_parser import EdersParseError, parse_course_activities, parse_enrolled_courses
 from manashelper.services.eders import filter_activities
 from manashelper.services.eders_formatter import format_material_events

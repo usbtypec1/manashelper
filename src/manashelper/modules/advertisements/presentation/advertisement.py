@@ -13,8 +13,7 @@ from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
 from manashelper.bot.filters.translated_text import TranslatedText
-from manashelper.bot.keyboards.phone_numbers import build_contact_request_keyboard
-from manashelper.bot.routers.start import build_main_keyboard
+from manashelper.bot.navigation import build_main_keyboard
 from manashelper.config import Settings
 from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import DEFAULT_LOCALE
@@ -53,12 +52,13 @@ from manashelper.modules.advertisements.presentation.keyboards.advertisement imp
     build_skip_price_keyboard,
 )
 from manashelper.modules.advertisements.presentation.keyboards.advertisement_moderation import build_moderation_keyboard
-from manashelper.services.user_contact import (
+from manashelper.modules.users.application.user_contact import (
     ContactStatus,
     InvalidPhoneNumberError,
     UserContactService,
     UserNotFoundError,
 )
+from manashelper.modules.users.presentation.keyboards.phone_numbers import build_contact_request_keyboard
 
 logger = logging.getLogger(__name__)
 

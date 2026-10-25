@@ -6,7 +6,7 @@ from aiogram.types import Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.bot.routers.start import send_welcome
+from manashelper.bot.navigation import send_welcome
 from manashelper.config import Settings
 from manashelper.modules.advertisements.application.advertisement import AdvertisementNotFoundError
 from manashelper.modules.advertisements.application.advertisement_contact import AdvertisementContactService

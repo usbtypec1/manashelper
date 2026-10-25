@@ -2,8 +2,8 @@ import re
 import uuid
 from dataclasses import dataclass
 
-from manashelper.repositories.user_phone_number_repository import UserPhoneNumberRepository
-from manashelper.repositories.user_repository import UserRepository
+from manashelper.modules.users.infrastructure.user_phone_number_repository import UserPhoneNumberRepository
+from manashelper.modules.users.infrastructure.user_repository import UserRepository
 
 PHONE_NUMBER_PATTERN = re.compile(r"^\+?\d[\d\s\-()]{5,19}$")
 

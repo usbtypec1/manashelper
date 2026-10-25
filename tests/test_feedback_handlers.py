@@ -23,7 +23,7 @@ from manashelper.modules.feedback.router import (
     router,
 )
 from manashelper.modules.feedback.service import BODY_MAX_LENGTH, FeedbackService, FeedbackSummary
-from manashelper.services.locale import LocaleService
+from manashelper.modules.users.application.locale import LocaleService
 
 USER_ID = 941_001
 ADMIN_CHAT_ID = -100941001

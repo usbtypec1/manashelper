@@ -26,6 +26,7 @@ from manashelper.modules.schedule.application.schedule import NoTrackedCoursesEr
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.student_questions.provider import StudentQuestionsProvider
 from manashelper.modules.student_questions.service import StudentQuestionsService
+from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.scraping.eders_parser import EdersParseError
 from manashelper.services.eders import EdersService
@@ -38,7 +39,6 @@ from manashelper.services.eders_models import (
     EdersSnapshot,
 )
 from manashelper.services.eders_tracking import EdersEvent, EdersTrackingService
-from manashelper.services.locale import LocaleService
 from manashelper.services.obis import UserHasNoCredentialsError
 from manashelper.services.study_week import StudyWeekService
 

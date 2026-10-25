@@ -4,7 +4,7 @@ from manashelper.jobs.common import send_notification
 from manashelper.localization.i18n import i18n
 from manashelper.modules.schedule.application.timetable_sync import LessonChange
 from manashelper.modules.schedule.presentation.timetable_formatter import format_lesson_changes
-from manashelper.services.locale import LocaleService
+from manashelper.modules.users.application.locale import LocaleService
 
 
 class TelegramScheduleChangeSender:

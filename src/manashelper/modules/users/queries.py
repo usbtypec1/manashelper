@@ -1,4 +1,4 @@
-from manashelper.repositories.user_repository import UserRepository
+from manashelper.modules.users.infrastructure.user_repository import UserRepository
 
 
 class UsersQuery:

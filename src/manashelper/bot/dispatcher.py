@@ -11,9 +11,7 @@ from manashelper.bot.middlewares.per_chat_ordering import PerChatOrderingMiddlew
 from manashelper.bot.middlewares.private_chat_only import PrivateChatOnlyMiddleware
 from manashelper.bot.middlewares.rate_limit import RateLimitMiddleware
 from manashelper.bot.routers.eders import router as eders_router
-from manashelper.bot.routers.locale import router as locale_router
 from manashelper.bot.routers.obis import router as obis_router
-from manashelper.bot.routers.phone_numbers import router as phone_numbers_router
 from manashelper.bot.routers.settings import router as settings_router
 from manashelper.bot.routers.start import router as start_router
 from manashelper.modules.advertisements.presentation.advertisement import router as advertisement_router
@@ -33,6 +31,8 @@ from manashelper.modules.notifications.router import router as notifications_rou
 from manashelper.modules.schedule.presentation.routers.lesson_search import router as lesson_search_router
 from manashelper.modules.schedule.presentation.routers.timetable import router as timetable_router
 from manashelper.modules.student_questions.router import router as student_questions_router
+from manashelper.modules.users.presentation.routers.locale import router as locale_router
+from manashelper.modules.users.presentation.routers.phone_numbers import router as phone_numbers_router
 from manashelper.modules.versions.router import router as versions_router
 
 logger = logging.getLogger(__name__)

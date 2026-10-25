@@ -13,8 +13,8 @@ from manashelper.modules.broadcast.callbacks import BroadcastAction, BroadcastCa
 from manashelper.modules.broadcast.keyboards import build_broadcast_confirm_keyboard
 from manashelper.modules.broadcast.sender import TelegramBroadcastSender
 from manashelper.modules.broadcast.service import BroadcastSender, SendBroadcast
+from manashelper.modules.users.application.locale import LocaleService
 from manashelper.services.html_sanitization import escape_html
-from manashelper.services.locale import LocaleService
 
 router = Router(name="broadcast")
 
