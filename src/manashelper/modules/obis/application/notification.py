@@ -2,9 +2,10 @@ import uuid
 from dataclasses import dataclass
 from enum import StrEnum
 
-from manashelper.db.models import UserExamGrade, UserLessonAttendance
 from manashelper.modules.obis.application.obis import ObisService
+from manashelper.modules.obis.infrastructure.user_exam_grade import UserExamGrade
 from manashelper.modules.obis.infrastructure.user_exam_grade_repository import UserExamGradeRepository
+from manashelper.modules.obis.infrastructure.user_lesson_attendance import UserLessonAttendance
 from manashelper.modules.obis.infrastructure.user_lesson_attendance_repository import UserLessonAttendanceRepository
 
 

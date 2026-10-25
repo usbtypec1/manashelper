@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from manashelper.db.models import User
+from manashelper.modules.users.infrastructure.user import User
 
 
 class CourseTrackingRepository:

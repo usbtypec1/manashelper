@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.db.models import Dish
+from manashelper.modules.food_menu.infrastructure.models.dish import Dish
 
 
 class DishRepository:

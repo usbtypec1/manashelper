@@ -1,9 +1,9 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.db.models import FoodMenuCleanupSettings
 from manashelper.modules.food_menu.infrastructure.models.food_menu_cleanup_settings import (
     DEFAULT_FOOD_MENU_CLEANUP_DELAY_MINUTES,
+    FoodMenuCleanupSettings,
 )
 
 

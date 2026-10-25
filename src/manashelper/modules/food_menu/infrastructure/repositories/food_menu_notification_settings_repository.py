@@ -3,7 +3,10 @@ import uuid
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.db.models import FoodMenuNotificationSettings, User
+from manashelper.modules.food_menu.infrastructure.models.food_menu_notification_settings import (
+    FoodMenuNotificationSettings,
+)
+from manashelper.modules.users.infrastructure.user import User
 
 WEEKDAYS = range(7)
 

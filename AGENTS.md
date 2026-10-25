@@ -17,8 +17,9 @@ router, service, repository, and tests before changing a feature. `features/` ho
 ## Architecture
 
 Business features live in `modules/`; shared infrastructure lives in `core/` and `platform/`.
-The planned feature migration is complete. `db/models` keeps the global ORM registry, `jobs` keeps scheduler wiring,
-and `services/` retains shared timezone/text helpers. Feedback, advertisements and the survey live in
+The planned feature migration is complete. `bootstrap.py` explicitly loads ORM models; `jobs` keeps scheduler wiring,
+and `core/time.py` owns the shared timezone. Schedule owns its application text normalization helper.
+Empty legacy `bot/`, `services/`, `repositories/` and `scraping/` packages were removed. Feedback, advertisements and the survey live in
 `modules/feedback/`, `modules/advertisements/` and `modules/student_questions/`, with REQUEST providers in `main.py`.
 Advertisements separates presentation, application and infrastructure, with domain enums; feedback and the survey stay flat.
 Release history lives in flat `modules/versions/`, with functions and no artificial DI provider. Its runtime
@@ -41,7 +42,7 @@ stays in `platform/telegram/`; Food menu/Eders preferences and OBIS polling rema
 NotificationSettingsRepository initializes all three flags to True when creating a row, before flush;
 the first toggle disables the selected flag and summaries never expose transient None values.
 Missing rows still opt recipients into all notifications. Do not rely on INSERT-time defaults when toggling new rows.
-Shared weekday labels live in `localization/weekdays.py`; reuse `services/time_utils.py::BISHKEK_TZ` instead of a feature's timezone.
+Shared weekday labels live in `localization/weekdays.py`; reuse `core/time.py::BISHKEK_TZ` instead of a feature's timezone.
 Users lives in `modules/users/`: application locale/contact services, infrastructure profile/phone ORM and
 repositories, presentation language/phone routers, keyboards and callbacks. UsersProvider retains REQUEST
 scope for all its dependencies, including public UsersQuery (counts, IDs, existence). LocaleService is the
@@ -65,7 +66,11 @@ text with `platform/telegram/html.py::escape_html` before inserting it into Tele
 
 Core lives in `core/`: config.py, database.py, logging.py and provider.py. CoreProvider owns APP settings,
 engine, session factory and the shared HTTP client, plus the REQUEST session. The last legacy `di.py` was removed;
-StudyWeekProvider owns its REQUEST use case. Keep the single Base from `core/database.py` and model registration in `db/models/`.
+StudyWeekProvider owns its REQUEST use case. Keep the single Base from `core/database.py`.
+The `db` package was removed. Import ORM classes from their owning feature/platform modules, never from a global facade.
+Call `bootstrap.load_models()` at application/test/Alembic bootstrap before using ORM. It registers all model modules and
+configures string relationships without re-exporting classes. Standalone compositions must call it explicitly;
+importing one repository no longer loads the whole schema as a side effect.
 Telegram Platform lives in `platform/telegram/`: dispatcher, commands/catalog/extractor, navigation,
 Settings callbacks/routers, filters, middleware, HTML/delivery, audit and scheduled message deletions.
 TelegramPlatformProvider owns both audit and deletion repositories/services in REQUEST. Audit records only
@@ -105,7 +110,7 @@ The session commits only on normal REQUEST finalization. An escaping body except
 commit failures/cancellation also trigger rollback before propagating. Dishka sends the scope exception as the yield value,
 so CoreProvider must inspect it instead of relying only on except around yield. Caught errors inside a scope still allow commit.
 Tests cover real PostgreSQL savepoints, aiogram's outer error handler, cancellation and cleanup failures in
-`tests/test_core_transactions.py` and feature composition in `tests/test_feedback_composition.py`.
+`tests/core/test_core_transactions.py` and feature composition in `tests/modules/feedback/test_feedback_composition.py`.
 New handlers use `FromDishka[...]`; jobs open request scopes with
 `async with container() as request_container`. Keep `setup_dishka(container, dispatcher)` followed by an explicit
 `inject_router(dispatcher)`; `auto_inject=True` conflicts with aiogram startup callbacks in the current versions.
@@ -115,7 +120,7 @@ state. `RateLimitMiddleware` runs before it. `LocaleMiddleware` runs after Dishk
 container. Keep middleware registration order and router filters in mind when adding handlers.
 
 Schema changes go through the owning feature's ORM and an Alembic migration in `alembic/versions`.
-The global model registry still imports migrated models for Alembic. File relocation alone needs no schema migration.
+`bootstrap.load_models()` imports owned models for Alembic; add new ORM modules there. File relocation alone needs no schema migration.
 Generate migrations with
 `uv run alembic revision --autogenerate -m "description"` when a database is available, then review the generated
 operations. `main.py` applies migrations on startup; `uv run alembic upgrade head` applies them manually.
@@ -224,6 +229,11 @@ env DATASOURCE_HOST=localhost \
 
 These commands target the local development database; do not point them at production.
 For focused tests, append a test path to the same `env ... .venv/bin/pytest` command.
+
+Tests mirror ownership: `tests/modules/<feature>/`, `tests/core/` and `tests/platform/{telegram,i18n}/`.
+Run one feature with `tests/modules/eders/`, for example. Keep shared DB fixtures in `tests/conftest.py`,
+resource roots in `tests/paths.py`, and shared Eders factories/fixture in its own test package; do not import helpers
+from a test module. Data stays in `tests/fixtures/`, also used by local HTTP mocks. Test packages use standard imports.
 
 Tests use a real Postgres instance, not SQLite, and need compiled gettext catalogs. The `session` fixture in
 `tests/conftest.py` uses a transaction and savepoint so writes roll back after each test. Ruff uses a 120-character

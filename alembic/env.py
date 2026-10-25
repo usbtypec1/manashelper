@@ -5,8 +5,8 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-import manashelper.db.models  # noqa: F401
 from alembic import context
+from manashelper.bootstrap import load_models
 from manashelper.core.config import get_settings
 from manashelper.core.database import Base
 
@@ -19,6 +19,7 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name, disable_existing_loggers=False)
 
+load_models()
 target_metadata = Base.metadata
 
 config.set_main_option("sqlalchemy.url", get_settings().database_url)

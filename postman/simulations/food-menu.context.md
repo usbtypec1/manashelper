@@ -10,7 +10,7 @@ The mock was built from the caller and parser selectors; no published provider m
 Run `postman simulation run postman/simulations/food-menu.sim.yaml --port 4901 --output ndjson --no-history`.
 The listening event supplies the actual address. In PowerShell set
 `$env:FOOD_MENU_SIMULATION_URL='http://127.0.0.1:4901'`, then run
-`.venv/Scripts/python.exe -m pytest -q tests/test_food_menu_http_simulation.py`.
+`.venv/Scripts/python.exe -m pytest -q tests/modules/food_menu/test_food_menu_http_simulation.py`.
 Stop the foreground simulation with Ctrl+C. The test changes only the module URL in its own process.
 
 ## Assumptions

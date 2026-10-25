@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.db.models import Course
+from manashelper.modules.schedule.infrastructure.models.course import Course
 
 
 class CourseRepository:

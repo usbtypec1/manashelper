@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.db.models import LessonHistory
+from manashelper.modules.schedule.infrastructure.models.lesson_history import LessonHistory
 
 
 class LessonHistoryRepository:

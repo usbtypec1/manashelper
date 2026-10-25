@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
-from manashelper.db.models import FoodMenuNotificationSettings
+from manashelper.modules.food_menu.infrastructure.models.food_menu_notification_settings import (
+    FoodMenuNotificationSettings,
+)
 from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notification_settings_repository import (
     WEEKDAYS,
     FoodMenuNotificationSettingsRepository,

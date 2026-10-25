@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from manashelper.db.models import DailyMenu
+from manashelper.modules.food_menu.infrastructure.models.daily_menu import DailyMenu
 
 
 class DailyMenuRepository:

@@ -2,7 +2,7 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.db.models import ActionLog
+from manashelper.platform.telegram.audit.orm import ActionLog
 
 
 class ActionLogRepository:

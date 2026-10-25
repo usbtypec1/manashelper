@@ -79,10 +79,12 @@ flowchart TD
 manashelper/
 ├── src/manashelper/
 │   ├── main.py                    # Точка входа и жизненный цикл приложения
+│   ├── bootstrap.py               # Явная загрузка ORM и конфигурация relationships
 │   ├── core/
 │   │   ├── config.py              # Настройки окружения и кеш
 │   │   ├── database.py            # DeclarativeBase, engine, фабрика сессий
 │   │   ├── logging.py             # Консольные и файловые логи
+│   │   ├── time.py                # Общий BISHKEK_TZ
 │   │   └── provider.py            # Общие APP-ресурсы и REQUEST-сессия
 │   ├── platform/
 │   │   ├── i18n/catalog.py        # CatalogI18n и единый gettext context
@@ -102,9 +104,6 @@ manashelper/
 │   │       ├── audit/             # Service, repository, ORM
 │   │       ├── deletions/         # Service, repository, ORM и тонкая cleanup job
 │   │       └── provider.py        # Четыре REQUEST-зависимости платформы
-│   ├── services/                  # Общие timezone/text helpers
-│   ├── db/
-│   │   └── models/                # Общий registry ORM-моделей функциональных модулей
 │   ├── jobs/                      # Регистрация фоновых заданий
 │   ├── modules/
 │   │   ├── advertisements/
@@ -165,22 +164,23 @@ manashelper/
 └── CLAUDE.md                      # Архитектурные заметки и история решений
 ```
 
-Внутри `services/` находятся не только классы сервисов. Там же лежат `*_formatter.py`, модели результатов,
-сериализация снимков eders, нормализация текста, работа со временем и HTML. Часть этих модулей зависит от типов
-aiogram; слой сервисов целиком не изолирован от Telegram.
+Application-компоненты и модели результатов находятся внутри функциональных модулей. Их Telegram formatter
+принадлежит presentation, сериализация снимков — infrastructure. Общий BISHKEK_TZ находится в core/time.py;
+только Schedule использует fold_turkish, поэтому нормализация текста принадлежит его application-пакету.
+Пустые горизонтальные bot/services/repositories/scraping пакеты удалены.
 
 ## 4. Слои и границы ответственности
 
 ### Telegram-слой
 
 [platform/telegram/dispatcher.py](../src/manashelper/platform/telegram/dispatcher.py) создаёт `Dispatcher`, подключает middleware и
-регистрирует маршрутизаторы. Обработчики находятся в `bot/routers/`, `modules/feedback/router.py`
-и presentation перенесённых модулей, включая `modules/student_questions/router.py`. Они выбирают сценарий по команде, тексту кнопки,
+регистрирует маршрутизаторы. Общая навигация находится в `platform/telegram/routers/`, обработчики features —
+в их presentation-пакетах или плоских router.py, включая Feedback и Student questions. Они выбирают сценарий по команде, тексту кнопки,
 callback-данным или состоянию FSM. Сервисы передаются через `FromDishka[...]`.
 
 Обработчики управляют диалогом и Telegram-операциями: отправляют и редактируют сообщения, отвечают на нажатия,
-публикуют объявления, переключают состояния форм. `bot/keyboards/` строит клавиатуры, а
-`bot/callback_data.py` задаёт типизированные payload для inline-кнопок.
+публикуют объявления, переключают состояния форм. Клавиатуры и типизированные callback payload принадлежат
+presentation своей области; общий Settings payload находится в platform/telegram/callbacks.py.
 
 Порядок маршрутизаторов значим: aiogram использует первый подходящий обработчик. Сейчас сначала подключены
 `student_questions` и `advertisement_contact`, затем общий `start`. Это позволяет обработать
@@ -190,7 +190,7 @@ callback-данным или состоянию FSM. Сервисы переда
 
 ### Сервисы
 
-`services/` и application-компоненты перенесённых модулей содержат бизнес-правила:
+Application-компоненты функциональных модулей содержат бизнес-правила:
 подписки на курсы, сравнение снимков, настройки уведомлений,
 проверку владельца объявления, сохранение учётных данных и подготовку результатов для интерфейса.
 Сервисы получают конкретные зависимости через конструктор. Они могут вызывать другие сервисы:
@@ -214,14 +214,14 @@ ORM-объекты используются внутри сервисов и р�
 Dishka передаёт исключение тела через asend() как значение yield, а не через athrow(). CoreProvider явно
 проверяет это значение. Ошибка, пойманная внутри scope, не меняет успешный статус его завершения.
 Прежний дефект commit после ошибки исправлен отдельно от feature-переносов. Проверки в
-`tests/test_core_transactions.py` охватывают PostgreSQL savepoints, отмену задачи, aiogram error handler,
+`tests/core/test_core_transactions.py` охватывают PostgreSQL savepoints, отмену задачи, aiogram error handler,
 ошибки commit/rollback и возможность следующего запроса после сбоя. История — в `docs/MIGRATION.md`.
 
 ### Внешние источники
 
-`scraping/` разделяет получение страниц и их разбор. Клиенты выполняют HTTP-запросы, парсеры преобразуют HTML
+Infrastructure каждой интеграции разделяет получение страниц и их разбор. Клиенты выполняют HTTP-запросы, парсеры преобразуют HTML
 в структурированные данные. Сервисы решают, как проверить, сохранить и показать эти данные.
-Для eders общие модели находятся в `services/eders_models.py`, поэтому парсер тоже зависит от этого модуля.
+Для eders модели находятся в `modules/eders/application/models.py`, поэтому его парсер зависит от этих типов.
 
 ### Фоновые задания
 
@@ -359,7 +359,7 @@ TelegramAPIError доставки пропускает получателя, н�
 и истории. Повторной отправки нет; интервал job остаётся один час с немедленным первым запуском.
 
 Названия дней недели вынесены без изменения функций в `localization/weekdays.py`, где их используют
-Food menu, Schedule и Study week. Все используют существующий `services/time_utils.py::BISHKEK_TZ`;
+Food menu, Schedule и Study week. Все используют общий `core/time.py::BISHKEK_TZ`;
 дублирующая константа Food menu удалена. Между Food menu и Schedule больше нет этих взаимных зависимостей.
 
 ### Столовая
@@ -385,9 +385,9 @@ Repository создаёт новые настройки дня с lunch_enabled=
 ### Users
 
 `modules/users/` владеет User и UserPhoneNumber, двумя репозиториями, application-сервисами локали и
-контактов, публичным UsersQuery и presentation выбора языка/телефонов. Общий registry `db/models/`
-по-прежнему регистрирует обе модели для Alembic. Репозитории импортируют модели через этот registry:
-это сохраняет регистрацию связанных мапперов Schedule даже при отдельном импорте Users.
+контактов, публичным UsersQuery и presentation выбора языка/телефонов. Репозитории импортируют модели напрямую
+из owning modules. Регистрация связанных мапперов Schedule выполняется явным bootstrap.load_models(),
+а не побочным эффектом импорта одного репозитория.
 Все зависимости Users имеют REQUEST scope.
 Обновление имени/username сохраняет локаль, credentials и ORM-коллекцию подписок. LocaleService читает
 локаль без регистрации пользователя, а resolve обновляет профиль и сохраняет выбранный/определённый язык.
@@ -520,10 +520,13 @@ presentation использует enum из `domain/enums.py`, не импорт
 
 ## 8. Постоянные данные
 
-ORM-модели находятся в [db/models/](../src/manashelper/db/models/), `modules/feedback/orm.py`,
-`modules/student_questions/orm.py` и `modules/advertisements/infrastructure/`. Общий `db/models/__init__.py`
-импортирует и повторно экспортирует модели перенесённых модулей, поэтому Alembic
-продолжает видеть всю metadata. Основные таблицы сгруппированы ниже.
+ORM-модели находятся в owning `modules/<feature>/` и `platform/telegram/{audit,deletions}/`.
+Пакет db и общий фасад классов удалены. [bootstrap.py](../src/manashelper/bootstrap.py) предоставляет только
+load_models(): функция явно импортирует ORM modules и вызывает Base.registry.configure(). Конкретные модели
+не экспортируются из bootstrap; прикладной код импортирует их у владельцев.
+Эта же функция вызывается до создания ресурсов в main(), перед target_metadata в alembic/env.py
+и в tests/conftest.py. Standalone composition должна вызвать её перед ORM-операциями.
+Base, engine и session factory остаются в core/database.py. Основные таблицы сгруппированы ниже.
 
 | Область | Таблицы | Содержимое и связи |
 | --- | --- | --- |
@@ -666,9 +669,15 @@ runtime-файлы из `docs/commands`, `docs/requisites`, `docs/versions`, з�
 `tests/conftest.py` создаёт внешнюю транзакцию и savepoint; изменения откатываются после теста даже при
 внутреннем `commit` тестируемого кода.
 
+55 тестовых модулей сгруппированы в `tests/modules/<feature>/`, `tests/core/` и `tests/platform/{telegram,i18n}/`.
+Для запуска одной области используется, например, `uv run pytest tests/modules/eders/`.
+`tests/paths.py` задаёт стабильные корни repository/fixtures независимо от глубины теста. Данные остаются в
+`tests/fixtures/`, поскольку их также читают Postman mocks. Общая Eders tracking fixture находится в локальном
+conftest.py, а factory данных — в factories.py; тестовые модули не импортируют друг друга ради helper-функций.
+
 Парсеры и сценарии eders проверяются на HTML-примерах. Дополнительный корпусный тест читает локальную
 выгрузку из `EDERS_HTML_DIR` или `r` и пропускается, если файлов нет. HTTP-тест
-`tests/test_eders_http_flow.py` использует локальную Postman Simulation и запускается при заданном
+`tests/modules/eders/test_eders_http_flow.py` использует локальную Postman Simulation и запускается при заданном
 `EDERS_SIMULATION_PORT`; без него тесты этого модуля пропускаются. Симуляция не входит в production Compose.
 
 Базовые команды из корня проекта:
@@ -713,7 +722,7 @@ Ruff использует длину строки 120 и целевую верс
   пользователей для модерации, а деплой запускается по тегам `v*`.
 
 Код и зависимости feature изменяются внутри `modules/<feature>/`; новый provider
-подключается в composition root. Общие timezone/text helpers пока остаются в `services/`.
+подключается в composition root. Общий timezone helper принадлежит Core, нормализация текста — Schedule.
 Общая Telegram-навигация в `platform/telegram/navigation.py`, i18n, `core.config.Settings` и `core.database.Base`
 остаются внешними зависимостями перенесённых модулей. `LocaleService` принадлежит Users.
 Объявления используют `UserContactService`

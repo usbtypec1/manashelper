@@ -1,14 +1,14 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
-from manashelper.db.models import Lesson
 from manashelper.modules.schedule.application.schedule import (
     MAX_GAP_MINUTES_TO_GROUP,
     parse_time_range_end_minutes,
     parse_time_range_start_minutes,
 )
+from manashelper.modules.schedule.application.text_normalization import fold_turkish
+from manashelper.modules.schedule.infrastructure.models.lesson import Lesson
 from manashelper.modules.schedule.infrastructure.repositories.lesson_repository import LessonRepository
-from manashelper.services.text_normalization import fold_turkish
 
 
 @dataclass(frozen=True, slots=True)

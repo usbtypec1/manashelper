@@ -6,7 +6,7 @@ from datetime import datetime
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.db.models import ScheduledMessageDeletion
+from manashelper.platform.telegram.deletions.orm import ScheduledMessageDeletion
 
 
 class ScheduledMessageDeletionRepository:

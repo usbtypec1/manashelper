@@ -2,11 +2,11 @@ from datetime import timedelta
 
 from aiogram.utils.i18n import gettext as _
 
+from manashelper.core.time import BISHKEK_TZ
 from manashelper.localization.weekdays import weekday_full
 from manashelper.modules.eders.application.models import ActivityKind
 from manashelper.modules.study_week.application import StudyWeek, week_end
 from manashelper.platform.telegram.html import escape_html
-from manashelper.services.time_utils import BISHKEK_TZ
 
 
 def format_study_week(week: StudyWeek) -> list[str]:

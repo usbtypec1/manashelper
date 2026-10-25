@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.db.models import Faculty
+from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
 
 
 class FacultyRepository:

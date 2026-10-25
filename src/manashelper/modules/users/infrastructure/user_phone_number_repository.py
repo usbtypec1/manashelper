@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.db.models import UserPhoneNumber
+from manashelper.modules.users.infrastructure.user_phone_number import UserPhoneNumber
 
 
 class UserPhoneNumberRepository:

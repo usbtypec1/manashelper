@@ -1,5 +1,6 @@
 from aiogram.utils.i18n import gettext as _
 
+from manashelper.core.time import BISHKEK_TZ
 from manashelper.modules.eders.application.models import (
     ActivityDate,
     ActivityKind,
@@ -9,7 +10,6 @@ from manashelper.modules.eders.application.models import (
 )
 from manashelper.modules.eders.application.tracking import EdersEvent
 from manashelper.platform.telegram.html import escape_html
-from manashelper.services.time_utils import BISHKEK_TZ
 
 
 def _date(value: ActivityDate, source_limit: int = 300) -> str:

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
+from manashelper.core.time import BISHKEK_TZ
 from manashelper.modules.eders.application.eders import EdersService
 from manashelper.modules.eders.application.models import EdersSnapshot
 from manashelper.modules.schedule.application.schedule import (
@@ -8,7 +9,6 @@ from manashelper.modules.schedule.application.schedule import (
     ScheduleLessonModel,
     ScheduleService,
 )
-from manashelper.services.time_utils import BISHKEK_TZ
 
 
 @dataclass(frozen=True, slots=True)

@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
+from manashelper.core.time import BISHKEK_TZ
 from manashelper.modules.eders.application.models import (
     ActivityDate,
     ActivityKind,
@@ -18,7 +19,6 @@ from manashelper.modules.eders.application.models import (
 )
 from manashelper.modules.eders.errors import EdersParseError, EdersUnsafeUrlError
 from manashelper.modules.eders.infrastructure.urls import EDERS_BASE_URL, eders_id, safe_eders_url
-from manashelper.services.time_utils import BISHKEK_TZ
 
 
 def parse_enrolled_courses(payload: object) -> tuple[list[EdersCourse], int | None]:

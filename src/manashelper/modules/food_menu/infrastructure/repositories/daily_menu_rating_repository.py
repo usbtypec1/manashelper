@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.db.models import DailyMenuRating
+from manashelper.modules.food_menu.infrastructure.models.daily_menu_rating import DailyMenuRating
 
 
 class DailyMenuRatingRepository:

@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.db.models import UserExamGrade
+from manashelper.modules.obis.infrastructure.user_exam_grade import UserExamGrade
 
 
 class UserExamGradeRepository:

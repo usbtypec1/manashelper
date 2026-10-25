@@ -1,7 +1,9 @@
 import uuid
 from dataclasses import dataclass
 
-from manashelper.db.models import Lesson, LessonHistory
+from manashelper.modules.schedule.application.text_normalization import fold_turkish
+from manashelper.modules.schedule.infrastructure.models.lesson import Lesson
+from manashelper.modules.schedule.infrastructure.models.lesson_history import LessonHistory
 from manashelper.modules.schedule.infrastructure.repositories.lesson_history_repository import LessonHistoryRepository
 from manashelper.modules.schedule.infrastructure.repositories.lesson_repository import LessonRepository
 from manashelper.modules.schedule.infrastructure.timetable_client import TimetableClient
@@ -10,7 +12,6 @@ from manashelper.modules.schedule.infrastructure.timetable_parser import (
     ScrapedTimeSlot,
     parse_timetable_page,
 )
-from manashelper.services.text_normalization import fold_turkish
 
 
 @dataclass(frozen=True, slots=True)

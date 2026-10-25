@@ -35,7 +35,7 @@ Core capabilities (current):
 - **Notification settings**: a `⚙️ Settings` menu (`platform/telegram/routers/settings.py`) lets each user toggle five
   notification kinds (schedule changes, before-lunch/before-dinner menu pings, exam-grade changes, lesson skips),
   backed by a lazily-created `NotificationSettings` row per user that defaults every toggle to enabled — see
-  `services/notification_settings.py`.
+  `modules/notifications/settings.py` and the Food menu notification settings service.
 - **Scheduled notifications** (the `jobs/` package, wired up in `jobs/scheduler.py`): the daily menu is broadcast to
   opted-in users at 11:00/17:00 Bishkek time; OBIS exam grades and lesson attendance are polled hourly per user
   and diffed against previously-seen state to notify only on actual changes; each tracked course's timetable is
@@ -167,7 +167,7 @@ Shared Settings navigation stays in platform/telegram/. NotificationSettingsRepo
 before flush; initial summaries reflect enabled defaults and the first toggle disables the selected flag.
 Missing settings still opt users into notifications; do not depend on INSERT-time defaults when toggling new rows.
 Shared weekday labels live in localization/weekdays.py; Bishkek timezone reuses
-services/time_utils.py. Root composition now has fourteen providers, including CoreProvider, TelegramPlatformProvider and ObisProvider.
+core/time.py. Root composition now has fourteen providers, including CoreProvider, TelegramPlatformProvider and ObisProvider.
 Core owns shared config, logging, database factories/Base and resource lifecycle in core/.
 The last legacy di.py was removed; StudyWeekProvider owns GetStudyWeek in REQUEST. Shared Telegram presentation and
 infrastructure live in platform/telegram/: dispatcher, commands, navigation, filters, middleware, HTML/delivery,
@@ -198,15 +198,15 @@ The same adapter removes advertisement publications. Runtime commands/locales pa
 `docs/ARCHITECTURE.md` describes the current state; `docs/MIGRATION.md` records stage boundaries and baseline issues.
 
 Under `src/manashelper/`, migrated features own their code in `modules/`; shared infrastructure lives in `core/`
-and `platform/`. `db/models` keeps the global registry, `jobs` wires the scheduler, and `services/`
-retains shared timezone/text helpers. Business features no longer use the horizontal legacy layers.
+and `platform/`. `bootstrap.py` loads ORM explicitly and `jobs` wires the scheduler. `core/time.py` owns BISHKEK_TZ;
+Schedule's application package owns text_normalization.py. Empty bot/services/repositories/scraping packages were removed.
 
-**Services return plain dataclasses, never ORM models.** A `service` method called from a `bot/routers` handler
+**Services return plain dataclasses, never ORM models.** An application method called from a feature's router
 returns a frozen `dataclass` (e.g. `FacultyModel`, `DepartmentSummary`, `CourseSummary`) or raises, never a
 SQLAlchemy model instance — routers must never hold an ORM object. Map ORM model → dataclass with a private
 module-level helper next to the service class (see `course._to_summaries`, used by `CourseService`).
 
-**`services/` classes exist to hold DI-injected collaborators, not as Java-style ceremony.** A `*Service` class's
+**Application services exist to hold DI-injected collaborators, not as Java-style ceremony.** A `*Service` class's
 `__init__` takes the repositories (and other collaborators, e.g. `CryptoService`, `ObisClient`) it needs and
 stores them as attributes; its methods are the only thing a router or a `jobs/` module depends on via
 `FromDishka[...]`/`request_container.get(...)` — the presentation layer never sees a repository, an `AsyncSession`,
@@ -222,7 +222,7 @@ list, first match wins), aiogram matches each incoming update against filters de
 `@router.callback_query(...)` decorators — still effectively first-match-wins across included routers, so keep
 filters mutually exclusive the same way the Java handlers' `shouldHandle` predicates had to be.
 
-Callback data is packed via aiogram's typed `CallbackData` factories (`bot/callback_data.py` —
+Callback data is packed via aiogram's typed `CallbackData` factories (feature-local callbacks.py —
 `FacultyCallback`/`DepartmentCallback`/`CourseCallback`), replacing the old `CallbackDataByIdFilter.pack`/
 `.parseUUID`/`.parseInt` string convention — `SomeCallback.filter()` is passed directly to
 `@router.callback_query(...)`, and the parsed instance is injected into the handler as a `callback_data: SomeCallback`
@@ -248,8 +248,8 @@ parameter annotations — the analog of Spring's constructor injection into `@Co
 CoreProvider's session provider commits only on successful finalization. An escaping body exception/cancellation
 or a failed/cancelled commit triggers rollback; the session still closes. Dishka sends the scope exception via
 asend(), so the provider explicitly inspects the yielded value. A handled error inside the scope still permits commit.
-Regression tests in `tests/test_core_transactions.py` cover real PostgreSQL savepoints, cancellation, aiogram error middleware
-and cleanup failures; `tests/test_feedback_composition.py` verifies feature composition. Feature providers share the REQUEST session.
+Regression tests in `tests/core/test_core_transactions.py` cover real PostgreSQL savepoints, cancellation, aiogram error middleware
+and cleanup failures; `tests/modules/feedback/test_feedback_composition.py` verifies feature composition. Feature providers share the REQUEST session.
 
 **Do not use `dishka.integrations.aiogram.setup_dishka(..., auto_inject=True)`.** As of dishka 1.10.1 + aiogram
 3.31, it registers its handler-injection pass as a `router.startup` callback via
@@ -267,11 +267,14 @@ Flyway migration history, though the seed data (faculties/departments/courses) w
 project's `V2__seed_faculties_and_departments.sql` into `e82d16133698_seed_faculties_departments_courses.py`.
 `alembic/env.py` points `target_metadata` at `manashelper.core.database.Base.metadata` and overrides `sqlalchemy.url`
 from `Settings.database_url` at runtime — `alembic.ini`'s `sqlalchemy.url` placeholder is never actually used.
+The `db` package and global ORM re-exports were removed. Import each model from its owning feature/platform module.
+`bootstrap.load_models()` registers all model modules and configures relationships at main/Alembic/test bootstrap;
+standalone compositions must call it before using ORM. Imports of individual repositories no longer load all models.
 Migrations run automatically on boot (`main.py::run_migrations`, called before `asyncio.run(main())` — mirrors the
 old `FlywayConfig`'s `initMethod=migrate` bean) as well as being runnable manually via `uv run alembic upgrade head`.
 
 Add new migrations with `uv run alembic revision --autogenerate -m "..."` after changing a model under
-`db/models/`, rather than hand-writing schema changes.
+the owning feature/platform ORM module. Register a new model module in bootstrap.py, then review generated operations.
 
 ### Tests
 
@@ -281,6 +284,11 @@ under test calls `session.commit()`, only a SAVEPOINT is released — the outer 
 after the test, so tests can freely insert rows (including ones that collide in shape with seeded catalog data,
 as long as ids don't collide) without polluting the dev database. Tests run against the real dev Postgres
 (`docker-compose.dev.yml`), not SQLite — avoids dialect drift on native `UUID`/`TIMESTAMP` types.
+
+The 55 test modules are grouped under `tests/modules/<feature>/`, `tests/core/` and `tests/platform/{telegram,i18n}/`.
+Run a feature with `uv run pytest tests/modules/eders/`. Shared resource anchors live in `tests/paths.py`;
+fixtures data stays in `tests/fixtures/` for both pytest and HTTP mocks. Eders factories and its tracking fixture
+live in `tests/modules/eders/factories.py` and local conftest.py, without imports from another test module.
 
 ### OBIS integration notes
 

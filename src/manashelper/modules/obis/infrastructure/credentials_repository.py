@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.db.models import User
+from manashelper.modules.users.infrastructure.user import User
 
 
 class ObisCredentialsRepository:

@@ -9,6 +9,7 @@ from aiogram.types import CallbackQuery, EphemeralMessageParameters, Message, Re
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
+from manashelper.core.time import BISHKEK_TZ
 from manashelper.modules.food_menu.application.daily_menu import DailyMenuNotFoundError, DailyMenuService
 from manashelper.modules.food_menu.application.food_menu_cleanup_settings import FoodMenuCleanupSettingsService
 from manashelper.modules.food_menu.presentation.callbacks import (
@@ -32,7 +33,6 @@ from manashelper.modules.food_menu.presentation.keyboards.food_menu import (
     build_menu_rating_buttons,
 )
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
-from manashelper.services.time_utils import BISHKEK_TZ
 
 router = Router(name="food_menu")
 logger = logging.getLogger(__name__)

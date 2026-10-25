@@ -1,8 +1,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-# The shared registry also loads Schedule's related mappers.
-from manashelper.db.models import User
+from manashelper.modules.users.infrastructure.user import User
 
 
 class UserRepository:

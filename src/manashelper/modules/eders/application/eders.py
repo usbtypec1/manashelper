@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
+from manashelper.core.time import BISHKEK_TZ
 from manashelper.modules.eders.application.models import (
     ActivityKind,
     DeadlineFilter,
@@ -12,7 +13,6 @@ from manashelper.modules.eders.application.tracking import EdersTrackingService
 from manashelper.modules.eders.infrastructure.client import EdersClient
 from manashelper.modules.obis.application.credentials import ObisCredentialsService
 from manashelper.modules.obis.errors import DecryptionError, UserHasNoCredentialsError
-from manashelper.services.time_utils import BISHKEK_TZ
 
 
 def filter_activities(

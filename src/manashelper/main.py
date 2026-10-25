@@ -10,6 +10,7 @@ from alembic.config import Config
 from dishka import make_async_container
 
 from alembic import command
+from manashelper.bootstrap import load_models
 from manashelper.core.config import get_settings
 from manashelper.core.logging import configure_logging
 from manashelper.core.provider import CoreProvider
@@ -45,6 +46,7 @@ def _handle_asyncio_exception(loop: asyncio.AbstractEventLoop, context: dict[str
 
 
 async def main() -> None:
+    load_models()
     asyncio.get_running_loop().set_exception_handler(_handle_asyncio_exception)
     settings = get_settings()
 

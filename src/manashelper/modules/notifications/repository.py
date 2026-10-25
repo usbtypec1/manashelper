@@ -2,8 +2,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
-from manashelper.db.models import User, user_courses
 from manashelper.modules.notifications.orm import NotificationSettings
+from manashelper.modules.schedule.infrastructure.models.associations import user_courses
+from manashelper.modules.users.infrastructure.user import User
 
 
 class NotificationSettingsRepository:

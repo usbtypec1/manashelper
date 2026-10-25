@@ -38,8 +38,8 @@ GET страниц Eders запрашивает `lang=en`; парсер такж
 Для тестов с БД использовать локальный Postgres и переменные окружения из `AGENTS.md`.
 
 ```sh
-.venv/bin/pytest -q tests/test_eders.py tests/test_eders_tracking.py tests/test_eders_handlers.py tests/test_eders_materials.py
-EDERS_HTML_DIR=r .venv/bin/pytest -q -s tests/test_eders_corpus.py
+.venv/bin/pytest -q tests/modules/eders/test_eders.py tests/modules/eders/test_eders_tracking.py tests/modules/eders/test_eders_handlers.py tests/modules/eders/test_eders_materials.py
+EDERS_HTML_DIR=r .venv/bin/pytest -q -s tests/modules/eders/test_eders_corpus.py
 ```
 
 На 827 локальных HTML проверены полнота поддерживаемых карточек, отсутствие дубликатов, разбор дат,
@@ -54,7 +54,7 @@ Postman CLI не авторизован. Подключать аккаунт д�
 ```sh
 postman simulation run postman/simulations/eders.sim.yaml --port 4947 --no-history --output ndjson
 # В другом терминале:
-EDERS_SIMULATION_PORT=4947 .venv/bin/pytest -q tests/test_eders_http_flow.py
+EDERS_SIMULATION_PORT=4947 .venv/bin/pytest -q tests/modules/eders/test_eders_http_flow.py
 ```
 
 Проверяются вход, cookies/redirects, sesskey, тело AJAX, пагинация, загрузка курса/деталей,

@@ -3,12 +3,13 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
-from manashelper.db.models import DailyMenu, DailyMenuRating
+from manashelper.core.time import BISHKEK_TZ
+from manashelper.modules.food_menu.infrastructure.models.daily_menu import DailyMenu
+from manashelper.modules.food_menu.infrastructure.models.daily_menu_rating import DailyMenuRating
 from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_rating_repository import (
     DailyMenuRatingRepository,
 )
 from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_repository import DailyMenuRepository
-from manashelper.services.time_utils import BISHKEK_TZ
 
 MENU_LOOKAHEAD_DAYS = 7
 

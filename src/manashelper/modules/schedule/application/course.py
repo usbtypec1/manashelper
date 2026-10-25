@@ -2,7 +2,7 @@ import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from manashelper.db.models import Course
+from manashelper.modules.schedule.infrastructure.models.course import Course
 from manashelper.modules.schedule.infrastructure.repositories.course_repository import CourseRepository
 from manashelper.modules.schedule.infrastructure.repositories.course_tracking_repository import CourseTrackingRepository
 

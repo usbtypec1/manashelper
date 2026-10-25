@@ -1,9 +1,10 @@
 import re
 import uuid
 
-from manashelper.db.models import DailyMenu, Dish
 from manashelper.modules.food_menu.infrastructure.food_menu_client import FoodMenuClient
 from manashelper.modules.food_menu.infrastructure.food_menu_parser import FoodMenuParser, ScrapedDailyMenu
+from manashelper.modules.food_menu.infrastructure.models.daily_menu import DailyMenu
+from manashelper.modules.food_menu.infrastructure.models.dish import Dish
 from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_repository import DailyMenuRepository
 from manashelper.modules.food_menu.infrastructure.repositories.dish_repository import DishRepository
 

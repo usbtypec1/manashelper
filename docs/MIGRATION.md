@@ -9,11 +9,14 @@
 Актуальный статус на 25 октября 2026 года: перенесены **Feedback**, **Advertisements**, **Student questions**,
 **Versions**, **Donations**, **Broadcast**, **Food menu**, **Schedule**, **Notifications**, **Users**, **OBIS**, **Eders** и **Study week**.
 План переноса бизнес-областей выполнен. OBIS владеет credentials и предоставляет их Eders через application-границу;
-Study week объединяет application-результаты Eders и Schedule. Общие timezone/text helpers пока остаются в services/.
+Study week объединяет application-результаты Eders и Schedule. После отдельной уборки общий timezone helper
+находится в core/time.py, text normalization — в Schedule; пустые legacy пакеты удалены, тесты сгруппированы по владельцам.
 Общая инфраструктура выделена в Core, Telegram Platform, аудит и очередь удаления — в platform/.
+Пакет db удалён полностью. ORM-классы импортируются у владельцев, bootstrap.load_models() явно загружает
+модель и конфигурирует relationships для runtime, Alembic и тестов, без общего реэкспорта классов.
 Отдельно исправлены REQUEST rollback при ошибке/отмене и начальные значения настроек Notifications/Food menu:
 новые строки сразу содержат True, первый toggle выключает выбранные уведомления.
-Общий gate с локальной OBIS/Eders simulation зелёный: **635 passed, 5 skipped**, Ruff, mypy и Alembic проходят.
+Общий gate с локальной OBIS/Eders simulation зелёный: **638 passed, 5 skipped**, Ruff, mypy и Alembic проходят.
 Первоначальные красные результаты ниже оставлены как история baseline и не описывают текущую проверку.
 
 ## Исходное состояние — 24 октября 2026 года
@@ -1128,3 +1131,125 @@ Existing recipient/default opt-in, enable_all/disable_all и неизвестн�
 Документы AGENTS/CLAUDE/ARCHITECTURE обновлены; старые записи сохранены как история этапов.
 Изменение ограничено двумя repository и проверками настроек; незавершённой работы в этом исправлении нет.
 Коммиты, push и deploy не выполнялись.
+
+### План уборки: helpers, пустые пакеты и тесты
+
+Пользователь выбрал только косметическую доводку. Runtime-алгоритмы, зависимости, схема, HTTP-контракт и поведение
+OBIS/уведомлений не меняются. Исходное дерево чистое кроме трёх `.DS_Store`; коллекция тестов сохраняется до переносов.
+
+Общий BISHKEK_TZ переносится из services/time_utils.py в core/time.py. fold_turkish используется только двумя
+application-компонентами Schedule, поэтому принадлежит modules/schedule/application/text_normalization.py.
+После проверки отсутствия потребителей удаляются пустые legacy bot/, repositories/, scraping/ и services/.
+
+54 тестовых модуля группируются в tests/modules/<feature>/, tests/core/ и tests/platform/{telegram,i18n}/.
+Имена файлов и тестов сохраняются. tests/conftest.py продолжает владеть PostgreSQL transaction/savepoint fixtures;
+данные остаются в tests/fixtures/, поскольку их переиспользуют HTTP-моки. Корни ресурсов получают единый tests/paths.py.
+Прямые импорты из test_eders_tracking заменяются общим factory-модулем; одинаковая tracking fixture принадлежит
+локальному Eders conftest.py. Package initializers нужны для штатных Python imports, sys.path не изменяется вручную.
+
+Проверки: одинаковая коллекция тестов без учёта нового directory prefix, AST runtime/тестовых сценариев,
+полный pytest, Ruff, mypy, Alembic, import walk и актуальность текущих команд/путей в документации.
+
+### Выполнено: helpers, пустые пакеты и тесты
+
+Baseline с существующей локальной OBIS/Eders simulation: **635 passed, 5 skipped**. До изменений сохранена
+коллекция **640 тестовых случаев**. Дерево было чистым кроме трёх пользовательских `.DS_Store`.
+
+Через Index MCP перенесены BISHKEK_TZ в `core/time.py` и fold_turkish в
+`modules/schedule/application/text_normalization.py`. Первый используется несколькими features и scheduler,
+второй — только Schedule. Оба файла побайтно совпадают с исходными; в 12 runtime-потребителях изменились только imports.
+После проверки отсутствия потребителей удалены шесть пустых package initializers и каталоги legacy
+bot/routers, bot/keyboards, bot, repositories, scraping, services; удалены только их сгенерированные pyc-файлы.
+
+54 тестовых файла перенесены через Index MCP без переименования: 13 feature-пакетов в tests/modules/,
+Core в tests/core/, Telegram/i18n в tests/platform/. tests/conftest.py и исходные data fixtures сохранены.
+Новые test package initializers обеспечивают обычные Python imports; pyproject, зависимости и sys.path не менялись.
+tests/paths.py задаёт устойчивые PROJECT_ROOT/FIXTURES_DIR. Пять resource-dependent тестовых модулей получили
+новые anchors; проверки runtime checkout/Docker-like layouts и Babel работают с теми же файлами, что раньше.
+
+Общие Eders NOW/item вынесены в factories.py, одинаковая tracking fixture — в локальный conftest.py.
+Импортов из test_eders_tracking больше нет. Factory и typed fixture совпали с исходными по AST;
+AST всех 54 тестовых модулей совпал с baseline после исключения imports, перенесённых helpers и замены resource anchors.
+Нормализованная коллекция из 640 случаев совпала полностью, включая parameter IDs; ни один тест не потерян и не добавлен.
+
+Проверки:
+
+- полный pytest в новой структуре: **635 passed, 5 skipped**, как до переноса;
+  пропуски прежние: четыре Food menu/Timetable HTTP-теста без их simulations и приватный корпус Eders;
+- Ruff lint/format: **413 файлов**; mypy strict: **271 source files**, без ошибок;
+- все **270 подмодулей приложения** импортируются; старых legacy packages и imports нет;
+- Alembic: `No new upgrade operations detected.`; ORM и migrations не менялись;
+- Index diagnostics helpers/test support и остальных проверенных moved files без ошибок, кроме прежних
+  IDE inspections в неизменённых тестовых сценариях: dynamic new_http_client monkeypatch и Babel Message.id typing;
+  их runtime-тесты проходят, сценарии совпали по AST. Никаких suppressions или несвязанных исправлений не добавлялось;
+- IDE build сообщает success с ограниченными diagnostics; основное доказательство — CLI gates;
+- `git diff --check` чист; текущие Markdown links и Python test paths разрешаются;
+- существующая Postman simulation переиспользована без изменения mock/контракта. HTTP-тесты после переносов
+  прошли; реальные university endpoints/accounts не вызывались.
+
+AGENTS/CLAUDE/ARCHITECTURE, Eders testing commands и Postman context test paths обновлены.
+Исторические записи MIGRATION сохраняют пути соответствующего этапа. Уборка завершена без изменения
+runtime-алгоритмов, транзакций, настроек, локалей и внешнего поведения. Коммиты, push и deploy не выполнялись.
+Simulation остановлена; IDE auto-staging снят со 140 проверенных task-путей при исходно пустом index.
+Три исходных `.DS_Store` сохранены; изменения остаются в рабочем дереве для review.
+
+### План: убрать реэкспорт db.models
+
+Пользователь попросил обойтись без общего фасада всех ORM-классов. Уже staged изменения предыдущей уборки
+сохраняются; index snapshot и DDL 27 таблиц сохранены отдельно перед новым этапом.
+Обычные потребители переходят с db.models на owning ORM modules. Глобальный реэкспорт и пустой models-пакет удаляются.
+
+Строковые relationships и Alembic по-прежнему требуют регистрации полной модели. Явный bootstrap.load_models
+загружает ORM и конфигурирует mappers; функция вызывается в main bootstrap, alembic/env.py и tests/conftest.py.
+Импорт отдельной feature больше не должен неявно подтягивать все 27 таблиц. Автопоиск, новый DI provider и generic
+registry abstractions не вводятся. Bootstrap module не экспортирует конкретные ORM-классы.
+По уточнённому запросу пользователя удаляется весь пакет db, а не только models: Base/engine/session
+остаются в core/database.py, регистрация ORM принадлежит корневому composition bootstrap.py.
+
+Проверки: cold-process import/load, полный metadata/relationships, idempotence, startup before resources,
+baseline DDL, Alembic, полный pytest и strict checks. Runtime-алгоритмы и модель данных сохраняются.
+
+### Выполнено: полностью удалён пакет db
+
+Исходный gate: **635 passed, 5 skipped** с локальной OBIS/Eders simulation. До изменений сохранены DDL
+27 таблиц/индексов и исходный index: пользователь уже staged предыдущую уборку, её записи не изменяются.
+Cold-process regression сначала воспроизвела скрытый side effect: импорт Users repository загружал всю схему.
+
+Все 55 потребителей прежнего фасада переведены на owning ORM imports или bootstrap. db/models/__init__.py
+с __all__ удалён; по уточнённому запросу удалён и весь db package. Base, engine/session factories остаются в
+core/database.py, ORM-классы — в features и platform. Ни модели, ни схема не перемещались.
+
+Корневой bootstrap.py предоставляет load_models(): явные импорты внутри функции регистрируют модели,
+затем Base.registry.configure() разрешает строковые relationships. Конкретные классы не появляются в namespace
+bootstrap и не экспортируются. Функция вызывается в main() до ресурсов, в alembic/env.py до target_metadata
+и в tests/conftest.py. Core не зависит от feature registry; standalone compositions используют тот же explicit bootstrap.
+Автопоиска модулей, новых DI abstractions или дополнительных зависимостей нет. F401 в bootstrap отключён адресно
+для намеренных registration imports, без type suppressions.
+
+В 27 runtime-потребителях изменились только imports, что подтверждено AST относительно исходного index.
+В main/alembic/test entry points добавлен только вызов load_models(). Старые assertions identity между facade
+и owning model удалены; metadata/DI lifecycle assertions сохранены. Изолированные Users import-тесты теперь
+проверяют отсутствие полной схемы до bootstrap и корректную регистрацию после него.
+
+Добавлены три проверки: полный cold-start metadata/relationships без reexports, idempotent registration
+с отсутствующим db package, и ошибка model setup до создания Bot/container. Existing шесть main lifecycle cases
+также проверяют вызов bootstrap. User↔Course и DailyMenu→Dish relationships, association FK и все 27 таблиц проверены
+в отдельном процессе; прогретые pytest imports не могут скрыть ошибки model registration.
+
+Финальные проверки:
+
+- целевой Core/Users gate: **34 passed**;
+- полный pytest: **638 passed, 5 skipped**; прежние четыре Food menu/Timetable HTTP-теста требуют своих simulations,
+  корпусный Eders тест — приватную выгрузку;
+- Ruff lint/format: **413 файлов**, mypy strict: **270 source files**, без ошибок;
+- DDL всех **27 таблиц и индексов** совпал с baseline; Alembic: `No new upgrade operations detected.`;
+- все **269 подмодулей приложения** импортируются, db package физически отсутствует;
+- Index diagnostics исходников, Alembic, conftest и cold-bootstrap tests без ошибок. test_main.py сохраняет
+  IDE inspections для стандартных monkeypatch.setattr(module, "name", ...) targets; runtime-тесты проходят;
+- IDE build сообщает success с ограниченными diagnostics; основное доказательство — CLI gates;
+- `git diff --check` чист, текущие doc links/test paths разрешаются, старых db imports нет;
+- существующий Postman mock/контракт не менялся; HTTP-лог подтвердил OBIS login/read и Eders SSO/AJAX 200/302/500.
+  Настоящие university endpoints/accounts не использовались.
+
+AGENTS/CLAUDE/ARCHITECTURE описывают imports у владельцев и explicit bootstrap вместо db facade.
+Пакет db удалён полностью, незавершённой работы в этом изменении нет. Коммиты, push и deploy не выполнялись.

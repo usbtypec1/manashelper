@@ -4,7 +4,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from manashelper.db.models import Course, Department, Lesson
+from manashelper.modules.schedule.infrastructure.models.course import Course
+from manashelper.modules.schedule.infrastructure.models.department import Department
+from manashelper.modules.schedule.infrastructure.models.lesson import Lesson
 
 
 def _escape_like_pattern(value: str) -> str:

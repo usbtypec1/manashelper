@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.db.models import UserLessonAttendance
+from manashelper.modules.obis.infrastructure.user_lesson_attendance import UserLessonAttendance
 
 
 class UserLessonAttendanceRepository:
