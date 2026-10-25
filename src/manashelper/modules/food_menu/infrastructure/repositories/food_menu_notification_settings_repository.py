@@ -27,7 +27,9 @@ class FoodMenuNotificationSettingsRepository:
         )
         settings = result.scalar_one_or_none()
         if settings is None:
-            settings = FoodMenuNotificationSettings(id=uuid.uuid4(), user_id=user_id, weekday=weekday)
+            settings = FoodMenuNotificationSettings(
+                id=uuid.uuid4(), user_id=user_id, weekday=weekday, lunch_enabled=True, dinner_enabled=True
+            )
             self._session.add(settings)
         return settings
 

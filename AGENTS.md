@@ -38,8 +38,9 @@ Notifications lives in flat `modules/notifications/`: settings, recipient querie
 keyboard and router. Its provider retains REQUEST scope. Settings checks users through UsersQuery;
 Schedule and OBIS polling select recipients through NotificationRecipientsQuery. Shared Settings navigation
 stays in `platform/telegram/`; Food menu/Eders preferences and OBIS polling remain owned by their features.
-Preserve the characterized deferred-default defect: a new unflushed settings row exposes None values,
-and its first toggle enables the selected flag. Missing rows still opt recipients into all notifications.
+NotificationSettingsRepository initializes all three flags to True when creating a row, before flush;
+the first toggle disables the selected flag and summaries never expose transient None values.
+Missing rows still opt recipients into all notifications. Do not rely on INSERT-time defaults when toggling new rows.
 Shared weekday labels live in `localization/weekdays.py`; reuse `services/time_utils.py::BISHKEK_TZ` instead of a feature's timezone.
 Users lives in `modules/users/`: application locale/contact services, infrastructure profile/phone ORM and
 repositories, presentation language/phone routers, keyboards and callbacks. UsersProvider retains REQUEST
@@ -122,8 +123,8 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
 ## Feature-specific conventions
 
 - Food menu keeps rich/ephemeral message behavior, fixed-date callbacks, per-chat cleanup and weekday meal
-  notification settings. A characterized existing defect makes the first lunch toggle on an absent settings
-  row remain enabled until another toggle; do not silently fix ORM-default timing during relocation.
+  notification settings. Its repository initializes new lunch/dinner flags to True before flush, so the first
+  meal/day toggle disables the selection immediately. Missing rows mean enabled; saved preferences must be preserved.
 
 - OBIS credentials are verified with a real login before storage and encrypted with AES-GCM through
   `CryptoService`. The credentials form uses aiogram FSM and in-process `MemoryStorage`. OBIS fetches authenticate

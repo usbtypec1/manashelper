@@ -70,28 +70,60 @@ async def test_toggle_preserves_other_settings_and_persists(session, setting):
 
 
 @pytest.mark.parametrize("setting", list(NotificationSetting))
-async def test_first_toggle_keeps_existing_orm_default_timing(session, setting):
+async def test_first_toggle_disables_selected_setting_and_preserves_enabled_defaults(session, setting):
     session.add(User(id=972001, full_name="Notifications"))
     await session.flush()
     result = await service(session).toggle_setting(972001, setting)
-    # Defaults only run on INSERT. Preserve this existing defect during relocation.
-    assert getattr(result, f"{setting.value}_enabled") is True
-    assert all(getattr(result, f"{other.value}_enabled") is None for other in NotificationSetting if other != setting)
+    expected = {f"{option.value}_enabled": option != setting for option in NotificationSetting}
+    assert result == NotificationSettingsSummary(**expected)
     await session.flush()
-    assert await service(session).get_settings(972001) == NotificationSettingsSummary(True, True, True)
+    session.expire_all()
+    assert await service(session).get_settings(972001) == result
 
 
-async def test_read_creates_settings_with_existing_deferred_defaults(session):
+async def test_read_creates_enabled_settings_before_flush(session):
     session.add(User(id=972001, full_name="Notifications"))
     await session.flush()
     summary = await service(session).get_settings(972001)
-    assert summary.schedule_changes_enabled is None
-    assert summary.exam_grades_enabled is None
-    assert summary.lesson_skips_enabled is None
+    assert summary == NotificationSettingsSummary(True, True, True)
+    with i18n.context(), i18n.use_locale("ru"):
+        keyboard = build_notifications_keyboard(summary)
+    assert all(keyboard.inline_keyboard[index][0].text.startswith("✅") for index in (0, 2, 3))
     await session.flush()
     assert await service(session).get_settings(972001) == NotificationSettingsSummary(True, True, True)
     rows = await session.scalars(select(NotificationSettings).where(NotificationSettings.user_id == 972001))
     assert len(rows.all()) == 1
+
+
+@pytest.mark.parametrize("setting", list(NotificationSetting))
+async def test_initial_menu_and_first_click_match_persisted_settings(session, setting):
+    session.add(User(id=972001, full_name="Notifications"))
+    await session.flush()
+    callback = AsyncMock(spec=CallbackQuery)
+    callback.from_user = SimpleNamespace(id=972001)
+    callback.message = AsyncMock(spec=Message)
+    callback.message.edit_text = AsyncMock()
+    callback.answer = AsyncMock()
+    settings_service = service(session)
+    payload = NotificationSettingCallback(setting=setting).pack()
+    with i18n.context(), i18n.use_locale("ru"):
+        await router.on_open_notifications(callback, settings_service)
+        keyboard = callback.message.edit_text.call_args.kwargs["reply_markup"]
+        selected = next(button for row in keyboard.inline_keyboard for button in row if button.callback_data == payload)
+        assert selected.text.startswith("✅")
+        await session.commit()
+        session.expire_all()
+        await router.on_toggle_notification_setting(
+            callback, NotificationSettingCallback(setting=setting), settings_service
+        )
+        keyboard = callback.message.edit_text.call_args.kwargs["reply_markup"]
+        selected = next(button for row in keyboard.inline_keyboard for button in row if button.callback_data == payload)
+        assert selected.text.startswith("❌")
+    await session.commit()
+    session.expire_all()
+    expected = {f"{option.value}_enabled": option != setting for option in NotificationSetting}
+    assert await settings_service.get_settings(972001) == NotificationSettingsSummary(**expected)
+    assert callback.answer.await_count == 2
 
 
 async def test_recipients_include_missing_settings_and_filter_flags_independently(session):

@@ -13,7 +13,12 @@ class NotificationSettingsRepository:
     async def get_or_create(self, user_id: int) -> NotificationSettings:
         settings = await self._session.get(NotificationSettings, user_id)
         if settings is None:
-            settings = NotificationSettings(user_id=user_id)
+            settings = NotificationSettings(
+                user_id=user_id,
+                schedule_changes_enabled=True,
+                exam_grades_enabled=True,
+                lesson_skips_enabled=True,
+            )
             self._session.add(settings)
         return settings
 

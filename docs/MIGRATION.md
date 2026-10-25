@@ -11,8 +11,9 @@
 План переноса бизнес-областей выполнен. OBIS владеет credentials и предоставляет их Eders через application-границу;
 Study week объединяет application-результаты Eders и Schedule. Общие timezone/text helpers пока остаются в services/.
 Общая инфраструктура выделена в Core, Telegram Platform, аудит и очередь удаления — в platform/.
-После отдельного исправления REQUEST-транзакций ошибка/отмена scope вызывает rollback; settings-default defects остаются.
-Общий gate с локальной OBIS/Eders simulation зелёный: **624 passed, 5 skipped**, Ruff, mypy и Alembic проходят.
+Отдельно исправлены REQUEST rollback при ошибке/отмене и начальные значения настроек Notifications/Food menu:
+новые строки сразу содержат True, первый toggle выключает выбранные уведомления.
+Общий gate с локальной OBIS/Eders simulation зелёный: **635 passed, 5 skipped**, Ruff, mypy и Alembic проходят.
 Первоначальные красные результаты ниже оставлены как история baseline и не описывают текущую проверку.
 
 ## Исходное состояние — 24 октября 2026 года
@@ -1089,3 +1090,41 @@ savepoints: отмена/ошибка убирает flushed row, соседни
 Изменение находится только в session provider; feature workflows, middleware order и настройки уведомлений не менялись.
 Документы AGENTS/CLAUDE/ARCHITECTURE теперь описывают исправленный lifecycle; прежние записи выше остаются историей.
 Коммиты, push и deploy не выполнялись. Следующий отдельный дефект — timing defaults первого переключения уведомлений.
+
+### Отдельное исправление: первое переключение уведомлений
+
+У новых ORM-объектов значения mapped_column(default=True) применялись при INSERT, а не при создании.
+NotificationSettingsService возвращал None в initial summary и выполнял not None→True при первом toggle.
+Food menu показывал отсутствие строки как включённые обед/ужин, но первый toggle создавал строку с None
+и оставлял выбор включённым. Переключение всего нового дня было затронуто той же причиной.
+
+До исправления пять обновлённых characterization-сценариев воспроизвели неверные defaults/первый toggle.
+NotificationSettingsRepository теперь явно задаёт True для трёх флагов при создании строки;
+FoodMenuNotificationSettingsRepository — для lunch_enabled/dinner_enabled. Другие пути создания этих моделей
+в production-коде отсутствуют. Services, callback payloads и handlers не менялись; лишних flush/commit нет.
+ORM/server defaults остаются True, схема и существующие пользовательские настройки не изменяются.
+
+Добавлено **11 регрессионных тестов**, пять прежних characterization-сценариев проверяют исправленное поведение.
+Проверены начальная клавиатура Notifications, первое выключение каждого из трёх флагов, callback→реальный
+service→PostgreSQL→клавиатура и сохранность после commit/expire/reload. Для Food menu проверены первое
+переключение обеда/ужина, целого дня и каждого приёма пищи за всю неделю, повторное включение и сохранность
+чужих дней. Реальные handlers показывают ✅ до первого клика и ❌ после него для обоих приёмов пищи.
+Existing recipient/default opt-in, enable_all/disable_all и неизвестный пользователь также покрыты целевым набором.
+
+Проверки:
+
+- Notifications/Food menu целевые тесты: **61 passed**;
+- полный pytest с локальной OBIS/Eders simulation: **635 passed, 5 skipped**;
+  пропуски прежние: четыре Food menu/Timetable HTTP-теста без их simulations и приватный корпус Eders;
+- Ruff lint/format: **397 файлов**, mypy strict: **277 source files**, без ошибок;
+- Alembic: `No new upgrade operations detected.`; миграция и backfill не требуются;
+- Index diagnostics обоих repository и Notifications tests без ошибок. В Food menu tests IDE отмечает
+  существующую строку monkeypatch.setattr(jobs, "TelegramFoodMenuSender", ...); соответствующая test-функция
+  не менялась по AST, runtime-тест проходит. Это не ошибка нового кода;
+- IDE build сообщает success с ограниченными diagnostics; основное доказательство — CLI gates;
+- `git diff --check` чист. Postman mock/HTTP-контракт не менялись; локальный лог подтверждает OBIS login/read
+  и Eders SSO/AJAX 200/302/500. Настоящие университетские endpoints/аккаунты не использовались.
+
+Документы AGENTS/CLAUDE/ARCHITECTURE обновлены; старые записи сохранены как история этапов.
+Изменение ограничено двумя repository и проверками настроек; незавершённой работы в этом исправлении нет.
+Коммиты, push и deploy не выполнялись.

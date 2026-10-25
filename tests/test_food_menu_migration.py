@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 import pytest
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.methods import SendMessage
+from aiogram.types import CallbackQuery, Message
 from dishka import make_async_container
 
 from manashelper.core.provider import CoreProvider
@@ -35,6 +36,11 @@ from manashelper.modules.food_menu.infrastructure.repositories.dish_repository i
 from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notification_settings_repository import (
     FoodMenuNotificationSettingsRepository,
 )
+from manashelper.modules.food_menu.presentation.callbacks import FoodMenuNotificationDayCallback
+from manashelper.modules.food_menu.presentation.routers.food_menu_notifications import (
+    on_open_food_menu_notifications,
+    on_toggle_food_menu_notification_day,
+)
 from manashelper.modules.food_menu.presentation.sender import TelegramFoodMenuSender
 from manashelper.modules.food_menu.provider import FoodMenuProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
@@ -45,6 +51,7 @@ from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.infrastructure.user_repository import UserRepository
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.modules.users.queries import UsersQuery
+from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
 
 
@@ -58,10 +65,11 @@ async def test_notification_defaults_weekday_meal_and_bulk_toggles(session):
         (weekday, True, True) for weekday in range(7)
     ]
     summary = await service.toggle(960001, 2, FoodMenuMeal.LUNCH)
-    # Existing behavior: a new row's Python defaults apply only on flush, so not None is True.
-    assert (summary.days[2].lunch_enabled, summary.days[2].dinner_enabled) == (True, True)
-    summary = await service.toggle(960001, 2, FoodMenuMeal.LUNCH)
     assert (summary.days[2].lunch_enabled, summary.days[2].dinner_enabled) == (False, True)
+    summary = await service.toggle(960001, 2, FoodMenuMeal.LUNCH)
+    assert (summary.days[2].lunch_enabled, summary.days[2].dinner_enabled) == (True, True)
+    summary = await service.toggle_weekday(960001, 2)
+    assert (summary.days[2].lunch_enabled, summary.days[2].dinner_enabled) == (False, False)
     summary = await service.toggle_weekday(960001, 2)
     assert (summary.days[2].lunch_enabled, summary.days[2].dinner_enabled) == (True, True)
     summary = await service.toggle_meal(960001, FoodMenuMeal.DINNER)
@@ -73,6 +81,84 @@ async def test_notification_defaults_weekday_meal_and_bulk_toggles(session):
     summary = await service.enable_all(960001)
     assert all(day.lunch_enabled and day.dinner_enabled for day in summary.days)
     assert await repository.get_all_by_user_id(960001) == []
+
+
+@pytest.mark.parametrize(
+    "action,args,disabled",
+    [
+        ("toggle", (2, FoodMenuMeal.LUNCH), {(2, FoodMenuMeal.LUNCH)}),
+        ("toggle", (2, FoodMenuMeal.DINNER), {(2, FoodMenuMeal.DINNER)}),
+        ("toggle_weekday", (2,), {(2, FoodMenuMeal.LUNCH), (2, FoodMenuMeal.DINNER)}),
+        ("toggle_meal", (FoodMenuMeal.LUNCH,), {(day, FoodMenuMeal.LUNCH) for day in range(7)}),
+        ("toggle_meal", (FoodMenuMeal.DINNER,), {(day, FoodMenuMeal.DINNER) for day in range(7)}),
+    ],
+)
+async def test_first_food_toggle_disables_selection_and_survives_reload(session, action, args, disabled):
+    session.add(User(id=960001, full_name="Menu settings"))
+    await session.flush()
+    service = FoodMenuNotificationSettingsService(
+        FoodMenuNotificationSettingsRepository(session), UsersQuery(UserRepository(session))
+    )
+    summary = await getattr(service, action)(960001, *args)
+    for day in summary.days:
+        assert day.lunch_enabled is ((day.weekday, FoodMenuMeal.LUNCH) not in disabled)
+        assert day.dinner_enabled is ((day.weekday, FoodMenuMeal.DINNER) not in disabled)
+    await session.commit()
+    session.expire_all()
+    assert await service.get_settings(960001) == summary
+    repeated = await getattr(service, action)(960001, *args)
+    assert all(day.lunch_enabled and day.dinner_enabled for day in repeated.days)
+
+
+async def test_new_weekday_toggle_preserves_other_saved_preferences(session):
+    session.add(User(id=960001, full_name="Menu settings"))
+    await session.flush()
+    repository = FoodMenuNotificationSettingsRepository(session)
+    row = await repository.get_or_create(960001, 1)
+    row.lunch_enabled = row.dinner_enabled = False
+    await session.commit()
+    session.expire_all()
+    service = FoodMenuNotificationSettingsService(repository, UsersQuery(UserRepository(session)))
+    summary = await service.toggle(960001, 2, FoodMenuMeal.LUNCH)
+    assert (summary.days[1].lunch_enabled, summary.days[1].dinner_enabled) == (False, False)
+    assert (summary.days[2].lunch_enabled, summary.days[2].dinner_enabled) == (False, True)
+    assert all(day.lunch_enabled and day.dinner_enabled for day in summary.days if day.weekday not in {1, 2})
+
+
+@pytest.mark.parametrize("meal", list(FoodMenuMeal))
+async def test_first_food_click_updates_visible_button_and_persisted_preference(session, meal):
+    session.add(User(id=960001, full_name="Menu settings"))
+    await session.flush()
+    service = FoodMenuNotificationSettingsService(
+        FoodMenuNotificationSettingsRepository(session), UsersQuery(UserRepository(session))
+    )
+    callback = AsyncMock(spec=CallbackQuery)
+    callback.from_user = SimpleNamespace(id=960001)
+    callback.message = AsyncMock(spec=Message)
+    callback.message.rich_message = False
+    callback.message.edit_text = AsyncMock()
+    callback.answer = AsyncMock()
+    data = FoodMenuNotificationDayCallback(weekday=2, meal=meal)
+    with i18n.context(), i18n.use_locale("ru"):
+        await on_open_food_menu_notifications(callback, service)
+        keyboard = callback.message.edit_text.call_args.kwargs["reply_markup"]
+        selected = next(
+            button for row in keyboard.inline_keyboard for button in row if button.callback_data == data.pack()
+        )
+        assert selected.text == "✅"
+        await session.commit()
+        session.expire_all()
+        await on_toggle_food_menu_notification_day(callback, data, service)
+        keyboard = callback.message.edit_text.call_args.kwargs["reply_markup"]
+        selected = next(
+            button for row in keyboard.inline_keyboard for button in row if button.callback_data == data.pack()
+        )
+        assert selected.text == "❌"
+    await session.commit()
+    session.expire_all()
+    summary = await service.get_settings(960001)
+    assert getattr(summary.days[2], f"{meal.value}_enabled") is False
+    assert callback.answer.await_count == 2
 
 
 @pytest.mark.parametrize(

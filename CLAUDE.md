@@ -156,13 +156,16 @@ UsersQuery and counts delivery results. TelegramBroadcastSender owns locale, HTM
 the router owns authorization, FSM and admin-facing messages.
 Food menu lives in modules/food_menu/: application services, Telegram presentation, infrastructure and thin jobs.
 Its provider retains APP client/parser and REQUEST services. BroadcastFoodMenu uses a Telegram sender boundary;
-notification settings check users through UsersQuery.exists. Preserve the characterized first-toggle ORM-default defect.
+notification settings check users through UsersQuery.exists. Its repository initializes new lunch/dinner flags to True
+before flush; the first meal/day toggle disables the selection immediately, preserving other saved preferences.
 Schedule now lives in modules/schedule/ with catalog/tracking, timetable/search, infrastructure and thin jobs.
 CourseTrackingRepository owns the tracked-course query; User ORM belongs to Users. SyncCourseTimetable selects
 recipients through public modules/notifications/queries.py, whose provider retains REQUEST scope.
 Notifications now lives in flat modules/notifications/: settings, ORM, repository and Telegram presentation.
 Settings uses UsersQuery.exists; OBIS polling also selects recipients through NotificationRecipientsQuery.
-Shared Settings navigation stays in platform/telegram/. Preserve the characterized deferred-default/first-toggle defect.
+Shared Settings navigation stays in platform/telegram/. NotificationSettingsRepository initializes all three flags to True
+before flush; initial summaries reflect enabled defaults and the first toggle disables the selected flag.
+Missing settings still opt users into notifications; do not depend on INSERT-time defaults when toggling new rows.
 Shared weekday labels live in localization/weekdays.py; Bishkek timezone reuses
 services/time_utils.py. Root composition now has fourteen providers, including CoreProvider, TelegramPlatformProvider and ObisProvider.
 Core owns shared config, logging, database factories/Base and resource lifecycle in core/.
