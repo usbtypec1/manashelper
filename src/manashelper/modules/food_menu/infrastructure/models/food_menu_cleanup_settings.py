@@ -4,7 +4,7 @@ from sqlalchemy import BigInteger, SmallInteger
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
-from manashelper.db.base import Base
+from manashelper.core.database import Base
 
 DEFAULT_FOOD_MENU_CLEANUP_DELAY_MINUTES = 180
 

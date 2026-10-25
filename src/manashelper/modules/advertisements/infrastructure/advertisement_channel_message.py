@@ -6,7 +6,7 @@ from sqlalchemy import BigInteger, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
-from manashelper.db.base import Base
+from manashelper.core.database import Base
 
 if TYPE_CHECKING:
     from manashelper.modules.advertisements.infrastructure.advertisement import Advertisement

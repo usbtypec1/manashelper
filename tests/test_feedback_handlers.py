@@ -11,7 +11,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.methods import AnswerCallbackQuery, EditMessageText, SendMessage
 from aiogram.types import CallbackQuery, Chat, Message, User
 
-from manashelper.config import Settings
+from manashelper.core.config import Settings
 from manashelper.localization.i18n import i18n
 from manashelper.modules.feedback.callbacks import FeedbackAction, FeedbackCallback
 from manashelper.modules.feedback.router import (

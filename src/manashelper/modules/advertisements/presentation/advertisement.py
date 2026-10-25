@@ -14,7 +14,7 @@ from dishka import FromDishka
 
 from manashelper.bot.filters.translated_text import TranslatedText
 from manashelper.bot.navigation import build_main_keyboard
-from manashelper.config import Settings
+from manashelper.core.config import Settings
 from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import DEFAULT_LOCALE
 from manashelper.modules.advertisements.application.advertisement import (

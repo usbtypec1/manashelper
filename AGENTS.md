@@ -17,7 +17,7 @@ router, service, repository, and tests before changing a feature. `features/` ho
 ## Architecture
 
 Code is organized by layer under `src/manashelper/`: `bot/routers` (handlers), `bot/keyboards`, `bot/middlewares`,
-`bot/callback_data.py`, `services`, `repositories`, `db/models`, `scraping`, `jobs`, `localization`, `config.py`,
+`bot/callback_data.py`, `services`, `repositories`, `db/models`, `scraping`, `jobs`, `localization`, `core`,
 `di.py`, and `main.py`. A gradual feature-first migration is in progress: feedback, advertisements and the survey live in
 `modules/feedback/`, `modules/advertisements/` and `modules/student_questions/`, with REQUEST providers in `main.py`.
 Advertisements separates presentation, application and infrastructure, with domain enums; feedback and the survey stay flat.
@@ -60,8 +60,10 @@ business logic; repositories handle persistence. Services return plain dataclass
 presentation layer. Put pure mapping and formatting helpers at module level. Escape user-provided and other dynamic
 text with `services/html_sanitization.py::escape_html` before inserting it into Telegram HTML messages.
 
-`di.py` has an application scope for settings, engine, session factory, clients and shared services, and a request
-scope for sessions, repositories and most services. The session commits on normal finalization and rolls back if
+Core lives in `core/`: config.py, database.py, logging.py and provider.py. CoreProvider owns APP settings,
+engine, session factory and the shared HTTP client, plus the REQUEST session. `di.py` retains only legacy
+feature APP/REQUEST dependencies. Keep the single Base from `core/database.py` and model registration in `db/models/`.
+The session commits on normal finalization and rolls back if
 commit raises. An existing defect is characterized in `tests/test_feedback_composition.py`: Dishka sends a request-body
 exception as the yield value, which the provider ignores, so a body exception alone still leads to commit. Do not
 silently fix this while relocating a feature. New handlers use `FromDishka[...]`; jobs open request scopes with
@@ -153,7 +155,7 @@ uv run python -m manashelper.main
 .venv/bin/pytest
 ```
 
-The app needs Postgres and the environment variables defined in `src/manashelper/config.py`: Telegram token,
+The app needs Postgres and the environment variables defined in `src/manashelper/core/config.py`: Telegram token,
 database credentials, OBIS encryption key, advertisement channel ID/link, moderation chat ID and admin chat ID.
 `DATASOURCE_HOST` defaults to the Docker service name `db`; use `localhost` when running outside Docker.
 `docker-compose.dev.yml` starts the development Postgres on port 5432. A local `.env` is read automatically and

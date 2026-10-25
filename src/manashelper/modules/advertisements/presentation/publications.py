@@ -1,6 +1,6 @@
 from aiogram import Bot
 
-from manashelper.config import Settings
+from manashelper.core.config import Settings
 from manashelper.jobs.common import TELEGRAM_DELETE_MESSAGES_BATCH_SIZE, chunk, delete_message_batch
 
 

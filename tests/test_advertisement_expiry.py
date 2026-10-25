@@ -11,6 +11,7 @@ from dishka import Provider, Scope, make_async_container, provide
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from manashelper.core.provider import CoreProvider
 from manashelper.db.models import Advertisement, AdvertisementChannelMessage, User
 from manashelper.di import AppProvider, RequestProvider
 from manashelper.modules.advertisements import jobs as job
@@ -67,6 +68,7 @@ async def test_expiry_deletes_publications_in_batches_before_removing_rows(sessi
     bot.delete_messages.side_effect = delete_messages
     monkeypatch.setattr(job, "get_settings", lambda: SimpleNamespace(advertisement_channel_id=CHANNEL_ID))
     async with make_async_container(
+        CoreProvider(),
         AppProvider(),
         RequestProvider(),
         ScheduleProvider(),

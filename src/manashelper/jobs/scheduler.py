@@ -4,7 +4,7 @@ from aiogram import Bot
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dishka import AsyncContainer
 
-from manashelper.config import get_settings
+from manashelper.core.config import get_settings
 from manashelper.jobs.eders import poll_eders_job
 from manashelper.jobs.obis_notification import poll_obis_notifications_job
 from manashelper.jobs.scheduled_message_deletion import cleanup_scheduled_message_deletions_job

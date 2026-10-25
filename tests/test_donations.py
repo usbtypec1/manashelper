@@ -10,6 +10,7 @@ from aiogram import Bot
 from aiogram.types import FSInputFile
 from dishka import make_async_container
 
+from manashelper.core.provider import CoreProvider
 from manashelper.di import AppProvider, RequestProvider
 from manashelper.modules.donations import catalog as donations
 from manashelper.modules.donations import qr as qr_adapter
@@ -149,6 +150,7 @@ async def test_qr_cache_is_shared_across_request_scopes_while_application_servic
     bank = DonationBank("bank", "Bank", path)
     bot = FakeBot()
     async with make_async_container(
+        CoreProvider(),
         AppProvider(),
         RequestProvider(),
         ScheduleProvider(),

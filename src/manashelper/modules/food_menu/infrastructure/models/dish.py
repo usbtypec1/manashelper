@@ -5,7 +5,7 @@ from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
-from manashelper.db.base import Base
+from manashelper.core.database import Base
 
 
 class Dish(Base):

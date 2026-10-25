@@ -7,7 +7,7 @@ from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
 from manashelper.bot.navigation import send_welcome
-from manashelper.config import Settings
+from manashelper.core.config import Settings
 from manashelper.modules.advertisements.application.advertisement import AdvertisementNotFoundError
 from manashelper.modules.advertisements.application.advertisement_contact import AdvertisementContactService
 from manashelper.modules.advertisements.presentation.advertisement import send_marketplace_menu

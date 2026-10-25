@@ -6,7 +6,7 @@ from sqlalchemy import ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
-from manashelper.db.base import Base
+from manashelper.core.database import Base
 
 if TYPE_CHECKING:
     from manashelper.modules.schedule.infrastructure.models.course import Course

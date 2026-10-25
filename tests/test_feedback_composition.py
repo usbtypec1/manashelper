@@ -7,7 +7,8 @@ import pytest
 from dishka import Provider, Scope, make_async_container, provide
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from manashelper.db.base import Base
+from manashelper.core.database import Base
+from manashelper.core.provider import CoreProvider
 from manashelper.db.models import FeedbackMessage as RegisteredFeedbackMessage
 from manashelper.di import AppProvider, RequestProvider
 from manashelper.modules.feedback.orm import FeedbackMessage
@@ -30,6 +31,7 @@ async def test_feedback_request_scope_preserves_existing_transaction_finalizatio
             return pool
 
     async with make_async_container(
+        CoreProvider(),
         AppProvider(),
         RequestProvider(),
         ScheduleProvider(),
@@ -58,7 +60,7 @@ async def test_feedback_request_scope_preserves_existing_transaction_finalizatio
                 raise RuntimeError("rollback requested")
 
         # Existing behavior: Dishka sends the body exception as the yield value.
-        # RequestProvider ignores that value and commits. Fix separately from relocation.
+        # CoreProvider ignores that value and commits. Fix separately from relocation.
         sessions[1].commit.assert_awaited_once()
         sessions[1].rollback.assert_not_awaited()
         sessions[1].__aexit__.assert_awaited_once()
@@ -79,6 +81,7 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
         import asyncio
         from dishka import make_async_container
         from manashelper.bot.dispatcher import create_dispatcher
+        from manashelper.core.provider import CoreProvider
         from manashelper.di import AppProvider, RequestProvider
         from manashelper.modules.schedule.provider import ScheduleProvider
         from manashelper.modules.notifications.provider import NotificationsProvider
@@ -92,7 +95,7 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
 
         async def check():
             async with make_async_container(
-                AppProvider(),
+                CoreProvider(), AppProvider(),
                 RequestProvider(),
                 ScheduleProvider(),
                 NotificationsProvider(),

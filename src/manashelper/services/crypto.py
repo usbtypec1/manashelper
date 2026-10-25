@@ -3,7 +3,7 @@ import os
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
-from manashelper.config import Settings
+from manashelper.core.config import Settings
 
 _NONCE_LENGTH = 12
 

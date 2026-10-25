@@ -50,6 +50,7 @@ async def test_resources_close_on_exit_and_failures(failure: str | None, monkeyp
         loop.set_exception_handler(previous_handler)
 
     container.close.assert_awaited_once()
+    assert sum(isinstance(provider, app.CoreProvider) for provider in app.make_async_container.call_args.args) == 1
     close_session.assert_awaited_once()
     if failure == "dispatcher":
         scheduler.start.assert_not_called()

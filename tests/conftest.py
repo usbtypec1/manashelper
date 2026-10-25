@@ -3,7 +3,7 @@ from collections.abc import AsyncIterator
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
-from manashelper.config import get_settings
+from manashelper.core.config import get_settings
 
 
 @pytest_asyncio.fixture

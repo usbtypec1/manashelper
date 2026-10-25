@@ -103,7 +103,7 @@ respectively — see `pyproject.toml`/`[tool.ruff] extend-exclude`).
 
 ### Running locally
 
-The app needs Postgres and these environment variables (see `src/manashelper/config.py`): `TELEGRAM_BOT_TOKEN`,
+The app needs Postgres and these environment variables (see `src/manashelper/core/config.py`): `TELEGRAM_BOT_TOKEN`,
 `DATASOURCE_NAME`, `DATASOURCE_USERNAME`, `DATASOURCE_PASSWORD`, `OBIS_ENCRYPTION_KEY` (a base64-encoded 32-byte
 AES-256 key used by `CryptoService` to encrypt stored OBIS passwords — generate one with
 `python3 -c "import base64,os;print(base64.b64encode(os.urandom(32)).decode())"`), `ADVERTISEMENT_CHANNEL_ID`
@@ -162,13 +162,15 @@ Notifications now lives in flat modules/notifications/: settings, ORM, repositor
 Settings uses UsersQuery.exists; OBIS polling also selects recipients through NotificationRecipientsQuery.
 Shared Settings navigation stays in bot/. Preserve the characterized deferred-default/first-toggle defect.
 Shared weekday labels live in localization/weekdays.py; Bishkek timezone reuses
-services/time_utils.py. Root composition now has eleven providers.
+services/time_utils.py. Root composition now has twelve providers, including CoreProvider.
+Core owns shared config, logging, database factories/Base and resource lifecycle in core/.
+The legacy di.py providers now retain only feature dependencies; Telegram platform and audit stay legacy.
 `docs/ARCHITECTURE.md` describes the current state; `docs/MIGRATION.md` records stage boundaries and baseline issues.
 
 Under `src/manashelper/`, code is organized by technical layer, mirroring the original Java structure:
 `bot/routers` (aiogram handlers), `bot/keyboards` (inline keyboard builders), `bot/middlewares`, `bot/callback_data.py`,
 `services` (business logic), `repositories` (SQLAlchemy queries), `db/models` (ORM models), `jobs` (`AsyncIOScheduler`
-job functions, one module per feature area — see "Scheduled jobs & change detection" below), `config.py`, `di.py`,
+job functions, one module per feature area — see "Scheduled jobs & change detection" below), `core/`, `di.py`,
 `main.py`. These layers describe the remaining legacy areas; migrated features own their code in `modules/`.
 
 **Services return plain dataclasses, never ORM models.** A `service` method called from a `bot/routers` handler
@@ -210,12 +212,12 @@ read-modify-write isn't safe under concurrent access for the same user. This is 
 
 ### Dependency injection (Dishka)
 
-`di.py` defines two providers: `AppProvider` (`Scope.APP` — `Settings`, the `AsyncEngine`, the
-`async_sessionmaker`, created once per process) and `RequestProvider` (`Scope.REQUEST` — one `AsyncSession` per
-update, plus repositories/services built on top of it). `setup_dishka(container, dispatcher)` +
+`core/provider.py` defines CoreProvider: Settings, AsyncEngine, async_sessionmaker and the shared HTTP client
+have APP scope, and AsyncSession has REQUEST scope. `di.py` retains AppProvider/RequestProvider only for
+legacy feature dependencies. `setup_dishka(container, dispatcher)` +
 `inject_router(dispatcher)` in `bot/dispatcher.py` wire dependency injection into router handlers via `FromDishka[X]`
 parameter annotations — the analog of Spring's constructor injection into `@Component`/`@Service` beans. The
-`RequestProvider`'s session provider commits on finalization and rolls back if commit raises. The existing
+CoreProvider's session provider commits on finalization and rolls back if commit raises. The existing
 Dishka integration does not roll back on a request-body exception: it sends the exception as a yield value,
 which the provider ignores. This is characterized in `tests/test_feedback_composition.py` and remains a separate
 transaction-management defect. `FeedbackProvider` and `AdvertisementsProvider` supply feature dependencies in the same REQUEST scope,
@@ -235,7 +237,7 @@ Telegram API call.
 Alembic (`alembic/versions/*.py`) is the source of truth for schema — this is a fresh start, not a port of the old
 Flyway migration history, though the seed data (faculties/departments/courses) was carried over from the Java
 project's `V2__seed_faculties_and_departments.sql` into `e82d16133698_seed_faculties_departments_courses.py`.
-`alembic/env.py` points `target_metadata` at `manashelper.db.base.Base.metadata` and overrides `sqlalchemy.url`
+`alembic/env.py` points `target_metadata` at `manashelper.core.database.Base.metadata` and overrides `sqlalchemy.url`
 from `Settings.database_url` at runtime — `alembic.ini`'s `sqlalchemy.url` placeholder is never actually used.
 Migrations run automatically on boot (`main.py::run_migrations`, called before `asyncio.run(main())` — mirrors the
 old `FlywayConfig`'s `initMethod=migrate` bean) as well as being runnable manually via `uv run alembic upgrade head`.

@@ -9,7 +9,8 @@
 Актуальный статус на 25 октября 2026 года: перенесены **Feedback**, **Advertisements**, **Student questions**,
 **Versions**, **Donations**, **Broadcast**, **Food menu**, **Schedule**, **Notifications** и **Users**.
 Users сохраняет временных legacy-потребителей credentials в OBIS/Eders; аудит остаётся до Platform/Core.
-Общий gate зелёный: **486 passed, 9 skipped**, Ruff, mypy и проверка Alembic проходят.
+Общая инфраструктура выделена в Core; Telegram Platform и аудит ещё предстоят.
+Общий gate зелёный: **493 passed, 9 skipped**, Ruff, mypy и проверка Alembic проходят.
 Первоначальные красные результаты ниже оставлены как история baseline и не описывают текущую проверку.
 
 ## Исходное состояние — 24 октября 2026 года
@@ -740,3 +741,53 @@ Schedule; legacy OBIS/Eders пока используют перенесённы
 этапы OBIS, Eders, Study week остаются вне этой итерации. Известные дефекты defaults и request transaction
 finalization не исправлялись. IDE auto-staging снят только с 28 известных task-путей; исходный index был пуст.
 Коммиты, push и deploy не выполнялись; `.DS_Store` сохранены.
+
+### План следующего этапа: Core
+
+Baseline: **486 passed, 9 skipped**; исходное рабочее дерево чистое, кроме трёх `.DS_Store`.
+Сохранён DDL 27 таблиц и индексов. Следующая владельческая граница — общая инфраструктура Core;
+Telegram Platform, аудит и feature-провайдеры остаются отдельными последующими этапами.
+
+`core/config.py` получает Settings/get_settings, `core/logging.py` — настройку логирования,
+`core/database.py` — единый Base и фабрики engine/session pool. Для 17 строк реализации БД отдельные
+base/engine/session пакеты не создаются. Общий registry моделей остаётся в `db/models/`.
+CoreProvider получает APP-настройки, engine, session factory, HTTP-клиент и REQUEST-сессию.
+В `di.py` остаются только legacy feature-зависимости, root composition явно добавляет CoreProvider.
+
+Сохраняются все env aliases/defaults/cache, относительные пути .env/logs, format/rotation логирования,
+expire_on_commit=False, timeout=15, APP/REQUEST lifetimes, порядок запуска и освобождения ресурсов,
+включая существующий commit при исключении тела Dishka scope. UI, HTTP-контракты и schema не меняются.
+
+### Выполнено: Core
+
+Настройки, общая БД и логирование перенесены Index MCP в `core/config.py`, `core/database.py` и
+`core/logging.py`. Старые модули удалены, adapters совместимости не создавались. Общий registry моделей
+остаётся в `db/models/`, все ORM используют единственный Base из Core. Alembic и subprocess-тесты обновлены.
+
+CoreProvider получил пять прежних resource factory methods. Их тела/сигнатуры совпали по AST;
+декоратор get_session теперь явно задаёт REQUEST, остальные ресурсы остаются APP. AST трёх перенесённых
+файлов не изменился, кроме imports. В 35 остальных исходных файлах изменились только импорты.
+`di.py` содержит только legacy feature-зависимости, main и тестовые композиции явно добавляют CoreProvider.
+Root composition теперь состоит из 12 providers. Дополнительного stylistic cleanup не потребовалось.
+
+Добавлено семь characterization/lifecycle тестов: APP engine/disposal при нормальном и ошибочном выходе,
+общий HTTP-клиент с timeout 15 и закрытием, .env от CWD/env aliases/cache, UTF-8/rotation/path логирования,
+независимый Core container с APP/session factory и REQUEST cache, commit перед закрытием session.
+Существующие тесты request body error/commit failure, startup/shutdown и standalone Users сохранены;
+тест main дополнительно проверяет единственную регистрацию CoreProvider. Целевой gate: **40 passed**,
+проверка main после усиления assertion: **6 passed**.
+
+Финальный gate:
+
+- pytest: **493 passed, 9 skipped**; пропуски прежние: восемь HTTP-тестов без локальных simulations
+  и корпусный тест без приватной выгрузки Eders;
+- Ruff lint/format: **362 файла**; mypy strict: **247 source files**, без ошибок;
+- все **246 подмодулей** импортируются; DDL **27 таблиц и индексов** совпал с baseline;
+- Alembic: `No new upgrade operations detected.`;
+- Index diagnostics семи компонентов без ошибок, старых/промежуточных Python imports нет;
+- IDE build сообщает success, но не предоставляет полноценные build diagnostics; проверка основана на CLI gates.
+
+Этап Core завершён. Поведение транзакций, APP/REQUEST, start/stop ordering, env, логирование и metadata
+сохранены. Telegram Platform, аудит, OBIS, Eders и Study week остаются следующими областями карты.
+Коммиты, push и deploy не выполнялись. IDE auto-staging снят только с известных task-путей;
+исходный index был пуст, три `.DS_Store` сохранены.

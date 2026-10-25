@@ -16,6 +16,7 @@ from dishka import make_async_container
 from manashelper.bot.callback_data import EdersPageCallback
 from manashelper.bot.dispatcher import create_dispatcher
 from manashelper.bot.routers.eders import SNAPSHOT_KEY, on_eders_command, on_eders_page
+from manashelper.core.provider import CoreProvider
 from manashelper.di import AppProvider, RequestProvider
 from manashelper.jobs.eders import poll_eders_job
 from manashelper.jobs.scheduler import create_scheduler
@@ -163,6 +164,7 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
 
 async def test_application_resolves_new_services_and_registers_thirty_minute_polling() -> None:
     container = make_async_container(
+        CoreProvider(),
         AppProvider(),
         RequestProvider(),
         ScheduleProvider(),

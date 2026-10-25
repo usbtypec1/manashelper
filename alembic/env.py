@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 import manashelper.db.models  # noqa: F401
 from alembic import context
-from manashelper.config import get_settings
-from manashelper.db.base import Base
+from manashelper.core.config import get_settings
+from manashelper.core.database import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

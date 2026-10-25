@@ -13,9 +13,11 @@
 presentation. Публичный UsersQuery предоставляет count, список ID и проверку существования для потребителей.
 В плоском `modules/notifications/` собраны настройки расписания/оценок/пропусков, запросы получателей,
 ORM, repository и Telegram presentation. Food menu/Eders сохраняют собственные настройки;
-общая навигация Settings и общая инфраструктура пока legacy. OBIS/Eders временно используют UserRepository
-для credentials; аудит остаётся в legacy до Platform/Core.
+общая навигация Settings и Telegram-инфраструктура пока legacy. OBIS/Eders временно используют UserRepository
+для credentials; аудит остаётся в legacy до Platform.
 Карта зависимостей, порядок этапов и исходные проблемы проверок описаны в [MIGRATION.md](MIGRATION.md).
+Общая инфраструктура выделена в `core/`: настройки, логирование, Base/фабрики БД и управление ресурсами DI.
+Telegram Platform и аудит остаются следующей владельческой границей.
 
 ## 1. Назначение и общий подход
 
@@ -78,9 +80,12 @@ flowchart TD
 manashelper/
 ├── src/manashelper/
 │   ├── main.py                    # Точка входа и жизненный цикл приложения
-│   ├── config.py                  # Настройки окружения
-│   ├── di.py                      # Общие и пока не перенесённые зависимости Dishka
-│   ├── logging_config.py          # Консольные и файловые логи
+│   ├── core/
+│   │   ├── config.py              # Настройки окружения и кеш
+│   │   ├── database.py            # DeclarativeBase, engine, фабрика сессий
+│   │   ├── logging.py             # Консольные и файловые логи
+│   │   └── provider.py            # Общие APP-ресурсы и REQUEST-сессия
+│   ├── di.py                      # Пока не перенесённые feature-зависимости Dishka
 │   ├── bot/
 │   │   ├── dispatcher.py          # Middleware, маршрутизаторы, обработчик ошибок
 │   │   ├── commands.py            # Регистрация команд в Telegram
@@ -93,8 +98,7 @@ manashelper/
 │   ├── services/                  # Сценарии, dataclass-модели, форматтеры, утилиты
 │   ├── repositories/              # Запросы и изменения данных через SQLAlchemy
 │   ├── db/
-│   │   ├── base.py                # DeclarativeBase, engine, фабрика сессий
-│   │   └── models/                # ORM-модели и таблицы связей
+│   │   └── models/                # Общий registry и пока не перенесённые ORM-модели
 │   ├── scraping/                  # HTTP-клиенты, HTML-парсеры, проверка URL eders
 │   ├── jobs/                      # Фоновые задания и их расписание
 │   ├── modules/
@@ -192,7 +196,7 @@ ORM-объекты используются внутри сервисов и р�
 
 Каждый репозиторий получает `AsyncSession` и выполняет запросы к своей области данных. Например,
 `LessonRepository` читает сохранённое расписание, а `EdersRepository` хранит снимки и события уведомлений.
-Общая декларативная база и фабрики подключения находятся в [db/base.py](../src/manashelper/db/base.py).
+Общая декларативная база и фабрики подключения находятся в [core/database.py](../src/manashelper/core/database.py).
 
 Жизненный цикл сессии принадлежит области `REQUEST` Dishka. Фабрика использует `expire_on_commit=False`.
 Отдельного класса Unit of Work нет. При обычном выходе провайдер выполняет `commit`, при исключении
@@ -227,7 +231,12 @@ OBIS и удаления сообщений также напрямую полу
 
 ## 5. Внедрение зависимостей и запуск
 
-[di.py](../src/manashelper/di.py) содержит общие `AppProvider` и `RequestProvider`.
+[CoreProvider](../src/manashelper/core/provider.py) владеет Settings, engine, фабрикой сессий и HTTP-клиентом
+в APP scope и сессией в REQUEST scope. Settings кешируется прежним get_settings; HTTP timeout — 15 секунд,
+session factory сохраняет expire_on_commit=False. Engine и HTTP-клиент закрываются при завершении APP;
+request-сессия выполняет commit перед закрытием. Существующая семантика при ошибке тела scope сохранена.
+CoreProvider работает самостоятельно, без feature-провайдеров. [di.py](../src/manashelper/di.py) содержит
+`AppProvider` и `RequestProvider` только для ещё не перенесённых feature-зависимостей.
 Отдельный [FeedbackProvider](../src/manashelper/modules/feedback/provider.py) регистрирует репозиторий и
 сервис обращений. [AdvertisementsProvider](../src/manashelper/modules/advertisements/provider.py)
 регистрирует два репозитория, три сервиса и сценарий очистки. Их зависимости имеют `Scope.REQUEST`;
@@ -239,7 +248,7 @@ LocaleService, UserContactService и два репозитория пользо�
 `FoodMenuProvider` сохраняет клиент/parser в `APP`, репозитории и сценарии меню — в `REQUEST`.
 `ScheduleProvider` сохраняет TimetableClient в `APP`, каталог, подписки и сценарии — в `REQUEST`.
 `NotificationsProvider` предоставляет NotificationRecipientsQuery, NotificationSettingsService и repository в `REQUEST`.
-Одиннадцать провайдеров собираются в `main.py`; состояние LRU-кеша сохраняется между request scopes.
+Двенадцать провайдеров собираются в `main.py`; состояние LRU-кеша сохраняется между request scopes.
 
 | Область | Объекты | Время жизни |
 | --- | --- | --- |
@@ -553,7 +562,7 @@ Telegram с запасным русским. Для отсутствующих �
 
 ## 12. Конфигурация, развёртывание и логи
 
-[config.py](../src/manashelper/config.py) читает `.env` и окружение. `get_settings()` кешируется через `lru_cache`.
+[core/config.py](../src/manashelper/core/config.py) читает `.env` и окружение. `get_settings()` кешируется через `lru_cache`.
 
 | Переменные | Назначение |
 | --- | --- |
@@ -579,7 +588,7 @@ runtime-файлы из `docs/commands`, `docs/requisites`, `docs/versions`, з�
 публикуются в Docker Hub, затем по SSH обновляется Docker Compose на сервере. Обычный push ветки
 в текущих триггерах workflow не указан.
 
-`logging_config.py` пишет события уровня INFO и выше в консоль и `logs/manashelper.log`.
+`core/logging.py` пишет события уровня INFO и выше в консоль и `logs/manashelper.log`.
 Ротация ограничена примерно 50 МиБ на файл с двумя резервными копиями, то есть примерно 150 МиБ суммарно.
 Есть обработчики ошибок обновлений aiogram, исключений цикла событий и фатального завершения приложения.
 
@@ -638,7 +647,7 @@ Ruff использует длину строки 120 и целевую верс
 
 Для перенесённой feature код и зависимости изменяются внутри `modules/<feature>/`; новый provider
 подключается в composition root. Остальные области пока используют `bot/routers/`, `services/`,
-`repositories/` и `di.py`. Общая Telegram-навигация в `bot/navigation.py`, i18n, `Settings` и `db.base.Base`
+`repositories/` и `di.py`. Общая Telegram-навигация в `bot/navigation.py`, i18n, `core.config.Settings` и `core.database.Base`
 остаются внешними зависимостями перенесённых модулей. `LocaleService` принадлежит Users.
 Объявления используют `UserContactService`
 через application-поверхность, без доступа к репозиториям Users. Donations и Broadcast используют UsersQuery

@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from manashelper.db.base import Base
+from manashelper.core.database import Base
 
 
 class EdersState(Base):

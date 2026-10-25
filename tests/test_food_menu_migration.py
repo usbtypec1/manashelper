@@ -9,6 +9,7 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.methods import SendMessage
 from dishka import make_async_container
 
+from manashelper.core.provider import CoreProvider
 from manashelper.db.models import User
 from manashelper.di import AppProvider, RequestProvider
 from manashelper.jobs.scheduler import create_scheduler
@@ -185,6 +186,7 @@ async def test_sync_normalized_names_preserve_existing_dishes_and_replace_change
 
 async def test_food_menu_provider_preserves_app_and_request_lifetimes():
     async with make_async_container(
+        CoreProvider(),
         AppProvider(),
         RequestProvider(),
         ScheduleProvider(),

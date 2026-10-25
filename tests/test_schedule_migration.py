@@ -14,6 +14,7 @@ from aiogram.methods import SendMessage
 from aiogram.types import CallbackQuery, Chat, Message, User
 from dishka import make_async_container
 
+from manashelper.core.provider import CoreProvider
 from manashelper.db.models import Course, Department, Faculty, NotificationSettings
 from manashelper.db.models import User as DbUser
 from manashelper.di import AppProvider, RequestProvider
@@ -199,7 +200,7 @@ async def test_schedule_recipient_query_preserves_tracking_and_default_opt_in(se
 
 async def test_schedule_provider_scopes_and_hourly_job_contract():
     async with make_async_container(
-        AppProvider(), RequestProvider(), ScheduleProvider(), NotificationsProvider(), UsersProvider()
+        CoreProvider(), AppProvider(), RequestProvider(), ScheduleProvider(), NotificationsProvider(), UsersProvider()
     ) as container:
         client = await container.get(TimetableClient)
         async with container() as request:

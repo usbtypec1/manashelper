@@ -9,7 +9,8 @@ from dishka import make_async_container
 from sqlalchemy import select
 
 from manashelper.bot.callback_data import SettingsAction, SettingsCallback
-from manashelper.db.base import Base
+from manashelper.core.database import Base
+from manashelper.core.provider import CoreProvider
 from manashelper.db.models import NotificationSettings, User
 from manashelper.di import AppProvider, RequestProvider
 from manashelper.jobs import obis_notification
@@ -225,7 +226,7 @@ async def test_notification_provider_preserves_request_scope_and_model_registry(
     assert NotificationSettings is OwnedNotificationSettings
     assert Base.metadata.tables["notification_settings"] is NotificationSettings.__table__
     async with make_async_container(
-        AppProvider(), RequestProvider(), ScheduleProvider(), NotificationsProvider(), UsersProvider()
+        CoreProvider(), AppProvider(), RequestProvider(), ScheduleProvider(), NotificationsProvider(), UsersProvider()
     ) as container:
         async with container() as request:
             settings = await request.get(NotificationSettingsService)

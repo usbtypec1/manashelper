@@ -12,7 +12,7 @@ from dishka import FromDishka
 
 from manashelper.bot.callback_data import SettingsAction, SettingsCallback
 from manashelper.bot.keyboards.settings import build_settings_keyboard
-from manashelper.config import Settings
+from manashelper.core.config import Settings
 from manashelper.localization.i18n import i18n
 from manashelper.localization.locale import DEFAULT_LOCALE
 from manashelper.modules.feedback.callbacks import FeedbackAction, FeedbackCallback

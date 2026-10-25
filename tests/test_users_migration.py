@@ -16,7 +16,8 @@ from dishka import make_async_container
 from dishka.integrations.aiogram import CONTAINER_NAME
 
 from manashelper.bot.middlewares.i18n import LocaleMiddleware
-from manashelper.db.base import Base
+from manashelper.core.database import Base
+from manashelper.core.provider import CoreProvider
 from manashelper.db.models import Course, Department, Faculty, UserPhoneNumber
 from manashelper.db.models import User as DbUser
 from manashelper.di import AppProvider, RequestProvider
@@ -247,7 +248,7 @@ async def test_users_provider_scopes_and_orm_registry():
     assert Base.metadata.tables["user_phone_numbers"] is OwnedPhoneNumber.__table__
     dependencies = (UsersQuery, LocaleService, UserContactService, UserRepository, UserPhoneNumberRepository)
     async with make_async_container(
-        AppProvider(), RequestProvider(), UsersProvider(), ScheduleProvider(), NotificationsProvider()
+        CoreProvider(), AppProvider(), RequestProvider(), UsersProvider(), ScheduleProvider(), NotificationsProvider()
     ) as container:
         async with container() as request:
             first = [await request.get(dependency) for dependency in dependencies]
@@ -297,7 +298,7 @@ def test_users_standalone_import_preserves_related_model_registration(module):
     script = (
         "import importlib; from sqlalchemy.orm import configure_mappers; "
         f"importlib.import_module({module!r}); configure_mappers(); "
-        "from manashelper.db.base import Base; "
+        "from manashelper.core.database import Base; "
         "assert len(Base.metadata.tables) == 27; "
         "assert Base.metadata.tables['user_courses'].c.user_id.references(Base.metadata.tables['users'].c.id)"
     )

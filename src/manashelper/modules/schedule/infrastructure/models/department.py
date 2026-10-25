@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from manashelper.db.base import Base
+from manashelper.core.database import Base
 
 if TYPE_CHECKING:
     from manashelper.modules.schedule.infrastructure.models.course import Course

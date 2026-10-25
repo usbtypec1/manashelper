@@ -3,7 +3,7 @@ import logging
 from aiogram import Bot
 from dishka import AsyncContainer
 
-from manashelper.config import get_settings
+from manashelper.core.config import get_settings
 from manashelper.modules.advertisements.application.expiry import ExpireAdvertisements, PublicationRemover
 from manashelper.modules.advertisements.presentation.publications import TelegramPublicationRemover
 

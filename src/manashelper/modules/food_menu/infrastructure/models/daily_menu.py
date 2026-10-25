@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Column, ForeignKey, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from manashelper.db.base import Base
+from manashelper.core.database import Base
 
 if TYPE_CHECKING:
     from manashelper.modules.food_menu.infrastructure.models.dish import Dish

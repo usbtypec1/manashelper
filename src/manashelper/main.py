@@ -12,10 +12,11 @@ from dishka import make_async_container
 from alembic import command
 from manashelper.bot.commands import setup_commands
 from manashelper.bot.dispatcher import create_dispatcher
-from manashelper.config import get_settings
+from manashelper.core.config import get_settings
+from manashelper.core.logging import configure_logging
+from manashelper.core.provider import CoreProvider
 from manashelper.di import AppProvider, RequestProvider
 from manashelper.jobs.scheduler import create_scheduler
-from manashelper.logging_config import configure_logging
 from manashelper.modules.advertisements.provider import AdvertisementsProvider
 from manashelper.modules.broadcast.provider import BroadcastProvider
 from manashelper.modules.donations.provider import DonationsProvider
@@ -49,6 +50,7 @@ async def main() -> None:
             Bot(token=settings.telegram_bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
         )
         container = make_async_container(
+            CoreProvider(),
             AppProvider(),
             RequestProvider(),
             ScheduleProvider(),
