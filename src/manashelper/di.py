@@ -8,7 +8,6 @@ from manashelper.config import Settings, get_settings
 from manashelper.db.base import create_engine, create_session_pool
 from manashelper.repositories.action_log_repository import ActionLogRepository
 from manashelper.repositories.eders_repository import EdersRepository
-from manashelper.repositories.notification_settings_repository import NotificationSettingsRepository
 from manashelper.repositories.scheduled_message_deletion_repository import ScheduledMessageDeletionRepository
 from manashelper.repositories.user_exam_grade_repository import UserExamGradeRepository
 from manashelper.repositories.user_lesson_attendance_repository import UserLessonAttendanceRepository
@@ -22,7 +21,6 @@ from manashelper.services.eders import EdersService
 from manashelper.services.eders_tracking import EdersTrackingService
 from manashelper.services.locale import LocaleService
 from manashelper.services.message_deletion import MessageDeletionService
-from manashelper.services.notification_settings import NotificationSettingsService
 from manashelper.services.obis import ObisService
 from manashelper.services.obis_notification import ObisNotificationService
 from manashelper.services.study_week import StudyWeekService
@@ -71,7 +69,6 @@ class RequestProvider(Provider):
 
     user_repository = provide(UserRepository)
     eders_repository = provide(EdersRepository)
-    notification_settings_repository = provide(NotificationSettingsRepository)
     user_exam_grade_repository = provide(UserExamGradeRepository)
     user_lesson_attendance_repository = provide(UserLessonAttendanceRepository)
     scheduled_message_deletion_repository = provide(ScheduledMessageDeletionRepository)
@@ -81,7 +78,6 @@ class RequestProvider(Provider):
     obis_service = provide(ObisService)
     eders_service = provide(EdersService)
     eders_tracking_service = provide(EdersTrackingService)
-    notification_settings_service = provide(NotificationSettingsService)
     obis_notification_service = provide(ObisNotificationService)
     study_week_service = provide(StudyWeekService)
     locale_service = provide(LocaleService)

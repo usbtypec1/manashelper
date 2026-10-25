@@ -236,10 +236,11 @@ async def test_job_groups_new_materials_and_acknowledges_all_events_only_on_succ
 
 async def test_eders_settings_open_from_notifications_and_keep_return_path_after_toggle() -> None:
     from manashelper.bot.callback_data import EdersSettingCallback, SettingsAction, SettingsCallback
-    from manashelper.bot.keyboards.settings import build_notifications_keyboard, build_settings_keyboard
+    from manashelper.bot.keyboards.settings import build_settings_keyboard
     from manashelper.bot.routers.eders import on_eders_setting, on_open_eders_settings
+    from manashelper.modules.notifications.keyboards import build_notifications_keyboard
+    from manashelper.modules.notifications.settings import NotificationSettingsSummary
     from manashelper.services.eders_tracking import EdersSetting, EdersSettings
-    from manashelper.services.notification_settings import NotificationSettingsSummary
 
     main = build_settings_keyboard()
     assert any(

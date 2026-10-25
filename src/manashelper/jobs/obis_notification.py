@@ -5,7 +5,7 @@ from dishka import AsyncContainer
 
 from manashelper.jobs.common import get_user_locale, send_notification
 from manashelper.localization.i18n import i18n
-from manashelper.repositories.notification_settings_repository import NotificationSettingsRepository
+from manashelper.modules.notifications.queries import NotificationRecipientsQuery
 from manashelper.repositories.user_repository import UserRepository
 from manashelper.scraping.obis_client import ObisLoginError
 from manashelper.scraping.obis_parser import ObisParseError
@@ -20,9 +20,9 @@ logger = logging.getLogger(__name__)
 async def poll_obis_notifications_job(container: AsyncContainer, bot: Bot) -> None:
     try:
         async with container() as request_container:
-            notification_settings_repository = await request_container.get(NotificationSettingsRepository)
-            exam_grade_user_ids = set(await notification_settings_repository.get_user_ids_with_exam_grades_enabled())
-            lesson_skip_user_ids = set(await notification_settings_repository.get_user_ids_with_lesson_skips_enabled())
+            recipients = await request_container.get(NotificationRecipientsQuery)
+            exam_grade_user_ids = set(await recipients.for_exam_grades())
+            lesson_skip_user_ids = set(await recipients.for_lesson_skips())
     except Exception:
         logger.exception("Failed to load users for OBIS notification polling")
         return

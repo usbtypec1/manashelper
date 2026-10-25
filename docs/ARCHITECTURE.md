@@ -4,15 +4,16 @@
 репозитории; наличие функции в `features/` само по себе не означает, что она реализована.
 
 Проект находится в процессе постепенного перехода к функциональным модулям. Перенесены `feedback`,
-`advertisements`, `student_questions`, `versions`, `donations`, `broadcast`, `food_menu` и `schedule`.
+`advertisements`, `student_questions`, `versions`, `donations`, `broadcast`, `food_menu`, `schedule` и `notifications`.
 Код каждой области собран в `modules/`.
 У объявлений также перенесена очистка истёкших публикаций. Versions остаётся набором функций без DI provider.
 Остальные области пока
 сохраняют прежнюю структуру по слоям.
 В `modules/users/` пока выделены только публичный UsersQuery и REQUEST-provider: count, список ID
-и проверка существования используются пожертвованиями, рассылкой и Food menu. Остальной код пользователей остаётся legacy.
-В `modules/notifications/` выделен только NotificationRecipientsQuery с REQUEST-provider для выбора
-получателей изменений расписания. Остальные Notifications, User ORM и общая инфраструктура пока legacy.
+и проверка существования используются пожертвованиями, рассылкой, Food menu и Notifications. Остальной код пользователей остаётся legacy.
+В плоском `modules/notifications/` собраны настройки расписания/оценок/пропусков, запросы получателей,
+ORM, repository и Telegram presentation. Food menu/Eders сохраняют собственные настройки;
+общая навигация Settings, User ORM и общая инфраструктура пока legacy.
 Карта зависимостей, порядок этапов и исходные проблемы проверок описаны в [MIGRATION.md](MIGRATION.md).
 
 ## 1. Назначение и общий подход
@@ -108,7 +109,7 @@ manashelper/
 │   │   ├── broadcast/             # SendBroadcast, Telegram sender, router, клавиатура, callbacks, REQUEST-provider
 │   │   ├── food_menu/             # application, presentation, infrastructure, тонкие jobs, APP/REQUEST-provider
 │   │   ├── schedule/              # Каталог, подписки, расписание, поиск, sync; application/presentation/infrastructure
-│   │   ├── notifications/         # Пока только публичный запрос получателей и REQUEST-provider
+│   │   ├── notifications/         # Настройки, запросы получателей, ORM, Telegram и REQUEST-provider
 │   │   ├── users/                 # Пока только публичный UsersQuery и REQUEST-provider
 │   │   └── feedback/
 │   │       ├── router.py          # FSM, обращения и ответы admin-чата
@@ -234,7 +235,7 @@ OBIS и удаления сообщений также напрямую полу
 `BroadcastProvider` предоставляет `SendBroadcast` в `REQUEST`; адаптер доставки создаёт обработчик с текущим Bot.
 `FoodMenuProvider` сохраняет клиент/parser в `APP`, репозитории и сценарии меню — в `REQUEST`.
 `ScheduleProvider` сохраняет TimetableClient в `APP`, каталог, подписки и сценарии — в `REQUEST`.
-`NotificationsProvider` предоставляет пока только NotificationRecipientsQuery в `REQUEST`.
+`NotificationsProvider` предоставляет NotificationRecipientsQuery, NotificationSettingsService и repository в `REQUEST`.
 Одиннадцать провайдеров собираются в `main.py`; состояние LRU-кеша сохраняется между request scopes.
 
 | Область | Объекты | Время жизни |
@@ -348,7 +349,22 @@ Telegram-слой строит rich messages с кнопками оценки и
 
 `ObisNotificationService` сравнивает результаты с сохранёнными оценками и посещаемостью. Первое наблюдение
 создаёт исходное состояние без уведомлений. Общие переключатели расписания, оценок и пропусков находятся
-в `NotificationSettings`; отсутствие строки означает, что все три включены.
+в `modules/notifications/orm.py::NotificationSettings`; отсутствие строки означает, что все три включены.
+OBIS job выбирает ID через публичный `NotificationRecipientsQuery`, сохраняя отдельные наборы оценок/пропусков
+и их объединение. Polling, сравнение снимков и доставка остаются в OBIS.
+
+### Настройки уведомлений
+
+Плоский `modules/notifications/` владеет `settings.py`, `queries.py`, `repository.py`, `orm.py`,
+`callbacks.py`, `keyboards.py`, `router.py` и `provider.py`. Сервис возвращает immutable dataclass,
+проверяет пользователя через `UsersQuery.exists` и сохраняет прежние SQL и ошибки неизвестного пользователя.
+Router обслуживает открытие, возврат и три переключателя; общий Settings router сохраняет навигацию.
+Callback payload `notification_setting:*`, `settings:open_notifications` и `settings:back_to_notifications`
+не изменились. Кнопки Food menu/Eders ведут в прежние feature-specific настройки.
+
+Сохранён существующий дефект SQLAlchemy defaults: до первого flush новая строка содержит `None`,
+клавиатура показывает выключенные флаги, а первый toggle включает выбранный флаг. После INSERT
+остальные флаги получают default True. Выбор адресатов без строки настроек по-прежнему включает все уведомления.
 
 ### Eders и учебная неделя
 
@@ -606,7 +622,7 @@ Ruff использует длину строки 120 и целевую верс
 остаются временными внешними зависимостями перенесённых модулей. Объявления используют `UserContactService`
 через application-поверхность, без доступа к репозиториям Users. Donations и Broadcast используют UsersQuery
 из частично выделенного `modules/users/`. Старые Python-пути Feedback, объявлений, опроса, версий, Donations,
-Broadcast, Food menu и Schedule удалены;
+Broadcast, Food menu, Schedule и Notifications удалены;
 адаптеров совместимости для них нет, все потребители в проекте используют новые импорты.
 
 Broadcast остаётся небольшим плоским модулем. `service.py` содержит `SendBroadcast`, immutable dataclass

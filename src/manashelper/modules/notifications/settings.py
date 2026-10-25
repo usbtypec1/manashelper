@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
-from manashelper.db.models import NotificationSettings
-from manashelper.repositories.notification_settings_repository import NotificationSettingsRepository
-from manashelper.repositories.user_repository import UserRepository
+from manashelper.modules.notifications.orm import NotificationSettings
+from manashelper.modules.notifications.repository import NotificationSettingsRepository
+from manashelper.modules.users.queries import UsersQuery
 
 
 class UserNotFoundError(Exception):
@@ -37,10 +37,10 @@ class NotificationSettingsService:
     def __init__(
         self,
         notification_settings_repository: NotificationSettingsRepository,
-        user_repository: UserRepository,
+        users: UsersQuery,
     ) -> None:
         self._notification_settings_repository = notification_settings_repository
-        self._user_repository = user_repository
+        self._users = users
 
     async def get_settings(self, user_id: int) -> NotificationSettingsSummary:
         settings = await self._get_or_create(user_id)
@@ -58,7 +58,6 @@ class NotificationSettingsService:
         return _to_summary(settings)
 
     async def _get_or_create(self, user_id: int) -> NotificationSettings:
-        user = await self._user_repository.get_by_id(user_id)
-        if user is None:
+        if not await self._users.exists(user_id):
             raise UserNotFoundError(user_id)
         return await self._notification_settings_repository.get_or_create(user_id)

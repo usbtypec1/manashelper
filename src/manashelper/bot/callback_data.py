@@ -6,7 +6,6 @@ from aiogram.filters.callback_data import CallbackData
 from manashelper.localization.locale import Locale
 from manashelper.services.eders_models import DeadlineFilter
 from manashelper.services.eders_tracking import EdersSetting
-from manashelper.services.notification_settings import NotificationSetting
 
 
 class ObisAction(StrEnum):
@@ -50,10 +49,6 @@ class SettingsAction(StrEnum):
 
 class SettingsCallback(CallbackData, prefix="settings"):
     action: SettingsAction
-
-
-class NotificationSettingCallback(CallbackData, prefix="notification_setting"):
-    setting: NotificationSetting
 
 
 class LocaleCallback(CallbackData, prefix="locale"):

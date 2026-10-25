@@ -153,8 +153,11 @@ Its provider retains APP client/parser and REQUEST services. BroadcastFoodMenu u
 notification settings check users through UsersQuery.exists. Preserve the characterized first-toggle ORM-default defect.
 Schedule now lives in modules/schedule/ with catalog/tracking, timetable/search, infrastructure and thin jobs.
 CourseTrackingRepository owns the tracked-course query; User ORM remains legacy. SyncCourseTimetable selects
-recipients through public modules/notifications/queries.py, whose provider retains REQUEST scope. Notifications
-is only partially migrated. Shared weekday labels live in localization/weekdays.py; Bishkek timezone reuses
+recipients through public modules/notifications/queries.py, whose provider retains REQUEST scope.
+Notifications now lives in flat modules/notifications/: settings, ORM, repository and Telegram presentation.
+Settings uses UsersQuery.exists; OBIS polling also selects recipients through NotificationRecipientsQuery.
+Shared Settings navigation stays in bot/. Preserve the characterized deferred-default/first-toggle defect.
+Shared weekday labels live in localization/weekdays.py; Bishkek timezone reuses
 services/time_utils.py. Root composition now has eleven providers.
 `docs/ARCHITECTURE.md` describes the current state; `docs/MIGRATION.md` records stage boundaries and baseline issues.
 

@@ -6,9 +6,10 @@
 схемы PostgreSQL, callback payload, имён состояний FSM, переводов и форматов сохранённых данных.
 Этот документ фиксирует анализ до изменения исходников и результаты завершённых этапов.
 
-Актуальный статус на 25 октября 2026 года: перенесены **Feedback**, **Advertisements**, **Student questions**, **Versions** и **Donations**.
+Актуальный статус на 25 октября 2026 года: перенесены **Feedback**, **Advertisements**, **Student questions**,
+**Versions**, **Donations**, **Broadcast**, **Food menu**, **Schedule** и **Notifications**.
 В Users отдельно выделена публичная read-граница; вся область пользователей пока не перенесена.
-Общий gate зелёный: **358 passed, 5 skipped**, Ruff, mypy и проверка Alembic проходят.
+Общий gate зелёный: **461 passed, 9 skipped**, Ruff, mypy и проверка Alembic проходят.
 Первоначальные красные результаты ниже оставлены как история baseline и не описывают текущую проверку.
 
 ## Исходное состояние — 24 октября 2026 года
@@ -639,3 +640,49 @@ Food menu и Schedule больше не зависят от formatter/timezone �
 расписания jobs, scopes, transaction defect и Food menu first-toggle defect сохранены.
 Архитектурные документы и инструкции обновлены. Автоматический staging перемещений снят только с известных
 пар путей; исходный index был пустым. Коммиты не создавались. Следующий этап карты — Users/Notifications/Platform/Core.
+
+### План следующего этапа: Notifications
+
+Baseline: **434 passed, 8 skipped** (HTTP simulations не включены),
+Ruff lint/format и mypy strict (235 файлов) проходят. Сохранён PostgreSQL DDL всех 27 таблиц и индексов.
+
+Один владельческий перенос: `modules/notifications/` получает настройки, repository, ORM, callbacks,
+клавиатуру и три обработчика уведомлений из общего settings router. Общая навигация Settings остаётся
+в Telegram-слое; настройки Food menu/Eders и OBIS polling принадлежат своим областям.
+NotificationsProvider собирает REQUEST-зависимости, global model registry сохраняет Alembic metadata.
+
+После структурного переноса Notifications использует существующий UsersQuery.exists вместо UserRepository;
+OBIS job получает адресатов через NotificationRecipientsQuery. SQL, порядок запросов, set union,
+request scopes, callback payload, локализация и ошибки сохраняются. HTTP-интеграции не затрагиваются.
+
+Characterization фиксирует существующий дефект ORM defaults: до flush новая строка содержит None вместо
+трёх bool; первый toggle включает выбранный флаг. Не исправлять этот дефект в архитектурном переносе.
+
+### Выполнено: Notifications
+
+Phase A собрала feature в плоском `modules/notifications/`: настройки, query, repository, ORM, callbacks,
+клавиатура, router и REQUEST-provider. AST шести перенесённых реализаций до упрощения совпал с исходным,
+кроме imports. Прошли **54 целевых теста** и mypy. Общая Settings-навигация остаётся в `bot/`,
+новый router подключён рядом с settings в dispatcher; flags, фильтры, payload и кнопки возврата сохранены.
+
+Phase B заменила UserRepository в настройках на существующий UsersQuery.exists. OBIS job получает
+два списка адресатов через публичный NotificationRecipientsQuery; прежние SQL, set union, флаги проверки,
+порядок запросов, обработка ошибок и request scopes не изменились. Сравнение снимков и доставка OBIS
+не переносились. Новых интерфейсов, зависимостей или миграций нет.
+
+Добавлены **28 тестов**: неизвестный пользователь, независимость/сохранение переключателей,
+deferred defaults, default opt-in и фильтрация адресатов, клавиатура и payload, handlers/alerts,
+маршрутизация, OBIS recipient union/load failure, scopes и model registry. Расширен root composition test.
+
+Финальный gate:
+
+- pytest: **461 passed, 9 skipped**; восемь HTTP-тестов требуют локальные simulations,
+  корпусный тест пропущен из-за отсутствия приватной выгрузки Eders;
+- Ruff lint/format: **351 файл**; mypy strict: **238 source files**, без ошибок;
+- Index diagnostics девяти компонентов без ошибок, старых imports не найдено;
+- все **237 подмодулей** импортируются; DDL всех **27 таблиц и индексов** совпал с baseline;
+- Alembic: `No new upgrade operations detected.`;
+- существующие дефекты transaction finalization и first-toggle defaults сохранены и покрыты тестами.
+
+Этап завершён. Users, Platform/Core, OBIS, Eders и Study week остаются следующими областями карты.
+Коммиты, push и deploy не выполнялись; исходные `.DS_Store` не изменялись.

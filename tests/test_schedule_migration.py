@@ -35,6 +35,7 @@ from manashelper.modules.schedule.presentation.callbacks import (
 )
 from manashelper.modules.schedule.presentation.routers import lesson_search, timetable
 from manashelper.modules.schedule.provider import ScheduleProvider
+from manashelper.modules.users.provider import UsersProvider
 from manashelper.services.locale import LocaleService
 
 
@@ -190,7 +191,7 @@ async def test_schedule_recipient_query_preserves_tracking_and_default_opt_in(se
     await session.flush()
     session.add(NotificationSettings(user_id=961012, schedule_changes_enabled=False))
     await session.flush()
-    from manashelper.repositories.notification_settings_repository import NotificationSettingsRepository
+    from manashelper.modules.notifications.repository import NotificationSettingsRepository
 
     result = await NotificationRecipientsQuery(NotificationSettingsRepository(session)).for_schedule_changes(course.id)
     assert 961011 in result and 961012 not in result and 961013 not in result
@@ -198,7 +199,7 @@ async def test_schedule_recipient_query_preserves_tracking_and_default_opt_in(se
 
 async def test_schedule_provider_scopes_and_hourly_job_contract():
     async with make_async_container(
-        AppProvider(), RequestProvider(), ScheduleProvider(), NotificationsProvider()
+        AppProvider(), RequestProvider(), ScheduleProvider(), NotificationsProvider(), UsersProvider()
     ) as container:
         client = await container.get(TimetableClient)
         async with container() as request:

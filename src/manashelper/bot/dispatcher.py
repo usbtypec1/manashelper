@@ -29,6 +29,7 @@ from manashelper.modules.food_menu.presentation.routers.food_menu_cleanup import
 from manashelper.modules.food_menu.presentation.routers.food_menu_notifications import (
     router as food_menu_notifications_router,
 )
+from manashelper.modules.notifications.router import router as notifications_router
 from manashelper.modules.schedule.presentation.routers.lesson_search import router as lesson_search_router
 from manashelper.modules.schedule.presentation.routers.timetable import router as timetable_router
 from manashelper.modules.student_questions.router import router as student_questions_router
@@ -69,6 +70,7 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
         obis_router,
         eders_router,
         settings_router,
+        notifications_router,
         donations_router,
         phone_numbers_router,
         versions_router,

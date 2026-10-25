@@ -34,10 +34,15 @@ Schedule lives in `modules/schedule/`: catalog/tracking, timetable/search, sync,
 TimetableClient remains APP; services/repositories remain REQUEST. CourseTrackingRepository owns the tracked-course
 query formerly in UserRepository, preserving ORM collections. SyncCourseTimetable uses public NotificationRecipientsQuery;
 its Telegram sender preserves per-recipient locale and delivery behavior. StudyWeekService remains a legacy consumer.
-`modules/notifications/` is partial: only the recipient query and REQUEST provider have moved; settings/ORM/repository remain legacy.
+Notifications lives in flat `modules/notifications/`: settings, recipient queries, ORM, repository, callbacks,
+keyboard and router. Its provider retains REQUEST scope. Settings checks users through UsersQuery;
+Schedule and OBIS polling select recipients through NotificationRecipientsQuery. Shared Settings navigation
+stays in `bot/`; Food menu/Eders preferences and OBIS polling remain owned by their features.
+Preserve the characterized deferred-default defect: a new unflushed settings row exposes None values,
+and its first toggle enables the selected flag. Missing rows still opt recipients into all notifications.
 Shared weekday labels live in `localization/weekdays.py`; reuse `services/time_utils.py::BISHKEK_TZ` instead of a feature's timezone.
 `modules/users/` currently exposes UsersQuery and a REQUEST provider for counts, recipient IDs and existence
-checks used by donations, broadcasts and Food menu. Other user functionality, ORM and repository remain legacy.
+checks used by donations, broadcasts, Food menu and Notifications. Other user functionality, ORM and repository remain legacy.
 Keep migrated feature code together;
 do not move unrelated legacy areas in the same stage. See `docs/ARCHITECTURE.md` and `docs/MIGRATION.md`.
 Add routers to the dispatcher in `bot/dispatcher.py`; legacy services/repositories remain in `di.py`, while migrated

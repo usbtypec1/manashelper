@@ -1,6 +1,5 @@
 from manashelper.db.models.action_log import ActionLog
 from manashelper.db.models.eders import EdersNotification, EdersState
-from manashelper.db.models.notification_settings import NotificationSettings
 from manashelper.db.models.scheduled_message_deletion import ScheduledMessageDeletion
 from manashelper.db.models.user import User
 from manashelper.db.models.user_exam_grade import UserExamGrade
@@ -18,6 +17,7 @@ from manashelper.modules.food_menu.infrastructure.models.food_menu_cleanup_setti
 from manashelper.modules.food_menu.infrastructure.models.food_menu_notification_settings import (
     FoodMenuNotificationSettings,
 )
+from manashelper.modules.notifications.orm import NotificationSettings
 from manashelper.modules.schedule.infrastructure.models.associations import user_courses
 from manashelper.modules.schedule.infrastructure.models.course import Course
 from manashelper.modules.schedule.infrastructure.models.department import Department
