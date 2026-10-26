@@ -882,18 +882,6 @@ msgstr ""
 "➖ {time_range} (iptal edildi)\n"
 "{content}"
 
-msgid "versions.title"
-msgstr "📦 Sürüm geçmişi"
-
-msgid "versions.title_page"
-msgstr "📦 Sürüm geçmişi (sayfa {page}/{total_pages})"
-
-msgid "versions.version_header"
-msgstr "📦 <b>Sürüm {version}</b>"
-
-msgid "versions.release_date"
-msgstr "📅 Yayın tarihi: {date}"
-
 msgid "language.native_name"
 msgstr "Türkçe"
 
@@ -911,9 +899,6 @@ msgstr "Yemekhane menüsünü görüntüle"
 
 msgid "commands.language"
 msgstr "Dili değiştir"
-
-msgid "commands.versions"
-msgstr "Botun sürüm geçmişini görüntüle"
 
 msgid "commands.donate"
 msgstr "Botu destekle"

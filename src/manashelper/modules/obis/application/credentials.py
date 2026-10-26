@@ -24,8 +24,9 @@ class ObisCredentialsService:
     async def save_credentials(self, user_id: int, student_number: str, plain_password: str) -> None:
         user = await self._get_user(user_id)
         await self._client.verify_credentials(student_number, plain_password)
+        encrypted_password = self._crypto.encrypt(plain_password)
         user.student_number = student_number
-        user.encrypted_password = self._crypto.encrypt(plain_password)
+        user.encrypted_password = encrypted_password
 
     async def has_credentials(self, user_id: int) -> bool:
         user = await self._get_user(user_id)

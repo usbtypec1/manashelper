@@ -107,9 +107,12 @@ async def test_failed_login_does_not_replace_existing_credentials(session, crede
     with pytest.raises(ObisLoginError):
         await credentials.service.save_credentials(975001, "new", "fake-password")
     assert (user.student_number, user.encrypted_password) == ("old", "old-ciphertext")
+    await session.commit()
+    await session.refresh(user)
+    assert (user.student_number, user.encrypted_password) == ("old", "old-ciphertext")
 
 
-async def test_encryption_failure_preserves_existing_assignment_order(session, credentials, crypto, monkeypatch):
+async def test_encryption_failure_does_not_replace_existing_credentials(session, credentials, crypto, monkeypatch):
     user = DbUser(id=975001, full_name="Student", student_number="old", encrypted_password="old-ciphertext")
     session.add(user)
     await session.flush()
@@ -120,8 +123,10 @@ async def test_encryption_failure_preserves_existing_assignment_order(session, c
     monkeypatch.setattr(crypto, "encrypt", fail)
     with pytest.raises(RuntimeError, match="Encryption unavailable"):
         await credentials.service.save_credentials(975001, "new", "fake-password")
-    # Existing order: student number mutates before encrypting. Fix separately from relocation.
-    assert (user.student_number, user.encrypted_password) == ("new", "old-ciphertext")
+    assert (user.student_number, user.encrypted_password) == ("old", "old-ciphertext")
+    await session.commit()
+    await session.refresh(user)
+    assert (user.student_number, user.encrypted_password) == ("old", "old-ciphertext")
 
 
 @pytest.mark.parametrize("ciphertext", [None, "not-ciphertext"])
@@ -151,20 +156,30 @@ def test_crypto_errors_keep_generic_message_without_plaintext(crypto, ciphertext
 
 
 @pytest.mark.parametrize("score", [None, "80"])
-async def test_first_grade_preserves_existing_nonempty_notification_behavior(session, score):
+async def test_first_grade_snapshot_is_silent_and_subsequent_changes_notify(session, score):
     session.add(DbUser(id=975001, full_name="Student"))
     await session.flush()
     source = AsyncMock(spec=ObisService)
     source.get_exam_grades.return_value = [LessonExamsModel("Math", "MATH", [ExamModel("Midterm", score)])]
     service = ObisNotificationService(source, UserExamGradeRepository(session), UserLessonAttendanceRepository(session))
     first = await service.check_exam_grade_changes(975001)
-    assert [change.score for change in first] == ([] if score is None else ["80"])
+    assert first == []
     await session.flush()
+    saved = await UserExamGradeRepository(session).get_all_by_user_id(975001)
+    assert [(grade.lesson_code, grade.exam_name, grade.score) for grade in saved] == [("MATH", "Midterm", score)]
     assert await service.check_exam_grade_changes(975001) == []
     source.get_exam_grades.return_value = [LessonExamsModel("Math", "MATH", [ExamModel("Midterm", None)])]
     assert await service.check_exam_grade_changes(975001) == []
     source.get_exam_grades.return_value = [LessonExamsModel("Math", "MATH", [ExamModel("Midterm", "85")])]
     assert [change.score for change in await service.check_exam_grade_changes(975001)] == ["85"]
+    source.get_exam_grades.return_value = [
+        LessonExamsModel("Math", "MATH", [ExamModel("Midterm", "85"), ExamModel("Final", "90")])
+    ]
+    assert [(change.exam_name, change.score) for change in await service.check_exam_grade_changes(975001)] == [
+        ("Final", "90")
+    ]
+    await session.flush()
+    assert await service.check_exam_grade_changes(975001) == []
 
 
 async def test_attendance_baseline_is_silent_and_only_known_increases_notify(session):

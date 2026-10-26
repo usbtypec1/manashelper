@@ -2,7 +2,6 @@
 .gitignore
 .idea
 *.md
-!docs/versions/*.md
 
 .venv
 __pycache__/

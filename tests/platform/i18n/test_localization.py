@@ -44,6 +44,8 @@ async def test_command_registration_allows_local_start_without_admin_chat(admin_
     if admin_chat_id:
         assert admin_calls[0].kwargs["scope"].chat_id == admin_chat_id
     assert bot.set_my_commands.await_count == len(Locale) * 2 + 2 + int(bool(admin_chat_id))
+    for call in bot.set_my_commands.await_args_list:
+        assert all(command.command != "versions" for command in call.kwargs["commands"])
 
 
 def _catalog(locale: Locale):
@@ -149,7 +151,6 @@ def test_command_descriptions_use_requested_locale(locale: Locale) -> None:
 def test_only_group_yemek_command_is_ephemeral(locale: Locale) -> None:
     group = {command.command: command for command in build_group_commands(locale)}
     assert group["yemek"].is_ephemeral is True
-    assert group["versions"].is_ephemeral is None
     assert all(command.is_ephemeral is None for command in build_private_commands(locale))
 
 

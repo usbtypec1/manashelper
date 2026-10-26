@@ -886,18 +886,6 @@ msgstr ""
 "➖ {time_range} (cancelled)\n"
 "{content}"
 
-msgid "versions.title"
-msgstr "📦 Version history"
-
-msgid "versions.title_page"
-msgstr "📦 Version history (page {page}/{total_pages})"
-
-msgid "versions.version_header"
-msgstr "📦 <b>Version {version}</b>"
-
-msgid "versions.release_date"
-msgstr "📅 Released: {date}"
-
 msgid "language.native_name"
 msgstr "English"
 
@@ -915,9 +903,6 @@ msgstr "View the cafeteria menu"
 
 msgid "commands.language"
 msgstr "Change language"
-
-msgid "commands.versions"
-msgstr "View the bot's version history"
 
 msgid "commands.donate"
 msgstr "Support the bot"

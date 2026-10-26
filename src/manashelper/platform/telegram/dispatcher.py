@@ -27,7 +27,6 @@ from manashelper.modules.student_questions.router import router as student_quest
 from manashelper.modules.study_week.router import router as study_week_router
 from manashelper.modules.users.presentation.routers.locale import router as locale_router
 from manashelper.modules.users.presentation.routers.phone_numbers import router as phone_numbers_router
-from manashelper.modules.versions.router import router as versions_router
 from manashelper.platform.telegram.middlewares.action_log import ActionLogMiddleware
 from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
 from manashelper.platform.telegram.middlewares.per_chat_ordering import PerChatOrderingMiddleware
@@ -75,7 +74,6 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
         notifications_router,
         donations_router,
         phone_numbers_router,
-        versions_router,
         advertisement_router,
         advertisement_moderation_router,
         broadcast_router,

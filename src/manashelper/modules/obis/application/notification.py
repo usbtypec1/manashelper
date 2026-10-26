@@ -64,7 +64,7 @@ class ObisNotificationService:
                             score=exam.score,
                         )
                     )
-                    if exam.score is not None:
+                    if existing_grades and exam.score is not None:
                         changes.append(
                             ExamGradeChange(lesson_name=lesson.lesson_name, exam_name=exam.name, score=exam.score)
                         )

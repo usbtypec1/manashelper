@@ -19,7 +19,7 @@ COMMANDS_DIR = Path(__file__).resolve().parents[4] / "docs" / "commands"
 
 
 def _load_command_configs(filename: str) -> list[_CommandConfig]:
-    """Read command files on demand, as the versions module reads release history."""
+    """Read command files on demand."""
     return cast(list[_CommandConfig], json.loads((COMMANDS_DIR / filename).read_text(encoding="utf-8")))
 
 

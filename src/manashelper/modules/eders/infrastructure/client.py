@@ -14,39 +14,10 @@ from manashelper.modules.eders.infrastructure.parser import (
     parse_course_activities,
     parse_enrolled_courses,
 )
-from manashelper.modules.eders.infrastructure.urls import EDERS_BASE_URL, safe_eders_url
+from manashelper.modules.eders.infrastructure.urls import EDERS_BASE_URL
 from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL, OBIS_LOGIN_PATH, login, new_http_client
 
 COURSES_METHOD = "core_course_get_enrolled_courses_by_timeline_classification"
-
-
-def _validate_request_url(url: str, phase: str) -> None:
-    parsed = urlsplit(url)
-    if parsed.fragment:
-        raise EdersUnsafeUrlError("Unsupported eders URL")
-    if phase == "sso":
-        if url in {f"{OBIS_BASE_URL}/site/eders", f"{OBIS_BASE_URL}{OBIS_LOGIN_PATH}"}:
-            return
-        if parsed.scheme == "https" and parsed.netloc == "eders.manas.edu.kg":
-            if parsed.path in {"/", "/my/", "/my/index.php"} and not parsed.query:
-                return
-            params = parse_qs(parsed.query, keep_blank_values=True)
-            if (
-                parsed.path == "/auth/userkey/login.php"
-                and set(params) == {"key"}
-                and len(params["key"]) == 1
-                and params["key"][0]
-            ):
-                return
-        raise EdersUnsafeUrlError("Unsupported authentication URL")
-    if phase == "read":
-        if url == f"{EDERS_BASE_URL}/user/profile.php":
-            return
-        if parsed.scheme == "https" and parsed.netloc == "eders.manas.edu.kg" and parsed.path == "/login/index.php":
-            raise EdersSessionExpiredError("Eders session expired")
-        safe_eders_url(url, {"/course/view.php", "/mod/assign/view.php", "/mod/quiz/view.php"})
-        return
-    raise EdersUnsafeUrlError("Unsupported request phase")
 
 
 async def _request(
@@ -56,7 +27,6 @@ async def _request(
     data: dict[str, str] | None = None,
 ) -> httpx.Response:
     for _ in range(10):
-        _validate_request_url(url, phase)
         if data is not None and url != f"{OBIS_BASE_URL}{OBIS_LOGIN_PATH}":
             raise EdersUnsafeUrlError("POST is restricted to OBIS login")
         try:

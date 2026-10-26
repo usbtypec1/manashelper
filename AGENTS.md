@@ -23,8 +23,6 @@ and `core/time.py` owns the shared timezone. Schedule owns its application text 
 Empty legacy `bot/`, `services/`, `repositories/` and `scraping/` packages were removed. Feedback, advertisements and the survey live in
 `modules/feedback/`, `modules/advertisements/` and `modules/student_questions/`, with REQUEST providers in `main.py`.
 Advertisements separates presentation, application and infrastructure, with domain enums; feedback and the survey stay flat.
-Release history lives in flat `modules/versions/`, with functions and no artificial DI provider. Its runtime
-`docs/versions/` path is tested for both checkout and Docker-like layouts.
 Donations lives in flat `modules/donations/`: catalog, Telegram QR adapter, application service and presentation.
 Its provider keeps DonationQrService in APP for shared bounded caching and DonationService in REQUEST.
 Broadcast lives in flat `modules/broadcast/`: SendBroadcast uses UsersQuery and a delivery protocol;
@@ -89,9 +87,9 @@ Its frozen read model hides secrets in repr; Eders marker stays SHA-256 of ciphe
 The shared login/new_http_client functions are public OBIS infrastructure reused by Eders with the same cookies.
 PollObisUser handles expected auth/parse errors; Telegram sender owns locale/HTML and skips TelegramAPIError.
 Unexpected errors abort that user and are logged by the job, without stopping the next user.
-Preserve two characterized behaviors: first nonempty grades notify immediately; attendance's first row is silent.
-Saving assigns student_number before encryption, so an encryption error leaves that in-memory assignment changed.
-Treat changes to these behaviors as separate fixes; see `docs/BACKLOG.md`. Preserve hourly scheduling, FSM,
+The first grade snapshot and attendance's first row are silent. Later new or changed nonempty grades notify.
+Saving verifies login and encrypts the password before assigning either credential field, so login/encryption failures
+preserve both previous values even if caught inside a committed scope. Preserve hourly scheduling, FSM,
 password masking and encryption format.
 
 Eders lives in `modules/eders/`: application snapshot/filter/tracking/polling, infrastructure client/parser/URL validation,
@@ -141,8 +139,7 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
 - All jobs are registered in `jobs/scheduler.py`. They use independent request scopes, catch
   failures per item or recipient, and log unexpected exceptions so one failure does not stop a batch. Grade,
   attendance and timetable notifications compare new snapshots with persisted last-known state.
-  Attendance/timetable first observations are silent; OBIS's first nonempty grade currently notifies.
-  A decision about changing that behavior is deferred in `docs/BACKLOG.md`.
+  Attendance/timetable first observations and the first OBIS grade snapshot are silent.
   Users without a `NotificationSettings` row have all toggles enabled.
   Food menu, Schedule, OBIS and Eders jobs live in their modules. Schedule loads course IDs in one request scope,
   then opens another per course. TelegramAPIError skips a recipient; unexpected delivery/locale errors abort

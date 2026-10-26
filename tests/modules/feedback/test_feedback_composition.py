@@ -126,6 +126,7 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
                         is not dispatcher.callback_query.outer_middleware[index]
                     )
                 names = [router.name for router in dispatcher.sub_routers]
+                assert "versions" not in names
                 assert names.count("feedback") == 1
                 assert names.count("broadcast") == 1
                 assert names.count("timetable") == 1
@@ -140,7 +141,7 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
                 assert names.index("study_week") == names.index("eders") + 1
                 assert names.index("study_week") < names.index("settings")
                 assert names.index("start") < names.index("locale") < names.index("timetable")
-                assert names.index("donations") < names.index("phone_numbers") < names.index("versions")
+                assert names.index("donations") < names.index("phone_numbers") < names.index("advertisement")
                 assert names.index("settings") < names.index("notifications") < names.index("donations")
                 assert names.index("student_questions") < names.index("advertisement_contact")
                 assert names.index("advertisement_contact") < names.index("start")
