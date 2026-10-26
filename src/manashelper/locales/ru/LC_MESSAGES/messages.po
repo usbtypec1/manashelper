@@ -886,18 +886,6 @@ msgstr ""
 "➖ {time_range} (отменено)\n"
 "{content}"
 
-msgid "versions.title"
-msgstr "📦 История версий"
-
-msgid "versions.title_page"
-msgstr "📦 История версий (страница {page}/{total_pages})"
-
-msgid "versions.version_header"
-msgstr "📦 <b>Версия {version}</b>"
-
-msgid "versions.release_date"
-msgstr "📅 Дата выхода: {date}"
-
 msgid "language.native_name"
 msgstr "Русский"
 
@@ -915,9 +903,6 @@ msgstr "Просмотр меню столовой"
 
 msgid "commands.language"
 msgstr "Сменить язык"
-
-msgid "commands.versions"
-msgstr "Посмотреть историю версий бота"
 
 msgid "commands.donate"
 msgstr "Поддержать бота"

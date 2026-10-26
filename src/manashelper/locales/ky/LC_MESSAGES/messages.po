@@ -888,18 +888,6 @@ msgstr ""
 "➖ {time_range} (жокко чыгарылды)\n"
 "{content}"
 
-msgid "versions.title"
-msgstr "📦 Версиялар тарыхы"
-
-msgid "versions.title_page"
-msgstr "📦 Версиялар тарыхы ({page}/{total_pages}-бет)"
-
-msgid "versions.version_header"
-msgstr "📦 <b>{version}-версия</b>"
-
-msgid "versions.release_date"
-msgstr "📅 Чыгарылган күнү: {date}"
-
 msgid "language.native_name"
 msgstr "Кыргызча"
 
@@ -917,9 +905,6 @@ msgstr "Ашкана менюсун көрүү"
 
 msgid "commands.language"
 msgstr "Тилди өзгөртүү"
-
-msgid "commands.versions"
-msgstr "Боттун версиялар тарыхын көрүү"
 
 msgid "commands.donate"
 msgstr "Ботту колдоо"

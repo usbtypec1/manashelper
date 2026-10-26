@@ -12,10 +12,6 @@
     "description": "commands.language"
   },
   {
-    "command": "versions",
-    "description": "commands.versions"
-  },
-  {
     "command": "donate",
     "description": "commands.donate"
   },

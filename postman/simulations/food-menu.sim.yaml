@@ -1,0 +1,5 @@
+simulation: food-menu-refactor
+routing: header
+mocks:
+  - routeKey: food-menu
+    path: ../mocks/food-menu/config.yaml

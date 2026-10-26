@@ -4,7 +4,7 @@ Manashelper is a Telegram bot that helps students at Manas University keep track
 their class schedule, the cafeteria menu, and their grades — without having to dig through separate websites.
 You just chat with it on Telegram like you would with a friend, tapping buttons instead of typing commands.
 
-> Looking for how the code works instead? See [`CLAUDE.md`](CLAUDE.md) for the full architecture notes, or jump
+> Looking for how the code works instead? See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the current architecture, or jump
 > to [For developers](#for-developers) below.
 
 ## What the bot can do
@@ -27,7 +27,7 @@ You just chat with it on Telegram like you would with a friend, tapping buttons 
   sections and titles. New and renamed materials or changed text blocks are grouped by course in notifications.
   Folders, links, files, forums and text blocks are supported. Initial syncs are silent for materials.
   Unverified timezones and conflicting dates are shown explicitly. See [Eders tracking](docs/eders-tracking.md).
-- 🌐 **Multiple languages** — the bot speaks Kyrgyz, Russian, Turkish and English, and picks a language
+- 🌐 **Multiple languages** — the bot speaks Kyrgyz, Russian, Turkish, English and simplified Chinese, and picks a language
   automatically based on your Telegram app's language (you can also switch manually at any time).
 
 Everything happens directly in the Telegram chat — there's no separate app or website to install.
@@ -36,8 +36,9 @@ Everything happens directly in the Telegram chat — there's no separate app or 
 
 Built with Python 3.13, [aiogram 3](https://docs.aiogram.dev/) for the Telegram bot layer, SQLAlchemy 2 (async)
 + Postgres for storage, and [Dishka](https://github.com/reagento/dishka) for dependency injection. There is no
-REST API — all interaction happens through Telegram long-polling. See [`CLAUDE.md`](CLAUDE.md) for a deep dive
-into the architecture, package layout, and design decisions.
+REST API — all interaction happens through Telegram long-polling. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+for the current package layout, [`docs/MIGRATION.md`](docs/MIGRATION.md) for the completed refactor and
+[`docs/BACKLOG.md`](docs/BACKLOG.md) for deferred fixes and verification.
 
 ### Requirements
 
@@ -87,18 +88,19 @@ uv run mypy src/manashelper    # type check
 A [`.pre-commit-config.yaml`](.pre-commit-config.yaml) is included to run all three checks automatically before
 each commit — install the git hook once with `pre-commit install`.
 
-Adding or changing a user-facing string? See the gettext catalog workflow in [`CLAUDE.md`](CLAUDE.md#commands).
+Adding or changing a user-facing string? See the gettext catalog workflow in
+[`AGENTS.md`](AGENTS.md#localization-and-telegram-text).
 
 ### Deployment
 
 `.github/workflows/ci-cd.yml` handles CI/CD:
 
-- **Tests** (lint, type-check, and the test suite against a real Postgres service container) run on every push
-  to every branch, on pull requests targeting `main`, and on `v*` tag pushes.
-- **Build & deploy** only runs after tests pass, and only on a push to `main` or a `v*` tag: it builds and
+- **Tests** (lint, type-check, and the test suite against a real Postgres service container) run on pull requests
+  targeting `main` and on `v*` tag pushes.
+- **Build & deploy** only runs after tests pass on a `v*` tag push: it builds and
   pushes the Docker image (`docker/Dockerfile`) to `usbtypec1/manashelper` on Docker Hub, then deploys it to the
-  server over SSH via `docker compose`, pruning old, no-longer-used image versions afterwards to keep the
-  server's disk usage in check.
+  server over SSH via `docker compose`, then prunes dangling images. Ordinary branch pushes do not trigger
+  this workflow.
 
 ## License
 

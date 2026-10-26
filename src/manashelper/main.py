@@ -10,12 +10,26 @@ from alembic.config import Config
 from dishka import make_async_container
 
 from alembic import command
-from manashelper.bot.commands import setup_commands
-from manashelper.bot.dispatcher import create_dispatcher
-from manashelper.config import get_settings
-from manashelper.di import AppProvider, RequestProvider
+from manashelper.bootstrap import load_models
+from manashelper.core.config import get_settings
+from manashelper.core.logging import configure_logging
+from manashelper.core.provider import CoreProvider
 from manashelper.jobs.scheduler import create_scheduler
-from manashelper.logging_config import configure_logging
+from manashelper.modules.advertisements.provider import AdvertisementsProvider
+from manashelper.modules.broadcast.provider import BroadcastProvider
+from manashelper.modules.donations.provider import DonationsProvider
+from manashelper.modules.eders.provider import EdersProvider
+from manashelper.modules.feedback.provider import FeedbackProvider
+from manashelper.modules.food_menu.provider import FoodMenuProvider
+from manashelper.modules.notifications.provider import NotificationsProvider
+from manashelper.modules.obis.provider import ObisProvider
+from manashelper.modules.schedule.provider import ScheduleProvider
+from manashelper.modules.student_questions.provider import StudentQuestionsProvider
+from manashelper.modules.study_week.provider import StudyWeekProvider
+from manashelper.modules.users.provider import UsersProvider
+from manashelper.platform.telegram.commands import setup_commands
+from manashelper.platform.telegram.dispatcher import create_dispatcher
+from manashelper.platform.telegram.provider import TelegramPlatformProvider
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +46,7 @@ def _handle_asyncio_exception(loop: asyncio.AbstractEventLoop, context: dict[str
 
 
 async def main() -> None:
+    load_models()
     asyncio.get_running_loop().set_exception_handler(_handle_asyncio_exception)
     settings = get_settings()
 
@@ -39,7 +54,22 @@ async def main() -> None:
         bot = await stack.enter_async_context(
             Bot(token=settings.telegram_bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
         )
-        container = make_async_container(AppProvider(), RequestProvider())
+        container = make_async_container(
+            CoreProvider(),
+            TelegramPlatformProvider(),
+            ObisProvider(),
+            EdersProvider(),
+            StudyWeekProvider(),
+            ScheduleProvider(),
+            NotificationsProvider(),
+            FeedbackProvider(),
+            AdvertisementsProvider(),
+            StudentQuestionsProvider(),
+            UsersProvider(),
+            DonationsProvider(),
+            BroadcastProvider(),
+            FoodMenuProvider(),
+        )
         stack.push_async_callback(container.close)
 
         dispatcher = create_dispatcher(container)

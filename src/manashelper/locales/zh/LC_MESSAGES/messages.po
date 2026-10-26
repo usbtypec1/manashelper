@@ -877,18 +877,6 @@ msgstr ""
 "➖ {time_range}（已取消）\n"
 "{content}"
 
-msgid "versions.title"
-msgstr "📦 版本历史"
-
-msgid "versions.title_page"
-msgstr "📦 版本历史（第 {page}/{total_pages} 页）"
-
-msgid "versions.version_header"
-msgstr "📦 <b>版本 {version}</b>"
-
-msgid "versions.release_date"
-msgstr "📅 发布日期：{date}"
-
 msgid "language.native_name"
 msgstr "中文"
 
@@ -906,9 +894,6 @@ msgstr "查看食堂菜单"
 
 msgid "commands.language"
 msgstr "更改语言"
-
-msgid "commands.versions"
-msgstr "查看机器人版本历史"
 
 msgid "commands.donate"
 msgstr "支持机器人"
