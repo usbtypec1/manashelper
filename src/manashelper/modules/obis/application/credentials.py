@@ -45,6 +45,12 @@ class ObisCredentialsService:
         marker = hashlib.sha256(user.encrypted_password.encode()).hexdigest()
         return ObisCredentials(user.student_number, password, marker)
 
+    async def get_student_number(self, user_id: int) -> str:
+        user = await self._get_user(user_id)
+        if not user.student_number:
+            raise UserHasNoCredentialsError(user_id)
+        return user.student_number
+
     async def _get_user(self, user_id: int) -> User:
         user = await self._repository.get_by_user_id(user_id)
         if user is None:

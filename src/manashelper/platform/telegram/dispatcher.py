@@ -5,6 +5,7 @@ from aiogram.types import ErrorEvent
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import inject_router, setup_dishka
 
+from manashelper.core.config import get_settings
 from manashelper.modules.advertisements.presentation.advertisement import router as advertisement_router
 from manashelper.modules.advertisements.presentation.advertisement_contact import router as advertisement_contact_router
 from manashelper.modules.advertisements.presentation.advertisement_moderation import (
@@ -68,8 +69,7 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
         food_menu_notifications_router,
         food_menu_cleanup_router,
         obis_router,
-        eders_router,
-        study_week_router,
+        *((eders_router, study_week_router) if get_settings().eders_enabled else ()),
         settings_router,
         notifications_router,
         donations_router,

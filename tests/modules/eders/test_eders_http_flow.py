@@ -9,7 +9,6 @@ import pytest
 
 from manashelper.modules.eders.errors import EdersFetchError, EdersSessionExpiredError
 from manashelper.modules.eders.infrastructure import client as eders_client
-from manashelper.modules.eders.infrastructure.client import EdersClient
 from manashelper.modules.eders.infrastructure.serialization import serialize_snapshot
 from manashelper.modules.obis.application.credentials import ObisCredentialsService
 from manashelper.modules.obis.application.obis import ObisService
@@ -19,6 +18,7 @@ from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL, ObisCl
 from manashelper.modules.obis.infrastructure.credentials_repository import ObisCredentialsRepository
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
 from manashelper.modules.users.infrastructure.user import User
+from tests.modules.eders.factories import make_eders_client
 
 PORT = os.environ.get("EDERS_SIMULATION_PORT")
 pytestmark = pytest.mark.skipif(
@@ -69,11 +69,18 @@ def install_client(monkeypatch, mode="normal"):
 
 async def test_http_login_ajax_pagination_courses_and_details(monkeypatch):
     transports = install_client(monkeypatch)
-    snapshot = await EdersClient().fetch_snapshot("fake-student", "fake-password")
+    snapshot = await make_eders_client().fetch_snapshot("fake-student")
     assert len(snapshot.activities) == 3 and [course.id for course in snapshot.courses] == [10]
     assert transports[0].paths.count(("POST", "/lib/ajax/service.php")) == 2
     assert ("GET", "/mod/assign/view.php") in transports[0].paths
     assert ("GET", "/mod/quiz/view.php") in transports[0].paths
+    assert transports[0].paths[:4] == [
+        ("GET", "/login/index.php"),
+        ("POST", "/login/index.php"),
+        ("GET", "/login/index.php"),
+        ("GET", "/my/courses.php"),
+    ]
+    assert not any(path.startswith("/site/") for _, path in transports[0].paths)
     assert "fake-sso" not in serialize_snapshot(snapshot) and "fakekey" not in serialize_snapshot(snapshot)
 
 
@@ -81,14 +88,23 @@ async def test_http_login_ajax_pagination_courses_and_details(monkeypatch):
 async def test_http_ajax_failure_never_returns_partial_snapshot(monkeypatch, mode):
     install_client(monkeypatch, mode)
     with pytest.raises(EdersFetchError):
-        await EdersClient().fetch_snapshot("fake-student", "fake-password")
+        await make_eders_client().fetch_snapshot("fake-student")
 
 
 async def test_http_expired_session_retries_once(monkeypatch):
     transports = install_client(monkeypatch, "expired")
     with pytest.raises(EdersSessionExpiredError):
-        await EdersClient().fetch_snapshot("fake-student", "fake-password")
+        await make_eders_client().fetch_snapshot("fake-student")
     assert len(transports) == 2
+
+
+@pytest.mark.parametrize("mode", ["eders-login-denied", "eders-token-missing"])
+async def test_http_login_failure_stops_before_reading_user_data(monkeypatch, mode):
+    transports = install_client(monkeypatch, mode)
+    with pytest.raises(EdersFetchError):
+        await make_eders_client().fetch_snapshot("fake-student")
+    assert len(transports) == 1
+    assert all(path == "/login/index.php" for _, path in transports[0].paths)
 
 
 def install_obis_client(monkeypatch, mode="normal"):

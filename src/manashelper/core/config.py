@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,7 +17,12 @@ class Settings(BaseSettings):
     advertisement_channel_link: str = Field(alias="ADVERTISEMENT_CHANNEL_LINK")
     moderation_chat_id: int = Field(alias="MODERATION_CHAT_ID")
     admin_chat_id: int = Field(alias="ADMIN_CHAT_ID")
+    eders_password: SecretStr | None = Field(default=None, alias="EDERS_PASSWORD")
     eders_poll_minutes: int | None = Field(default=30, alias="EDERS_POLL_MINUTES", ge=15, le=60)
+
+    @property
+    def eders_enabled(self) -> bool:
+        return self.eders_password is not None and bool(self.eders_password.get_secret_value())
 
     @property
     def database_url(self) -> str:

@@ -18,9 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-msgid "commands.eders"
-msgstr "View eders assignments and quizzes"
-
 msgid "eders.loading"
 msgstr "Loading eders assignments…"
 
@@ -95,12 +92,6 @@ msgstr "Awaiting grade"
 
 msgid "eders.filter_unknown"
 msgstr "Unknown deadline"
-
-msgid "commands.eders_settings"
-msgstr "Configure eders reminders"
-
-msgid "commands.week"
-msgstr "My study week"
 
 msgid "eders.reminder_day"
 msgstr "eders deadline reminder: one day before"
@@ -1033,11 +1024,17 @@ msgstr "New material"
 msgid "eders.material_changed"
 msgstr "Material updated"
 
-msgid "commands.materials"
-msgstr "Eders materials and search"
-
 msgid "eders.materials_help"
 msgstr "Search by course, section or title: /materials text. New means first discovered after the initial sync."
 
 msgid "notifications.eders"
 msgstr "Eders"
+
+msgid "menu.eders"
+msgstr "Eders deadlines"
+
+msgid "menu.eders_materials"
+msgstr "Eders materials"
+
+msgid "menu.study_week"
+msgstr "Study week"

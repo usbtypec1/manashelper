@@ -22,7 +22,8 @@ def create_scheduler(container: AsyncContainer, bot: Bot) -> AsyncIOScheduler:
     scheduler.add_job(broadcast_lunch_menu_job, "cron", hour=11, minute=0, timezone=BISHKEK_TZ, args=[container, bot])
     scheduler.add_job(broadcast_dinner_menu_job, "cron", hour=17, minute=0, timezone=BISHKEK_TZ, args=[container, bot])
     scheduler.add_job(poll_obis_notifications_job, "interval", hours=1, args=[container, bot], next_run_time=now)
-    if (eders_minutes := get_settings().eders_poll_minutes) is not None:
+    settings = get_settings()
+    if settings.eders_enabled and (eders_minutes := settings.eders_poll_minutes) is not None:
         scheduler.add_job(
             poll_eders_job,
             "interval",

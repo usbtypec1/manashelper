@@ -28,6 +28,6 @@ class EdersRepository:
 
     async def get_poll_user_ids(self) -> list[int]:
         result = await self._session.execute(
-            select(User.id).where(User.student_number.is_not(None), User.encrypted_password.is_not(None))
+            select(User.id).where(User.student_number.is_not(None), User.student_number != "")
         )
         return list(result.scalars())

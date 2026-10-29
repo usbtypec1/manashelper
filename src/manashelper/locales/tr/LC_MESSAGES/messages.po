@@ -18,9 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-msgid "commands.eders"
-msgstr "eders ödev ve sınavlarını görüntüle"
-
 msgid "eders.loading"
 msgstr "eders ödevleri yükleniyor…"
 
@@ -95,12 +92,6 @@ msgstr "Not bekleyenler"
 
 msgid "eders.filter_unknown"
 msgstr "Kesin tarihi yok"
-
-msgid "commands.eders_settings"
-msgstr "eders hatırlatıcılarını ayarla"
-
-msgid "commands.week"
-msgstr "Haftalık ders özetim"
 
 msgid "eders.reminder_day"
 msgstr "eders hatırlatıcısı: son tarihten bir gün önce"
@@ -1029,11 +1020,17 @@ msgstr "Yeni materyal"
 msgid "eders.material_changed"
 msgstr "Materyal güncellendi"
 
-msgid "commands.materials"
-msgstr "Eders materyalleri ve arama"
-
 msgid "eders.materials_help"
 msgstr "Ders, bölüm veya başlığa göre arama: /materials metin. Yeni, ilk eşitlemeden sonra keşfedilen demektir."
 
 msgid "notifications.eders"
 msgstr "Eders"
+
+msgid "menu.eders"
+msgstr "Eders son tarihler"
+
+msgid "menu.eders_materials"
+msgstr "Eders materyalleri"
+
+msgid "menu.study_week"
+msgstr "Ders haftası"

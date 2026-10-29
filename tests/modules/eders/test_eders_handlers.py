@@ -12,7 +12,9 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.methods import SendMessage
 from aiogram.types import CallbackQuery, Message
 from dishka import make_async_container
+from pydantic import SecretStr
 
+from manashelper.core.config import get_settings
 from manashelper.core.provider import CoreProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.localization.locale import Locale
@@ -65,9 +67,54 @@ def state() -> FSMContext:
 
 
 @pytest.fixture(autouse=True)
-def english():
+def english(monkeypatch):
+    monkeypatch.setattr(get_settings(), "eders_password", SecretStr("fake-password"))
     with i18n.context(), i18n.use_locale("en"):
         yield
+
+
+@pytest.mark.parametrize("locale", list(Locale))
+@pytest.mark.parametrize("key", ["menu.eders", "menu.eders_materials"])
+async def test_main_menu_eders_buttons_route_and_show_expected_view(locale, key):
+    from dataclasses import replace
+
+    from manashelper.modules.eders.presentation.router import router
+
+    service, tracking = AsyncMock(), AsyncMock()
+    data = snapshot()
+    reading = replace(data.activities[0], id=21, kind=ActivityKind.RESOURCE, name="Reading")
+    service.get_snapshot.return_value = replace(data, activities=(*data.activities, reading))
+    message = AsyncMock(spec=Message)
+    message.answer = AsyncMock()
+    message.from_user = SimpleNamespace(id=42)
+    with i18n.use_locale(locale.value):
+        message.text = i18n.gettext(key)
+        assert any([(await handler.check(message, bot=AsyncMock(spec=Bot)))[0] for handler in router.message.handlers])
+        await on_eders_command(message, state(), service, tracking)
+    service.get_snapshot.assert_awaited_once_with(42)
+    # A multiword translated button must not become a search query.
+    assert (
+        "Work" in message.answer.call_args.args[0]
+        if key == "menu.eders"
+        else "Work" not in message.answer.call_args.args[0]
+    )
+    keyboard = message.answer.call_args.kwargs["reply_markup"]
+    selected = next(button for row in keyboard.inline_keyboard for button in row if button.text.startswith("✓ "))
+    assert EdersPageCallback.unpack(selected.callback_data).selected == (
+        DeadlineFilter.ALL if key == "menu.eders" else DeadlineFilter.MATERIALS
+    )
+    if key == "menu.eders_materials":
+        assert "Reading" in message.answer.call_args.args[0]
+
+
+@pytest.mark.parametrize("locale", list(Locale))
+async def test_main_menu_study_week_button_matches_handler(locale):
+    from manashelper.modules.study_week.router import router
+
+    message = AsyncMock(spec=Message)
+    with i18n.use_locale(locale.value):
+        message.text = i18n.gettext("menu.study_week")
+        assert any([(await handler.check(message, bot=AsyncMock(spec=Bot)))[0] for handler in router.message.handlers])
 
 
 async def test_command_caches_public_snapshot_and_pagination_avoids_network() -> None:

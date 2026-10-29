@@ -135,7 +135,7 @@ async def test_missing_user_is_rejected_before_state_creation():
     repository.get_state.assert_not_awaited()
 
 
-async def test_poll_eligibility_requires_both_credential_columns(session):
+async def test_poll_eligibility_requires_only_student_number(session):
     users = [
         User(id=976701, full_name="none"),
         User(id=976702, full_name="number", student_number="fixture"),
@@ -145,7 +145,7 @@ async def test_poll_eligibility_requires_both_credential_columns(session):
     session.add_all(users)
     await session.flush()
     selected = await EdersRepository(session).get_poll_user_ids()
-    assert set(selected) & {user.id for user in users} == {976704}
+    assert set(selected) & {user.id for user in users} == {976702, 976704}
 
 
 @pytest.mark.parametrize("failure", ["telegram", "unexpected", "ack"])

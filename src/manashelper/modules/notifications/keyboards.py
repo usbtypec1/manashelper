@@ -2,6 +2,7 @@ from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from manashelper.core.config import get_settings
 from manashelper.modules.notifications.callbacks import NotificationSettingCallback
 from manashelper.modules.notifications.settings import NotificationSetting, NotificationSettingsSummary
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
@@ -29,10 +30,11 @@ def build_notifications_keyboard(settings: NotificationSettingsSummary) -> Inlin
         text=f"{_mark(settings.lesson_skips_enabled)} {_('notifications.lesson_skips')}",
         callback_data=NotificationSettingCallback(setting=NotificationSetting.LESSON_SKIPS),
     )
-    builder.button(
-        text=_("notifications.eders"),
-        callback_data=SettingsCallback(action=SettingsAction.OPEN_EDERS_NOTIFICATIONS),
-    )
+    if get_settings().eders_enabled:
+        builder.button(
+            text=_("notifications.eders"),
+            callback_data=SettingsCallback(action=SettingsAction.OPEN_EDERS_NOTIFICATIONS),
+        )
     builder.button(text=_("common.back"), callback_data=SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS))
     builder.adjust(1)
     return builder.as_markup()

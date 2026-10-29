@@ -256,22 +256,19 @@ async def test_public_credentials_keep_ciphertext_marker_and_hide_secrets(sessio
     client.fetch_snapshot.return_value = snapshot
     tracking.observe.return_value = snapshot
     assert await EdersService(credentials.account, client, tracking).get_snapshot(user.id) is snapshot
-    client.fetch_snapshot.assert_awaited_once_with("fake-student", "fake-password")
-    tracking.observe.assert_awaited_once_with(user.id, account.credential_marker, snapshot)
+    client.fetch_snapshot.assert_awaited_once_with("fake-student")
+    tracking.observe.assert_awaited_once_with(user.id, hashlib.sha256(b"fake-student").hexdigest(), snapshot)
     credentials.client.verify_credentials.assert_not_awaited()
 
 
-@pytest.mark.parametrize("mode", ["unknown", "missing", "corrupt"])
-async def test_eders_credential_failures_never_fetch_and_preserve_suppressed_decryption_context(
-    session, credentials, mode
-):
+@pytest.mark.parametrize("mode", ["unknown", "missing", "empty"])
+async def test_eders_missing_student_number_never_fetches(session, credentials, mode):
     if mode != "unknown":
         session.add(
             DbUser(
                 id=975001,
                 full_name="Student",
-                student_number="fake-student",
-                encrypted_password=None if mode == "missing" else "bad-ciphertext",
+                student_number=None if mode == "missing" else "",
             )
         )
         await session.flush()
@@ -280,8 +277,6 @@ async def test_eders_credential_failures_never_fetch_and_preserve_suppressed_dec
     with pytest.raises(expected) as error:
         await EdersService(credentials.account, client, tracking).get_snapshot(975001)
     assert error.value.__cause__ is None
-    if mode == "corrupt":
-        assert error.value.__suppress_context__
     tracking.get_settings.assert_awaited_once_with(975001)
     client.fetch_snapshot.assert_not_awaited()
     tracking.observe.assert_not_awaited()
@@ -292,7 +287,7 @@ async def test_eders_checks_tracking_before_reading_credentials():
     tracking.get_settings.side_effect = RuntimeError("Tracking failed")
     with pytest.raises(RuntimeError, match="Tracking failed"):
         await EdersService(account, client, tracking).get_snapshot(975001)
-    account.get_credentials.assert_not_awaited()
+    account.get_student_number.assert_not_awaited()
     client.fetch_snapshot.assert_not_awaited()
 
 

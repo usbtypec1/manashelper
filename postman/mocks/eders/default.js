@@ -1,4 +1,4 @@
-// Local contract fixture based on eders.py and anonymous tests/fixtures/eders markup.
+// Local contract fixture based on the Moodle form and anonymous tests/fixtures/eders markup.
 // Deliberately accepts only fake credentials. Never connects to OBIS or Eders.
 const http = require('http');
 const fs = require('fs');
@@ -28,11 +28,28 @@ http.createServer(async (req, res) => {
                 {'content-type': 'text/html'});
   }
   if (url.pathname === '/') return send(200, 'Logged in');
-  if (url.pathname === '/site/eders')
-    return send(302, '', {location: 'https://eders.manas.edu.kg/auth/userkey/login.php?key=fake-sso'});
-  if (url.pathname === '/auth/userkey/login.php')
-    return send(303, '', {location: '/my/', 'set-cookie': 'MoodleSession=fixture; Path=/'});
-  if (url.pathname === '/my/') return send(200, '<a href="/login/logout.php?sesskey=fakekey">Logout</a>');
+  if (url.pathname === '/login/index.php') {
+    const mode = req.headers['x-fixture-mode'];
+    const loginForm = '<form><input name="username" type="text"><input name="logintoken" value="fake-login-token"></form>';
+    if (req.method === 'GET' && url.searchParams.get('loginredirect') === '1') {
+      if (mode === 'eders-login-denied') return send(200, loginForm);
+      return send(303, '', {location: '/my/courses.php'});
+    }
+    if (req.method === 'GET') return send(200, mode === 'eders-token-missing' ? '<form></form>' : loginForm,
+      {'set-cookie': 'MoodleSession=initial; Path=/'});
+    const form = typeof req.body === 'string' ? new URLSearchParams(req.body) : req.body;
+    const get = key => form instanceof URLSearchParams ? form.get(key) : form?.[key];
+    if (req.method !== 'POST' || !req.headers['content-type']?.startsWith('application/x-www-form-urlencoded') ||
+        !req.headers.cookie?.includes('MoodleSession=initial') || get('anchor') !== '' ||
+        get('logintoken') !== 'fake-login-token' || get('username') !== 'fake-student' || get('password') !== 'fake-password')
+      return send(400, 'Unexpected Moodle login contract');
+    return send(303, '', {location: '/login/index.php?loginredirect=1', 'set-cookie': 'MoodleSession=fixture; Path=/'});
+  }
+  if (url.pathname.startsWith('/my/') || url.pathname === '/lib/ajax/service.php' || url.pathname === '/user/profile.php' ||
+      url.pathname === '/course/view.php' || url.pathname.startsWith('/mod/')) {
+    if (!req.headers.cookie?.includes('MoodleSession=fixture')) return send(401, 'Moodle login required');
+  }
+  if (url.pathname === '/my/courses.php') return send(200, '<script>M.cfg = {"sesskey":"fakekey"};</script>');
   if (url.pathname === '/lib/ajax/service.php') {
     const mode = req.headers['x-fixture-mode'];
     if (mode === 'html-error') return send(500, '<h1>Unavailable</h1>');

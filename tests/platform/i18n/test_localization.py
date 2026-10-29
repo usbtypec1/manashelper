@@ -122,8 +122,16 @@ def test_language_picker_shows_native_names_in_every_locale() -> None:
 
 
 @pytest.mark.parametrize("locale", list(Locale))
-async def test_translated_reply_keyboard_buttons_match_filters(locale: Locale) -> None:
+@pytest.mark.parametrize("eders_enabled", [False, True])
+async def test_translated_reply_keyboard_buttons_match_filters(locale: Locale, eders_enabled, monkeypatch) -> None:
+    from pydantic import SecretStr
+
+    from manashelper.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "eders_password", SecretStr("fake-password") if eders_enabled else None)
     keys = ["menu.food", "menu.schedule", "menu.attendance", "menu.grades", "menu.marketplace", "menu.settings"]
+    if eders_enabled:
+        keys[4:4] = ["menu.eders", "menu.eders_materials", "menu.study_week"]
     with i18n.context(), i18n.use_locale(locale.value):
         labels = [button.text for row in build_main_keyboard().keyboard for button in row]
         assert labels == [i18n.gettext(key) for key in keys]

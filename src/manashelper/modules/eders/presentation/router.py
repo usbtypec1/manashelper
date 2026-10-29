@@ -18,12 +18,15 @@ from manashelper.modules.eders.presentation.keyboards import build_eders_keyboar
 from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
 from manashelper.modules.obis.presentation.keyboards import build_no_credentials_keyboard
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
+from manashelper.platform.telegram.filters.translated_text import TranslatedText
 
 router = Router(name="eders")
 SNAPSHOT_KEY = "eders_snapshot"
 SNAPSHOT_TTL = timedelta(minutes=15)
 
 
+@router.message(TranslatedText("menu.eders"))
+@router.message(TranslatedText("menu.eders_materials"))
 @router.message(Command("eders", "materials"))
 @flags.private_chat_only
 async def on_eders_command(
@@ -51,7 +54,10 @@ async def on_eders_command(
         await message.answer(_("eders.fetch_failed"))
         return
     command, separator, query = (message.text or "").partition(" ")
-    selected = DeadlineFilter.MATERIALS if command.split("@")[0] == "/materials" else DeadlineFilter.ALL
+    is_materials = command.split("@")[0] == "/materials" or message.text == _("menu.eders_materials")
+    selected = DeadlineFilter.MATERIALS if is_materials else DeadlineFilter.ALL
+    if not command.startswith("/"):
+        query = ""
     if query.strip():
         search = query.strip().casefold()
         snapshot = replace(

@@ -34,11 +34,11 @@ from manashelper.modules.eders.infrastructure.parser import (
 from manashelper.modules.eders.infrastructure.serialization import deserialize_snapshot, serialize_snapshot
 from manashelper.modules.eders.infrastructure.urls import EDERS_BASE_URL, safe_eders_url
 from manashelper.modules.eders.presentation.formatter import format_activity_page
-from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL
 from manashelper.modules.schedule.application.schedule import ScheduleLessonModel
 from manashelper.modules.study_week.application import StudyWeek
 from manashelper.modules.study_week.formatter import format_study_week
 from manashelper.platform.i18n.catalog import i18n
+from tests.modules.eders.factories import make_eders_client
 from tests.paths import FIXTURES_DIR
 
 FIXTURES = FIXTURES_DIR / "eders"
@@ -231,17 +231,13 @@ async def test_client_authenticates_once_and_retries_expired_snapshot(monkeypatc
         nonlocal expired
         requests.append(request)
         path = request.url.path
-        if path == "/site/login":
+        if path == "/login/index.php":
             if request.method == "GET":
-                return httpx.Response(200, text='<form><input name="_csrf" value="test"></form>')
-            return httpx.Response(302, headers={"location": "/"})
-        if request.url.host == "obistest.manas.edu.kg" and path == "/":
-            return httpx.Response(200, text="Logged in")
-        if path == "/site/eders":
-            return httpx.Response(302, headers={"location": f"{EDERS_BASE_URL}/auth/userkey/login.php?key=fake-secret"})
-        if path == "/auth/userkey/login.php":
-            return httpx.Response(303, headers={"location": "/my/"})
-        if path == "/my/":
+                return httpx.Response(
+                    200, text='<form><input name="username" type="text"><input name="logintoken" value="test"></form>'
+                )
+            return httpx.Response(303, headers={"location": "/my/courses.php"})
+        if path == "/my/courses.php":
             return httpx.Response(200, text='<a href="/login/logout.php?sesskey=testkey">Logout</a>')
         if path == "/user/profile.php":
             return httpx.Response(200, text=fixture("profile"))
@@ -270,21 +266,23 @@ async def test_client_authenticates_once_and_retries_expired_snapshot(monkeypatc
 
     def factory():
         client = httpx.AsyncClient(
-            base_url=OBIS_BASE_URL, follow_redirects=True, transport=httpx.MockTransport(handler)
+            base_url=EDERS_BASE_URL, follow_redirects=True, transport=httpx.MockTransport(handler)
         )
         clients.append(client)
         return client
 
     monkeypatch.setattr(eders_client, "new_http_client", factory)
-    result = await EdersClient().fetch_snapshot("fake-student", "fake-password")
+    result = await make_eders_client().fetch_snapshot("fake-student")
     assert len(result.activities) == 3
     assert all(client.is_closed for client in clients)
     assert len(clients) == 2
     assert all(
-        request.url.path in {"/site/login", "/lib/ajax/service.php"} for request in requests if request.method == "POST"
+        request.url.path in {"/login/index.php", "/lib/ajax/service.php"}
+        for request in requests
+        if request.method == "POST"
     )
-    assert "fake-secret" not in serialize_snapshot(result)
-    assert not any(request.url.path == "/login/index.php" for request in requests)
+    assert "fake-password" not in serialize_snapshot(result)
+    assert all(request.url.host == "eders.manas.edu.kg" for request in requests)
 
 
 async def test_redirect_limit_and_request_errors_hide_secrets() -> None:
@@ -292,12 +290,12 @@ async def test_redirect_limit_and_request_errors_hide_secrets() -> None:
 
     def handler(request: httpx.Request) -> httpx.Response:
         paths.append(request.url.path)
-        return httpx.Response(302, headers={"location": f"{EDERS_BASE_URL}/auth/userkey/login.php?key=fake-secret"})
+        return httpx.Response(302, headers={"location": "/login/index.php?loginredirect=1"})
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         with pytest.raises(EdersFetchError, match="Too many authentication redirects") as error:
-            await eders_client._request(client, f"{OBIS_BASE_URL}/site/eders", "sso")
-    assert paths == ["/site/eders"] + ["/auth/userkey/login.php"] * 9
+            await eders_client._request(client, eders_client.LOGIN_URL, "login")
+    assert paths == ["/login/index.php"] * 10
     assert "fake-secret" not in str(error.value)
 
     def failure(request: httpx.Request) -> httpx.Response:
@@ -305,14 +303,14 @@ async def test_redirect_limit_and_request_errors_hide_secrets() -> None:
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(failure)) as client:
         with pytest.raises(EdersFetchError) as error:
-            await eders_client._request(client, f"{EDERS_BASE_URL}/auth/userkey/login.php?key=fake-secret", "sso")
+            await eders_client._request(client, eders_client.LOGIN_URL, "login")
     assert "fake-secret" not in str(error.value) and error.value.__suppress_context__
 
 
 async def test_persistent_session_expiry_stops_after_one_retry(monkeypatch: pytest.MonkeyPatch) -> None:
     authenticate = []
 
-    async def login(self, client, student, password):
+    async def login(self, client, student):
         authenticate.append(student)
         return "testkey"
 
@@ -324,7 +322,7 @@ async def test_persistent_session_expiry_stops_after_one_retry(monkeypatch: pyte
         eders_client, "new_http_client", lambda: httpx.AsyncClient(transport=httpx.MockTransport(handler))
     )
     with pytest.raises(EdersSessionExpiredError):
-        await EdersClient().fetch_snapshot("fake-student", "fake-password")
+        await make_eders_client().fetch_snapshot("fake-student")
     assert authenticate == ["fake-student", "fake-student"]
 
 
@@ -332,10 +330,10 @@ async def test_persistent_session_expiry_stops_after_one_retry(monkeypatch: pyte
     "destination",
     [
         f"{EDERS_BASE_URL}/my/index.php",
-        f"{EDERS_BASE_URL}/auth/userkey/login.php?key=fake-secret&lang=en",
+        f"{EDERS_BASE_URL}/login/index.php?loginredirect=1",
     ],
 )
-async def test_sso_follows_redirect_without_url_allowlist(destination):
+async def test_login_follows_supported_redirects(destination):
     requests = []
 
     def handler(request):
@@ -345,7 +343,7 @@ async def test_sso_follows_redirect_without_url_allowlist(destination):
         return httpx.Response(200, text="SSO page")
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        response = await eders_client._request(client, f"{OBIS_BASE_URL}/site/eders", "sso")
+        response = await eders_client._request(client, eders_client.LOGIN_URL, "login")
     assert response.text == "SSO page"
     assert len(requests) == 2
     assert requests[1].url == httpx.URL(destination)
@@ -380,7 +378,7 @@ async def test_read_login_redirect_expires_when_login_form_is_returned():
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         with pytest.raises(EdersSessionExpiredError):
             await eders_client._request(client, f"{EDERS_BASE_URL}/user/profile.php", "read")
-    assert paths == ["/user/profile.php", "/login/index.php"]
+    assert paths == ["/user/profile.php"]
 
 
 @pytest.mark.parametrize(

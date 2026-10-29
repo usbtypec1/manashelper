@@ -1,0 +1,32 @@
+purpose:
+  stands_in_for: Eders Moodle form login, course AJAX and read-only pages; existing OBIS HTTP fixtures.
+  unblocks: Local verification of direct Eders authentication without real student credentials.
+assumptions:
+  - id: direct-moodle-form-login
+    status: supported
+    claim: The anonymous Eders login page exposes a POST form with anchor, logintoken, username and password.
+    reason: These fields and the form action were inspected on the real anonymous login page.
+    verification: On 2026-10-29, GET returned HTTP 200; parsed form action was the HTTPS login/index.php URL.
+    source: https://eders.manas.edu.kg/login/index.php
+    updated_at: "2026-10-29"
+  - id: shared-password-success-redirect
+    status: unknown
+    claim: The configured shared password authenticates each saved student number and ends at /my/courses.php.
+    reason: The user supplied this contract; no real shared password was available for authenticated verification.
+    verification: >-
+      On 2026-10-29, the real client passed local simulation tests for form encoding, fresh login token,
+      cookies, POST/303/GET redirects, course pagination, details, denied login, missing token, invalid JSON,
+      HTTP failure and one whole-snapshot retry after session expiry. Simulation request events confirmed
+      GET login/index.php, POST login/index.php (303), GET login/index.php?loginredirect=1 (303),
+      GET my/courses.php (200). Full suite on a clean PostgreSQL 18 database: 664 passed, 5 skipped.
+      These results establish caller behavior against the stand-in; real successful login remains unverified.
+    source: >-
+      User-provided login contract; postman/mocks/eders/default.js;
+      tests/modules/eders/test_eders_http_flow.py; tests/modules/eders/test_eders_login.py;
+      fingerprint eders-direct-login-2026-10-29.
+    updated_at: "2026-10-29"
+fingerprints:
+  - id: eders-direct-login-2026-10-29
+    date: "2026-10-29"
+    commit: "745395c707e5486a209aa53c6ab590b769d528a6 (working tree changes)"
+    cli: "1.74.0"
