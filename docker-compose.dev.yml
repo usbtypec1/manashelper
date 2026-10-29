@@ -1,7 +1,7 @@
 services:
 
   db:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     restart: always
     shm_size: 128mb
     ports:
@@ -11,7 +11,12 @@ services:
       POSTGRES_USER: ${DATASOURCE_USERNAME:-user123}
       POSTGRES_DB: ${DATASOURCE_NAME:-db123}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres18_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
-  postgres_data:
+  postgres18_data:
