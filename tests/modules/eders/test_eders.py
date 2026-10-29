@@ -287,17 +287,18 @@ async def test_client_authenticates_once_and_retries_expired_snapshot(monkeypatc
     assert not any(request.url.path == "/login/index.php" for request in requests)
 
 
-async def test_redirect_allowlist_blocks_actions_before_request_and_hides_secrets() -> None:
+async def test_redirect_limit_and_request_errors_hide_secrets() -> None:
     paths = []
 
     def handler(request: httpx.Request) -> httpx.Response:
         paths.append(request.url.path)
-        return httpx.Response(302, headers={"location": f"{EDERS_BASE_URL}/mod/assign/view.php?id=1&action=submit"})
+        return httpx.Response(302, headers={"location": f"{EDERS_BASE_URL}/auth/userkey/login.php?key=fake-secret"})
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        with pytest.raises(EdersUnsafeUrlError):
+        with pytest.raises(EdersFetchError, match="Too many authentication redirects") as error:
             await eders_client._request(client, f"{OBIS_BASE_URL}/site/eders", "sso")
-    assert paths == ["/site/eders"]
+    assert paths == ["/site/eders"] + ["/auth/userkey/login.php"] * 9
+    assert "fake-secret" not in str(error.value)
 
     def failure(request: httpx.Request) -> httpx.Response:
         raise httpx.ConnectError(f"URL contains fake-secret: {request.url}", request=request)
@@ -330,29 +331,28 @@ async def test_persistent_session_expiry_stops_after_one_retry(monkeypatch: pyte
 @pytest.mark.parametrize(
     "destination",
     [
-        "https://example.com/auth/userkey/login.php?key=fake-secret",
-        "http://eders.manas.edu.kg/my/",
-        f"{EDERS_BASE_URL}/login/logout.php?sesskey=fake-secret",
-        f"{EDERS_BASE_URL}/auth/userkey/login.php?key=one&key=two",
-        f"{EDERS_BASE_URL}/auth/userkey/login.php?key=fake-secret&action=submit",
+        f"{EDERS_BASE_URL}/my/index.php",
+        f"{EDERS_BASE_URL}/auth/userkey/login.php?key=fake-secret&lang=en",
     ],
 )
-async def test_sso_rejects_unsafe_redirect_without_requesting_destination(destination):
+async def test_sso_follows_redirect_without_url_allowlist(destination):
     requests = []
 
     def handler(request):
         requests.append(request)
-        return httpx.Response(302, headers={"location": destination})
+        if len(requests) == 1:
+            return httpx.Response(302, headers={"location": destination})
+        return httpx.Response(200, text="SSO page")
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        with pytest.raises(EdersUnsafeUrlError) as error:
-            await eders_client._request(client, f"{OBIS_BASE_URL}/site/eders", "sso")
-    assert [request.url.path for request in requests] == ["/site/eders"]
-    assert "fake-secret" not in str(error.value)
+        response = await eders_client._request(client, f"{OBIS_BASE_URL}/site/eders", "sso")
+    assert response.text == "SSO page"
+    assert len(requests) == 2
+    assert requests[1].url == httpx.URL(destination)
 
 
 @pytest.mark.parametrize("path", ["/course/view.php?id=10", "/mod/assign/view.php?id=20", "/mod/quiz/view.php?id=21"])
-async def test_read_redirect_preserves_english_without_allowing_actions(path):
+async def test_read_redirect_preserves_english(path):
     requests = []
 
     def handler(request):
@@ -368,14 +368,39 @@ async def test_read_redirect_preserves_english_without_allowing_actions(path):
     assert all(request.url.params.get_list("lang") == ["en"] for request in requests)
 
 
-async def test_read_login_redirect_expires_before_requesting_login_page():
+async def test_read_login_redirect_expires_when_login_form_is_returned():
     paths = []
 
     def handler(request):
         paths.append(request.url.path)
-        return httpx.Response(302, headers={"location": "/login/index.php"})
+        if request.url.path == "/user/profile.php":
+            return httpx.Response(302, headers={"location": "/login/index.php"})
+        return httpx.Response(200, text='<input name="logintoken">')
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         with pytest.raises(EdersSessionExpiredError):
             await eders_client._request(client, f"{EDERS_BASE_URL}/user/profile.php", "read")
-    assert paths == ["/user/profile.php"]
+    assert paths == ["/user/profile.php", "/login/index.php"]
+
+
+@pytest.mark.parametrize(
+    "destination",
+    [
+        f"{EDERS_BASE_URL}/course/view.php?id=1&section=2",
+        f"{EDERS_BASE_URL}/my/index.php",
+    ],
+)
+async def test_read_follows_redirect_without_url_allowlist(destination):
+    requests = []
+
+    def handler(request):
+        requests.append(request)
+        if len(requests) == 1:
+            return httpx.Response(302, headers={"location": destination})
+        return httpx.Response(200, text="Read-only page")
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        response = await eders_client._request(client, f"{EDERS_BASE_URL}/user/profile.php", "read")
+    assert response.text == "Read-only page"
+    assert len(requests) == 2
+    assert requests[1].url == httpx.URL(destination).copy_add_param("lang", "en")

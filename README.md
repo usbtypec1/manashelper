@@ -44,10 +44,13 @@ for the current package layout, [`docs/MIGRATION.md`](docs/MIGRATION.md) for the
 
 - Python 3.13+
 - [`uv`](https://docs.astral.sh/uv/)
-- Docker (to run a local Postgres instance)
+- Docker (to run a local PostgreSQL 18 instance)
 - A Telegram bot token from [@BotFather](https://t.me/BotFather)
 
 ### Quick start
+
+Existing PostgreSQL 17 installations must follow [the upgrade procedure](docs/postgres-18-upgrade.md)
+before starting the new Compose configuration. The old volume is preserved.
 
 1. Start Postgres:
    ```
@@ -96,11 +99,11 @@ Adding or changing a user-facing string? See the gettext catalog workflow in
 `.github/workflows/ci-cd.yml` handles CI/CD:
 
 - **Tests** (lint, type-check, and the test suite against a real Postgres service container) run on pull requests
-  targeting `main` and on `v*` tag pushes.
-- **Build & deploy** only runs after tests pass on a `v*` tag push: it builds and
+  targeting `main`, pushes to `main` (including merges), and `v*` tag pushes.
+- **Build & deploy** runs after tests pass on a push to `main` or a `v*` tag push: it builds and
   pushes the Docker image (`docker/Dockerfile`) to `usbtypec1/manashelper` on Docker Hub, then deploys it to the
-  server over SSH via `docker compose`, then prunes dangling images. Ordinary branch pushes do not trigger
-  this workflow.
+  server over SSH via `docker compose`, then prunes dangling images. Images from `main` use a `sha-<commit>` tag;
+  release tags use the version without the `v` prefix. Pushes to other branches do not trigger this workflow.
 
 ## License
 

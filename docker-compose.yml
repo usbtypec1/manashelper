@@ -1,7 +1,7 @@
 services:
 
   db:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     restart: always
     shm_size: 128mb
     env_file:
@@ -11,7 +11,12 @@ services:
       POSTGRES_USER: ${DATASOURCE_USERNAME}
       POSTGRES_DB: ${DATASOURCE_NAME}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres18_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   app:
     image: usbtypec1/manashelper:${VERSION}
@@ -20,10 +25,11 @@ services:
     env_file:
       - .env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - app_logs:/app/logs
 
 volumes:
-  postgres_data:
+  postgres18_data:
   app_logs:
