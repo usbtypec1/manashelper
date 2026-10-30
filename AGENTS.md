@@ -46,7 +46,8 @@ scope for all its dependencies, including public UsersQuery (counts, IDs, existe
 shared user-locale boundary for middleware and delivery; UserContactService supplies plain contact models.
 User keeps OBIS credential columns and the Schedule tracked_courses relationship without schema changes.
 OBIS owns credential access through ObisCredentialsRepository on the unchanged User row.
-EdersService reads only the student number through ObisCredentialsService.get_student_number, without decrypting a password.
+EdersService reads the student number without decrypting a password for direct login and cached snapshots.
+Only a failed direct login triggers OBIS credential decryption and the legacy OBIS SSO fallback.
 Eders tracking checks existence through UsersQuery; its repository owns credential eligibility SQL and the user-row lock.
 Shared Telegram navigation lives in `platform/telegram/navigation.py`; feature routers must not import the start router for it.
 Keep feature code with its owner and limit changes to the requested scope. See `docs/ARCHITECTURE.md`
@@ -82,7 +83,7 @@ credential and snapshot repositories/ORM, Telegram presentation, provider and jo
 ObisClient/CryptoService in APP and all other dependencies in REQUEST. Public errors live in errors.py.
 ObisService retains save/has/clear/get methods; ObisCredentialsService owns verification/storage/decryption.
 Its frozen read model hides secrets in repr; OBIS credentials retain the SHA-256 ciphertext marker.
-Eders owns its HTTP client and direct Moodle form login; it does not authenticate through OBIS.
+Eders owns its HTTP client: try direct Moodle form login first, then the legacy OBIS login and /site/eders SSO flow.
 PollObisUser handles expected auth/parse errors; Telegram sender owns locale/HTML and skips TelegramAPIError.
 Unexpected errors abort that user and are logged by the job, without stopping the next user.
 The first grade snapshot and attendance's first row are silent. Later new or changed nonempty grades notify.
@@ -103,7 +104,8 @@ materials and yields delivered events for immediate acknowledgement. TelegramAPI
 unexpected errors abort only that user. Preserve snapshot JSON, event keys, baseline/account/schema suppression,
 monotonic observations, user-row FOR UPDATE before first state, and the one-retry whole-snapshot login flow.
 The optional EDERS_PASSWORD env value is the shared Moodle password; obtain logintoken from the form for every login
-and require the final /my/courses.php URL. Missing or empty EDERS_PASSWORD disables Eders and Study week routers,
+and detect successful login by an authenticated page with sesskey, without a redirect URL allowlist.
+Missing or empty EDERS_PASSWORD disables Eders and Study week routers,
 main-menu buttons, Eders notification settings and polling. Legacy commands remain hidden aliases when enabled.
 Eders polling requires only a nonempty saved student number; the snapshot marker is SHA-256 of that number.
 The first sync after switching from the ciphertext marker establishes a silent account baseline.

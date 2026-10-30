@@ -182,3 +182,67 @@ async def test_eders_background_refresh_persists_snapshot_and_read_survives_upst
     paths = list(failed_transports[0].paths)
     assert await service.get_snapshot(user.id) == refreshed
     assert failed_transports[0].paths == paths
+
+
+@pytest.mark.parametrize(
+    "mode", ["eders-login-denied", "eders-token-missing", "eders-login-unavailable", "eders-sso-link"]
+)
+async def test_http_failed_direct_login_falls_back_to_obis_sso(session, monkeypatch, mode):
+    transports = install_client(monkeypatch, mode)
+    crypto = CryptoService(SimpleNamespace(obis_encryption_key=base64.b64encode(bytes(range(32))).decode()))
+    user = User(
+        id=975103,
+        full_name="Fallback fixture",
+        student_number="fake-student",
+        encrypted_password=crypto.encrypt("fake-password"),
+    )
+    session.add(user)
+    await session.flush()
+    account = ObisCredentialsService(ObisCredentialsRepository(session), ObisClient(), crypto)
+    tracking = EdersTrackingService(EdersRepository(session), UsersQuery(UserRepository(session)))
+    service = EdersService(account, make_eders_client(), tracking)
+    snapshot = await service.refresh_snapshot(user.id)
+    await session.flush()
+
+    assert len(snapshot.activities) == 3
+    assert await service.get_snapshot(user.id) == snapshot
+    assert len(transports) == 2
+    assert transports[0].paths[0] == ("GET", "/login/index.php")
+    assert all(path == "/login/index.php" for _, path in transports[0].paths)
+    assert transports[1].paths[:6] == [
+        ("GET", "/site/login"),
+        ("POST", "/site/login"),
+        ("GET", "/"),
+        ("GET", "/site/eders"),
+        ("GET", "/auth/userkey/login.php"),
+        ("GET", "/my/index.php"),
+    ]
+    assert transports[1].paths.count(("POST", "/lib/ajax/service.php")) == 2
+    assert await tracking.pending_events(user.id, snapshot.fetched_at) == []
+    serialized = serialize_snapshot(snapshot)
+    assert "fake-password" not in serialized and "fake-sso" not in serialized
+
+
+@pytest.mark.parametrize("mode", ["both-logins-denied", "sso-expired"])
+async def test_http_both_login_paths_fail_without_replacing_previous_snapshot(session, monkeypatch, mode):
+    install_client(monkeypatch)
+    crypto = CryptoService(SimpleNamespace(obis_encryption_key=base64.b64encode(bytes(range(32))).decode()))
+    user = User(
+        id=975104,
+        full_name="Fallback failure",
+        student_number="fake-student",
+        encrypted_password=crypto.encrypt("fake-password"),
+    )
+    session.add(user)
+    await session.flush()
+    account = ObisCredentialsService(ObisCredentialsRepository(session), ObisClient(), crypto)
+    tracking = EdersTrackingService(EdersRepository(session), UsersQuery(UserRepository(session)))
+    service = EdersService(account, make_eders_client(), tracking)
+    previous = await service.refresh_snapshot(user.id)
+    await session.flush()
+    transports = install_client(monkeypatch, mode)
+    with pytest.raises(EdersFetchError):
+        await service.refresh_snapshot(user.id)
+    assert await service.get_snapshot(user.id) == previous
+    assert len(transports) == (3 if mode == "sso-expired" else 2)
+    assert not any(path == "/lib/ajax/service.php" for transport in transports for _, path in transport.paths)

@@ -11,6 +11,7 @@ from manashelper.modules.eders.application.models import (
     SubmissionStatus,
 )
 from manashelper.modules.eders.application.tracking import EdersTrackingService
+from manashelper.modules.eders.errors import EdersLoginError
 from manashelper.modules.eders.infrastructure.client import EdersClient
 from manashelper.modules.obis.application.credentials import ObisCredentialsService
 
@@ -82,6 +83,10 @@ class EdersService:
         await self._tracking.get_settings(user_id)
         await self._tracking.lock(user_id)
         student_number = await self._credentials.get_student_number(user_id)
-        snapshot = await self._client.fetch_snapshot(student_number)
+        try:
+            snapshot = await self._client.fetch_snapshot(student_number)
+        except EdersLoginError:
+            credentials = await self._credentials.get_credentials(user_id)
+            snapshot = await self._client.fetch_snapshot(student_number, credentials.plain_password)
         marker = hashlib.sha256(student_number.encode()).hexdigest()
         return await self._tracking.observe(user_id, marker, snapshot)

@@ -3,7 +3,7 @@ from urllib.parse import parse_qs
 import httpx
 import pytest
 
-from manashelper.modules.eders.errors import EdersFetchError, EdersUnsafeUrlError
+from manashelper.modules.eders.errors import EdersFetchError, EdersLoginError
 from manashelper.modules.eders.infrastructure.client import COURSES_URL, LOGIN_URL
 from tests.modules.eders.factories import make_eders_client
 
@@ -77,27 +77,28 @@ async def test_failed_login_is_not_a_success_even_with_sesskey(destination):
 @pytest.mark.parametrize(
     "destination",
     [
-        "https://evil.example/my/courses.php",
-        "http://eders.manas.edu.kg/my/courses.php",
-        "/login/logout.php?sesskey=secret",
-        "/auth/userkey/login.php?key=secret",
-        "/login/index.php?loginredirect=1&action=delete",
-        "/my/courses.php?action=delete",
+        "/my/",
+        "/my/index.php?lang=ru",
+        "/my/courses.php?lang=en",
+        "/auth/userkey/login.php?key=fake-sso",
+        "/login/index.php?testsession=opaque-value",
     ],
 )
-async def test_login_rejects_unsafe_redirect_before_following(destination):
+async def test_form_login_accepts_redirect_variants_without_url_allowlist(destination):
     requests = []
 
     def handler(request):
         requests.append(request)
-        if request.method == "GET":
+        if len(requests) == 1:
             return httpx.Response(200, text=LOGIN_FORM)
-        return httpx.Response(303, headers={"location": destination})
+        if len(requests) == 2:
+            return httpx.Response(303, headers={"location": destination})
+        return httpx.Response(200, text=COURSES_PAGE)
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        with pytest.raises(EdersUnsafeUrlError):
-            await make_eders_client().login(client, "fake-student")
-    assert len(requests) == 2
+        assert await make_eders_client().login(client, "fake-student") == "sessionkey"
+    assert len(requests) == 3
+    assert requests[-1].method == "GET" and not requests[-1].content
 
 
 @pytest.mark.parametrize("status", [307, 308])
@@ -111,7 +112,7 @@ async def test_login_never_replays_password_on_preserving_redirect(status):
         return httpx.Response(status, headers={"location": "/my/courses.php"})
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        with pytest.raises(EdersUnsafeUrlError):
+        with pytest.raises(EdersLoginError):
             await make_eders_client().login(client, "fake-student")
     assert len(requests) == 2
 
