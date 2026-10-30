@@ -54,6 +54,9 @@ EdersService reads the student number without decrypting a password for direct l
 Only a failed direct login triggers OBIS credential decryption and the legacy OBIS SSO fallback.
 Eders tracking checks existence through UsersQuery; its repository owns credential eligibility SQL and the user-row lock.
 Shared Telegram navigation lives in `platform/telegram/navigation.py`; feature routers must not import the start router for it.
+The main keyboard groups academic features under Studies. Its reply submenu reuses existing feature labels and hides
+Eders/Study week when disabled. The platform navigation router handles Studies and Back before feature FSM handlers,
+clearing unfinished forms on navigation; the shared Back handler also serves Marketplace.
 Keep feature code with its owner and limit changes to the requested scope. See `docs/ARCHITECTURE.md`
 for current boundaries, `docs/MIGRATION.md` for the completed refactor and `docs/BACKLOG.md` for deferred work.
 Add routers to the dispatcher in `platform/telegram/dispatcher.py`; features own their providers in the composition root.

@@ -6,6 +6,7 @@ from manashelper.localization.theme import Theme
 _HALLOWEEN_ICONS = {
     "common.welcome": ("", "🎃"),
     "menu.food": ("🍉", "🎃"),
+    "menu.study": ("📚", "🦉"),
     "menu.schedule": ("📅", "🕸️"),
     "menu.attendance": ("📋", "👻"),
     "menu.grades": ("💯", "🦇"),

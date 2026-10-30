@@ -326,7 +326,7 @@ jobs:
 
   notify:
     needs: [test, build, deploy]
-    if: ${{ always() }}
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
 
     steps:

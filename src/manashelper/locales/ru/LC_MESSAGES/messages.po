@@ -1088,3 +1088,6 @@ msgstr "Текст рассылки слишком длинный. Сократ�
 
 msgid "broadcast.confirm_prompt"
 msgstr "Отправить эту рассылку?"
+
+msgid "menu.study"
+msgstr "📚 Учёба"

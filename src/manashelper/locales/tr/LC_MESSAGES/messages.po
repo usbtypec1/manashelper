@@ -1089,3 +1089,6 @@ msgstr "Duyuru metni çok uzun. Göndermeden önce kısaltın."
 
 msgid "broadcast.confirm_prompt"
 msgstr "Bu duyuru gönderilsin mi?"
+
+msgid "menu.study"
+msgstr "📚 Eğitim"

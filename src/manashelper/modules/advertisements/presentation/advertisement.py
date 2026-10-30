@@ -58,7 +58,6 @@ from manashelper.modules.users.application.user_contact import (
 from manashelper.modules.users.presentation.keyboards.phone_numbers import build_contact_request_keyboard
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
-from manashelper.platform.telegram.navigation import build_main_keyboard
 
 logger = logging.getLogger(__name__)
 
@@ -124,12 +123,6 @@ async def send_marketplace_menu(message: Message, settings: Settings) -> None:
 @flags.private_chat_only
 async def on_marketplace_button(message: Message, settings: FromDishka[Settings]) -> None:
     await send_marketplace_menu(message, settings)
-
-
-@router.message(TranslatedText("common.back_to_menu"))
-@flags.private_chat_only
-async def on_back_to_main_menu(message: Message) -> None:
-    await message.answer(_("menu.main"), reply_markup=build_main_keyboard())
 
 
 @router.message(TranslatedText("ads.post"))
