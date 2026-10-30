@@ -9,6 +9,7 @@ from manashelper.modules.food_menu.application.food_menu_notification_settings i
 from manashelper.modules.food_menu.application.food_menu_sync import FoodMenuSyncService
 from manashelper.modules.food_menu.presentation.sender import TelegramFoodMenuSender
 from manashelper.modules.users.application.locale import LocaleService
+from manashelper.modules.users.application.theme import ThemeService
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,8 @@ async def _broadcast_menu_job(container: AsyncContainer, bot: Bot, meal: FoodMen
             service = await request_container.get(BroadcastFoodMenu)
             locales = await request_container.get(LocaleService)
             cleanup = await request_container.get(FoodMenuCleanupSettingsService)
-            sender: FoodMenuSender = TelegramFoodMenuSender(bot, locales, cleanup)
+            themes = await request_container.get(ThemeService)
+            sender: FoodMenuSender = TelegramFoodMenuSender(bot, locales, cleanup, themes)
             await service.execute(meal, sender)
     except Exception:
         logger.exception("Failed to broadcast %s menu", meal.value)

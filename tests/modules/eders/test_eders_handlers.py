@@ -18,6 +18,7 @@ from manashelper.core.config import get_settings
 from manashelper.core.provider import CoreProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.localization.locale import Locale
+from manashelper.localization.theme import Theme
 from manashelper.modules.eders.application.eders import EdersService
 from manashelper.modules.eders.application.models import (
     ActivityDate,
@@ -43,6 +44,7 @@ from manashelper.modules.student_questions.provider import StudentQuestionsProvi
 from manashelper.modules.student_questions.service import StudentQuestionsService
 from manashelper.modules.study_week.application import GetStudyWeek
 from manashelper.modules.study_week.provider import StudyWeekProvider
+from manashelper.modules.users.application.theme import ThemeService
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.dispatcher import create_dispatcher
@@ -195,7 +197,11 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
     locales.get_locale.side_effect = recipient_locale
     tracking.pending_events.return_value = [event]
     bot.send_message.side_effect = [TelegramBadRequest(SendMessage(chat_id=1, text="test"), "test failure"), None]
-    dependencies = {EdersTrackingService: tracking, PollEdersUser: PollEdersUser(service, tracking, locales)}
+    dependencies = {
+        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+        EdersTrackingService: tracking,
+        PollEdersUser: PollEdersUser(service, tracking, locales),
+    }
 
     class Request:
         async def get(self, dependency):
@@ -271,7 +277,11 @@ async def test_job_groups_new_materials_and_acknowledges_all_events_only_on_succ
     second = EdersEvent("second", snapshot().activities[0], "material_changed", now, now)
     tracking.pending_events.return_value = [first, second]
     locales.get_locale.return_value = Locale.EN
-    dependencies = {EdersTrackingService: tracking, PollEdersUser: PollEdersUser(service, tracking, locales)}
+    dependencies = {
+        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+        EdersTrackingService: tracking,
+        PollEdersUser: PollEdersUser(service, tracking, locales),
+    }
 
     @asynccontextmanager
     async def scope():

@@ -1018,7 +1018,7 @@ msgid "settings.theme"
 msgstr "🎨 Тема"
 
 msgid "theme.prompt"
-msgstr "Менюнун темасын тандаңыз. Тандооңуз кийинки кирүүлөр үчүн сакталат."
+msgstr "Боттун темасын тандаңыз. Тандооңуз кийинки кирүүлөр үчүн сакталат."
 
 msgid "theme.basic"
 msgstr "Негизги"
@@ -1028,3 +1028,45 @@ msgstr "🎃 Хэллоуин"
 
 msgid "theme.selected"
 msgstr "Тандалган тема: {theme}"
+
+msgid "halloween.food_title"
+msgstr "🎃 Хэллоуин ашканасы"
+
+msgid "halloween.food_menu_header"
+msgstr "🎃 Сыйкырдуу ашкананын менюсу · {weekday}, {date}"
+
+msgid "halloween.food_dish"
+msgstr "🦇 {index}. {name} — {calories} ккал"
+
+msgid "halloween.food_total_calories"
+msgstr "🔥 Даамдардын энергиясы: {calories} ккал"
+
+msgid "halloween.food_rating"
+msgstr "🍬 Даамдардын баасы: {average} ({count})"
+
+msgid "halloween.food_no_ratings"
+msgstr "🍬 Бул даамдарга азырынча эч ким баа бере элек"
+
+msgid "halloween.food_rate_prompt"
+msgstr "🎃 Даамдарга 1ден 5ке чейин баа бериңиз. Бааңызды өзгөртсөңүз болот."
+
+msgid "halloween.food_rating_thanks"
+msgstr "👻 Рахмат! Бааңыз даамдар китебине кошулду."
+
+msgid "halloween.food_enjoy_meal"
+msgstr "🕯️ Даамдуу Хэллоуин! Тамагыңыз таттуу болсун!"
+
+msgid "halloween.food_choose_day"
+msgstr "🕸️ Кайсы күндүн даамдар китебин ачалы?"
+
+msgid "halloween.food_open_menu"
+msgstr "🎃 Хэллоуин менюсун ачуу"
+
+msgid "halloween.food_today_unpublished"
+msgstr "🕯️ Казан дагы эле жылып жатат: бүгүнкү меню жарыялана элек."
+
+msgid "halloween.food_menu_unpublished"
+msgstr "🕯️ Казан дагы эле жылып жатат: тандалган күндүн менюсу жарыялана элек."
+
+msgid "halloween.food_no_available_menus"
+msgstr "🕸️ Даамдар китеби азырынча бош: жакынкы 7 күндүн менюсу жарыялана элек."

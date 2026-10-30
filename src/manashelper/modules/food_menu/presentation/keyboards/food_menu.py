@@ -5,6 +5,7 @@ from aiogram.types import InlineKeyboardMarkup, InputRichBlockButtons, RichMessa
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from manashelper.localization.theme import Theme
 from manashelper.localization.weekdays import weekday_full
 from manashelper.modules.food_menu.presentation.callbacks import (
     FoodMenuCleanupOpenCallback,
@@ -12,9 +13,14 @@ from manashelper.modules.food_menu.presentation.callbacks import (
     FoodMenuOpenCallback,
     FoodMenuRatingCallback,
 )
+from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 
 _RATING_LABELS = {1: "1️⃣", 2: "2️⃣", 3: "3️⃣", 4: "4️⃣", 5: "5️⃣"}
+
+
+def _rating_label(score: int) -> str:
+    return f"🎃 {score}" if i18n.current_theme == Theme.HALLOWEEN else _RATING_LABELS[score]
 
 
 def _day_label(menu_date: date, today: date) -> str:
@@ -68,7 +74,7 @@ def build_menu_rating_buttons(daily_menu_id: uuid.UUID, user_rating: int | None 
     return InputRichBlockButtons(
         buttons=[
             RichMessageButton(
-                text=_RATING_LABELS[score],
+                text=_rating_label(score),
                 style="success" if score == user_rating else None,
                 callback_data=FoodMenuRatingCallback(daily_menu_id=daily_menu_id, rating=score).pack(),
             )
@@ -81,7 +87,7 @@ def build_rating_keyboard(daily_menu_id: uuid.UUID) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     for score in range(1, 6):
         builder.button(
-            text=_RATING_LABELS[score],
+            text=_rating_label(score),
             callback_data=FoodMenuRatingCallback(daily_menu_id=daily_menu_id, rating=score),
         )
     builder.button(text=_("food.auto_delete_settings"), callback_data=FoodMenuCleanupOpenCallback())

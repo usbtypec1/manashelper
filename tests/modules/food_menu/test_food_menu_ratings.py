@@ -20,6 +20,7 @@ from aiogram.types import User as TelegramUser
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from manashelper.localization.theme import Theme
 from manashelper.modules.food_menu.application.daily_menu import DailyMenuModel, DailyMenuService, DishModel
 from manashelper.modules.food_menu.infrastructure.models.daily_menu import DailyMenu
 from manashelper.modules.food_menu.infrastructure.models.daily_menu_rating import DailyMenuRating
@@ -267,7 +268,9 @@ async def test_menu_delivery_and_broadcast_schedule_one_rich_message_for_cleanup
     users = AsyncMock()
     users.get_by_id.return_value.locale = "ru"
     cleanup.reset_mock()
-    await TelegramFoodMenuSender(bot, LocaleService(users), cleanup).send(menu, 900_001)
+    await TelegramFoodMenuSender(
+        bot, LocaleService(users), cleanup, AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC))
+    ).send(menu, 900_001)
     cleanup.schedule_cleanup.assert_awaited_once_with(900_001, [43])
     rich = bot.send_rich_message.call_args.kwargs["rich_message"]
     assert "Меню" in rich.blocks[0].text

@@ -1016,7 +1016,7 @@ msgid "settings.theme"
 msgstr "🎨 Tema"
 
 msgid "theme.prompt"
-msgstr "Menü temasını seçin. Seçiminiz sonraki ziyaretler için kaydedilir."
+msgstr "Bot temasını seçin. Seçiminiz sonraki ziyaretler için kaydedilir."
 
 msgid "theme.basic"
 msgstr "Temel"
@@ -1026,3 +1026,45 @@ msgstr "🎃 Cadılar Bayramı"
 
 msgid "theme.selected"
 msgstr "Seçilen tema: {theme}"
+
+msgid "halloween.food_title"
+msgstr "🎃 Cadılar Bayramı mutfağı"
+
+msgid "halloween.food_menu_header"
+msgstr "🎃 Cadının mutfak menüsü · {weekday}, {date}"
+
+msgid "halloween.food_dish"
+msgstr "🦇 {index}. {name} — {calories} kcal"
+
+msgid "halloween.food_total_calories"
+msgstr "🔥 İkramların enerjisi: {calories} kcal"
+
+msgid "halloween.food_rating"
+msgstr "🍬 İkram puanı: {average} ({count})"
+
+msgid "halloween.food_no_ratings"
+msgstr "🍬 Bu ikramları henüz kimse puanlamadı"
+
+msgid "halloween.food_rate_prompt"
+msgstr "🎃 İkramlara 1 ile 5 arasında puan verin. Puanınızı değiştirebilirsiniz."
+
+msgid "halloween.food_rating_thanks"
+msgstr "👻 Teşekkürler! Puanınız ikram defterine eklendi."
+
+msgid "halloween.food_enjoy_meal"
+msgstr "🕯️ Lezzetli bir Cadılar Bayramı! Afiyet olsun!"
+
+msgid "halloween.food_choose_day"
+msgstr "🕸️ Hangi günün ikram defterini açalım?"
+
+msgid "halloween.food_open_menu"
+msgstr "🎃 Cadılar Bayramı menüsünü aç"
+
+msgid "halloween.food_today_unpublished"
+msgstr "🕯️ Kazan ısınıyor: bugünün menüsü henüz yayımlanmadı."
+
+msgid "halloween.food_menu_unpublished"
+msgstr "🕯️ Kazan ısınıyor: seçilen günün menüsü henüz yayımlanmadı."
+
+msgid "halloween.food_no_available_menus"
+msgstr "🕸️ İkram defteri şimdilik boş: önümüzdeki 7 günün menüleri henüz yayımlanmadı."

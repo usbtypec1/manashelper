@@ -12,6 +12,7 @@ from sqlalchemy.dialects import postgresql
 from manashelper.core.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.localization.locale import Locale
+from manashelper.localization.theme import Theme
 from manashelper.modules.eders.application.eders import EdersService
 from manashelper.modules.eders.application.models import DeadlineFilter, EdersSnapshot
 from manashelper.modules.eders.application.polling import PollEdersUser
@@ -26,6 +27,7 @@ from manashelper.modules.eders.presentation.sender import TelegramEdersNotificat
 from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.obis.errors import UserNotFoundError
 from manashelper.modules.obis.provider import ObisProvider
+from manashelper.modules.users.application.theme import ThemeService
 from manashelper.modules.users.infrastructure.user import User
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
@@ -104,7 +106,11 @@ async def test_poll_failure_aborts_only_current_user_and_preserves_call_order(fa
     service.refresh_snapshot.side_effect = refresh
     locales.get_locale.side_effect = locale
     tracking.pending_events.side_effect = pending
-    dependencies = {EdersTrackingService: tracking, PollEdersUser: PollEdersUser(service, tracking, locales)}
+    dependencies = {
+        EdersTrackingService: tracking,
+        PollEdersUser: PollEdersUser(service, tracking, locales),
+        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+    }
     scopes = []
 
     @asynccontextmanager
@@ -180,11 +186,15 @@ async def test_delivery_acknowledges_success_immediately_and_preserves_failure_b
     poll = PollEdersUser(service, tracking, locales)
     with i18n.context(), i18n.use_locale("ru"):
         if failure == "telegram":
-            await poll.execute(42, TelegramEdersNotificationSender(bot))
+            await poll.execute(
+                42, TelegramEdersNotificationSender(bot, AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)))
+            )
             assert calls == ["send", "material-1", "material-2", "send", "send", "reminder-2"]
         else:
             with pytest.raises(RuntimeError, match="ack failed" if failure == "ack" else "transport failed"):
-                await poll.execute(42, TelegramEdersNotificationSender(bot))
+                await poll.execute(
+                    42, TelegramEdersNotificationSender(bot, AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)))
+                )
             assert calls == (
                 ["send", "material-1"] if failure == "ack" else ["send", "material-1", "material-2", "send"]
             )
@@ -199,7 +209,9 @@ async def test_all_messages_are_formatted_before_any_delivery():
         EdersEvent("invalid", item(), "unknown", NOW, NOW),
     ]
     with pytest.raises(KeyError):
-        async for _event in TelegramEdersNotificationSender(bot).send(42, Locale.EN, events):
+        async for _event in TelegramEdersNotificationSender(
+            bot, AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC))
+        ).send(42, Locale.EN, events):
             pytest.fail("No event can be acknowledged before formatting completes")
     bot.send_message.assert_not_awaited()
 

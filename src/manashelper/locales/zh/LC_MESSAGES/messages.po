@@ -1006,7 +1006,7 @@ msgid "settings.theme"
 msgstr "🎨 主题"
 
 msgid "theme.prompt"
-msgstr "请选择菜单主题。您的选择将保存，下次使用时仍然生效。"
+msgstr "请选择机器人主题。您的选择将保存，下次使用时仍然生效。"
 
 msgid "theme.basic"
 msgstr "基础"
@@ -1016,3 +1016,45 @@ msgstr "🎃 万圣节"
 
 msgid "theme.selected"
 msgstr "已选择主题：{theme}"
+
+msgid "halloween.food_title"
+msgstr "🎃 万圣节厨房"
+
+msgid "halloween.food_menu_header"
+msgstr "🎃 女巫厨房菜单 · {weekday}，{date}"
+
+msgid "halloween.food_dish"
+msgstr "🦇 {index}. {name} — {calories} 千卡"
+
+msgid "halloween.food_total_calories"
+msgstr "🔥 美食能量：{calories} 千卡"
+
+msgid "halloween.food_rating"
+msgstr "🍬 美食评分：{average}（{count}）"
+
+msgid "halloween.food_no_ratings"
+msgstr "🍬 这些美食还没有评分"
+
+msgid "halloween.food_rate_prompt"
+msgstr "🎃 请为美食打1至5分。您可以修改评分。"
+
+msgid "halloween.food_rating_thanks"
+msgstr "👻 谢谢！您的评分已记入美食之书。"
+
+msgid "halloween.food_enjoy_meal"
+msgstr "🕯️ 祝您度过美味的万圣节！用餐愉快！"
+
+msgid "halloween.food_choose_day"
+msgstr "🕸️ 要打开哪一天的美食之书？"
+
+msgid "halloween.food_open_menu"
+msgstr "🎃 打开万圣节菜单"
+
+msgid "halloween.food_today_unpublished"
+msgstr "🕯️ 大锅还在加热：今天的菜单尚未发布。"
+
+msgid "halloween.food_menu_unpublished"
+msgstr "🕯️ 大锅还在加热：所选日期的菜单尚未发布。"
+
+msgid "halloween.food_no_available_menus"
+msgstr "🕸️ 美食之书暂时为空：未来7天的菜单尚未发布。"

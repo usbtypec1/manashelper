@@ -185,7 +185,9 @@ message to another user must format it inside that recipient's `i18n.use_locale(
 establish `i18n.context()` because they run outside update middleware. Shared moderation/admin chats and the
 advertisement channel render in `DEFAULT_LOCALE`.
 Evaluate translation calls and message builders inside the recipient's locale context; wrapping an already-built
-string cannot change its language.
+string cannot change its language. Personal notifications also bind the recipient's saved Theme through i18n.use_theme;
+never inherit another recipient's theme. Basic is the default. Theme copy lives in all five catalogs; decorate templates
+before interpolating user content, and preserve dishes, photos, numbers, callback payloads and status meanings.
 
 After editing a catalog, compile it with `.venv/bin/pybabel compile -d src/manashelper/locales`. The `.po` files
 are committed; generated `.mo` files are ignored by Git. When adding msgids, use the extract/update workflow if

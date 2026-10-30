@@ -1015,7 +1015,7 @@ msgid "settings.theme"
 msgstr "🎨 Тема"
 
 msgid "theme.prompt"
-msgstr "Выберите тему оформления меню. Выбор сохранится для следующих посещений."
+msgstr "Выберите тему оформления бота. Выбор сохранится для следующих посещений."
 
 msgid "theme.basic"
 msgstr "Базовая"
@@ -1025,3 +1025,45 @@ msgstr "🎃 Хеллоуин"
 
 msgid "theme.selected"
 msgstr "Выбрана тема: {theme}"
+
+msgid "halloween.food_title"
+msgstr "🎃 Кухня Хеллоуина"
+
+msgid "halloween.food_menu_header"
+msgstr "🎃 Меню ведьминой кухни · {weekday}, {date}"
+
+msgid "halloween.food_dish"
+msgstr "🦇 {index}. {name} — {calories} ккал"
+
+msgid "halloween.food_total_calories"
+msgstr "🔥 Энергия угощений: {calories} ккал"
+
+msgid "halloween.food_rating"
+msgstr "🍬 Оценка угощений: {average} ({count})"
+
+msgid "halloween.food_no_ratings"
+msgstr "🍬 Эти угощения пока никто не оценил"
+
+msgid "halloween.food_rate_prompt"
+msgstr "🎃 Оцените угощения от 1 до 5. Оценку можно изменить."
+
+msgid "halloween.food_rating_thanks"
+msgstr "👻 Спасибо! Ваша оценка добавлена в книгу угощений."
+
+msgid "halloween.food_enjoy_meal"
+msgstr "🕯️ Вкусного Хеллоуина! Приятного аппетита!"
+
+msgid "halloween.food_choose_day"
+msgstr "🕸️ На какой день открыть книгу угощений?"
+
+msgid "halloween.food_open_menu"
+msgstr "🎃 Открыть меню Хеллоуина"
+
+msgid "halloween.food_today_unpublished"
+msgstr "🕯️ Котёл ещё греется: меню на сегодня пока не опубликовано."
+
+msgid "halloween.food_menu_unpublished"
+msgstr "🕯️ Котёл ещё греется: меню на выбранный день пока не опубликовано."
+
+msgid "halloween.food_no_available_menus"
+msgstr "🕸️ Книга угощений пока пуста: меню на ближайшие 7 дней ещё не опубликовано."

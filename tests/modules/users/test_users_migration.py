@@ -220,7 +220,11 @@ async def test_obis_user_poll_keeps_locale_fallback_and_failure_isolation(monkey
     service = AsyncMock(spec=ObisNotificationService)
     service.check_exam_grade_changes.return_value = [object()]
     service.check_lesson_skip_changes.return_value = [object()]
-    dependencies = {LocaleService: LocaleService(users), PollObisUser: PollObisUser(service)}
+    dependencies = {
+        LocaleService: LocaleService(users),
+        PollObisUser: PollObisUser(service),
+        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+    }
     opened = []
 
     @asynccontextmanager
