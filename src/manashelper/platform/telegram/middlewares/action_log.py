@@ -3,6 +3,7 @@ from typing import Any
 
 from aiogram import BaseMiddleware
 from aiogram.dispatcher.flags import get_flag
+from aiogram.enums import ChatType
 from aiogram.types import CallbackQuery, Message, TelegramObject
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import CONTAINER_NAME
@@ -14,7 +15,9 @@ _MASKED_MESSAGE_TEXT = "[masked]"
 
 
 class ActionLogMiddleware(BaseMiddleware):
-    """Persists an update to the `action_logs` table, for basic usage auditing.
+    """Persists private-chat updates to the `action_logs` table, for basic usage auditing.
+
+    Messages and callbacks from groups, supergroups and channels pass through without an audit row.
 
     Registered as an *inner* middleware (`.middleware()`, not `.outer_middleware()`) so it only
     fires for updates that matched a router's filters and were dispatched to a handler —
@@ -38,7 +41,7 @@ class ActionLogMiddleware(BaseMiddleware):
     ) -> Any:
         chat = data.get("event_chat")
         user = data.get("event_from_user")
-        if chat is not None and user is not None:
+        if chat is not None and chat.type == ChatType.PRIVATE and user is not None:
             container: AsyncContainer = data[CONTAINER_NAME]
             action_log_service = await container.get(ActionLogService)
             if isinstance(event, CallbackQuery):

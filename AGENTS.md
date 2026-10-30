@@ -72,7 +72,7 @@ importing one repository no longer loads the whole schema as a side effect.
 Telegram Platform lives in `platform/telegram/`: dispatcher, commands/catalog/extractor, navigation,
 Settings callbacks/routers, filters, middleware, HTML/delivery, audit and scheduled message deletions.
 TelegramPlatformProvider owns both audit and deletion repositories/services in REQUEST. Audit records only
-matched/allowed updates, masks password text with `[masked]`, and stays after the private-chat guard.
+matched/allowed updates from private chats only, masks password text with `[masked]`, and stays after the private-chat guard.
 Cleanup jobs use MessageDeletionService.delete_due with async delivery; delete_messages batches by 100,
 continues after TelegramAPIError and propagates unexpected errors. Rows are acknowledged after all chats;
 an unexpected sweep failure logs and leaves them queued. Preserve the five-minute schedule and no retry.
