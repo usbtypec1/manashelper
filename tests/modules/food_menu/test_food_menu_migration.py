@@ -13,6 +13,7 @@ from dishka import make_async_container
 from manashelper.core.provider import CoreProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.localization.locale import Locale
+from manashelper.localization.theme import Theme
 from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.food_menu import jobs
 from manashelper.modules.food_menu.application import broadcast as broadcast_module
@@ -47,6 +48,7 @@ from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
 from manashelper.modules.users.application.locale import LocaleService
+from manashelper.modules.users.application.theme import ThemeService
 from manashelper.modules.users.infrastructure.user import User
 from manashelper.modules.users.infrastructure.user_repository import UserRepository
 from manashelper.modules.users.provider import UsersProvider
@@ -208,6 +210,7 @@ async def test_broadcast_job_selects_today_and_skips_missing_menu(monkeypatch, m
     dependencies = {
         BroadcastFoodMenu: BroadcastFoodMenu(daily, settings),
         LocaleService: users,
+        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
         FoodMenuCleanupSettingsService: cleanup,
     }
 
@@ -230,31 +233,39 @@ async def test_broadcast_job_selects_today_and_skips_missing_menu(monkeypatch, m
         send.assert_awaited_once_with(menu, 960011)
 
 
-@pytest.mark.parametrize("stage", ["locale", "send", "cleanup"])
+@pytest.mark.parametrize("stage", ["locale", "theme", "send", "cleanup"])
 @pytest.mark.parametrize("telegram_error", [False, True])
 async def test_broadcast_delivery_exception_boundary(stage, telegram_error):
     bot, users, cleanup = AsyncMock(), AsyncMock(), AsyncMock()
     users.get_locale.return_value = Locale.RU
+    themes = AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC))
     bot.send_rich_message.return_value = SimpleNamespace(message_id=42)
     error = (
         TelegramBadRequest(method=SendMessage(chat_id=1, text="x"), message="fixture failure")
         if telegram_error
         else RuntimeError("fixture failure")
     )
-    failing = {"locale": users.get_locale, "send": bot.send_rich_message, "cleanup": cleanup.schedule_cleanup}[stage]
-    success = {"locale": Locale.RU, "send": SimpleNamespace(message_id=42), "cleanup": None}[stage]
+    failing = {
+        "locale": users.get_locale,
+        "theme": themes.get_theme,
+        "send": bot.send_rich_message,
+        "cleanup": cleanup.schedule_cleanup,
+    }[stage]
+    success = {"locale": Locale.RU, "theme": Theme.BASIC, "send": SimpleNamespace(message_id=42), "cleanup": None}[
+        stage
+    ]
     failing.side_effect = [error, success]
     menu = DailyMenuModel(uuid.uuid4(), date(2026, 10, 25), [], 0, 0, 0)
     if telegram_error:
         for user_id in [1, 2]:
-            await TelegramFoodMenuSender(bot, users, cleanup).send(menu, user_id)
+            await TelegramFoodMenuSender(bot, users, cleanup, themes).send(menu, user_id)
         assert users.get_locale.await_count == 2
         assert bot.send_rich_message.await_args_list[-1].kwargs["chat_id"] == 2
         cleanup.schedule_cleanup.assert_any_await(2, [42])
     else:
         with pytest.raises(RuntimeError, match="fixture failure"):
             for user_id in [1, 2]:
-                await TelegramFoodMenuSender(bot, users, cleanup).send(menu, user_id)
+                await TelegramFoodMenuSender(bot, users, cleanup, themes).send(menu, user_id)
         assert users.get_locale.await_count == 1
 
 

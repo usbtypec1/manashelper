@@ -19,6 +19,7 @@ from manashelper.core.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.localization.locale import Locale
+from manashelper.localization.theme import Theme
 from manashelper.modules.eders.application.eders import EdersService
 from manashelper.modules.obis import jobs
 from manashelper.modules.obis.application.credentials import ObisCredentialsService
@@ -340,7 +341,7 @@ async def test_telegram_sender_keeps_recipient_locale_and_delivery_failure_bound
         else RuntimeError("Transport failed")
     )
     bot.send_message.side_effect = [error, None, None]
-    sender = TelegramObisNotificationSender(bot, 975001, Locale.ZH)
+    sender = TelegramObisNotificationSender(bot, 975001, Locale.ZH, Theme.BASIC)
     with i18n.context(), i18n.use_locale("ru"):
         if failure == "telegram":
             await PollObisUser(notifications).execute(975001, True, True, sender)

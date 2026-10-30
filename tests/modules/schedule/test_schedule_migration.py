@@ -16,6 +16,7 @@ from dishka import make_async_container
 
 from manashelper.core.provider import CoreProvider
 from manashelper.jobs.scheduler import create_scheduler
+from manashelper.localization.theme import Theme
 from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.notifications.orm import NotificationSettings
 from manashelper.modules.notifications.provider import NotificationsProvider
@@ -40,6 +41,7 @@ from manashelper.modules.schedule.presentation.routers import lesson_search, tim
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
 from manashelper.modules.users.application.locale import LocaleService
+from manashelper.modules.users.application.theme import ThemeService
 from manashelper.modules.users.infrastructure.user import User as DbUser
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
@@ -168,6 +170,7 @@ async def test_sync_job_keeps_course_scopes_and_failure_isolation(failure):
         CourseService: courses,
         SyncCourseTimetable: SyncCourseTimetable(sync, NotificationRecipientsQuery(notifications)),
         LocaleService: LocaleService(users),
+        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
     }
     scopes = []
 

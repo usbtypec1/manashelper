@@ -11,21 +11,26 @@ from manashelper.modules.food_menu.presentation.keyboards.food_menu import (
     build_menu_rating_buttons,
 )
 from manashelper.modules.users.application.locale import LocaleService
+from manashelper.modules.users.application.theme import ThemeService
 from manashelper.platform.i18n.catalog import i18n
 
 logger = logging.getLogger(__name__)
 
 
 class TelegramFoodMenuSender:
-    def __init__(self, bot: Bot, locales: LocaleService, cleanup: FoodMenuCleanupSettingsService) -> None:
+    def __init__(
+        self, bot: Bot, locales: LocaleService, cleanup: FoodMenuCleanupSettingsService, themes: ThemeService
+    ) -> None:
         self._bot = bot
         self._locales = locales
         self._cleanup = cleanup
+        self._themes = themes
 
     async def send(self, daily_menu: DailyMenuModel, user_id: int) -> None:
         try:
             locale = await self._locales.get_locale(user_id)
-            with i18n.context(), i18n.use_locale(locale.value):
+            theme = await self._themes.get_theme(user_id)
+            with i18n.context(), i18n.use_locale(locale.value), i18n.use_theme(theme):
                 rich_message = build_daily_menu_rich_message(
                     daily_menu,
                     build_menu_rating_buttons(daily_menu.id),

@@ -1017,7 +1017,7 @@ msgid "settings.theme"
 msgstr "🎨 Theme"
 
 msgid "theme.prompt"
-msgstr "Choose a menu theme. Your choice is saved for future visits."
+msgstr "Choose a bot theme. Your choice is saved for future visits."
 
 msgid "theme.basic"
 msgstr "Basic"
@@ -1027,3 +1027,45 @@ msgstr "🎃 Halloween"
 
 msgid "theme.selected"
 msgstr "Theme selected: {theme}"
+
+msgid "halloween.food_title"
+msgstr "🎃 Halloween kitchen"
+
+msgid "halloween.food_menu_header"
+msgstr "🎃 Witch's kitchen menu · {weekday}, {date}"
+
+msgid "halloween.food_dish"
+msgstr "🦇 {index}. {name} — {calories} kcal"
+
+msgid "halloween.food_total_calories"
+msgstr "🔥 Treat energy: {calories} kcal"
+
+msgid "halloween.food_rating"
+msgstr "🍬 Treat rating: {average} ({count})"
+
+msgid "halloween.food_no_ratings"
+msgstr "🍬 No one has rated these treats yet"
+
+msgid "halloween.food_rate_prompt"
+msgstr "🎃 Rate the treats from 1 to 5. You can change your rating."
+
+msgid "halloween.food_rating_thanks"
+msgstr "👻 Thank you! Your rating is in the book of treats."
+
+msgid "halloween.food_enjoy_meal"
+msgstr "🕯️ Have a delicious Halloween! Enjoy your meal!"
+
+msgid "halloween.food_choose_day"
+msgstr "🕸️ Which day's book of treats shall we open?"
+
+msgid "halloween.food_open_menu"
+msgstr "🎃 Open the Halloween menu"
+
+msgid "halloween.food_today_unpublished"
+msgstr "🕯️ The cauldron is warming up: today's menu has not been published yet."
+
+msgid "halloween.food_menu_unpublished"
+msgstr "🕯️ The cauldron is warming up: the selected day's menu has not been published yet."
+
+msgid "halloween.food_no_available_menus"
+msgstr "🕸️ The book of treats is empty: menus for the next 7 days have not been published yet."
