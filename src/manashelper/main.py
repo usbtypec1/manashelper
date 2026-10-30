@@ -17,7 +17,6 @@ from manashelper.core.provider import CoreProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.modules.advertisements.provider import AdvertisementsProvider
 from manashelper.modules.broadcast.provider import BroadcastProvider
-from manashelper.modules.donations.provider import DonationsProvider
 from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.feedback.provider import FeedbackProvider
 from manashelper.modules.food_menu.provider import FoodMenuProvider
@@ -66,7 +65,6 @@ async def main() -> None:
             AdvertisementsProvider(),
             StudentQuestionsProvider(),
             UsersProvider(),
-            DonationsProvider(),
             BroadcastProvider(),
             FoodMenuProvider(),
         )

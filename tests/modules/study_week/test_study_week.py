@@ -179,14 +179,13 @@ def message():
         (ObisParseError(), "Could not load eders. Try again later.", False),
     ],
 )
-async def test_week_handler_keeps_loading_and_expected_errors(error, text, keyboard):
+async def test_week_handler_returns_expected_errors_without_loading_message(error, text, keyboard):
     incoming, service = message(), AsyncMock()
     service.execute.side_effect = error
     await on_week_command(incoming, service)
     service.execute.assert_awaited_once_with(42)
-    assert incoming.answer.await_count == 2
-    assert incoming.answer.await_args_list[0].args == ("Loading eders assignments…",)
-    response = incoming.answer.await_args_list[1]
+    assert incoming.answer.await_count == 1
+    response = incoming.answer.await_args_list[0]
     assert bool(response.kwargs.get("reply_markup")) is keyboard
     assert response.args == (text,)
 
@@ -207,16 +206,16 @@ async def test_week_handler_sends_chunks_sequentially_with_previews_disabled():
     service.execute.return_value = week
     chunks = format_study_week(week)
     await on_week_command(incoming, service)
-    assert [call.args[0] for call in incoming.answer.await_args_list] == ["Loading eders assignments…", *chunks]
-    assert all(call.kwargs["link_preview_options"].is_disabled for call in incoming.answer.await_args_list[1:])
+    assert [call.args[0] for call in incoming.answer.await_args_list] == chunks
+    assert all(call.kwargs["link_preview_options"].is_disabled for call in incoming.answer.await_args_list)
 
 
-async def test_unexpected_week_failure_propagates_after_loading():
+async def test_unexpected_week_failure_propagates():
     incoming, service = message(), AsyncMock()
     service.execute.side_effect = RuntimeError("unexpected")
     with pytest.raises(RuntimeError, match="unexpected"):
         await on_week_command(incoming, service)
-    incoming.answer.assert_awaited_once_with("Loading eders assignments…")
+    incoming.answer.assert_not_awaited()
 
 
 def test_week_handler_keeps_private_command_filter():
@@ -239,7 +238,7 @@ async def test_partial_telegram_failure_stops_remaining_week_chunks():
     incoming.answer.side_effect = [None, None, RuntimeError("delivery failed")]
     with pytest.raises(RuntimeError, match="delivery failed"):
         await on_week_command(incoming, service)
-    assert [call.args[0] for call in incoming.answer.await_args_list] == ["Loading eders assignments…", *chunks[:2]]
+    assert [call.args[0] for call in incoming.answer.await_args_list] == chunks[:3]
     service.execute.assert_awaited_once_with(42)
 
 

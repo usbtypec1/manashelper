@@ -45,7 +45,7 @@ class ObisNotificationService:
         self._user_lesson_attendance_repository = user_lesson_attendance_repository
 
     async def check_exam_grade_changes(self, user_id: int) -> list[ExamGradeChange]:
-        lessons = await self._obis_service.get_exam_grades(user_id)
+        lessons = await self._obis_service.refresh_exam_grades(user_id)
         existing_grades = await self._user_exam_grade_repository.get_all_by_user_id(user_id)
         existing_by_key = {(grade.lesson_code, grade.exam_name): grade for grade in existing_grades}
 
@@ -77,7 +77,7 @@ class ObisNotificationService:
         return changes
 
     async def check_lesson_skip_changes(self, user_id: int) -> list[LessonSkipChange]:
-        lessons = await self._obis_service.get_attendance(user_id)
+        lessons = await self._obis_service.refresh_attendance(user_id)
         existing_records = await self._user_lesson_attendance_repository.get_all_by_user_id(user_id)
         existing_by_lesson_code = {record.lesson_code: record for record in existing_records}
 

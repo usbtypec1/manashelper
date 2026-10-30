@@ -18,9 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-msgid "eders.loading"
-msgstr "eders тапшырмалары жүктөлүүдө…"
-
 msgid "eders.fetch_failed"
 msgstr "eders жүктөлгөн жок. Кийин кайра аракет кылыңыз."
 
@@ -61,7 +58,10 @@ msgid "eders.empty"
 msgstr "Бул чыпкага туура келген жазуу жок."
 
 msgid "eders.filter_note"
-msgstr "Булак: eders баалар серептөөсүндөгү курстар. Ырасталган убакыт — Asia/Bishkek. Убакыт алкагы ырасталбаган же карама-каршы даталар убакыт чыпкаларына кирбейт; «Так мөөнөтү жок» бөлүмүн караңыз. Иштерди eders аркылуу аткарып, тапшырыңыз."
+msgstr ""
+"Булак: eders баалар серептөөсүндөгү курстар. Ырасталган убакыт — Asia/Bishkek. Убакыт алкагы ырасталбаган же "
+"карама-каршы даталар убакыт чыпкаларына кирбейт; «Так мөөнөтү жок» бөлүмүн караңыз. Иштерди eders аркылуу аткарып, "
+"тапшырыңыз."
 
 msgid "eders.opens"
 msgstr "Ачылат: {value}"
@@ -207,9 +207,6 @@ msgstr "🚫 Комментарийсиз"
 msgid "common.send"
 msgstr "✅ Жиберүү"
 
-msgid "common.back_to_settings"
-msgstr "◀️ Жөндөөлөргө кайтуу"
-
 msgid "food.today"
 msgstr "📅 Бүгүн"
 
@@ -290,9 +287,6 @@ msgstr "🌐 Тил"
 
 msgid "settings.feedback"
 msgstr "💬 Байланыш"
-
-msgid "settings.donate"
-msgstr "❤️ Ботту колдоо көрсөтүү"
 
 msgid "menu.food"
 msgstr "🍉 Йемек"
@@ -498,25 +492,6 @@ msgstr ""
 "\n"
 "{body}"
 
-msgid "donations.qr_coming_soon"
-msgstr "Төлөм QR-коддору жакында бул жерде пайда болот."
-
-msgid "donations.intro"
-msgstr ""
-"❤️ <b>Manashelper иштей беришине жардам бериңиз</b>\n"
-"\n"
-"28-сентябрда AWS'тин акысыз аккаунтуна чектөө коюлуп, бот иштебей калды. Расписание, ашкана менюсу, баалар жана "
-"сабакка катышуу маалыматы жеткиликтүү болушу үчүн ботту акы төлөнүүчү серверге көчүрдүм.\n"
-"\n"
-"Сиздин салымыңыз серверди сиз жана боттун дагы {others} колдонуучусу үчүн иштетүүгө жардам берет. Каалаган сумма "
-"маанилүү: бардык каражат сервердин ижарасына жумшалат. Колдооңуз үчүн рахмат!"
-
-msgid "donations.choose_bank"
-msgstr "Төлөм QR-кодун көрүү үчүн банкты тандаңыз:"
-
-msgid "donations.qr_unavailable"
-msgstr "Бул банктын QR-коду мындан ары жеткиликтүү эмес."
-
 msgid "feedback.sent"
 msgstr "✅ Рахмат! Билдирүүңүз администрацияга жөнөтүлдү."
 
@@ -549,13 +524,11 @@ msgstr "Билдирүү бош болбошу керек жана {max} бел�
 msgid "feedback.delivery_failed"
 msgstr "⚠️ Жоопту колдонуучуга жеткирүү мүмкүн болгон жок."
 
-
 msgid "food.rate_prompt"
 msgstr "Күндүн менюсуна 1ден 5ке чейин баа бериңиз. Бааны өзгөртсөңүз болот."
 
 msgid "food.rating_thanks"
 msgstr "Баалаганыңыз үчүн рахмат!"
-
 
 msgid "food.auto_delete_prompt"
 msgstr "🧹 Бул чатта меню жөнүндө билдирүүлөрдү автоматтык түрдө өчүрүү:"
@@ -897,9 +870,6 @@ msgstr "Ашкана менюсун көрүү"
 msgid "commands.language"
 msgstr "Тилди өзгөртүү"
 
-msgid "commands.donate"
-msgstr "Ботту колдоо"
-
 msgid "commands.hide_keyboard"
 msgstr "Баскычтопту жашыруу"
 
@@ -1040,3 +1010,6 @@ msgstr "Eders материалдары"
 
 msgid "menu.study_week"
 msgstr "Окуу аптасы"
+
+msgid "data.preparing"
+msgstr "Маалыматтар фондо даярдалып жатат. Кийинки жаңыртуудан кийин кайталап көрүңүз (ар 15 мүнөт сайын)."

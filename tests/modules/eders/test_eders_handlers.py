@@ -191,7 +191,7 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
     async def recipient_locale(user_id):
         return Locale.RU if user_id == 1 else Locale.ZH
 
-    service.get_snapshot.side_effect = fetch
+    service.refresh_snapshot.side_effect = fetch
     locales.get_locale.side_effect = recipient_locale
     tracking.pending_events.return_value = [event]
     bot.send_message.side_effect = [TelegramBadRequest(SendMessage(chat_id=1, text="test"), "test failure"), None]
@@ -212,7 +212,7 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
     assert tracking.mark_sent.await_count == 1 and tracking.mark_sent.call_args.args[:2] == (3, "key")
 
 
-async def test_application_resolves_new_services_and_registers_thirty_minute_polling() -> None:
+async def test_application_resolves_new_services_and_registers_fifteen_minute_polling() -> None:
     container = make_async_container(
         CoreProvider(),
         TelegramPlatformProvider(),
@@ -237,7 +237,7 @@ async def test_application_resolves_new_services_and_registers_thirty_minute_pol
             assert isinstance(await request.get(GetStudyWeek), GetStudyWeek)
         scheduler = create_scheduler(container, bot)
         jobs = [job for job in scheduler.get_jobs() if job.func == poll_eders_job]
-        assert len(jobs) == 1 and jobs[0].trigger.interval == timedelta(minutes=30)
+        assert len(jobs) == 1 and jobs[0].trigger.interval == timedelta(minutes=15)
         assert jobs[0].max_instances == 1
     finally:
         await container.close()

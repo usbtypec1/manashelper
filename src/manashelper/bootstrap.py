@@ -22,6 +22,7 @@ def load_models() -> None:
         FoodMenuNotificationSettings,
     )
     from manashelper.modules.notifications.orm import NotificationSettings
+    from manashelper.modules.obis.infrastructure.snapshot import ObisSnapshot
     from manashelper.modules.obis.infrastructure.user_exam_grade import UserExamGrade
     from manashelper.modules.obis.infrastructure.user_lesson_attendance import UserLessonAttendance
     from manashelper.modules.schedule.infrastructure.models.associations import user_courses

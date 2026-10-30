@@ -20,3 +20,7 @@ class ObisLoginError(Exception):
 
 class ObisParseError(Exception):
     pass
+
+
+class ObisSnapshotNotReadyError(Exception):
+    pass

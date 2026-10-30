@@ -104,7 +104,7 @@ def test_settings_keep_cwd_dotenv_aliases_overrides_and_cache(tmp_path, monkeypa
     config.get_settings.cache_clear()
     try:
         settings = config.get_settings()
-        assert settings.datasource_host == "db" and settings.eders_poll_minutes == 30
+        assert settings.datasource_host == "db" and settings.eders_poll_minutes == 15
         assert not settings.eders_enabled
         assert settings.database_url == "postgresql+asyncpg://student:placeholder@db:5432/development"
         monkeypatch.setenv("DATASOURCE_HOST", "localhost")

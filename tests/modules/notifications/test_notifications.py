@@ -25,6 +25,7 @@ from manashelper.modules.notifications.settings import (
     UserNotFoundError,
 )
 from manashelper.modules.obis import jobs
+from manashelper.modules.obis.application.obis import ObisService
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
@@ -198,18 +199,24 @@ async def test_notification_handlers_keep_rendering_and_unknown_user_alerts(acti
 
 
 @pytest.mark.parametrize("load_fails", [False, True])
-async def test_obis_poll_keeps_recipient_union_flags_and_load_failure_boundary(monkeypatch, caplog, load_fails):
+async def test_obis_poll_refreshes_all_eligible_users_with_recipient_flags_and_load_failure_boundary(
+    monkeypatch, caplog, load_fails
+):
     recipients = AsyncMock(spec=NotificationRecipientsQuery)
     recipients.for_exam_grades.return_value = [11, 12]
     recipients.for_lesson_skips.return_value = [12, 13]
     if load_fails:
         recipients.for_lesson_skips.side_effect = RuntimeError("Recipients unavailable")
     opened = []
+    service = AsyncMock(spec=ObisService)
+    service.get_poll_user_ids.return_value = [11, 12, 13, 14]
 
     @asynccontextmanager
     async def container():
         opened.append(object())
-        yield SimpleNamespace(get=AsyncMock(side_effect={NotificationRecipientsQuery: recipients}.__getitem__))
+        yield SimpleNamespace(
+            get=AsyncMock(side_effect={NotificationRecipientsQuery: recipients, ObisService: service}.__getitem__)
+        )
 
     poll = AsyncMock()
     monkeypatch.setattr(jobs, "_poll_user_obis_notifications", poll)
@@ -222,11 +229,12 @@ async def test_obis_poll_keeps_recipient_union_flags_and_load_failure_boundary(m
         poll.assert_not_awaited()
         assert "Failed to load users for OBIS notification polling" in caplog.text
     else:
-        assert poll.await_count == 3
+        assert poll.await_count == 4
         assert {call.args[2:] for call in poll.await_args_list} == {
             (11, True, False),
             (12, True, True),
             (13, False, True),
+            (14, False, False),
         }
         assert all(call.args[:2] == (container, bot) for call in poll.await_args_list)
 

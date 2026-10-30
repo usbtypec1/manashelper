@@ -18,9 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-msgid "eders.loading"
-msgstr "正在加载 eders 作业…"
-
 msgid "eders.fetch_failed"
 msgstr "无法加载 eders，请稍后重试。"
 
@@ -207,9 +204,6 @@ msgstr "🚫 不添加说明"
 msgid "common.send"
 msgstr "✅ 发送"
 
-msgid "common.back_to_settings"
-msgstr "◀️ 返回设置"
-
 msgid "food.today"
 msgstr "📅 今天"
 
@@ -290,9 +284,6 @@ msgstr "🌐 语言"
 
 msgid "settings.feedback"
 msgstr "💬 发送反馈"
-
-msgid "settings.donate"
-msgstr "❤️ 支持机器人"
 
 msgid "menu.food"
 msgstr "🍉 食堂"
@@ -493,23 +484,6 @@ msgstr ""
 "\n"
 "{body}"
 
-msgid "donations.qr_coming_soon"
-msgstr "收款二维码将很快在这里显示。"
-
-msgid "donations.intro"
-msgstr ""
-"❤️ <b>帮助 Manashelper 持续运行</b>\n"
-"\n"
-"9 月 28 日，机器人的免费 AWS 账户受到限制，导致服务停止。我已将它迁移到付费服务器，让你可以继续查看课表、食堂菜单、成绩和出勤记录。\n"
-"\n"
-"你的支持将帮助你和其他 {others} 位用户分担服务器费用。金额多少都能提供帮助，每一笔捐款都会用于服务器租金。感谢你支持机器人！"
-
-msgid "donations.choose_bank"
-msgstr "请选择下方银行，查看其收款二维码："
-
-msgid "donations.qr_unavailable"
-msgstr "该银行的二维码已不可用。"
-
 msgid "feedback.sent"
 msgstr "✅ 谢谢！你的消息已发送给管理团队。"
 
@@ -542,13 +516,11 @@ msgstr "消息不能为空，且不能超过 {max} 个字符。请重试："
 msgid "feedback.delivery_failed"
 msgstr "⚠️ 无法向用户发送回复。"
 
-
 msgid "food.rate_prompt"
 msgstr "请为当天的整份菜单打1到5分。您可以修改评分。"
 
 msgid "food.rating_thanks"
 msgstr "感谢你的评分！"
-
 
 msgid "food.auto_delete_prompt"
 msgstr "🧹 此聊天中的食堂菜单消息将在以下时间后自动删除："
@@ -886,9 +858,6 @@ msgstr "查看食堂菜单"
 msgid "commands.language"
 msgstr "更改语言"
 
-msgid "commands.donate"
-msgstr "支持机器人"
-
 msgid "commands.hide_keyboard"
 msgstr "隐藏键盘"
 
@@ -1029,3 +998,6 @@ msgstr "Eders 课程资料"
 
 msgid "menu.study_week"
 msgstr "学习周"
+
+msgid "data.preparing"
+msgstr "数据正在后台准备中。请在下次更新后重试（每15分钟更新一次）。"

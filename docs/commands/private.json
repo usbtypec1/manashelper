@@ -12,10 +12,6 @@
     "description": "commands.language"
   },
   {
-    "command": "donate",
-    "description": "commands.donate"
-  },
-  {
     "command": "hide_keyboard",
     "description": "commands.hide_keyboard"
   }

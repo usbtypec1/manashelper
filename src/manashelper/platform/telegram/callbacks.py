@@ -13,7 +13,6 @@ class SettingsAction(StrEnum):
     OPEN_LANGUAGE = "open_language"
     OPEN_PHONE_NUMBERS = "open_phone_numbers"
     OPEN_FEEDBACK = "open_feedback"
-    OPEN_DONATIONS = "open_donations"
     BACK_TO_SETTINGS = "back_to_settings"
 
 

@@ -77,7 +77,8 @@ async def test_feedback_request_scope_commits_success_and_rolls_back_failure():
         sessions[2].__aexit__.assert_awaited_once()
 
 
-def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
+def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry(monkeypatch):
+    monkeypatch.setenv("EDERS_PASSWORD", "simulation-password")
     # Production routers are singletons: attach/inject them in an isolated process.
     script = dedent("""\
         import asyncio
@@ -92,7 +93,6 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
         from manashelper.modules.notifications.provider import NotificationsProvider
         from manashelper.modules.advertisements.provider import AdvertisementsProvider
         from manashelper.modules.broadcast.provider import BroadcastProvider
-        from manashelper.modules.donations.provider import DonationsProvider
         from manashelper.modules.feedback.provider import FeedbackProvider
         from manashelper.modules.food_menu.provider import FoodMenuProvider
         from manashelper.modules.student_questions.provider import StudentQuestionsProvider
@@ -108,7 +108,6 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
                 AdvertisementsProvider(),
                 StudentQuestionsProvider(),
                 UsersProvider(),
-                DonationsProvider(),
                 BroadcastProvider(),
                 FoodMenuProvider(),
             ) as container:
@@ -141,8 +140,9 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry():
                 assert names.index("study_week") == names.index("eders") + 1
                 assert names.index("study_week") < names.index("settings")
                 assert names.index("start") < names.index("locale") < names.index("timetable")
-                assert names.index("donations") < names.index("phone_numbers") < names.index("advertisement")
-                assert names.index("settings") < names.index("notifications") < names.index("donations")
+                assert names.index("notifications") < names.index("phone_numbers") < names.index("advertisement")
+                assert names.index("settings") < names.index("notifications")
+                assert "donations" not in names
                 assert names.index("student_questions") < names.index("advertisement_contact")
                 assert names.index("advertisement_contact") < names.index("start")
 

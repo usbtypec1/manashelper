@@ -313,7 +313,7 @@ def test_users_standalone_import_uses_explicit_model_registration(module):
         "from manashelper.core.database import Base; "
         "assert len(Base.metadata.tables) < 27; "
         "from manashelper.bootstrap import load_models; load_models(); configure_mappers(); "
-        "assert len(Base.metadata.tables) == 27; "
+        "assert len(Base.metadata.tables) == 28; "
         "assert Base.metadata.tables['user_courses'].c.user_id.references(Base.metadata.tables['users'].c.id)"
     )
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)

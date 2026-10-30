@@ -25,8 +25,27 @@ assumptions:
       tests/modules/eders/test_eders_http_flow.py; tests/modules/eders/test_eders_login.py;
       fingerprint eders-direct-login-2026-10-29.
     updated_at: "2026-10-29"
+  - id: persisted-snapshots-survive-upstream-failure
+    status: supported
+    claim: In the local HTTP scenarios, saved OBIS and Eders results can be read without new upstream requests after refresh.
+    reason: The application services persist parsed responses in PostgreSQL and cached reads never enter the HTTP clients.
+    verification: >-
+      On 2026-10-29, tests/modules/eders/test_eders_http_flow.py exercised real HTTP clients against the existing
+      stand-in. OBIS credentials, grades and attendance were fetched, saved, and read again without creating
+      additional transports. Eders persisted a three-activity snapshot; a later AJAX HTTP 500 failed refresh,
+      while reading still returned the previous snapshot without adding requests. Simulation request events
+      confirmed the login, course/detail reads and the injected AJAX 500. This proves the local application
+      behavior, not successful authentication or response compatibility with real university accounts.
+    source: >-
+      tests/modules/eders/test_eders_http_flow.py;
+      postman/mocks/eders/default.js; fingerprint persisted-student-snapshots-2026-10-29.
+    updated_at: "2026-10-29"
 fingerprints:
   - id: eders-direct-login-2026-10-29
     date: "2026-10-29"
     commit: "745395c707e5486a209aa53c6ab590b769d528a6 (working tree changes)"
+    cli: "1.74.0"
+  - id: persisted-student-snapshots-2026-10-29
+    date: "2026-10-29"
+    commit: "3fe9692420bc1e71d5560347d15047e4508a6b9c (working tree changes)"
     cli: "1.74.0"

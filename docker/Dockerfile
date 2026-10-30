@@ -14,7 +14,6 @@ COPY alembic.ini ./
 COPY alembic ./alembic
 COPY src ./src
 COPY docs/commands ./docs/commands
-COPY docs/requisites ./docs/requisites
 
 RUN uv sync --frozen --no-dev
 

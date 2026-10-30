@@ -1,7 +1,9 @@
-from dataclasses import dataclass
+import json
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
 
-from manashelper.modules.obis.application.credentials import ObisCredentialsService
-from manashelper.modules.obis.errors import DecryptionError, UserHasNoCredentialsError
+from manashelper.modules.obis.application.credentials import ObisCredentials, ObisCredentialsService
+from manashelper.modules.obis.errors import DecryptionError, ObisSnapshotNotReadyError, UserHasNoCredentialsError
 from manashelper.modules.obis.infrastructure.client import ObisClient
 from manashelper.modules.obis.infrastructure.parser import (
     ScrapedLessonAttendance,
@@ -9,6 +11,8 @@ from manashelper.modules.obis.infrastructure.parser import (
     parse_attendance_page,
     parse_exam_grades_page,
 )
+from manashelper.modules.obis.infrastructure.snapshot import ObisSnapshot
+from manashelper.modules.obis.infrastructure.snapshot_repository import ObisSnapshotRepository
 
 THEORY_SKIPS_THRESHOLD = 30.0
 PRACTICE_SKIPS_THRESHOLD = 20.0
@@ -71,32 +75,77 @@ class ObisService:
         self,
         credentials: ObisCredentialsService,
         obis_client: ObisClient,
+        snapshots: ObisSnapshotRepository,
     ) -> None:
         self._credentials = credentials
         self._obis_client = obis_client
+        self._snapshots = snapshots
 
     async def save_credentials(self, user_id: int, student_number: str, plain_password: str) -> None:
         await self._credentials.save_credentials(user_id, student_number, plain_password)
+        await self._snapshots.reset(user_id)
 
     async def has_credentials(self, user_id: int) -> bool:
         return await self._credentials.has_credentials(user_id)
 
     async def clear_credentials(self, user_id: int) -> None:
         await self._credentials.clear_credentials(user_id)
+        await self._snapshots.reset(user_id)
 
     async def get_exam_grades(self, user_id: int) -> list[LessonExamsModel]:
-        student_number, plain_password = await self._get_credentials(user_id)
-        html = await self._obis_client.fetch_exam_grades_html(student_number, plain_password)
-        return [_to_exams_model(lesson) for lesson in parse_exam_grades_page(html)]
+        payload = await self._get_payload(user_id, "grades")
+        return [
+            LessonExamsModel(row["lesson_name"], row["lesson_code"], [ExamModel(**exam) for exam in row["exams"]])
+            for row in json.loads(payload)
+        ]
 
     async def get_attendance(self, user_id: int) -> list[LessonAttendanceModel]:
-        student_number, plain_password = await self._get_credentials(user_id)
-        html = await self._obis_client.fetch_attendance_html(student_number, plain_password)
-        return [_to_attendance_model(lesson) for lesson in parse_attendance_page(html)]
+        return [LessonAttendanceModel(**row) for row in json.loads(await self._get_payload(user_id, "attendance"))]
 
-    async def _get_credentials(self, user_id: int) -> tuple[str, str]:
+    async def _get_payload(self, user_id: int, kind: str) -> str:
+        credentials = await self._get_credentials(user_id)
+        snapshot = await self._snapshots.get(user_id, kind)
+        if snapshot is None or snapshot.credential_marker != credentials.credential_marker:
+            raise ObisSnapshotNotReadyError
+        return snapshot.payload
+
+    async def refresh_exam_grades(self, user_id: int) -> list[LessonExamsModel]:
+        await self._credentials.lock(user_id)
+        credentials = await self._get_credentials(user_id)
+        student_number, plain_password = credentials.student_number, credentials.plain_password
+        html = await self._obis_client.fetch_exam_grades_html(student_number, plain_password)
+        lessons = [_to_exams_model(lesson) for lesson in parse_exam_grades_page(html)]
+        await self._save_snapshot(user_id, "grades", credentials.credential_marker, lessons)
+        return lessons
+
+    async def refresh_attendance(self, user_id: int) -> list[LessonAttendanceModel]:
+        await self._credentials.lock(user_id)
+        credentials = await self._get_credentials(user_id)
+        student_number, plain_password = credentials.student_number, credentials.plain_password
+        html = await self._obis_client.fetch_attendance_html(student_number, plain_password)
+        lessons = [_to_attendance_model(lesson) for lesson in parse_attendance_page(html)]
+        await self._save_snapshot(user_id, "attendance", credentials.credential_marker, lessons)
+        return lessons
+
+    async def _save_snapshot(
+        self, user_id: int, kind: str, marker: str, lessons: list[LessonExamsModel] | list[LessonAttendanceModel]
+    ) -> None:
+        await self._snapshots.save(
+            ObisSnapshot(
+                user_id=user_id,
+                kind=kind,
+                credential_marker=marker,
+                payload=json.dumps([asdict(lesson) for lesson in lessons], ensure_ascii=False),
+                fetched_at=datetime.now(UTC),
+            )
+        )
+
+    async def get_poll_user_ids(self) -> list[int]:
+        return await self._snapshots.get_poll_user_ids()
+
+    async def _get_credentials(self, user_id: int) -> ObisCredentials:
         try:
             credentials = await self._credentials.get_credentials(user_id)
         except DecryptionError as error:
             raise UserHasNoCredentialsError(user_id) from error
-        return credentials.student_number, credentials.plain_password
+        return credentials

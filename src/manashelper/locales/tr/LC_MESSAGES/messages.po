@@ -18,9 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-msgid "eders.loading"
-msgstr "eders ödevleri yükleniyor…"
-
 msgid "eders.fetch_failed"
 msgstr "eders yüklenemedi. Daha sonra tekrar deneyin."
 
@@ -61,7 +58,10 @@ msgid "eders.empty"
 msgstr "Bu filtreye uyan öğe yok."
 
 msgid "eders.filter_note"
-msgstr "Kaynak: eders not özetindeki dersler. Doğrulanmış saatler Asia/Bishkek saat dilimindedir. Saat dilimi doğrulanmamış veya çelişen tarihler zaman filtrelerine dahil edilmez; “Kesin tarihi yok” bölümüne bakın. Çalışmaları eders üzerinde tamamlayıp teslim edin."
+msgstr ""
+"Kaynak: eders not özetindeki dersler. Doğrulanmış saatler Asia/Bishkek saat dilimindedir. Saat dilimi doğrulanmamış "
+"veya çelişen tarihler zaman filtrelerine dahil edilmez; “Kesin tarihi yok” bölümüne bakın. Çalışmaları eders üzerinde"
+" tamamlayıp teslim edin."
 
 msgid "eders.opens"
 msgstr "Açılış: {value}"
@@ -124,7 +124,9 @@ msgid "eders.setting_archived"
 msgstr "180 günden eski tarihleri gizle"
 
 msgid "eders.settings_header"
-msgstr "eders hatırlatıcıları. Düğmeler ayarları açıp kapatır. /eders ile ödevleri, /week ile önümüzdeki yedi günü görüntüleyin."
+msgstr ""
+"eders hatırlatıcıları. Düğmeler ayarları açıp kapatır. /eders ile ödevleri, /week ile önümüzdeki yedi günü "
+"görüntüleyin."
 
 msgid "eders.week_header"
 msgstr "Ders haftam: {start}–{end} (Asia/Bishkek)"
@@ -207,9 +209,6 @@ msgstr "🚫 Yorum yok"
 msgid "common.send"
 msgstr "✅ Gönder"
 
-msgid "common.back_to_settings"
-msgstr "◀️ Ayarlara dön"
-
 msgid "food.today"
 msgstr "📅 Bugün"
 
@@ -290,9 +289,6 @@ msgstr "🌐 Dil"
 
 msgid "settings.feedback"
 msgstr "💬 Geri bildirim gönder"
-
-msgid "settings.donate"
-msgstr "❤️ Botu destekle"
 
 msgid "menu.food"
 msgstr "🍉 Yemek"
@@ -496,25 +492,6 @@ msgstr ""
 "\n"
 "{body}"
 
-msgid "donations.qr_coming_soon"
-msgstr "Ödeme QR kodları yakında burada görünecek."
-
-msgid "donations.intro"
-msgstr ""
-"❤️ <b>Manashelper'ın çalışmaya devam etmesine destek olun</b>\n"
-"\n"
-"28 Eylül'de ücretsiz AWS hesabına getirilen kısıtlamalar nedeniyle bot durdu. Ders programınızı, yemekhane menüsünü, "
-"notlarınızı ve devamsızlık bilgilerinizi görmeye devam edebilmeniz için botu ücretli bir sunucuya taşıdım.\n"
-"\n"
-"Katkınız, sizin ve botu kullanan diğer {others} kişinin erişimi için sunucu masrafını karşılamaya yardımcı olur. Her "
-"miktar değerlidir; bağışların tamamı sunucu kirasına harcanacaktır. Desteğiniz için teşekkürler!"
-
-msgid "donations.choose_bank"
-msgstr "Ödeme QR kodunu görmek için bir banka seçin:"
-
-msgid "donations.qr_unavailable"
-msgstr "Bu bankanın QR kodu artık kullanılamıyor."
-
 msgid "feedback.sent"
 msgstr "✅ Teşekkürler! Mesajınız yönetime gönderildi."
 
@@ -547,13 +524,11 @@ msgstr "Mesaj boş olamaz ve en fazla {max} karakter uzunluğunda olmalıdır. L
 msgid "feedback.delivery_failed"
 msgstr "⚠️ Yanıt kullanıcıya iletilemedi."
 
-
 msgid "food.rate_prompt"
 msgstr "Günün menüsüne 1 ile 5 arasında puan verin. Puanınızı değiştirebilirsiniz."
 
 msgid "food.rating_thanks"
 msgstr "Değerlendirmeniz için teşekkürler!"
-
 
 msgid "food.auto_delete_prompt"
 msgstr "🧹 Bu sohbette yemek menüsü mesajlarını şu süre sonra otomatik sil:"
@@ -891,9 +866,6 @@ msgstr "Yemekhane menüsünü görüntüle"
 msgid "commands.language"
 msgstr "Dili değiştir"
 
-msgid "commands.donate"
-msgstr "Botu destekle"
-
 msgid "commands.hide_keyboard"
 msgstr "Klavyeyi gizle"
 
@@ -982,7 +954,9 @@ msgid "student_questions.beta_follow_up"
 msgstr "Beta testine katılım için bir ay içinde sizinle iletişime geçeceğiz."
 
 msgid "student_questions.already_completed"
-msgstr "Bu anketi daha önce doldurdunuz. Tekrar doldurmak ister misiniz? Tamamladığınızda yeni yanıtlar önceki yanıtların yerini alacak."
+msgstr ""
+"Bu anketi daha önce doldurdunuz. Tekrar doldurmak ister misiniz? Tamamladığınızda yeni yanıtlar önceki yanıtların "
+"yerini alacak."
 
 msgid "student_questions.fill_again"
 msgstr "Tekrar doldur"
@@ -1034,3 +1008,6 @@ msgstr "Eders materyalleri"
 
 msgid "menu.study_week"
 msgstr "Ders haftası"
+
+msgid "data.preparing"
+msgstr "Veriler arka planda hazırlanıyor. Sonraki güncellemeden sonra tekrar deneyin (her 15 dakikada bir)."

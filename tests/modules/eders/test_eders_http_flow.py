@@ -7,8 +7,11 @@ from types import SimpleNamespace
 import httpx
 import pytest
 
+from manashelper.modules.eders.application.eders import EdersService
+from manashelper.modules.eders.application.tracking import EdersTrackingService
 from manashelper.modules.eders.errors import EdersFetchError, EdersSessionExpiredError
 from manashelper.modules.eders.infrastructure import client as eders_client
+from manashelper.modules.eders.infrastructure.repository import EdersRepository
 from manashelper.modules.eders.infrastructure.serialization import serialize_snapshot
 from manashelper.modules.obis.application.credentials import ObisCredentialsService
 from manashelper.modules.obis.application.obis import ObisService
@@ -17,7 +20,10 @@ from manashelper.modules.obis.infrastructure import client as obis_client
 from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL, ObisClient
 from manashelper.modules.obis.infrastructure.credentials_repository import ObisCredentialsRepository
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
+from manashelper.modules.obis.infrastructure.snapshot_repository import ObisSnapshotRepository
 from manashelper.modules.users.infrastructure.user import User
+from manashelper.modules.users.infrastructure.user_repository import UserRepository
+from manashelper.modules.users.queries import UsersQuery
 from tests.modules.eders.factories import make_eders_client
 
 PORT = os.environ.get("EDERS_SIMULATION_PORT")
@@ -132,13 +138,15 @@ async def test_obis_http_credentials_grades_and_attendance_run_through_real_clie
     await session.flush()
     obis = ObisClient()
     account = ObisCredentialsService(ObisCredentialsRepository(session), obis, crypto)
-    service = ObisService(account, obis)
+    service = ObisService(account, obis, ObisSnapshotRepository(session))
     await service.save_credentials(user.id, "fake-student", "fake-password")
     assert user.encrypted_password != "fake-password" and crypto.decrypt(user.encrypted_password) == "fake-password"
-    grades = await service.get_exam_grades(user.id)
-    attendance = await service.get_attendance(user.id)
+    grades = await service.refresh_exam_grades(user.id)
+    attendance = await service.refresh_attendance(user.id)
     assert grades[0].exams[0].score == "80" and grades[0].lesson_code == "MATH"
     assert attendance[0].theory_skips_percentage == 12.5 and attendance[0].practice_skips_percentage == 6.25
+    assert await service.get_exam_grades(user.id) == grades
+    assert await service.get_attendance(user.id) == attendance
     assert len(transports) == 3
     assert transports[1].paths[-1] == ("GET", "/vs-ders/taken-grades")
     assert transports[2].paths[-1] == ("GET", "/vs-ders/taken-lessons")
@@ -152,3 +160,25 @@ async def test_obis_http_failure_preserves_error_type(monkeypatch, mode, error):
     install_obis_client(monkeypatch, mode)
     with pytest.raises(error):
         await ObisClient().fetch_exam_grades_html("fake-student", "fake-password")
+
+
+async def test_eders_background_refresh_persists_snapshot_and_read_survives_upstream_failure(session, monkeypatch):
+    transports = install_client(monkeypatch)
+    user = User(id=975102, full_name="Cache fixture", student_number="fake-student")
+    session.add(user)
+    await session.flush()
+    crypto = CryptoService(SimpleNamespace(obis_encryption_key=base64.b64encode(bytes(range(32))).decode()))
+    account = ObisCredentialsService(ObisCredentialsRepository(session), ObisClient(), crypto)
+    tracking = EdersTrackingService(EdersRepository(session), UsersQuery(UserRepository(session)))
+    service = EdersService(account, make_eders_client(), tracking)
+    refreshed = await service.refresh_snapshot(user.id)
+    await session.flush()
+    assert len(refreshed.activities) == 3
+    assert await service.get_snapshot(user.id) == refreshed
+    assert len(transports) == 1
+    failed_transports = install_client(monkeypatch, "html-error")
+    with pytest.raises(EdersFetchError):
+        await service.refresh_snapshot(user.id)
+    paths = list(failed_transports[0].paths)
+    assert await service.get_snapshot(user.id) == refreshed
+    assert failed_transports[0].paths == paths

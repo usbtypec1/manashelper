@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     moderation_chat_id: int = Field(alias="MODERATION_CHAT_ID")
     admin_chat_id: int = Field(alias="ADMIN_CHAT_ID")
     eders_password: SecretStr | None = Field(default=None, alias="EDERS_PASSWORD")
-    eders_poll_minutes: int | None = Field(default=30, alias="EDERS_POLL_MINUTES", ge=15, le=60)
+    eders_poll_minutes: int | None = Field(default=15, alias="EDERS_POLL_MINUTES", ge=15, le=60)
 
     @property
     def eders_enabled(self) -> bool:

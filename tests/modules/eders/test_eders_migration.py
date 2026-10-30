@@ -101,7 +101,7 @@ async def test_poll_failure_aborts_only_current_user_and_preserves_call_order(fa
     async def pending(user_id, now):
         return await operation("pending", user_id)
 
-    service.get_snapshot.side_effect = refresh
+    service.refresh_snapshot.side_effect = refresh
     locales.get_locale.side_effect = locale
     tracking.pending_events.side_effect = pending
     dependencies = {EdersTrackingService: tracking, PollEdersUser: PollEdersUser(service, tracking, locales)}

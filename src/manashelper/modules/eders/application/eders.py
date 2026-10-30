@@ -75,6 +75,13 @@ class EdersService:
     async def get_snapshot(self, user_id: int) -> EdersSnapshot:
         await self._tracking.get_settings(user_id)
         student_number = await self._credentials.get_student_number(user_id)
+        marker = hashlib.sha256(student_number.encode()).hexdigest()
+        return await self._tracking.get_snapshot(user_id, marker)
+
+    async def refresh_snapshot(self, user_id: int) -> EdersSnapshot:
+        await self._tracking.get_settings(user_id)
+        await self._tracking.lock(user_id)
+        student_number = await self._credentials.get_student_number(user_id)
         snapshot = await self._client.fetch_snapshot(student_number)
         marker = hashlib.sha256(student_number.encode()).hexdigest()
         return await self._tracking.observe(user_id, marker, snapshot)

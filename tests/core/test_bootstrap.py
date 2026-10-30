@@ -23,6 +23,7 @@ EXPECTED_TABLES = {
     "lesson_history",
     "lessons",
     "notification_settings",
+    "obis_snapshots",
     "scheduled_message_deletions",
     "student_questions_responses",
     "user_courses",

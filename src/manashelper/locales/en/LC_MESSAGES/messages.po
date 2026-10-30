@@ -18,9 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-msgid "eders.loading"
-msgstr "Loading eders assignments…"
-
 msgid "eders.fetch_failed"
 msgstr "Could not load eders. Try again later."
 
@@ -61,7 +58,9 @@ msgid "eders.empty"
 msgstr "No items match this filter."
 
 msgid "eders.filter_note"
-msgstr "Source: courses listed in the eders grade overview. Confirmed times use Asia/Bishkek. Dates with an unverified timezone or conflicts are excluded from time filters; see “Unknown deadline”. Complete and submit work on eders."
+msgstr ""
+"Source: courses listed in the eders grade overview. Confirmed times use Asia/Bishkek. Dates with an unverified "
+"timezone or conflicts are excluded from time filters; see “Unknown deadline”. Complete and submit work on eders."
 
 msgid "eders.opens"
 msgstr "Opens: {value}"
@@ -207,9 +206,6 @@ msgstr "🚫 No comment"
 msgid "common.send"
 msgstr "✅ Send"
 
-msgid "common.back_to_settings"
-msgstr "◀️ Back to settings"
-
 msgid "food.today"
 msgstr "📅 Today"
 
@@ -290,9 +286,6 @@ msgstr "🌐 Language"
 
 msgid "settings.feedback"
 msgstr "💬 Send feedback"
-
-msgid "settings.donate"
-msgstr "❤️ Support the bot"
 
 msgid "menu.food"
 msgstr "🍉 Food"
@@ -496,25 +489,6 @@ msgstr ""
 "\n"
 "{body}"
 
-msgid "donations.qr_coming_soon"
-msgstr "Payment QR codes will appear here soon."
-
-msgid "donations.intro"
-msgstr ""
-"❤️ <b>Help keep Manashelper running</b>\n"
-"\n"
-"On September 28, the bot stopped working after restrictions on its free AWS account. I moved it to a paid server so "
-"you can keep checking your schedule, cafeteria menu, grades and attendance.\n"
-"\n"
-"Your contribution helps cover the server for you and {others} other bot users. Any amount helps, and every donation "
-"goes toward server rent. Thank you for supporting the bot!"
-
-msgid "donations.choose_bank"
-msgstr "Choose a bank below to see its payment QR code:"
-
-msgid "donations.qr_unavailable"
-msgstr "This bank's QR code is no longer available."
-
 msgid "feedback.sent"
 msgstr "✅ Thank you! Your message has been sent to the administration."
 
@@ -547,13 +521,11 @@ msgstr "The message can't be empty and must be at most {max} characters long. Pl
 msgid "feedback.delivery_failed"
 msgstr "⚠️ Failed to deliver the reply to the user."
 
-
 msgid "food.rate_prompt"
 msgstr "Rate the day's menu from 1 to 5. You can change your rating."
 
 msgid "food.rating_thanks"
 msgstr "Thanks for your rating!"
-
 
 msgid "food.auto_delete_prompt"
 msgstr "🧹 Auto-delete food menu messages in this chat after:"
@@ -895,9 +867,6 @@ msgstr "View the cafeteria menu"
 msgid "commands.language"
 msgstr "Change language"
 
-msgid "commands.donate"
-msgstr "Support the bot"
-
 msgid "commands.hide_keyboard"
 msgstr "Hide the keyboard"
 
@@ -986,7 +955,9 @@ msgid "student_questions.beta_follow_up"
 msgstr "We will contact you within a month to take part in the beta test."
 
 msgid "student_questions.already_completed"
-msgstr "You have already completed this survey. Would you like to fill it out again? Once completed, the new response will replace the previous one."
+msgstr ""
+"You have already completed this survey. Would you like to fill it out again? Once completed, the new response will "
+"replace the previous one."
 
 msgid "student_questions.fill_again"
 msgstr "Fill out again"
@@ -1038,3 +1009,6 @@ msgstr "Eders materials"
 
 msgid "menu.study_week"
 msgstr "Study week"
+
+msgid "data.preparing"
+msgstr "Data is being prepared in the background. Please try again after the next update (every 15 minutes)."

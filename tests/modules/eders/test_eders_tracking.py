@@ -128,7 +128,7 @@ async def test_eders_needs_only_student_number_and_polling_includes_it(session, 
     client, crypto = AsyncMock(), AsyncMock()
     client.fetch_snapshot.return_value = EdersSnapshot((item(),), NOW)
     account = ObisCredentialsService(ObisCredentialsRepository(session), AsyncMock(), crypto)
-    result = await EdersService(account, client, tracking).get_snapshot(user.id)
+    result = await EdersService(account, client, tracking).refresh_snapshot(user.id)
     assert result.activities[0].id == 20
     client.fetch_snapshot.assert_awaited_once_with("fake-student")
     crypto.decrypt.assert_not_called()

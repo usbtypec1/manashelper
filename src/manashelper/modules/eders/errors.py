@@ -2,6 +2,10 @@ class EdersFetchError(Exception):
     pass
 
 
+class EdersSnapshotNotReadyError(Exception):
+    pass
+
+
 class EdersSessionExpiredError(EdersFetchError):
     pass
 

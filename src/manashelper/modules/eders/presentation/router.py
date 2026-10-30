@@ -11,7 +11,12 @@ from dishka import FromDishka
 from manashelper.modules.eders.application.eders import EdersService, filter_activities
 from manashelper.modules.eders.application.models import DeadlineFilter, EdersSnapshot
 from manashelper.modules.eders.application.tracking import EdersTrackingService
-from manashelper.modules.eders.errors import EdersFetchError, EdersParseError, EdersUnsafeUrlError
+from manashelper.modules.eders.errors import (
+    EdersFetchError,
+    EdersParseError,
+    EdersSnapshotNotReadyError,
+    EdersUnsafeUrlError,
+)
 from manashelper.modules.eders.presentation.callbacks import EdersPageCallback, EdersSettingCallback
 from manashelper.modules.eders.presentation.formatter import format_activity_page
 from manashelper.modules.eders.presentation.keyboards import build_eders_keyboard, build_eders_settings_keyboard
@@ -22,6 +27,7 @@ from manashelper.platform.telegram.filters.translated_text import TranslatedText
 
 router = Router(name="eders")
 SNAPSHOT_KEY = "eders_snapshot"
+SNAPSHOT_OPENED_AT_KEY = "eders_snapshot_opened_at"
 SNAPSHOT_TTL = timedelta(minutes=15)
 
 
@@ -38,11 +44,13 @@ async def on_eders_command(
     if message.from_user is None:
         return
     await state.update_data({SNAPSHOT_KEY: None})
-    await message.answer(_("eders.loading"))
     try:
         snapshot = await eders_service.get_snapshot(message.from_user.id)
     except UserNotFoundError:
         await message.answer(_("common.start_required"))
+        return
+    except EdersSnapshotNotReadyError:
+        await message.answer(_("data.preparing"))
         return
     except UserHasNoCredentialsError:
         await message.answer(_("obis.credentials_missing"), reply_markup=build_no_credentials_keyboard())
@@ -68,7 +76,7 @@ async def on_eders_command(
                 if search in f"{item.course.name} {item.section} {item.name} {item.description}".casefold()
             ),
         )
-    await state.update_data({SNAPSHOT_KEY: snapshot})
+    await state.update_data({SNAPSHOT_KEY: snapshot, SNAPSHOT_OPENED_AT_KEY: datetime.now(UTC)})
     settings = await tracking.get_settings(message.from_user.id)
     activities = filter_activities(snapshot.activities, selected, datetime.now(UTC), settings.hide_archived)
     await message.answer(
@@ -89,7 +97,8 @@ async def on_eders_page(
     data = await state.get_data()
     snapshot = data.get(SNAPSHOT_KEY)
     now = datetime.now(UTC)
-    if not isinstance(snapshot, EdersSnapshot) or now - snapshot.fetched_at > SNAPSHOT_TTL:
+    opened_at = data.get(SNAPSHOT_OPENED_AT_KEY, snapshot.fetched_at if isinstance(snapshot, EdersSnapshot) else now)
+    if not isinstance(snapshot, EdersSnapshot) or now - opened_at > SNAPSHOT_TTL:
         await callback.answer(_("eders.expired"), show_alert=True)
         return
     settings = await tracking.get_settings(callback.from_user.id)
