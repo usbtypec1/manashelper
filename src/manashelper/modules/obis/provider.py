@@ -7,6 +7,7 @@ from manashelper.modules.obis.application.polling import PollObisUser
 from manashelper.modules.obis.infrastructure.client import ObisClient
 from manashelper.modules.obis.infrastructure.credentials_repository import ObisCredentialsRepository
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
+from manashelper.modules.obis.infrastructure.snapshot_repository import ObisSnapshotRepository
 from manashelper.modules.obis.infrastructure.user_exam_grade_repository import UserExamGradeRepository
 from manashelper.modules.obis.infrastructure.user_lesson_attendance_repository import UserLessonAttendanceRepository
 
@@ -20,6 +21,7 @@ class ObisProvider(Provider):
     credentials = provide(ObisCredentialsService)
     grades = provide(UserExamGradeRepository)
     attendance = provide(UserLessonAttendanceRepository)
+    snapshots = provide(ObisSnapshotRepository)
     service = provide(ObisService)
     notifications = provide(ObisNotificationService)
     polling = provide(PollObisUser)

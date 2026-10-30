@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.modules.users.infrastructure.user import User
@@ -11,3 +12,8 @@ class ObisCredentialsRepository:
 
     async def get_by_user_id(self, user_id: int) -> User | None:
         return await self._session.get(User, user_id)
+
+    async def lock(self, user_id: int) -> None:
+        await self._session.execute(
+            select(User).where(User.id == user_id).with_for_update().execution_options(populate_existing=True)
+        )

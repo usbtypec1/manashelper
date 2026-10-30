@@ -13,7 +13,13 @@ from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
 from manashelper.modules.obis.application.obis import ObisService
-from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
+from manashelper.modules.obis.errors import (
+    ObisLoginError,
+    ObisParseError,
+    ObisSnapshotNotReadyError,
+    UserHasNoCredentialsError,
+    UserNotFoundError,
+)
 from manashelper.modules.obis.presentation.callbacks import ObisAction, ObisCallback, ObisResultsPageCallback
 from manashelper.modules.obis.presentation.formatter import format_attendance_pages, format_exam_grades_pages
 from manashelper.modules.obis.presentation.keyboards import (
@@ -51,6 +57,9 @@ async def _show_obis_results[T](
         lessons = await fetch(message.from_user.id)
     except UserNotFoundError:
         await sent.edit_text(_("common.start_required"))
+        return
+    except ObisSnapshotNotReadyError:
+        await sent.edit_text(_("data.preparing"))
         return
     except UserHasNoCredentialsError:
         await sent.edit_text(
@@ -173,6 +182,7 @@ async def on_clear_credentials_requested(callback_query: CallbackQuery) -> None:
 async def on_confirm_clear_credentials(
     callback_query: CallbackQuery,
     obis_service: FromDishka[ObisService],
+    state: FSMContext,
 ) -> None:
     try:
         await obis_service.clear_credentials(callback_query.from_user.id)
@@ -180,6 +190,7 @@ async def on_confirm_clear_credentials(
         await callback_query.answer(_("common.start_required"), show_alert=True)
         return
 
+    await state.clear()
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(
             _("obis.credentials_removed"), reply_markup=build_obis_settings_keyboard(has_credentials=False)

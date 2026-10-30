@@ -22,6 +22,7 @@ class ObisCredentialsService:
         self._crypto = crypto
 
     async def save_credentials(self, user_id: int, student_number: str, plain_password: str) -> None:
+        await self.lock(user_id)
         user = await self._get_user(user_id)
         await self._client.verify_credentials(student_number, plain_password)
         encrypted_password = self._crypto.encrypt(plain_password)
@@ -33,6 +34,7 @@ class ObisCredentialsService:
         return user.student_number is not None and user.encrypted_password is not None
 
     async def clear_credentials(self, user_id: int) -> None:
+        await self.lock(user_id)
         user = await self._get_user(user_id)
         user.student_number = None
         user.encrypted_password = None
@@ -44,6 +46,15 @@ class ObisCredentialsService:
         password = self._crypto.decrypt(user.encrypted_password)
         marker = hashlib.sha256(user.encrypted_password.encode()).hexdigest()
         return ObisCredentials(user.student_number, password, marker)
+
+    async def get_student_number(self, user_id: int) -> str:
+        user = await self._get_user(user_id)
+        if not user.student_number:
+            raise UserHasNoCredentialsError(user_id)
+        return user.student_number
+
+    async def lock(self, user_id: int) -> None:
+        await self._repository.lock(user_id)
 
     async def _get_user(self, user_id: int) -> User:
         user = await self._repository.get_by_user_id(user_id)

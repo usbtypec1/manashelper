@@ -1,0 +1,83 @@
+purpose:
+  stands_in_for: Eders Moodle form login, legacy OBIS SSO fallback, course AJAX and read-only pages.
+  unblocks: Local verification of direct and fallback Eders authentication without real student credentials.
+assumptions:
+  - id: direct-moodle-form-login
+    status: supported
+    claim: The anonymous Eders login page exposes a POST form with anchor, logintoken, username and password.
+    reason: These fields and the form action were inspected on the real anonymous login page.
+    verification: On 2026-10-29, GET returned HTTP 200; parsed form action was the HTTPS login/index.php URL.
+    source: https://eders.manas.edu.kg/login/index.php
+    updated_at: "2026-10-29"
+  - id: shared-password-success-redirect
+    status: unknown
+    claim: The configured shared password authenticates each saved student number and returns a page with sesskey.
+    reason: The user supplied this contract; no real shared password was available for authenticated verification.
+    verification: >-
+      On 2026-10-29, the real client passed local simulation tests for form encoding, fresh login token,
+      cookies, POST/303/GET redirects, course pagination, details, denied login, missing token, invalid JSON,
+      HTTP failure and one whole-snapshot retry after session expiry. Simulation request events confirmed
+      GET login/index.php, POST login/index.php (303), GET login/index.php?loginredirect=1 (303),
+      GET my/courses.php (200). Full suite on a clean PostgreSQL 18 database: 664 passed, 5 skipped.
+      These results establish caller behavior against the stand-in; real successful login remains unverified.
+    source: >-
+      User-provided login contract; postman/mocks/eders/default.js;
+      tests/modules/eders/test_eders_http_flow.py; tests/modules/eders/test_eders_login.py;
+      fingerprint eders-direct-login-2026-10-29.
+    updated_at: "2026-10-29"
+  - id: persisted-snapshots-survive-upstream-failure
+    status: supported
+    claim: In the local HTTP scenarios, saved OBIS and Eders results can be read without new upstream requests after refresh.
+    reason: The application services persist parsed responses in PostgreSQL and cached reads never enter the HTTP clients.
+    verification: >-
+      On 2026-10-29, tests/modules/eders/test_eders_http_flow.py exercised real HTTP clients against the existing
+      stand-in. OBIS credentials, grades and attendance were fetched, saved, and read again without creating
+      additional transports. Eders persisted a three-activity snapshot; a later AJAX HTTP 500 failed refresh,
+      while reading still returned the previous snapshot without adding requests. Simulation request events
+      confirmed the login, course/detail reads and the injected AJAX 500. This proves the local application
+      behavior, not successful authentication or response compatibility with real university accounts.
+    source: >-
+      tests/modules/eders/test_eders_http_flow.py;
+      postman/mocks/eders/default.js; fingerprint persisted-student-snapshots-2026-10-29.
+    updated_at: "2026-10-29"
+  - id: direct-login-obis-fallback-local-scenarios
+    status: supported
+    claim: In the simulated login failures, Eders tries the Moodle form first and then OBIS SSO using saved credentials.
+    reason: Real application services and HTTP clients completed refreshes against the repository-owned stand-in.
+    verification: >-
+      On 2026-10-30, Eders and OBIS tests passed with the local Postman simulation: 230 passed, 1 skipped.
+      Denied form login, missing logintoken, HTTP 503 and a rendered SSO link all reached a three-activity snapshot.
+      Request events confirmed the failed direct attempt, OBIS GET/POST site/login, site/eders,
+      auth/userkey/login.php, my/index.php with a language parameter and successful Moodle course AJAX.
+      Denied OBIS login and an SSO response containing a login form both failed without replacing the saved snapshot.
+      Unit tests confirmed that successful direct login and downstream fetch errors do not decrypt the OBIS password.
+      Fingerprint eders-obis-fallback-2026-10-30. This establishes local caller behavior only.
+    source: >-
+      tests/modules/eders/test_eders_http_flow.py; tests/modules/eders/test_cached_snapshots.py;
+      tests/modules/eders/test_eders_login.py; postman/mocks/eders/default.js.
+    updated_at: "2026-10-30"
+  - id: real-obis-sso-availability
+    status: unknown
+    claim: The real OBIS site/eders endpoint still authenticates students into Eders after a direct Moodle login failure.
+    reason: The legacy request sequence was recovered from repository history; no real account was used in this run.
+    verification: >-
+      On 2026-10-30, simulated redirect and rendered-link variants completed successfully.
+      This does not establish current real OBIS or Eders availability, shared-password validity or account eligibility.
+      A real authenticated refresh is still needed to verify the upstream services.
+    source: >-
+      git show 3fe9692^:src/manashelper/modules/eders/infrastructure/client.py;
+      postman/mocks/eders/default.js; tests/modules/eders/test_eders_http_flow.py.
+    updated_at: "2026-10-30"
+fingerprints:
+  - id: eders-direct-login-2026-10-29
+    date: "2026-10-29"
+    commit: "745395c707e5486a209aa53c6ab590b769d528a6 (working tree changes)"
+    cli: "1.74.0"
+  - id: persisted-student-snapshots-2026-10-29
+    date: "2026-10-29"
+    commit: "3fe9692420bc1e71d5560347d15047e4508a6b9c (working tree changes)"
+    cli: "1.74.0"
+  - id: eders-obis-fallback-2026-10-30
+    date: "2026-10-30"
+    commit: "5454cb30da52f2d0d7d0d1440b40605e70781acb (working tree changes)"
+    cli: "1.74.0"

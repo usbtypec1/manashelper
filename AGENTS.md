@@ -12,7 +12,7 @@ Postgres, Dishka dependency injection, Alembic, APScheduler and gettext. There i
 
 Current features include the faculty/department/course catalog and course tracking, timetable and lesson search,
 cafeteria menus, OBIS grades and attendance, notification settings, scheduled change notifications, advertisements
-with moderation and a channel, feedback and admin broadcasts, and `/donate` with bank QR codes. Read the relevant
+with moderation and a channel, feedback and admin broadcasts. Read the relevant
 router, service, repository, and tests before changing a feature. `features/` holds some feature specifications.
 
 ## Architecture
@@ -23,8 +23,6 @@ and `core/time.py` owns the shared timezone. Schedule owns its application text 
 Empty legacy `bot/`, `services/`, `repositories/` and `scraping/` packages were removed. Feedback, advertisements and the survey live in
 `modules/feedback/`, `modules/advertisements/` and `modules/student_questions/`, with REQUEST providers in `main.py`.
 Advertisements separates presentation, application and infrastructure, with domain enums; feedback and the survey stay flat.
-Donations lives in flat `modules/donations/`: catalog, Telegram QR adapter, application service and presentation.
-Its provider keeps DonationQrService in APP for shared bounded caching and DonationService in REQUEST.
 Broadcast lives in flat `modules/broadcast/`: SendBroadcast uses UsersQuery and a delivery protocol;
 Telegram localization, HTML and API errors stay in its sender adapter. Its provider retains REQUEST scope.
 Food menu lives in `modules/food_menu/` with application, presentation, infrastructure, jobs and provider.
@@ -48,7 +46,8 @@ scope for all its dependencies, including public UsersQuery (counts, IDs, existe
 shared user-locale boundary for middleware and delivery; UserContactService supplies plain contact models.
 User keeps OBIS credential columns and the Schedule tracked_courses relationship without schema changes.
 OBIS owns credential access through ObisCredentialsRepository on the unchanged User row.
-EdersService reads plain credentials and an opaque marker through ObisCredentialsService; it no longer reads ORM/ciphertext.
+EdersService reads the student number without decrypting a password for direct login and cached snapshots.
+Only a failed direct login triggers OBIS credential decryption and the legacy OBIS SSO fallback.
 Eders tracking checks existence through UsersQuery; its repository owns credential eligibility SQL and the user-row lock.
 Shared Telegram navigation lives in `platform/telegram/navigation.py`; feature routers must not import the start router for it.
 Keep feature code with its owner and limit changes to the requested scope. See `docs/ARCHITECTURE.md`
@@ -83,21 +82,33 @@ OBIS lives in `modules/obis/`: application facade/credentials/snapshot compariso
 credential and snapshot repositories/ORM, Telegram presentation, provider and jobs. ObisProvider keeps
 ObisClient/CryptoService in APP and all other dependencies in REQUEST. Public errors live in errors.py.
 ObisService retains save/has/clear/get methods; ObisCredentialsService owns verification/storage/decryption.
-Its frozen read model hides secrets in repr; Eders marker stays SHA-256 of ciphertext, not plaintext.
-The shared login/new_http_client functions are public OBIS infrastructure reused by Eders with the same cookies.
+Its frozen read model hides secrets in repr; OBIS credentials retain the SHA-256 ciphertext marker.
+Eders owns its HTTP client: try direct Moodle form login first, then the legacy OBIS login and /site/eders SSO flow.
 PollObisUser handles expected auth/parse errors; Telegram sender owns locale/HTML and skips TelegramAPIError.
 Unexpected errors abort that user and are logged by the job, without stopping the next user.
 The first grade snapshot and attendance's first row are silent. Later new or changed nonempty grades notify.
 Saving verifies login and encrypts the password before assigning either credential field, so login/encryption failures
-preserve both previous values even if caught inside a committed scope. Preserve hourly scheduling, FSM,
+preserve both previous values even if caught inside a committed scope. Preserve 15-minute polling, FSM,
 password masking and encryption format.
+
+OBIS and Eders user screens read persisted snapshots only, including Study week. Background jobs refresh both
+every 15 minutes (Eders retains its existing interval override). Notification toggles affect delivery, not
+synchronization. Missing snapshots show a preparation message; failed refreshes preserve the last successful data.
+Snapshot reads must not acquire locks held during HTTP fetches. OBIS credential changes clear cached results
+and comparison baselines; Eders validates its student-number marker.
 
 Eders lives in `modules/eders/`: application snapshot/filter/tracking/polling, infrastructure client/parser/URL validation,
 serialization/repository/ORM, Telegram presentation, jobs and provider. EdersProvider keeps the client APP and other
 dependencies REQUEST. PollEdersUser preserves refresh→locale→pending→send→ack ordering; its Telegram sender groups
 materials and yields delivered events for immediate acknowledgement. TelegramAPIError skips one message without ack;
 unexpected errors abort only that user. Preserve snapshot JSON, event keys, baseline/account/schema suppression,
-monotonic observations, user-row FOR UPDATE before first state, and the one-retry whole-snapshot SSO flow.
+monotonic observations, user-row FOR UPDATE before first state, and the one-retry whole-snapshot login flow.
+The optional EDERS_PASSWORD env value is the shared Moodle password; obtain logintoken from the form for every login
+and detect successful login by an authenticated page with sesskey, without a redirect URL allowlist.
+Missing or empty EDERS_PASSWORD disables Eders and Study week routers,
+main-menu buttons, Eders notification settings and polling. Legacy commands remain hidden aliases when enabled.
+Eders polling requires only a nonempty saved student number; the snapshot marker is SHA-256 of that number.
+The first sync after switching from the ciphertext marker establishes a silent account baseline.
 Eders exceptions are public in `modules/eders/errors.py`; other features must not import them through HTTP/parser modules.
 
 Study week is flat `modules/study_week/`: application.py, formatter.py, router.py and provider.py.
@@ -143,7 +154,7 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
   Users without a `NotificationSettings` row have all toggles enabled.
   Food menu, Schedule, OBIS and Eders jobs live in their modules. Schedule loads course IDs in one request scope,
   then opens another per course. TelegramAPIError skips a recipient; unexpected delivery/locale errors abort
-  that course, are logged, and do not prevent the next course. Keep this boundary and the hourly schedule.
+  that course, are logged, and do not prevent the next course. Keep this boundary and the hourly Schedule job.
 - Marketplace moderation is authorized by `Settings.moderation_chat_id`, not a user role. Approved ads go to the
   configured channel. Public posts hide contact details behind a `/start ad_<id>` link; contact opens are logged.
   The channel post IDs must remain available for deletion when an ad is removed or expires. The marketplace menu
@@ -159,11 +170,6 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
   Telegram's native reply action. `/broadcast` is registered only for that chat and sends to all registered users.
   Broadcast clears FSM before loading recipients and sends sequentially without retry. TelegramAPIError during
   delivery skips that recipient; locale lookup failures and unexpected errors abort without a summary.
-- `docs/requisites/` holds `/donate` bank QR images. Filenames provide bank labels. `DonationQrService` reuses
-  Telegram file IDs with bounded LRU caching. If runtime data is added under `docs/`, copy its directory in
-  `docker/Dockerfile`.
-  The catalogue and QR adapter now live in `modules/donations/catalog.py` and `qr.py`; preserve the runtime
-  directory and the APP scope when changing them. Donation and broadcast counts/IDs use public UsersQuery.
 
 ## Localization and Telegram text
 

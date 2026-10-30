@@ -4,6 +4,7 @@ from aiogram import Bot
 from dishka import AsyncContainer
 
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
+from manashelper.modules.obis.application.obis import ObisService
 from manashelper.modules.obis.application.polling import PollObisUser
 from manashelper.modules.obis.presentation.sender import TelegramObisNotificationSender
 from manashelper.modules.users.application.locale import LocaleService
@@ -17,11 +18,13 @@ async def poll_obis_notifications_job(container: AsyncContainer, bot: Bot) -> No
             recipients = await request_container.get(NotificationRecipientsQuery)
             exam_grade_user_ids = set(await recipients.for_exam_grades())
             lesson_skip_user_ids = set(await recipients.for_lesson_skips())
+            service = await request_container.get(ObisService)
+            user_ids = await service.get_poll_user_ids()
     except Exception:
         logger.exception("Failed to load users for OBIS notification polling")
         return
 
-    for user_id in exam_grade_user_ids | lesson_skip_user_ids:
+    for user_id in user_ids:
         await _poll_user_obis_notifications(
             container, bot, user_id, user_id in exam_grade_user_ids, user_id in lesson_skip_user_ids
         )

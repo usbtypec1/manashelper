@@ -20,13 +20,14 @@ You just chat with it on Telegram like you would with a friend, tapping buttons 
   lesson-attendance/skip budget straight from the chat. The bot can also notify you as soon as a new grade is
   posted or an absence is recorded, without you needing to check manually.
 - ⚙️ **Notification settings** — turn any of the above notifications on or off individually, whenever you like.
-- 📚 **eders deadlines** — `/eders` lists assignments and quizzes with filters; `/eders_settings` configures
-  reminders one day and two hours before a deadline, activity openings and deadline changes. `/week` combines
-  the next seven days of classes, activity dates and newly discovered materials. eders is checked every 30 minutes
-  using the linked OBIS account. `/materials` lists course materials; `/materials text` searches course names,
+- 📚 **Eders** — main-menu buttons open deadlines, course materials and the study week. Notification settings
+  configure reminders one day and two hours before a deadline, activity openings and deadline changes. The study week combines
+  the next seven days of classes, activity dates and newly discovered materials. Eders is checked every 30 minutes
+  using the saved student number and a shared password from `EDERS_PASSWORD`. `/materials text` searches course names,
   sections and titles. New and renamed materials or changed text blocks are grouped by course in notifications.
   Folders, links, files, forums and text blocks are supported. Initial syncs are silent for materials.
-  Unverified timezones and conflicting dates are shown explicitly. See [Eders tracking](docs/eders-tracking.md).
+  Unverified timezones and conflicting dates are shown explicitly. Without `EDERS_PASSWORD`, Eders buttons,
+  handlers, notification settings and polling are disabled, including the study week.
 - 🌐 **Multiple languages** — the bot speaks Kyrgyz, Russian, Turkish, English and simplified Chinese, and picks a language
   automatically based on your Telegram app's language (you can also switch manually at any time).
 
@@ -64,6 +65,7 @@ before starting the new Compose configuration. The old volume is preserved.
    DATASOURCE_USERNAME=user123
    DATASOURCE_PASSWORD=pass123
    OBIS_ENCRYPTION_KEY=<see below>
+   EDERS_PASSWORD=<optional shared Eders password-token>
    EDERS_POLL_MINUTES=30
    ```
    Generate a value for `OBIS_ENCRYPTION_KEY` (a base64-encoded 32-byte AES-256 key used to encrypt stored OBIS
@@ -71,6 +73,12 @@ before starting the new Compose configuration. The old volume is preserved.
    ```
    python3 -c "import base64,os;print(base64.b64encode(os.urandom(32)).decode())"
    ```
+   Omit `EDERS_PASSWORD` or leave it empty to disable Eders. To enable it, set the shared password and restart
+   the bot. Eders obtains a fresh `logintoken` from Moodle's login form, posts the saved student number and
+   shared password, and accepts login only after reaching `/my/courses.php`. It does not use the OBIS password.
+   Student numbers are still saved through the existing OBIS account-linking flow.
+   The first sync after switching authentication establishes a silent baseline for the student number;
+   changing the OBIS password no longer resets that baseline. Existing notification preferences are preserved.
 3. Install dependencies: `uv sync`
 4. Compile the translation catalogs (required before the bot or the test suite can run):
    ```

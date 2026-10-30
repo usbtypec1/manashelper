@@ -1,3 +1,4 @@
+import hashlib
 from datetime import UTC, datetime, timedelta
 
 from manashelper.core.time import BISHKEK_TZ
@@ -10,9 +11,9 @@ from manashelper.modules.eders.application.models import (
     SubmissionStatus,
 )
 from manashelper.modules.eders.application.tracking import EdersTrackingService
+from manashelper.modules.eders.errors import EdersLoginError
 from manashelper.modules.eders.infrastructure.client import EdersClient
 from manashelper.modules.obis.application.credentials import ObisCredentialsService
-from manashelper.modules.obis.errors import DecryptionError, UserHasNoCredentialsError
 
 
 def filter_activities(
@@ -74,9 +75,18 @@ class EdersService:
 
     async def get_snapshot(self, user_id: int) -> EdersSnapshot:
         await self._tracking.get_settings(user_id)
+        student_number = await self._credentials.get_student_number(user_id)
+        marker = hashlib.sha256(student_number.encode()).hexdigest()
+        return await self._tracking.get_snapshot(user_id, marker)
+
+    async def refresh_snapshot(self, user_id: int) -> EdersSnapshot:
+        await self._tracking.get_settings(user_id)
+        await self._tracking.lock(user_id)
+        student_number = await self._credentials.get_student_number(user_id)
         try:
+            snapshot = await self._client.fetch_snapshot(student_number)
+        except EdersLoginError:
             credentials = await self._credentials.get_credentials(user_id)
-        except DecryptionError:
-            raise UserHasNoCredentialsError(user_id) from None
-        snapshot = await self._client.fetch_snapshot(credentials.student_number, credentials.plain_password)
-        return await self._tracking.observe(user_id, credentials.credential_marker, snapshot)
+            snapshot = await self._client.fetch_snapshot(student_number, credentials.plain_password)
+        marker = hashlib.sha256(student_number.encode()).hexdigest()
+        return await self._tracking.observe(user_id, marker, snapshot)

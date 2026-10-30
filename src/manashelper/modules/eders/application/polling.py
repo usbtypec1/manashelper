@@ -21,7 +21,7 @@ class PollEdersUser:
         self._locales = locales
 
     async def execute(self, user_id: int, sender: EdersNotificationSender) -> None:
-        await self._service.get_snapshot(user_id)
+        await self._service.refresh_snapshot(user_id)
         locale = await self._locales.get_locale(user_id)
         events = await self._tracking.pending_events(user_id, datetime.now(UTC))
         async for event in sender.send(user_id, locale, events):

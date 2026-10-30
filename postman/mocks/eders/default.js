@@ -1,4 +1,4 @@
-// Local contract fixture based on eders.py and anonymous tests/fixtures/eders markup.
+// Local contract fixture based on the Moodle form and anonymous tests/fixtures/eders markup.
 // Deliberately accepts only fake credentials. Never connects to OBIS or Eders.
 const http = require('http');
 const fs = require('fs');
@@ -16,8 +16,19 @@ http.createServer(async (req, res) => {
     const get = key => form instanceof URLSearchParams ? form.get(key) : form?.[key];
     if (get('LoginForm[username]') !== 'fake-student' || get('LoginForm[password_hash]') !== 'fake-password')
       return send(401, 'Fake credentials required');
-    if (req.headers['x-fixture-mode'] === 'login-denied') return send(200, '<form>Invalid login</form>');
+    if (['login-denied', 'both-logins-denied'].includes(req.headers['x-fixture-mode'])) return send(200, '<form>Invalid login</form>');
     return send(302, '', {location: '/', 'set-cookie': 'obis=fixture; Path=/'});
+  }
+  if (url.pathname === '/site/eders') {
+    if (!req.headers.cookie?.includes('obis=fixture')) return send(401, 'OBIS login required');
+    const destination = 'https://eders.manas.edu.kg/auth/userkey/login.php?key=fake-sso';
+    if (req.headers['x-fixture-mode'] === 'eders-sso-link')
+      return send(200, '<a href="' + destination + '">Eders</a>');
+    return send(302, '', {location: destination});
+  }
+  if (url.pathname === '/auth/userkey/login.php') {
+    if (url.searchParams.get('key') !== 'fake-sso') return send(401, 'Fake SSO key required');
+    return send(303, '', {location: '/my/index.php?lang=ru', 'set-cookie': 'MoodleSession=fixture; Path=/'});
   }
   const obisPages = {'/vs-ders/taken-grades': 'grades.html', '/vs-ders/taken-lessons': 'attendance.html'};
   if (obisPages[url.pathname]) {
@@ -28,11 +39,33 @@ http.createServer(async (req, res) => {
                 {'content-type': 'text/html'});
   }
   if (url.pathname === '/') return send(200, 'Logged in');
-  if (url.pathname === '/site/eders')
-    return send(302, '', {location: 'https://eders.manas.edu.kg/auth/userkey/login.php?key=fake-sso'});
-  if (url.pathname === '/auth/userkey/login.php')
-    return send(303, '', {location: '/my/', 'set-cookie': 'MoodleSession=fixture; Path=/'});
-  if (url.pathname === '/my/') return send(200, '<a href="/login/logout.php?sesskey=fakekey">Logout</a>');
+  if (url.pathname === '/login/index.php') {
+    const mode = req.headers['x-fixture-mode'];
+    if (mode === 'eders-login-unavailable') return send(503, 'Moodle login unavailable');
+    const loginForm = '<form><input name="username" type="text"><input name="logintoken" value="fake-login-token"></form>';
+    if (req.method === 'GET' && url.searchParams.get('loginredirect') === '1') {
+      if (['eders-login-denied', 'eders-sso-link', 'both-logins-denied', 'sso-expired'].includes(mode)) return send(200, loginForm);
+      return send(303, '', {location: '/my/courses.php'});
+    }
+    if (req.method === 'GET') return send(200, mode === 'eders-token-missing' ? '<form></form>' : loginForm,
+      {'set-cookie': 'MoodleSession=initial; Path=/'});
+    const form = typeof req.body === 'string' ? new URLSearchParams(req.body) : req.body;
+    const get = key => form instanceof URLSearchParams ? form.get(key) : form?.[key];
+    if (req.method !== 'POST' || !req.headers['content-type']?.startsWith('application/x-www-form-urlencoded') ||
+        !req.headers.cookie?.includes('MoodleSession=initial') || get('anchor') !== '' ||
+        get('logintoken') !== 'fake-login-token' || get('username') !== 'fake-student' || get('password') !== 'fake-password')
+      return send(400, 'Unexpected Moodle login contract');
+    return send(303, '', {location: '/login/index.php?loginredirect=1', 'set-cookie': 'MoodleSession=fixture; Path=/'});
+  }
+  if (url.pathname.startsWith('/my/') || url.pathname === '/lib/ajax/service.php' || url.pathname === '/user/profile.php' ||
+      url.pathname === '/course/view.php' || url.pathname.startsWith('/mod/')) {
+    if (!req.headers.cookie?.includes('MoodleSession=fixture')) return send(401, 'Moodle login required');
+  }
+  if (url.pathname === '/my/courses.php' || url.pathname === '/my/index.php') {
+    if (req.headers['x-fixture-mode'] === 'sso-expired')
+      return send(200, '<input name="logintoken"><script>M.cfg = {"sesskey":"fakekey"};</script>');
+    return send(200, '<script>M.cfg = {"sesskey":"fakekey"};</script>');
+  }
   if (url.pathname === '/lib/ajax/service.php') {
     const mode = req.headers['x-fixture-mode'];
     if (mode === 'html-error') return send(500, '<h1>Unavailable</h1>');

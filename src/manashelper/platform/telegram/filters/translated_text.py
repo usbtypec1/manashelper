@@ -2,9 +2,12 @@ from aiogram.filters import Filter
 from aiogram.types import Message
 from aiogram.utils.i18n import gettext as _
 
+from manashelper.localization.theme import Theme
+from manashelper.platform.i18n.catalog import i18n
+
 
 class TranslatedText(Filter):
-    """Matches a message's text against a message key translated in the user's own locale.
+    """Matches a reply button in the user's locale, accepting labels from either theme.
 
     Reply-keyboard buttons echo their label back as the message text when tapped, and that
     label is localized per user, so a plain `F.text == "..."` filter can't match every locale
@@ -16,4 +19,9 @@ class TranslatedText(Filter):
         self.message_key = message_key
 
     async def __call__(self, message: Message) -> bool:
-        return message.text == _(self.message_key)
+        # Telegram can still show a keyboard created before the theme was switched.
+        for theme in Theme:
+            with i18n.use_theme(theme):
+                if message.text == _(self.message_key):
+                    return True
+        return False

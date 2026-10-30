@@ -12,7 +12,9 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.methods import SendMessage
 from aiogram.types import CallbackQuery, Message
 from dishka import make_async_container
+from pydantic import SecretStr
 
+from manashelper.core.config import get_settings
 from manashelper.core.provider import CoreProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.localization.locale import Locale
@@ -65,9 +67,54 @@ def state() -> FSMContext:
 
 
 @pytest.fixture(autouse=True)
-def english():
+def english(monkeypatch):
+    monkeypatch.setattr(get_settings(), "eders_password", SecretStr("fake-password"))
     with i18n.context(), i18n.use_locale("en"):
         yield
+
+
+@pytest.mark.parametrize("locale", list(Locale))
+@pytest.mark.parametrize("key", ["menu.eders", "menu.eders_materials"])
+async def test_main_menu_eders_buttons_route_and_show_expected_view(locale, key):
+    from dataclasses import replace
+
+    from manashelper.modules.eders.presentation.router import router
+
+    service, tracking = AsyncMock(), AsyncMock()
+    data = snapshot()
+    reading = replace(data.activities[0], id=21, kind=ActivityKind.RESOURCE, name="Reading")
+    service.get_snapshot.return_value = replace(data, activities=(*data.activities, reading))
+    message = AsyncMock(spec=Message)
+    message.answer = AsyncMock()
+    message.from_user = SimpleNamespace(id=42)
+    with i18n.use_locale(locale.value):
+        message.text = i18n.gettext(key)
+        assert any([(await handler.check(message, bot=AsyncMock(spec=Bot)))[0] for handler in router.message.handlers])
+        await on_eders_command(message, state(), service, tracking)
+    service.get_snapshot.assert_awaited_once_with(42)
+    # A multiword translated button must not become a search query.
+    assert (
+        "Work" in message.answer.call_args.args[0]
+        if key == "menu.eders"
+        else "Work" not in message.answer.call_args.args[0]
+    )
+    keyboard = message.answer.call_args.kwargs["reply_markup"]
+    selected = next(button for row in keyboard.inline_keyboard for button in row if button.text.startswith("✓ "))
+    assert EdersPageCallback.unpack(selected.callback_data).selected == (
+        DeadlineFilter.ALL if key == "menu.eders" else DeadlineFilter.MATERIALS
+    )
+    if key == "menu.eders_materials":
+        assert "Reading" in message.answer.call_args.args[0]
+
+
+@pytest.mark.parametrize("locale", list(Locale))
+async def test_main_menu_study_week_button_matches_handler(locale):
+    from manashelper.modules.study_week.router import router
+
+    message = AsyncMock(spec=Message)
+    with i18n.use_locale(locale.value):
+        message.text = i18n.gettext("menu.study_week")
+        assert any([(await handler.check(message, bot=AsyncMock(spec=Bot)))[0] for handler in router.message.handlers])
 
 
 async def test_command_caches_public_snapshot_and_pagination_avoids_network() -> None:
@@ -144,7 +191,7 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
     async def recipient_locale(user_id):
         return Locale.RU if user_id == 1 else Locale.ZH
 
-    service.get_snapshot.side_effect = fetch
+    service.refresh_snapshot.side_effect = fetch
     locales.get_locale.side_effect = recipient_locale
     tracking.pending_events.return_value = [event]
     bot.send_message.side_effect = [TelegramBadRequest(SendMessage(chat_id=1, text="test"), "test failure"), None]
@@ -165,7 +212,7 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
     assert tracking.mark_sent.await_count == 1 and tracking.mark_sent.call_args.args[:2] == (3, "key")
 
 
-async def test_application_resolves_new_services_and_registers_thirty_minute_polling() -> None:
+async def test_application_resolves_new_services_and_registers_fifteen_minute_polling() -> None:
     container = make_async_container(
         CoreProvider(),
         TelegramPlatformProvider(),
@@ -190,7 +237,7 @@ async def test_application_resolves_new_services_and_registers_thirty_minute_pol
             assert isinstance(await request.get(GetStudyWeek), GetStudyWeek)
         scheduler = create_scheduler(container, bot)
         jobs = [job for job in scheduler.get_jobs() if job.func == poll_eders_job]
-        assert len(jobs) == 1 and jobs[0].trigger.interval == timedelta(minutes=30)
+        assert len(jobs) == 1 and jobs[0].trigger.interval == timedelta(minutes=15)
         assert jobs[0].max_instances == 1
     finally:
         await container.close()

@@ -5,13 +5,13 @@ from aiogram.types import ErrorEvent
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import inject_router, setup_dishka
 
+from manashelper.core.config import get_settings
 from manashelper.modules.advertisements.presentation.advertisement import router as advertisement_router
 from manashelper.modules.advertisements.presentation.advertisement_contact import router as advertisement_contact_router
 from manashelper.modules.advertisements.presentation.advertisement_moderation import (
     router as advertisement_moderation_router,
 )
 from manashelper.modules.broadcast.router import router as broadcast_router
-from manashelper.modules.donations.router import router as donations_router
 from manashelper.modules.eders.presentation.router import router as eders_router
 from manashelper.modules.feedback.router import router as feedback_router
 from manashelper.modules.food_menu.presentation.routers.food_menu import router as food_menu_router
@@ -27,6 +27,7 @@ from manashelper.modules.student_questions.router import router as student_quest
 from manashelper.modules.study_week.router import router as study_week_router
 from manashelper.modules.users.presentation.routers.locale import router as locale_router
 from manashelper.modules.users.presentation.routers.phone_numbers import router as phone_numbers_router
+from manashelper.modules.users.presentation.routers.theme import router as theme_router
 from manashelper.platform.telegram.middlewares.action_log import ActionLogMiddleware
 from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
 from manashelper.platform.telegram.middlewares.per_chat_ordering import PerChatOrderingMiddleware
@@ -62,17 +63,16 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
         advertisement_contact_router,
         start_router,
         locale_router,
+        theme_router,
         timetable_router,
         lesson_search_router,
         food_menu_router,
         food_menu_notifications_router,
         food_menu_cleanup_router,
         obis_router,
-        eders_router,
-        study_week_router,
+        *((eders_router, study_week_router) if get_settings().eders_enabled else ()),
         settings_router,
         notifications_router,
-        donations_router,
         phone_numbers_router,
         advertisement_router,
         advertisement_moderation_router,

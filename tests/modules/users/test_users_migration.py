@@ -18,6 +18,7 @@ from dishka.integrations.aiogram import CONTAINER_NAME
 from manashelper.core.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale
+from manashelper.localization.theme import Theme
 from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis import jobs
@@ -31,6 +32,7 @@ from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
 from manashelper.modules.users.application.locale import LocaleService
+from manashelper.modules.users.application.theme import ThemeService
 from manashelper.modules.users.application.user_contact import (
     InvalidPhoneNumberError,
     PhoneNumberForbiddenError,
@@ -251,7 +253,14 @@ async def test_obis_user_poll_keeps_locale_fallback_and_failure_isolation(monkey
 async def test_users_provider_scopes_and_orm_registry():
     assert Base.metadata.tables["users"] is DbUser.__table__
     assert Base.metadata.tables["user_phone_numbers"] is UserPhoneNumber.__table__
-    dependencies = (UsersQuery, LocaleService, UserContactService, UserRepository, UserPhoneNumberRepository)
+    dependencies = (
+        UsersQuery,
+        LocaleService,
+        ThemeService,
+        UserContactService,
+        UserRepository,
+        UserPhoneNumberRepository,
+    )
     async with make_async_container(
         CoreProvider(),
         TelegramPlatformProvider(),
@@ -275,7 +284,9 @@ async def test_users_provider_scopes_and_orm_registry():
 async def test_locale_middleware_keeps_request_context_and_profile_refresh(context, has_user):
     locales = AsyncMock(spec=LocaleService)
     locales.resolve.return_value = Locale.ZH
-    request = SimpleNamespace(get=AsyncMock(return_value=locales))
+    themes = AsyncMock(spec=ThemeService)
+    themes.get_theme.return_value = Theme.BASIC
+    request = SimpleNamespace(get=AsyncMock(side_effect={LocaleService: locales, ThemeService: themes}.__getitem__))
     data = {CONTAINER_NAME: request}
     if has_user:
         data["event_from_user"] = context.message.from_user
@@ -289,7 +300,7 @@ async def test_locale_middleware_keeps_request_context_and_profile_refresh(conte
     assert observed == [(context.message, Locale.ZH if has_user else None, "zh" if has_user else "ru")]
     assert i18n.current_locale == "ru"
     if has_user:
-        request.get.assert_awaited_once_with(LocaleService)
+        assert [call.args[0] for call in request.get.await_args_list] == [LocaleService, ThemeService]
         user = context.message.from_user
         locales.resolve.assert_awaited_once_with(
             user_id=user.id, full_name=user.full_name, username=user.username, language_code=user.language_code
@@ -313,7 +324,7 @@ def test_users_standalone_import_uses_explicit_model_registration(module):
         "from manashelper.core.database import Base; "
         "assert len(Base.metadata.tables) < 27; "
         "from manashelper.bootstrap import load_models; load_models(); configure_mappers(); "
-        "assert len(Base.metadata.tables) == 27; "
+        "assert len(Base.metadata.tables) == 28; "
         "assert Base.metadata.tables['user_courses'].c.user_id.references(Base.metadata.tables['users'].c.id)"
     )
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)

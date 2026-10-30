@@ -12,7 +12,9 @@ from manashelper.modules.eders.application.models import (
     SubmissionStatus,
 )
 from manashelper.modules.eders.application.tracking import EdersSetting
+from manashelper.modules.eders.infrastructure.repository import EdersRepository
 from manashelper.modules.obis.errors import UserHasNoCredentialsError
+from manashelper.modules.users.infrastructure.user import User
 from tests.modules.eders.factories import NOW, item
 
 
@@ -112,6 +114,25 @@ async def test_missing_credentials_do_not_make_network_requests(session, trackin
     with pytest.raises(UserHasNoCredentialsError):
         await service.get_snapshot(980_001)
     client.fetch_snapshot.assert_not_awaited()
+
+
+@pytest.mark.parametrize("encrypted_password", [None, "bad-ciphertext"])
+async def test_eders_needs_only_student_number_and_polling_includes_it(session, tracking, encrypted_password):
+    from manashelper.modules.obis.application.credentials import ObisCredentialsService
+    from manashelper.modules.obis.infrastructure.credentials_repository import ObisCredentialsRepository
+
+    user = await session.get(User, 980_001)
+    user.student_number = "fake-student"
+    user.encrypted_password = encrypted_password
+    await session.flush()
+    client, crypto = AsyncMock(), AsyncMock()
+    client.fetch_snapshot.return_value = EdersSnapshot((item(),), NOW)
+    account = ObisCredentialsService(ObisCredentialsRepository(session), AsyncMock(), crypto)
+    result = await EdersService(account, client, tracking).refresh_snapshot(user.id)
+    assert result.activities[0].id == 20
+    client.fetch_snapshot.assert_awaited_once_with("fake-student")
+    crypto.decrypt.assert_not_called()
+    assert user.id in await EdersRepository(session).get_poll_user_ids()
 
 
 async def test_repeated_deadline_change_is_a_new_notification(tracking):

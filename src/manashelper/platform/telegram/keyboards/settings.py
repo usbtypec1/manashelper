@@ -18,7 +18,7 @@ def build_settings_keyboard() -> InlineKeyboardMarkup:
         text=_("settings.phone_numbers"), callback_data=SettingsCallback(action=SettingsAction.OPEN_PHONE_NUMBERS)
     )
     builder.button(text=_("settings.language"), callback_data=SettingsCallback(action=SettingsAction.OPEN_LANGUAGE))
+    builder.button(text=_("settings.theme"), callback_data=SettingsCallback(action=SettingsAction.OPEN_THEME))
     builder.button(text=_("settings.feedback"), callback_data=SettingsCallback(action=SettingsAction.OPEN_FEEDBACK))
-    builder.button(text=_("settings.donate"), callback_data=SettingsCallback(action=SettingsAction.OPEN_DONATIONS))
     builder.adjust(1)
     return builder.as_markup()

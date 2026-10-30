@@ -18,12 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-msgid "commands.eders"
-msgstr "Задания и тесты eders"
-
-msgid "eders.loading"
-msgstr "Загружаю задания eders…"
-
 msgid "eders.fetch_failed"
 msgstr "Не удалось загрузить eders. Попробуйте позже."
 
@@ -64,7 +58,9 @@ msgid "eders.empty"
 msgstr "По этому фильтру записей нет."
 
 msgid "eders.filter_note"
-msgstr "Источник: курсы из обзора оценок eders. Подтверждённое время — Asia/Bishkek. Сроки с неподтверждённым часовым поясом или конфликтом не попадают во временные фильтры; смотрите «Без точного срока». Выполняйте и сдавайте работы на eders."
+msgstr ""
+"Источник: курсы из обзора оценок eders. Подтверждённое время — Asia/Bishkek. Сроки с неподтверждённым часовым поясом "
+"или конфликтом не попадают во временные фильтры; смотрите «Без точного срока». Выполняйте и сдавайте работы на eders."
 
 msgid "eders.opens"
 msgstr "Открытие: {value}"
@@ -95,12 +91,6 @@ msgstr "Ожидают оценки"
 
 msgid "eders.filter_unknown"
 msgstr "Без точного срока"
-
-msgid "commands.eders_settings"
-msgstr "Настроить напоминания eders"
-
-msgid "commands.week"
-msgstr "Моя учебная неделя"
 
 msgid "eders.reminder_day"
 msgstr "Напоминание eders: за сутки до срока"
@@ -216,9 +206,6 @@ msgstr "🚫 Без комментария"
 msgid "common.send"
 msgstr "✅ Отправить"
 
-msgid "common.back_to_settings"
-msgstr "◀️ Назад в настройки"
-
 msgid "food.today"
 msgstr "📅 Сегодня"
 
@@ -299,9 +286,6 @@ msgstr "🌐 Язык"
 
 msgid "settings.feedback"
 msgstr "💬 Обратная связь"
-
-msgid "settings.donate"
-msgstr "❤️ Поддержать бота"
 
 msgid "menu.food"
 msgstr "🍉 Йемек"
@@ -505,25 +489,6 @@ msgstr ""
 "\n"
 "{body}"
 
-msgid "donations.qr_coming_soon"
-msgstr "QR-коды для перевода скоро появятся здесь."
-
-msgid "donations.intro"
-msgstr ""
-"❤️ <b>Помогите Manashelper работать дальше</b>\n"
-"\n"
-"28 сентября бот перестал работать из-за ограничений бесплатного аккаунта AWS. Чтобы вы по-прежнему могли смотреть "
-"расписание, меню столовой, оценки и посещаемость, мне пришлось перенести его на платный сервер.\n"
-"\n"
-"Ваш вклад поможет оплачивать сервер для вас и ещё {others} пользователей бота. Поможет любая сумма: все донаты пойдут"
-" на аренду сервера. Спасибо за поддержку!"
-
-msgid "donations.choose_bank"
-msgstr "Выберите банк, чтобы открыть QR-код для перевода:"
-
-msgid "donations.qr_unavailable"
-msgstr "QR-код этого банка больше недоступен."
-
 msgid "feedback.sent"
 msgstr "✅ Спасибо! Ваше сообщение отправлено администрации."
 
@@ -556,13 +521,11 @@ msgstr "Сообщение не может быть пустым и должно
 msgid "feedback.delivery_failed"
 msgstr "⚠️ Не удалось доставить ответ пользователю."
 
-
 msgid "food.rate_prompt"
 msgstr "Оцените меню на день от 1 до 5. Оценку можно изменить."
 
 msgid "food.rating_thanks"
 msgstr "Спасибо за оценку!"
-
 
 msgid "food.auto_delete_prompt"
 msgstr "🧹 Автоудаление сообщений о меню в этом чате через:"
@@ -904,9 +867,6 @@ msgstr "Просмотр меню столовой"
 msgid "commands.language"
 msgstr "Сменить язык"
 
-msgid "commands.donate"
-msgstr "Поддержать бота"
-
 msgid "commands.hide_keyboard"
 msgstr "Скрыть клавиатуру"
 
@@ -1033,11 +993,35 @@ msgstr "Новый материал"
 msgid "eders.material_changed"
 msgstr "Материал изменён"
 
-msgid "commands.materials"
-msgstr "Материалы Eders и поиск"
-
 msgid "eders.materials_help"
 msgstr "Поиск по курсу, разделу или названию: /materials текст. Новые — впервые обнаруженные после начальной синхронизации."
 
 msgid "notifications.eders"
 msgstr "Eders"
+
+msgid "menu.eders"
+msgstr "Дедлайны Eders"
+
+msgid "menu.eders_materials"
+msgstr "Материалы Eders"
+
+msgid "menu.study_week"
+msgstr "Учебная неделя"
+
+msgid "data.preparing"
+msgstr "Данные готовятся в фоне. Попробуйте после следующего обновления (каждые 15 минут)."
+
+msgid "settings.theme"
+msgstr "🎨 Тема"
+
+msgid "theme.prompt"
+msgstr "Выберите тему оформления меню. Выбор сохранится для следующих посещений."
+
+msgid "theme.basic"
+msgstr "Базовая"
+
+msgid "theme.halloween"
+msgstr "🎃 Хеллоуин"
+
+msgid "theme.selected"
+msgstr "Выбрана тема: {theme}"

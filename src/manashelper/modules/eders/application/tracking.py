@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 
 from manashelper.modules.eders.application.models import ActivityKind, EdersActivity, EdersSnapshot, SubmissionStatus
+from manashelper.modules.eders.errors import EdersSnapshotNotReadyError
 from manashelper.modules.eders.infrastructure.orm import EdersNotification
 from manashelper.modules.eders.infrastructure.repository import EdersRepository
 from manashelper.modules.eders.infrastructure.serialization import deserialize_snapshot, serialize_snapshot
@@ -108,14 +109,25 @@ class EdersTrackingService:
     async def get_settings(self, user_id: int) -> EdersSettings:
         if not await self._users.exists(user_id):
             raise UserNotFoundError(user_id)
-        state = await self._repository.get_state(user_id)
+        state = await self._repository.read_state(user_id)
+        if state is None:
+            return EdersSettings(True, True, True, True, True, True)
         return EdersSettings(*(getattr(state, item.value) for item in EdersSetting))
+
+    async def get_snapshot(self, user_id: int, marker: str) -> EdersSnapshot:
+        state = await self._repository.read_state(user_id)
+        if state is None or not state.snapshot or state.credential_marker != marker:
+            raise EdersSnapshotNotReadyError
+        return deserialize_snapshot(state.snapshot)
+
+    async def lock(self, user_id: int) -> None:
+        await self._repository.get_state(user_id)
 
     async def toggle(self, user_id: int, setting: EdersSetting) -> EdersSettings:
         await self.get_settings(user_id)
         state = await self._repository.get_state(user_id)
         setattr(state, setting.value, not getattr(state, setting.value))
-        return await self.get_settings(user_id)
+        return EdersSettings(*(getattr(state, item.value) for item in EdersSetting))
 
     async def observe(self, user_id: int, marker: str, snapshot: EdersSnapshot) -> EdersSnapshot:
         settings = await self.get_settings(user_id)

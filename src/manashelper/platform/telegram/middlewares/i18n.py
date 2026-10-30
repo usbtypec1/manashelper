@@ -7,11 +7,12 @@ from dishka import AsyncContainer
 from dishka.integrations.aiogram import CONTAINER_NAME
 
 from manashelper.modules.users.application.locale import LocaleService
+from manashelper.modules.users.application.theme import ThemeService
 from manashelper.platform.i18n.catalog import i18n
 
 
 class LocaleMiddleware(BaseMiddleware):
-    """Resolves the current user's locale before any handler runs and activates aiogram's
+    """Resolves the current user's locale and saved menu theme, and activates aiogram's
     gettext context for it (see `localization/i18n.py`), so every `_()`/`ngettext()` call made
     while handling this update — in filters, handlers, and formatters alike — resolves
     against that locale without needing it threaded through as a parameter.
@@ -44,6 +45,8 @@ class LocaleMiddleware(BaseMiddleware):
             language_code=telegram_user.language_code,
         )
 
+        theme_service = await container.get(ThemeService)
+        theme = await theme_service.get_theme(telegram_user.id)
         data["locale"] = locale
-        with i18n.context(), i18n.use_locale(locale.value):
+        with i18n.context(), i18n.use_locale(locale.value), i18n.use_theme(theme):
             return await handler(event, data)

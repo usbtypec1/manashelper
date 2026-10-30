@@ -12,26 +12,6 @@
     "description": "commands.language"
   },
   {
-    "command": "donate",
-    "description": "commands.donate"
-  },
-  {
-    "command": "eders",
-    "description": "commands.eders"
-  },
-  {
-    "command": "eders_settings",
-    "description": "commands.eders_settings"
-  },
-  {
-    "command": "week",
-    "description": "commands.week"
-  },
-  {
-    "command": "materials",
-    "description": "commands.materials"
-  },
-  {
     "command": "hide_keyboard",
     "description": "commands.hide_keyboard"
   }
