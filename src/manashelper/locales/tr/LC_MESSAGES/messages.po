@@ -464,7 +464,7 @@ msgid "ads.owner_approved"
 msgstr "\"{title}\" ilanınız onaylandı ve yayınlandı! 🎉"
 
 msgid "broadcast.message_prompt"
-msgstr "📢 Tüm kullanıcılara göndermek istediğiniz mesajı yazın:"
+msgstr "Duyuru metnini veya isteğe bağlı açıklaması olan tek bir fotoğraf gönderin."
 
 msgid "broadcast.preview"
 msgstr ""
@@ -484,7 +484,7 @@ msgid "broadcast.sent"
 msgstr "✅ Duyuru {sent}/{total} kullanıcıya gönderildi."
 
 msgid "broadcast.text_required"
-msgstr "Lütfen duyuruyu bir metin mesajı olarak gönderin."
+msgstr "Metin veya tek bir fotoğraf gönderin."
 
 msgid "broadcast.admin_message"
 msgstr ""
@@ -1068,3 +1068,24 @@ msgstr "🕯️ Kazan ısınıyor: seçilen günün menüsü henüz yayımlanmad
 
 msgid "halloween.food_no_available_menus"
 msgstr "🕸️ İkram defteri şimdilik boş: önümüzdeki 7 günün menüleri henüz yayımlanmadı."
+
+msgid "broadcast.edit_buttons"
+msgstr "Düğmeler"
+
+msgid "broadcast.without_buttons"
+msgstr "Düğmesiz"
+
+msgid "broadcast.buttons_prompt"
+msgstr "Her satıra bir düğme yazın:\nAd | https://example.com\nAd | callback:your_action\nBotun mevcut callback_data değerlerini kullanın: UTF-8 olarak 1–64 bayt. En fazla 100 düğme."
+
+msgid "broadcast.invalid_buttons"
+msgstr "Düğme biçimi geçersiz. Her satıra Ad | https://example.com veya Ad | callback:your_action yazın. callback_data: UTF-8 olarak 1–64 bayt; en fazla 100 düğme."
+
+msgid "broadcast.single_photo_required"
+msgstr "Albüm yerine tek bir fotoğraf gönderin."
+
+msgid "broadcast.too_long"
+msgstr "Duyuru metni çok uzun. Göndermeden önce kısaltın."
+
+msgid "broadcast.confirm_prompt"
+msgstr "Bu duyuru gönderilsin mi?"

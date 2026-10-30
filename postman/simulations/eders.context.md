@@ -11,7 +11,7 @@ the real HTTP clients. Request shapes and fixture modes live in that handler and
 ```sh
 postman simulation run postman/simulations/eders.sim.yaml --port 4900 --output ndjson
 # In another terminal, with the normal test database environment and migrations applied:
-EDERS_SIMULATION_PORT=4900 .venv/bin/pytest -q tests/modules/eders/test_eders_http_flow.py
+MANASHELPER_EDERS_SIMULATION_PORT=4900 .venv/bin/pytest -q tests/modules/eders/test_eders_http_flow.py
 ```
 
 Wait for the `listening` event, inspect `request` events for the `eders` member,

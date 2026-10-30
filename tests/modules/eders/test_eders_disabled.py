@@ -5,7 +5,7 @@ from textwrap import dedent
 
 def test_disabled_feature_has_no_entry_points_or_jobs(monkeypatch):
     # aiogram routers can only be attached once, so check startup in a fresh process.
-    monkeypatch.setenv("EDERS_PASSWORD", "")
+    monkeypatch.setenv("MANASHELPER_EDERS_PASSWORD", "")
     script = dedent("""\
         from dishka import make_async_container
         from manashelper.core.config import get_settings

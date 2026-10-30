@@ -1,0 +1,5 @@
+simulation: telegram-delivery
+routing: path
+mocks:
+  - routeKey: telegram
+    path: ../mocks/telegram/config.yaml

@@ -7,7 +7,7 @@ import pytest
 from manashelper.modules.food_menu.infrastructure import food_menu_client as client_module
 from manashelper.modules.food_menu.infrastructure.food_menu_parser import FoodMenuParser
 
-SIMULATION_URL = os.getenv("FOOD_MENU_SIMULATION_URL")
+SIMULATION_URL = os.getenv("MANASHELPER_FOOD_MENU_SIMULATION_URL")
 pytestmark = pytest.mark.skipif(not SIMULATION_URL, reason="Optional local Postman food menu simulation")
 
 

@@ -31,6 +31,7 @@ from manashelper.modules.schedule.infrastructure.models.department import Depart
 from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
+from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
 from manashelper.modules.users.application.user_contact import (
@@ -224,6 +225,7 @@ async def test_obis_user_poll_keeps_locale_fallback_and_failure_isolation(monkey
         LocaleService: LocaleService(users),
         PollObisUser: PollObisUser(service),
         ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+        BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
     }
     opened = []
 
@@ -249,7 +251,7 @@ async def test_obis_user_poll_keeps_locale_fallback_and_failure_isolation(monkey
         service.check_exam_grade_changes.assert_awaited_once_with(973001)
         service.check_lesson_skip_changes.assert_awaited_once_with(973001)
         assert [call.args for call in send.await_args_list] == [
-            (bot, 973001, i18n.gettext(key, locale=saved or DEFAULT_LOCALE.value))
+            (bot, 973001, i18n.gettext(key, locale=saved or DEFAULT_LOCALE.value), dependencies[BotStatusService])
             for key in ("menu.grades", "menu.attendance")
         ]
 
@@ -307,7 +309,11 @@ async def test_locale_middleware_keeps_request_context_and_profile_refresh(conte
         assert [call.args[0] for call in request.get.await_args_list] == [LocaleService, ThemeService]
         user = context.message.from_user
         locales.resolve.assert_awaited_once_with(
-            user_id=user.id, full_name=user.full_name, username=user.username, language_code=user.language_code
+            user_id=user.id,
+            full_name=user.full_name,
+            username=user.username,
+            language_code=user.language_code,
+            resume_bot=False,
         )
     else:
         request.get.assert_not_awaited()

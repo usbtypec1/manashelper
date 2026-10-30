@@ -78,7 +78,7 @@ async def test_feedback_request_scope_commits_success_and_rolls_back_failure():
 
 
 def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry(monkeypatch):
-    monkeypatch.setenv("EDERS_PASSWORD", "simulation-password")
+    monkeypatch.setenv("MANASHELPER_EDERS_PASSWORD", "simulation-password")
     # Production routers are singletons: attach/inject them in an isolated process.
     script = dedent("""\
         import asyncio

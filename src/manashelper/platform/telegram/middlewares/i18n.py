@@ -2,6 +2,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from aiogram import BaseMiddleware
+from aiogram.enums import ChatType
 from aiogram.types import TelegramObject
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import CONTAINER_NAME
@@ -43,6 +44,7 @@ class LocaleMiddleware(BaseMiddleware):
             full_name=telegram_user.full_name,
             username=telegram_user.username,
             language_code=telegram_user.language_code,
+            resume_bot=getattr(data.get("event_chat"), "type", None) == ChatType.PRIVATE,
         )
 
         theme_service = await container.get(ThemeService)

@@ -40,6 +40,7 @@ from manashelper.modules.schedule.presentation.callbacks import (
 from manashelper.modules.schedule.presentation.routers import lesson_search, timetable
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
+from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
 from manashelper.modules.users.infrastructure.user import User as DbUser
@@ -171,6 +172,7 @@ async def test_sync_job_keeps_course_scopes_and_failure_isolation(failure):
         SyncCourseTimetable: SyncCourseTimetable(sync, NotificationRecipientsQuery(notifications)),
         LocaleService: LocaleService(users),
         ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+        BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
     }
     scopes = []
 

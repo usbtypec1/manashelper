@@ -1,5 +1,6 @@
 import logging
 from collections.abc import AsyncIterator
+from functools import partial
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
@@ -8,16 +9,19 @@ from aiogram.types import LinkPreviewOptions
 from manashelper.localization.locale import Locale
 from manashelper.modules.eders.application.tracking import EdersEvent
 from manashelper.modules.eders.presentation.formatter import format_eders_event, format_material_events
+from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.theme import ThemeService
 from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.delivery import UserMessageDelivery
 
 logger = logging.getLogger(__name__)
 
 
 class TelegramEdersNotificationSender:
-    def __init__(self, bot: Bot, themes: ThemeService) -> None:
+    def __init__(self, bot: Bot, themes: ThemeService, status: BotStatusService) -> None:
         self._bot = bot
         self._themes = themes
+        self._delivery = UserMessageDelivery(status)
 
     async def send(self, user_id: int, locale: Locale, events: list[EdersEvent]) -> AsyncIterator[EdersEvent]:
         theme = await self._themes.get_theme(user_id)
@@ -29,7 +33,14 @@ class TelegramEdersNotificationSender:
             )
         for text, batch in messages:
             try:
-                await self._bot.send_message(user_id, text, link_preview_options=LinkPreviewOptions(is_disabled=True))
+                sent = await self._delivery.send(
+                    user_id,
+                    partial(
+                        self._bot.send_message, user_id, text, link_preview_options=LinkPreviewOptions(is_disabled=True)
+                    ),
+                )
+                if sent is None:
+                    return
             except TelegramAPIError:
                 logger.warning("Failed to send eders notification to user %s", user_id, exc_info=True)
                 continue

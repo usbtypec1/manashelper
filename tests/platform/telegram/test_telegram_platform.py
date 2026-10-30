@@ -9,11 +9,13 @@ from unittest.mock import AsyncMock
 
 import pytest
 from aiogram import Bot
+from aiogram.enums import ChatType
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.methods import DeleteMessages
 from aiogram.types import CallbackQuery, Chat, Message, User
 from dishka import make_async_container
 from dishka.integrations.aiogram import CONTAINER_NAME
+from sqlalchemy.ext.asyncio import AsyncSession
 
 import manashelper
 from manashelper.core.database import Base
@@ -114,6 +116,42 @@ async def test_private_chat_guard_prevents_audit_and_handler(context, callback):
     assert sent.text == catalog.i18n.gettext("common.private_chat_only")
     if callback:
         assert sent.show_alert is True
+
+
+@pytest.mark.parametrize("chat_type", [ChatType.PRIVATE, ChatType.GROUP, ChatType.SUPERGROUP, ChatType.CHANNEL])
+@pytest.mark.parametrize("kind", ["message", "masked", "callback"])
+async def test_audit_only_persists_private_chat_updates(context, chat_type, kind):
+    chat = Chat(id=974001 if chat_type == ChatType.PRIVATE else -974001, type=chat_type)
+    message = context.message.model_copy(update={"chat": chat, "text": "private input"})
+    event = (
+        context.callback.model_copy(update={"message": message, "data": "settings:back_to_settings"})
+        if kind == "callback"
+        else message
+    )
+    async with AsyncSession() as session:
+        service = ActionLogService(ActionLogRepository(session))
+        request = SimpleNamespace(get=AsyncMock(return_value=service))
+        data = {
+            "event_chat": chat,
+            "event_from_user": message.from_user,
+            "handler": SimpleNamespace(flags={"mask_logged_message": kind == "masked"}),
+            CONTAINER_NAME: request,
+        }
+
+        async def handler(received, payload):
+            assert received is event and payload is data
+            assert len(session.new) == int(chat_type == ChatType.PRIVATE)
+            return "handled"
+
+        assert await ActionLogMiddleware()(handler, event, data) == "handled"
+        if chat_type != ChatType.PRIVATE:
+            request.get.assert_not_awaited()
+            return
+        request.get.assert_awaited_once_with(ActionLogService)
+        [row] = list(session.new)
+        assert row.chat_id == chat.id and row.user_id == message.from_user.id
+        assert row.callback_query_data == (event.data if kind == "callback" else None)
+        assert row.message_text == {"message": "private input", "masked": "[masked]", "callback": None}[kind]
 
 
 async def test_per_chat_ordering_serializes_one_chat_and_allows_another():

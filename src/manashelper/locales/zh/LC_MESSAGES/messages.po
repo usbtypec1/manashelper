@@ -456,7 +456,7 @@ msgid "ads.owner_approved"
 msgstr "你的广告“{title}”已获批准并发布！🎉"
 
 msgid "broadcast.message_prompt"
-msgstr "📢 请发送要群发给所有用户的消息："
+msgstr "请发送广播文本，或一张可附带说明的照片。"
 
 msgid "broadcast.preview"
 msgstr ""
@@ -476,7 +476,7 @@ msgid "broadcast.sent"
 msgstr "✅ 已向 {sent}/{total} 位用户发送消息。"
 
 msgid "broadcast.text_required"
-msgstr "请以文字消息发送群发内容。"
+msgstr "请发送文本或一张照片。"
 
 msgid "broadcast.admin_message"
 msgstr ""
@@ -1058,3 +1058,24 @@ msgstr "🕯️ 大锅还在加热：所选日期的菜单尚未发布。"
 
 msgid "halloween.food_no_available_menus"
 msgstr "🕸️ 美食之书暂时为空：未来7天的菜单尚未发布。"
+
+msgid "broadcast.edit_buttons"
+msgstr "按钮"
+
+msgid "broadcast.without_buttons"
+msgstr "不添加按钮"
+
+msgid "broadcast.buttons_prompt"
+msgstr "每行输入一个按钮：\n名称 | https://example.com\n名称 | callback:your_action\n请使用机器人已有的 callback_data，长度为 1–64 个 UTF-8 字节。最多 100 个按钮。"
+
+msgid "broadcast.invalid_buttons"
+msgstr "按钮格式无效。每行输入 名称 | https://example.com 或 名称 | callback:your_action。callback_data 长度须为 1–64 个 UTF-8 字节，最多 100 个按钮。"
+
+msgid "broadcast.single_photo_required"
+msgstr "请发送单张照片，不要发送相册。"
+
+msgid "broadcast.too_long"
+msgstr "广播文本过长，请缩短后再发送。"
+
+msgid "broadcast.confirm_prompt"
+msgstr "发送这条广播吗？"

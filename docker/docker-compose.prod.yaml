@@ -4,12 +4,14 @@ services:
     image: postgres:18-alpine
     restart: always
     shm_size: 128mb
+    ports:
+      - "127.0.0.1:${MANASHELPER_DB_HOST_PORT:-5432}:5432"
     env_file:
       - .env
     environment:
-      POSTGRES_PASSWORD: ${DATASOURCE_PASSWORD}
-      POSTGRES_USER: ${DATASOURCE_USERNAME}
-      POSTGRES_DB: ${DATASOURCE_NAME}
+      POSTGRES_PASSWORD: ${MANASHELPER_DATASOURCE_PASSWORD}
+      POSTGRES_USER: ${MANASHELPER_DATASOURCE_USERNAME}
+      POSTGRES_DB: ${MANASHELPER_DATASOURCE_NAME}
     volumes:
       - postgres18_data:/var/lib/postgresql
     healthcheck:
@@ -19,7 +21,7 @@ services:
       retries: 10
 
   app:
-    image: usbtypec1/manashelper:${VERSION}
+    image: usbtypec1/manashelper:${MANASHELPER_VERSION}
     container_name: app
     restart: always
     env_file:

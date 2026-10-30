@@ -23,8 +23,12 @@ and `core/time.py` owns the shared timezone. Schedule owns its application text 
 Empty legacy `bot/`, `services/`, `repositories/` and `scraping/` packages were removed. Feedback, advertisements and the survey live in
 `modules/feedback/`, `modules/advertisements/` and `modules/student_questions/`, with REQUEST providers in `main.py`.
 Advertisements separates presentation, application and infrastructure, with domain enums; feedback and the survey stay flat.
-Broadcast lives in flat `modules/broadcast/`: SendBroadcast uses UsersQuery and a delivery protocol;
-Telegram localization, HTML and API errors stay in its sender adapter. Its provider retains REQUEST scope.
+Broadcast lives in flat `modules/broadcast/`: SendBroadcast uses active IDs from UsersQuery and a delivery protocol;
+Telegram localization, HTML, one-photo delivery and API errors stay in its sender adapter. Its provider retains REQUEST scope.
+Broadcast accepts a text/photo draft and URL or existing callback buttons, with preview and explicit confirmation.
+User.bot_stopped is the shared persistent delivery flag. Recipient SQL and UserMessageDelivery suppress stopped users
+across broadcasts, Food menu, Schedule, OBIS and Eders; permanent recipient errors set it in the same request scope.
+A private-chat profile refresh clears it; group activity preserves it. Notification preferences and snapshot syncs stay intact.
 Food menu lives in `modules/food_menu/` with application, presentation, infrastructure, jobs and provider.
 Its client/parser retain APP scope; repositories and services retain REQUEST. BroadcastFoodMenu selects
 the menu/recipients, TelegramFoodMenuSender handles delivery/cleanup, and jobs are thin request-scope entry points.
@@ -72,7 +76,7 @@ importing one repository no longer loads the whole schema as a side effect.
 Telegram Platform lives in `platform/telegram/`: dispatcher, commands/catalog/extractor, navigation,
 Settings callbacks/routers, filters, middleware, HTML/delivery, audit and scheduled message deletions.
 TelegramPlatformProvider owns both audit and deletion repositories/services in REQUEST. Audit records only
-matched/allowed updates, masks password text with `[masked]`, and stays after the private-chat guard.
+matched/allowed updates from private chats only, masks password text with `[masked]`, and stays after the private-chat guard.
 Cleanup jobs use MessageDeletionService.delete_due with async delivery; delete_messages batches by 100,
 continues after TelegramAPIError and propagates unexpected errors. Rows are acknowledged after all chats;
 an unexpected sweep failure logs and leaves them queued. Preserve the five-minute schedule and no retry.
@@ -103,9 +107,9 @@ dependencies REQUEST. PollEdersUser preserves refresh→locale→pending→send�
 materials and yields delivered events for immediate acknowledgement. TelegramAPIError skips one message without ack;
 unexpected errors abort only that user. Preserve snapshot JSON, event keys, baseline/account/schema suppression,
 monotonic observations, user-row FOR UPDATE before first state, and the one-retry whole-snapshot login flow.
-The optional EDERS_PASSWORD env value is the shared Moodle password; obtain logintoken from the form for every login
+The optional MANASHELPER_EDERS_PASSWORD env value is the shared Moodle password; obtain logintoken from the form for every login
 and detect successful login by an authenticated page with sesskey, without a redirect URL allowlist.
-Missing or empty EDERS_PASSWORD disables Eders and Study week routers,
+Missing or empty MANASHELPER_EDERS_PASSWORD disables Eders and Study week routers,
 main-menu buttons, Eders notification settings and polling. Legacy commands remain hidden aliases when enabled.
 Eders polling requires only a nonempty saved student number; the snapshot marker is SHA-256 of that number.
 The first sync after switching from the ciphertext marker establishes a silent account baseline.
@@ -167,7 +171,7 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
   only after the new survey finishes; cancellation leaves the old response intact. Callback session IDs reject stale
   buttons. Its deep-link router must precede the advertisement deep-link router, which claims other start payloads.
 - Feedback and `/broadcast` are restricted to `Settings.admin_chat_id`. Admins reply to forwarded feedback using
-  Telegram's native reply action. `/broadcast` is registered only for that chat and sends to all registered users.
+  Telegram's native reply action. `/broadcast` is registered only for that chat and sends to active registered users.
   Broadcast clears FSM before loading recipients and sends sequentially without retry. TelegramAPIError during
   delivery skips that recipient; locale lookup failures and unexpected errors abort without a summary.
 
@@ -220,27 +224,27 @@ uv run python -m manashelper.main
 
 The app needs Postgres and the environment variables defined in `src/manashelper/core/config.py`: Telegram token,
 database credentials, OBIS encryption key, advertisement channel ID/link, moderation chat ID and admin chat ID.
-`DATASOURCE_HOST` defaults to the Docker service name `db`; use `localhost` when running outside Docker.
-`docker-compose.dev.yml` starts the development Postgres on port 5432. A local `.env` is read automatically and
+`MANASHELPER_DATASOURCE_HOST` defaults to the Docker service name `db`; use `localhost` when running outside Docker.
+`docker/docker-compose.dev.yaml` starts the development Postgres on port 5432. A local `.env` is read automatically and
 is ignored by Git.
 
-For local verification, use a development `.env` with `TELEGRAM_BOT_TOKEN`, `OBIS_ENCRYPTION_KEY` and
-the `DATASOURCE_NAME`, `DATASOURCE_USERNAME`, `DATASOURCE_PASSWORD` values matching the development database.
+For local verification, use a development `.env` with `MANASHELPER_TELEGRAM_BOT_TOKEN`, `MANASHELPER_OBIS_ENCRYPTION_KEY` and
+the `MANASHELPER_DATASOURCE_NAME`, `MANASHELPER_DATASOURCE_USERNAME`, `MANASHELPER_DATASOURCE_PASSWORD` values matching the development database.
 The commands below override the Docker hostname and provide placeholder Telegram chat/channel settings for tests:
 
 ```sh
-docker compose -f docker-compose.dev.yml up -d --wait db
+docker compose --project-directory . --env-file .env -f docker/docker-compose.dev.yaml up -d --wait db
 .venv/bin/pybabel compile -d src/manashelper/locales
-env DATASOURCE_HOST=localhost \
-  ADVERTISEMENT_CHANNEL_ID=-1000000000000 ADVERTISEMENT_CHANNEL_LINK=https://t.me/example \
-  MODERATION_CHAT_ID=-1000000000001 ADMIN_CHAT_ID=-1000000000002 \
+env MANASHELPER_DATASOURCE_HOST=localhost \
+  MANASHELPER_ADVERTISEMENT_CHANNEL_ID=-1000000000000 MANASHELPER_ADVERTISEMENT_CHANNEL_LINK=https://t.me/example \
+  MANASHELPER_MODERATION_CHAT_ID=-1000000000001 MANASHELPER_ADMIN_CHAT_ID=-1000000000002 \
   .venv/bin/alembic upgrade head
 .venv/bin/ruff check .
 .venv/bin/ruff format --check .
 .venv/bin/mypy src/manashelper
-env DATASOURCE_HOST=localhost \
-  ADVERTISEMENT_CHANNEL_ID=-1000000000000 ADVERTISEMENT_CHANNEL_LINK=https://t.me/example \
-  MODERATION_CHAT_ID=-1000000000001 ADMIN_CHAT_ID=-1000000000002 \
+env MANASHELPER_DATASOURCE_HOST=localhost \
+  MANASHELPER_ADVERTISEMENT_CHANNEL_ID=-1000000000000 MANASHELPER_ADVERTISEMENT_CHANNEL_LINK=https://t.me/example \
+  MANASHELPER_MODERATION_CHAT_ID=-1000000000001 MANASHELPER_ADMIN_CHAT_ID=-1000000000002 \
   .venv/bin/pytest -q --tb=line
 ```
 

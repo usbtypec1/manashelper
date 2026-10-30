@@ -14,10 +14,10 @@ from manashelper.modules.eders.infrastructure.serialization import deserialize_s
 
 
 def test_saved_course_html_corpus():
-    directory = Path(os.environ.get("EDERS_HTML_DIR", "r"))
+    directory = Path(os.environ.get("MANASHELPER_EDERS_HTML_DIR", "r"))
     files = sorted(directory.glob("*.html"))
     if not files:
-        pytest.skip("Local Eders export is absent; set EDERS_HTML_DIR")
+        pytest.skip("Local Eders export is absent; set MANASHELPER_EDERS_HTML_DIR")
     counts = Counter()
     deadlines = 0
     for path in files:

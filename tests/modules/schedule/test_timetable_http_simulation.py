@@ -6,7 +6,7 @@ import pytest
 from manashelper.modules.schedule.infrastructure import timetable_client as client_module
 from manashelper.modules.schedule.infrastructure.timetable_parser import parse_timetable_page
 
-SIMULATION_URL = os.getenv("TIMETABLE_SIMULATION_URL")
+SIMULATION_URL = os.getenv("MANASHELPER_TIMETABLE_SIMULATION_URL")
 pytestmark = pytest.mark.skipif(not SIMULATION_URL, reason="Optional local Postman timetable simulation")
 
 
