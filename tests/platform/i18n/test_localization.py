@@ -25,7 +25,7 @@ from manashelper.platform.telegram.command_catalog import (
 )
 from manashelper.platform.telegram.commands import setup_commands
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
-from manashelper.platform.telegram.navigation import build_main_keyboard
+from manashelper.platform.telegram.navigation import build_main_keyboard, build_study_keyboard
 from tests.paths import PROJECT_ROOT
 
 ROOT = PROJECT_ROOT
@@ -133,12 +133,17 @@ async def test_translated_reply_keyboard_buttons_match_filters(
     from manashelper.core.config import get_settings
 
     monkeypatch.setattr(get_settings(), "eders_password", SecretStr("fake-password") if eders_enabled else None)
-    keys = ["menu.food", "menu.schedule", "menu.attendance", "menu.grades", "menu.marketplace", "menu.settings"]
+    main_keys = ["menu.food", "menu.study", "menu.marketplace", "menu.settings"]
+    study_keys = ["menu.schedule", "menu.attendance", "menu.grades", "common.back_to_menu"]
     if eders_enabled:
-        keys[4:4] = ["menu.eders", "menu.eders_materials", "menu.study_week"]
+        study_keys.insert(1, "menu.study_week")
+        study_keys[-1:-1] = ["menu.eders", "menu.eders_materials"]
     with i18n.context(), i18n.use_locale(locale.value), i18n.use_theme(theme):
-        labels = [button.text for row in build_main_keyboard().keyboard for button in row]
-        assert labels == [i18n.gettext(key) for key in keys]
+        main_labels = [button.text for row in build_main_keyboard().keyboard for button in row]
+        study_labels = [button.text for row in build_study_keyboard().keyboard for button in row]
+        assert main_labels == [i18n.gettext(key) for key in main_keys]
+        assert study_labels == [i18n.gettext(key) for key in study_keys]
+        keys, labels = main_keys + study_keys, main_labels + study_labels
         for key, label in zip(keys, labels, strict=True):
             message = Message(message_id=1, date=datetime.now(), chat={"id": 1, "type": "private"}, text=label)
             assert await TranslatedText(key)(message)

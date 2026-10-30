@@ -6,19 +6,30 @@ from manashelper.core.config import get_settings
 
 
 def build_main_keyboard() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=_("menu.food")), KeyboardButton(text=_("menu.study"))],
+            [KeyboardButton(text=_("menu.marketplace"))],
+            [KeyboardButton(text=_("menu.settings"))],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def build_study_keyboard() -> ReplyKeyboardMarkup:
+    schedule_row = [KeyboardButton(text=_("menu.schedule"))]
     eders_rows = []
     if get_settings().eders_enabled:
+        schedule_row.append(KeyboardButton(text=_("menu.study_week")))
         eders_rows = [
             [KeyboardButton(text=_("menu.eders")), KeyboardButton(text=_("menu.eders_materials"))],
-            [KeyboardButton(text=_("menu.study_week"))],
         ]
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=_("menu.food")), KeyboardButton(text=_("menu.schedule"))],
+            schedule_row,
             [KeyboardButton(text=_("menu.attendance")), KeyboardButton(text=_("menu.grades"))],
             *eders_rows,
-            [KeyboardButton(text=_("menu.marketplace"))],
-            [KeyboardButton(text=_("menu.settings"))],
+            [KeyboardButton(text=_("common.back_to_menu"))],
         ],
         resize_keyboard=True,
     )

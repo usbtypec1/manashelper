@@ -1091,3 +1091,6 @@ msgstr "Таратуунун тексти өтө узун. Жөнөтүүдөн 
 
 msgid "broadcast.confirm_prompt"
 msgstr "Бул билдирүүнү таратуубу?"
+
+msgid "menu.study"
+msgstr "📚 Окуу"

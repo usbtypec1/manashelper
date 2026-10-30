@@ -1079,3 +1079,6 @@ msgstr "广播文本过长，请缩短后再发送。"
 
 msgid "broadcast.confirm_prompt"
 msgstr "发送这条广播吗？"
+
+msgid "menu.study"
+msgstr "📚 学习"

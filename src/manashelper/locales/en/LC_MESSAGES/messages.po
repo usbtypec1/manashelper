@@ -1090,3 +1090,6 @@ msgstr "The broadcast text is too long. Shorten it before sending."
 
 msgid "broadcast.confirm_prompt"
 msgstr "Send this broadcast?"
+
+msgid "menu.study"
+msgstr "📚 Studies"

@@ -33,6 +33,7 @@ from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
 from manashelper.platform.telegram.middlewares.per_chat_ordering import PerChatOrderingMiddleware
 from manashelper.platform.telegram.middlewares.private_chat_only import PrivateChatOnlyMiddleware
 from manashelper.platform.telegram.middlewares.rate_limit import RateLimitMiddleware
+from manashelper.platform.telegram.routers.navigation import router as navigation_router
 from manashelper.platform.telegram.routers.settings import router as settings_router
 from manashelper.platform.telegram.routers.start import router as start_router
 
@@ -64,6 +65,7 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
         start_router,
         locale_router,
         theme_router,
+        navigation_router,
         timetable_router,
         lesson_search_router,
         food_menu_router,

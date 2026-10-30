@@ -19,7 +19,7 @@ def test_disabled_feature_has_no_entry_points_or_jobs(monkeypatch):
         from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
         from manashelper.platform.telegram.command_catalog import build_private_commands
         from manashelper.platform.telegram.dispatcher import create_dispatcher
-        from manashelper.platform.telegram.navigation import build_main_keyboard
+        from manashelper.platform.telegram.navigation import build_main_keyboard, build_study_keyboard
 
         get_settings.cache_clear()
         settings = get_settings()
@@ -30,6 +30,8 @@ def test_disabled_feature_has_no_entry_points_or_jobs(monkeypatch):
         assert all(j.func is not poll_eders_job for j in create_scheduler(container, None).get_jobs())
         with i18n.context(), i18n.use_locale('ru'):
             labels = [b.text for row in build_main_keyboard().keyboard for b in row]
+            assert i18n.gettext('menu.study') in labels
+            labels += [b.text for row in build_study_keyboard().keyboard for b in row]
             eders_keys = ('menu.eders', 'menu.eders_materials', 'menu.study_week')
             assert not any(i18n.gettext(key) in labels for key in eders_keys)
             keyboard = build_notifications_keyboard(NotificationSettingsSummary(True, True, True))

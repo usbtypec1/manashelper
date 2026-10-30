@@ -20,7 +20,7 @@ You just chat with it on Telegram like you would with a friend, tapping buttons 
   lesson-attendance/skip budget straight from the chat. The bot can also notify you as soon as a new grade is
   posted or an absence is recorded, without you needing to check manually.
 - ⚙️ **Notification settings** — turn any of the above notifications on or off individually, whenever you like.
-- 📚 **Eders** — main-menu buttons open deadlines, course materials and the study week. Notification settings
+- 📚 **Eders** — buttons in **Studies** open deadlines, course materials and the study week. Notification settings
   configure reminders one day and two hours before a deadline, activity openings and deadline changes. The study week combines
   the next seven days of classes, activity dates and newly discovered materials. Eders is checked every 15 minutes
   using the saved student number and a shared password from `MANASHELPER_EDERS_PASSWORD`. `/materials text` searches course names,
@@ -30,6 +30,9 @@ You just chat with it on Telegram like you would with a friend, tapping buttons 
   handlers, notification settings and polling are disabled, including the study week.
 - 🌐 **Multiple languages** — the bot speaks Kyrgyz, Russian, Turkish, English and simplified Chinese, and picks a language
   automatically based on your Telegram app's language (you can also switch manually at any time).
+
+The main menu's **Studies** button groups Schedule, Study week, attendance, grades, Eders deadlines and materials.
+Study week and Eders entries appear when Eders is enabled. **Back to menu** returns to the main keyboard.
 
 Everything happens directly in the Telegram chat — there's no separate app or website to install.
 
