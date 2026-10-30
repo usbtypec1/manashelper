@@ -6,6 +6,7 @@ from dishka import AsyncContainer
 from manashelper.modules.schedule.application.course import CourseService
 from manashelper.modules.schedule.application.sync_course import ScheduleChangeSender, SyncCourseTimetable
 from manashelper.modules.schedule.presentation.sender import TelegramScheduleChangeSender
+from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
 
@@ -31,7 +32,8 @@ async def _sync_course_timetable(container: AsyncContainer, bot: Bot, course_id:
             service = await request_container.get(SyncCourseTimetable)
             locales = await request_container.get(LocaleService)
             themes = await request_container.get(ThemeService)
-            sender: ScheduleChangeSender = TelegramScheduleChangeSender(bot, locales, themes)
+            status = await request_container.get(BotStatusService)
+            sender: ScheduleChangeSender = TelegramScheduleChangeSender(bot, locales, themes, status)
             await service.execute(course_id, sender)
     except Exception:
         logger.exception("Failed to sync timetable for course %s", course_id)

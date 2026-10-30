@@ -1,0 +1,30 @@
+purpose:
+  stands_in_for: Telegram Bot API sendMessage and sendPhoto delivery responses.
+  unblocks: Local verification of aiogram serialization and persistent delivery opt-out without notifying real users.
+assumptions:
+  - id: photo-and-keyboard-contract
+    status: supported
+    claim: A cached photo file ID can be sent with an inline keyboard whose buttons each select URL or callback_data.
+    reason: The installed aiogram method/type schemas mirror the published Telegram contract; the local HTTP run exercised actual client serialization.
+    verification: On 2026-10-30, the real aiohttp aiogram client sent sendPhoto and sendMessage through this simulation. The test inspected encoded photo, caption, URL and callback fields. This does not validate a file ID against live Telegram storage.
+    source: https://core.telegram.org/bots/api#sendphoto; https://core.telegram.org/bots/api#inlinekeyboardbutton; tests/modules/broadcast/test_telegram_http_delivery.py
+    updated_at: "2026-10-30"
+  - id: permanent-recipient-error-strings
+    status: unknown
+    claim: Blocked/deactivated-user and missing-chat descriptions consistently identify recipients that cannot receive future messages without renewed interaction.
+    reason: The stand-in models known Telegram error descriptions. Its responses verify caller behavior, not completeness or stability of real Telegram error text.
+    verification: On 2026-10-30, modeled 403 blocked, 403 deactivated and 400 chat-not-found responses set the database flag. A repeat send to each flagged user produced no additional HTTP request. No live errors were induced.
+    source: postman/mocks/telegram/default.js; src/manashelper/platform/telegram/delivery.py; tests/modules/broadcast/test_telegram_http_delivery.py
+    updated_at: "2026-10-30"
+  - id: temporary-and-content-error-eligibility
+    status: supported
+    claim: In the modeled rate-limit, server-failure and malformed-content responses, the caller preserves recipient eligibility.
+    reason: The real client parsed 429 with retry_after, 500 and 400 entity-parse failures; application state stayed enabled for all three users.
+    verification: On 2026-10-30, the HTTP simulation test asserted bot_stopped remained false for those synthetic responses. The mock does not establish real error frequency or recovery time.
+    source: tests/modules/broadcast/test_telegram_http_delivery.py; https://core.telegram.org/bots/api#responseparameters
+    updated_at: "2026-10-30"
+fingerprints:
+  - id: broadcast-delivery-2026-10-30
+    date: "2026-10-30"
+    commit: e407141d68ba4f2c06fef19a32218b9a29a534a7 (working tree with broadcast/delivery changes)
+    cli: Postman 1.75.0

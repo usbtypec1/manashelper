@@ -47,6 +47,7 @@ from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
+from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
 from manashelper.modules.users.infrastructure.user import User
@@ -211,6 +212,7 @@ async def test_broadcast_job_selects_today_and_skips_missing_menu(monkeypatch, m
         BroadcastFoodMenu: BroadcastFoodMenu(daily, settings),
         LocaleService: users,
         ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+        BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
         FoodMenuCleanupSettingsService: cleanup,
     }
 
@@ -258,14 +260,18 @@ async def test_broadcast_delivery_exception_boundary(stage, telegram_error):
     menu = DailyMenuModel(uuid.uuid4(), date(2026, 10, 25), [], 0, 0, 0)
     if telegram_error:
         for user_id in [1, 2]:
-            await TelegramFoodMenuSender(bot, users, cleanup, themes).send(menu, user_id)
+            await TelegramFoodMenuSender(
+                bot, users, cleanup, themes, status=AsyncMock(is_stopped=AsyncMock(return_value=False))
+            ).send(menu, user_id)
         assert users.get_locale.await_count == 2
         assert bot.send_rich_message.await_args_list[-1].kwargs["chat_id"] == 2
         cleanup.schedule_cleanup.assert_any_await(2, [42])
     else:
         with pytest.raises(RuntimeError, match="fixture failure"):
             for user_id in [1, 2]:
-                await TelegramFoodMenuSender(bot, users, cleanup, themes).send(menu, user_id)
+                await TelegramFoodMenuSender(
+                    bot, users, cleanup, themes, status=AsyncMock(is_stopped=AsyncMock(return_value=False))
+                ).send(menu, user_id)
         assert users.get_locale.await_count == 1
 
 

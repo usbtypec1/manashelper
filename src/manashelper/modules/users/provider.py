@@ -1,5 +1,6 @@
 from dishka import Provider, Scope, provide
 
+from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
 from manashelper.modules.users.application.user_contact import UserContactService
@@ -17,3 +18,4 @@ class UsersProvider(Provider):
     locales = provide(LocaleService)
     themes = provide(ThemeService)
     contacts = provide(UserContactService)
+    bot_status = provide(BotStatusService)

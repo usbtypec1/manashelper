@@ -461,7 +461,7 @@ msgid "ads.owner_approved"
 msgstr "Your ad \"{title}\" has been approved and published! 🎉"
 
 msgid "broadcast.message_prompt"
-msgstr "📢 Send the message you want to broadcast to every user:"
+msgstr "Send the broadcast text or one photo with an optional caption."
 
 msgid "broadcast.preview"
 msgstr ""
@@ -481,7 +481,7 @@ msgid "broadcast.sent"
 msgstr "✅ Broadcast sent to {sent}/{total} users."
 
 msgid "broadcast.text_required"
-msgstr "Please send the broadcast as a text message."
+msgstr "Send text or one photo."
 
 msgid "broadcast.admin_message"
 msgstr ""
@@ -1069,3 +1069,24 @@ msgstr "🕯️ The cauldron is warming up: the selected day's menu has not been
 
 msgid "halloween.food_no_available_menus"
 msgstr "🕸️ The book of treats is empty: menus for the next 7 days have not been published yet."
+
+msgid "broadcast.edit_buttons"
+msgstr "Buttons"
+
+msgid "broadcast.without_buttons"
+msgstr "Without buttons"
+
+msgid "broadcast.buttons_prompt"
+msgstr "Send one button per line:\nName | https://example.com\nName | callback:your_action\nUse existing bot callback_data, from 1 to 64 UTF-8 bytes. Up to 100 buttons."
+
+msgid "broadcast.invalid_buttons"
+msgstr "Invalid buttons. Use Name | https://example.com or Name | callback:your_action, one per line. callback_data must be 1–64 UTF-8 bytes; at most 100 buttons."
+
+msgid "broadcast.single_photo_required"
+msgstr "Send one photo without an album."
+
+msgid "broadcast.too_long"
+msgstr "The broadcast text is too long. Shorten it before sending."
+
+msgid "broadcast.confirm_prompt"
+msgstr "Send this broadcast?"

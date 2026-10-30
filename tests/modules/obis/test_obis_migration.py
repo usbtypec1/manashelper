@@ -341,7 +341,9 @@ async def test_telegram_sender_keeps_recipient_locale_and_delivery_failure_bound
         else RuntimeError("Transport failed")
     )
     bot.send_message.side_effect = [error, None, None]
-    sender = TelegramObisNotificationSender(bot, 975001, Locale.ZH, Theme.BASIC)
+    sender = TelegramObisNotificationSender(
+        bot, 975001, Locale.ZH, Theme.BASIC, status=AsyncMock(is_stopped=AsyncMock(return_value=False))
+    )
     with i18n.context(), i18n.use_locale("ru"):
         if failure == "telegram":
             await PollObisUser(notifications).execute(975001, True, True, sender)

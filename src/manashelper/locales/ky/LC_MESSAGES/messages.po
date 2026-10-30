@@ -464,7 +464,7 @@ msgid "ads.owner_approved"
 msgstr "«{title}» жарнамаңыз ырасталып, жарыялды! 🎉"
 
 msgid "broadcast.message_prompt"
-msgstr "📢 Бардык колдонуучуларга жиберүүчү билдирүүнү жазыңыз:"
+msgstr "Таратуу үчүн текст же кааласаңыз сүрөттөмөсү бар бир сүрөт жөнөтүңүз."
 
 msgid "broadcast.preview"
 msgstr ""
@@ -484,7 +484,7 @@ msgid "broadcast.sent"
 msgstr "✅ Рассылка {sent}/{total} колдонуучуга жөнөтүлдү."
 
 msgid "broadcast.text_required"
-msgstr "Рассылканы текст билдирүү катары жөнөтүңүз."
+msgstr "Текст же бир сүрөт жөнөтүңүз."
 
 msgid "broadcast.admin_message"
 msgstr ""
@@ -1070,3 +1070,24 @@ msgstr "🕯️ Казан дагы эле жылып жатат: тандалг
 
 msgid "halloween.food_no_available_menus"
 msgstr "🕸️ Даамдар китеби азырынча бош: жакынкы 7 күндүн менюсу жарыялана элек."
+
+msgid "broadcast.edit_buttons"
+msgstr "Баскычтар"
+
+msgid "broadcast.without_buttons"
+msgstr "Баскычсыз"
+
+msgid "broadcast.buttons_prompt"
+msgstr "Ар бир сапка бир баскыч жазыңыз:\nАталышы | https://example.com\nАталышы | callback:your_action\nБоттун учурдагы callback_data маанисин колдонуңуз: UTF-8 боюнча 1–64 байт. Эң көп 100 баскыч."
+
+msgid "broadcast.invalid_buttons"
+msgstr "Баскычтардын форматы туура эмес. Ар бир сапка Аталышы | https://example.com же Аталышы | callback:your_action жазыңыз. callback_data: UTF-8 боюнча 1–64 байт; эң көп 100 баскыч."
+
+msgid "broadcast.single_photo_required"
+msgstr "Альбомсуз бир сүрөт жөнөтүңүз."
+
+msgid "broadcast.too_long"
+msgstr "Таратуунун тексти өтө узун. Жөнөтүүдөн мурун кыскартыңыз."
+
+msgid "broadcast.confirm_prompt"
+msgstr "Бул билдирүүнү таратуубу?"

@@ -19,7 +19,7 @@ class SendBroadcast:
         self._users = users
 
     async def execute(self, body: str, sender: BroadcastSender) -> BroadcastResult:
-        recipient_ids = await self._users.get_all_ids()
+        recipient_ids = await self._users.get_active_ids()
         sent_count = 0
         for user_id in recipient_ids:
             if await sender.send(user_id, body):

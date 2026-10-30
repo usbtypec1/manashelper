@@ -44,6 +44,7 @@ from manashelper.modules.student_questions.provider import StudentQuestionsProvi
 from manashelper.modules.student_questions.service import StudentQuestionsService
 from manashelper.modules.study_week.application import GetStudyWeek
 from manashelper.modules.study_week.provider import StudyWeekProvider
+from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.theme import ThemeService
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
@@ -196,9 +197,10 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
     service.refresh_snapshot.side_effect = fetch
     locales.get_locale.side_effect = recipient_locale
     tracking.pending_events.return_value = [event]
-    bot.send_message.side_effect = [TelegramBadRequest(SendMessage(chat_id=1, text="test"), "test failure"), None]
+    bot.send_message.side_effect = [TelegramBadRequest(SendMessage(chat_id=1, text="test"), "test failure"), object()]
     dependencies = {
         ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+        BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
         EdersTrackingService: tracking,
         PollEdersUser: PollEdersUser(service, tracking, locales),
     }
@@ -279,6 +281,7 @@ async def test_job_groups_new_materials_and_acknowledges_all_events_only_on_succ
     locales.get_locale.return_value = Locale.EN
     dependencies = {
         ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+        BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
         EdersTrackingService: tracking,
         PollEdersUser: PollEdersUser(service, tracking, locales),
     }

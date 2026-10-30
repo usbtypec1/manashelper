@@ -4,23 +4,25 @@ from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme
 from manashelper.modules.obis.application.notification import ExamGradeChange, LessonSkipChange
 from manashelper.modules.obis.presentation.formatter import format_exam_grade_change, format_lesson_skip_change
+from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.delivery import send_notification
 
 
 class TelegramObisNotificationSender:
-    def __init__(self, bot: Bot, user_id: int, locale: Locale, theme: Theme) -> None:
+    def __init__(self, bot: Bot, user_id: int, locale: Locale, theme: Theme, status: BotStatusService) -> None:
         self._bot = bot
         self._user_id = user_id
         self._locale = locale
         self._theme = theme
+        self._status = status
 
     async def exam_grade_changed(self, change: ExamGradeChange) -> None:
         with i18n.context(), i18n.use_locale(self._locale.value), i18n.use_theme(self._theme):
             text = format_exam_grade_change(change)
-        await send_notification(self._bot, self._user_id, text)
+        await send_notification(self._bot, self._user_id, text, self._status)
 
     async def lesson_skips_changed(self, change: LessonSkipChange) -> None:
         with i18n.context(), i18n.use_locale(self._locale.value), i18n.use_theme(self._theme):
             text = format_lesson_skip_change(change)
-        await send_notification(self._bot, self._user_id, text)
+        await send_notification(self._bot, self._user_id, text, self._status)

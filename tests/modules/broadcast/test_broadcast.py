@@ -32,7 +32,7 @@ async def test_broadcast_reaches_every_registered_user(session: AsyncSession) ->
 @pytest.mark.parametrize("outcomes", [[], [True, True], [True, False, True]])
 async def test_application_preserves_order_body_and_counts_failed_deliveries(outcomes):
     users = AsyncMock(spec=UsersQuery)
-    users.get_all_ids.return_value = list(range(len(outcomes)))
+    users.get_active_ids.return_value = list(range(len(outcomes)))
     sender = AsyncMock(spec=BroadcastSender)
     sender.send.side_effect = outcomes
     body = "  <raw> & body\n "
@@ -41,12 +41,12 @@ async def test_application_preserves_order_body_and_counts_failed_deliveries(out
 
     assert result == BroadcastResult(sent=sum(outcomes), total=len(outcomes))
     assert sender.send.await_args_list == [call(user_id, body) for user_id in range(len(outcomes))]
-    users.get_all_ids.assert_awaited_once()
+    users.get_active_ids.assert_awaited_once()
 
 
 async def test_application_propagates_unexpected_sender_failure_and_stops_delivery():
     users = AsyncMock(spec=UsersQuery)
-    users.get_all_ids.return_value = [1, 2, 3]
+    users.get_active_ids.return_value = [1, 2, 3]
     sender = AsyncMock(spec=BroadcastSender)
     sender.send.side_effect = [True, RuntimeError("unexpected delivery failure"), True]
 

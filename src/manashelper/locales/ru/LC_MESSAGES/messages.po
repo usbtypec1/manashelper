@@ -461,7 +461,7 @@ msgid "ads.owner_approved"
 msgstr "Ваше объявление «{title}» одобрено и опубликовано! 🎉"
 
 msgid "broadcast.message_prompt"
-msgstr "📢 Отправьте сообщение, которое нужно разослать всем пользователям:"
+msgstr "Пришлите текст рассылки или одну фотографию с необязательной подписью."
 
 msgid "broadcast.preview"
 msgstr ""
@@ -481,7 +481,7 @@ msgid "broadcast.sent"
 msgstr "✅ Рассылка отправлена {sent}/{total} пользователям."
 
 msgid "broadcast.text_required"
-msgstr "Пожалуйста, отправьте рассылку текстовым сообщением."
+msgstr "Пришлите текст или одну фотографию."
 
 msgid "broadcast.admin_message"
 msgstr ""
@@ -1067,3 +1067,24 @@ msgstr "🕯️ Котёл ещё греется: меню на выбранны
 
 msgid "halloween.food_no_available_menus"
 msgstr "🕸️ Книга угощений пока пуста: меню на ближайшие 7 дней ещё не опубликовано."
+
+msgid "broadcast.edit_buttons"
+msgstr "Кнопки"
+
+msgid "broadcast.without_buttons"
+msgstr "Без кнопок"
+
+msgid "broadcast.buttons_prompt"
+msgstr "Пришлите по одной кнопке в строке:\nНазвание | https://example.com\nНазвание | callback:your_action\nИспользуйте существующие callback_data бота: от 1 до 64 байт UTF-8. Не более 100 кнопок."
+
+msgid "broadcast.invalid_buttons"
+msgstr "Неверный формат кнопок. Укажите Название | https://example.com или Название | callback:your_action, по одной в строке. callback_data: 1–64 байта UTF-8; не более 100 кнопок."
+
+msgid "broadcast.single_photo_required"
+msgstr "Пришлите одну фотографию без альбома."
+
+msgid "broadcast.too_long"
+msgstr "Текст рассылки слишком длинный. Сократите его перед отправкой."
+
+msgid "broadcast.confirm_prompt"
+msgstr "Отправить эту рассылку?"

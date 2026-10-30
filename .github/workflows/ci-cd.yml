@@ -117,7 +117,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           username: usbtypec1
-          password: ${{ secrets.MANASHELPER_DOCKERHUB_TOKEN }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Docker image
         run: |
@@ -148,7 +148,7 @@ jobs:
 
       - name: Prepare deployment files
         env:
-          MANASHELPER_ENV_FILE: ${{ secrets.MANASHELPER_ENV_FILE }}
+          MANASHELPER_ENV_FILE: ${{ secrets.ENV_FILE }}
         shell: bash
         run: |
           set -euo pipefail
@@ -187,10 +187,10 @@ jobs:
       - name: Test SSH connection
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.MANASHELPER_EC2_HOST }}
-          username: ${{ secrets.MANASHELPER_EC2_USER }}
-          key: ${{ secrets.MANASHELPER_EC2_SSH_KEY }}
-          port: ${{ secrets.MANASHELPER_EC2_PORT }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT }}
           debug: true
 
           script: |
@@ -231,10 +231,10 @@ jobs:
       - name: Copy deployment files
         uses: appleboy/scp-action@v1
         with:
-          host: ${{ secrets.MANASHELPER_EC2_HOST }}
-          username: ${{ secrets.MANASHELPER_EC2_USER }}
-          key: ${{ secrets.MANASHELPER_EC2_SSH_KEY }}
-          port: ${{ secrets.MANASHELPER_EC2_PORT }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT }}
 
           source: "docker-compose.yaml,.env"
           target: "/opt/manashelper"
@@ -249,10 +249,10 @@ jobs:
       - name: Verify deployment files
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.MANASHELPER_EC2_HOST }}
-          username: ${{ secrets.MANASHELPER_EC2_USER }}
-          key: ${{ secrets.MANASHELPER_EC2_SSH_KEY }}
-          port: ${{ secrets.MANASHELPER_EC2_PORT }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT }}
 
           script: |
             set -e
@@ -281,10 +281,10 @@ jobs:
       - name: Deploy
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.MANASHELPER_EC2_HOST }}
-          username: ${{ secrets.MANASHELPER_EC2_USER }}
-          key: ${{ secrets.MANASHELPER_EC2_SSH_KEY }}
-          port: ${{ secrets.MANASHELPER_EC2_PORT }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT }}
 
           script: |
             set -e
@@ -332,8 +332,8 @@ jobs:
     steps:
       - name: Send Telegram summary
         env:
-          MANASHELPER_TELEGRAM_BOT_TOKEN: ${{ secrets.MANASHELPER_TELEGRAM_BOT_TOKEN }}
-          MANASHELPER_TELEGRAM_CHAT_ID: ${{ vars.MANASHELPER_TELEGRAM_CHAT_ID }}
+          MANASHELPER_TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          MANASHELPER_TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
           MANASHELPER_TEST_RESULT: ${{ needs.test.result }}
           MANASHELPER_BUILD_RESULT: ${{ needs.build.result }}
           MANASHELPER_DEPLOY_RESULT: ${{ needs.deploy.result }}
@@ -342,7 +342,7 @@ jobs:
           set -euo pipefail
 
           if [ -z "$MANASHELPER_TELEGRAM_BOT_TOKEN" ] || [ -z "$MANASHELPER_TELEGRAM_CHAT_ID" ]; then
-            echo "::warning::Telegram summary skipped: set secrets.MANASHELPER_TELEGRAM_BOT_TOKEN and vars.MANASHELPER_TELEGRAM_CHAT_ID"
+            echo "::warning::Telegram summary skipped: set secrets.TELEGRAM_BOT_TOKEN and vars.TELEGRAM_CHAT_ID"
             exit 0
           fi
 

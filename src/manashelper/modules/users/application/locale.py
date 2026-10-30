@@ -22,6 +22,8 @@ class LocaleService:
         full_name: str,
         username: str | None,
         language_code: str | None,
+        *,
+        resume_bot: bool = False,
     ) -> Locale:
         """Upsert the user and return their resolved locale.
 
@@ -30,6 +32,8 @@ class LocaleService:
         that language isn't one of the supported locales.
         """
         user = await self._user_repository.upsert(user_id=user_id, full_name=full_name, username=username)
+        if resume_bot:
+            user.bot_stopped = False
         if user.locale is not None:
             return Locale(user.locale)
 

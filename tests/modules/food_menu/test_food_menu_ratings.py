@@ -269,7 +269,11 @@ async def test_menu_delivery_and_broadcast_schedule_one_rich_message_for_cleanup
     users.get_by_id.return_value.locale = "ru"
     cleanup.reset_mock()
     await TelegramFoodMenuSender(
-        bot, LocaleService(users), cleanup, AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC))
+        bot,
+        LocaleService(users),
+        cleanup,
+        AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+        status=AsyncMock(is_stopped=AsyncMock(return_value=False)),
     ).send(menu, 900_001)
     cleanup.schedule_cleanup.assert_awaited_once_with(900_001, [43])
     rich = bot.send_rich_message.call_args.kwargs["rich_message"]

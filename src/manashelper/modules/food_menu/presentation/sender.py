@@ -10,21 +10,29 @@ from manashelper.modules.food_menu.presentation.keyboards.food_menu import (
     build_food_menu_settings_buttons,
     build_menu_rating_buttons,
 )
+from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
 from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.delivery import UserMessageDelivery
 
 logger = logging.getLogger(__name__)
 
 
 class TelegramFoodMenuSender:
     def __init__(
-        self, bot: Bot, locales: LocaleService, cleanup: FoodMenuCleanupSettingsService, themes: ThemeService
+        self,
+        bot: Bot,
+        locales: LocaleService,
+        cleanup: FoodMenuCleanupSettingsService,
+        themes: ThemeService,
+        status: BotStatusService,
     ) -> None:
         self._bot = bot
         self._locales = locales
         self._cleanup = cleanup
         self._themes = themes
+        self._delivery = UserMessageDelivery(status)
 
     async def send(self, daily_menu: DailyMenuModel, user_id: int) -> None:
         try:
@@ -36,7 +44,10 @@ class TelegramFoodMenuSender:
                     build_menu_rating_buttons(daily_menu.id),
                     build_food_menu_settings_buttons(include_notifications=True),
                 )
-            sent = await self._bot.send_rich_message(chat_id=user_id, rich_message=rich_message)
-            await self._cleanup.schedule_cleanup(user_id, [sent.message_id])
+            sent = await self._delivery.send(
+                user_id, lambda: self._bot.send_rich_message(chat_id=user_id, rich_message=rich_message)
+            )
+            if sent is not None:
+                await self._cleanup.schedule_cleanup(user_id, [sent.message_id])
         except TelegramAPIError:
             logger.warning("Failed to send food menu broadcast to user %s", user_id, exc_info=True)

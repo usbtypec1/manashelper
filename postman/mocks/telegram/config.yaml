@@ -1,0 +1,9 @@
+version: 1
+name: Telegram delivery contract fixture
+slug: telegram
+protocol: http
+interceptRequests: true
+scenarios:
+  - name: default
+    path: ./default.js
+    default: true

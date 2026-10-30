@@ -8,6 +8,7 @@ from manashelper.modules.eders.application.tracking import EdersTrackingService
 from manashelper.modules.eders.errors import EdersFetchError, EdersParseError, EdersUnsafeUrlError
 from manashelper.modules.eders.presentation.sender import TelegramEdersNotificationSender
 from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
+from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.theme import ThemeService
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,8 @@ async def poll_eders_job(container: AsyncContainer, bot: Bot) -> None:
             async with container() as request:
                 poll = await request.get(PollEdersUser)
                 themes = await request.get(ThemeService)
-                await poll.execute(user_id, TelegramEdersNotificationSender(bot, themes))
+                status = await request.get(BotStatusService)
+                await poll.execute(user_id, TelegramEdersNotificationSender(bot, themes, status))
         except (
             UserNotFoundError,
             UserHasNoCredentialsError,

@@ -33,8 +33,10 @@ class NotificationSettingsRepository:
         result = await self._session.execute(
             select(user_courses.c.user_id)
             .select_from(user_courses)
+            .join(User, User.id == user_courses.c.user_id)
             .outerjoin(NotificationSettings, NotificationSettings.user_id == user_courses.c.user_id)
             .where(user_courses.c.course_id == course_id)
+            .where(User.bot_stopped.is_(False))
             .where(NotificationSettings.schedule_changes_enabled.is_distinct_from(False))
         )
         return list(result.scalars().all())
@@ -44,5 +46,6 @@ class NotificationSettingsRepository:
             select(User.id)
             .outerjoin(NotificationSettings, NotificationSettings.user_id == User.id)
             .where(column.is_distinct_from(False))
+            .where(User.bot_stopped.is_(False))
         )
         return list(result.scalars().all())

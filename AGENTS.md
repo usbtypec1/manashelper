@@ -23,8 +23,12 @@ and `core/time.py` owns the shared timezone. Schedule owns its application text 
 Empty legacy `bot/`, `services/`, `repositories/` and `scraping/` packages were removed. Feedback, advertisements and the survey live in
 `modules/feedback/`, `modules/advertisements/` and `modules/student_questions/`, with REQUEST providers in `main.py`.
 Advertisements separates presentation, application and infrastructure, with domain enums; feedback and the survey stay flat.
-Broadcast lives in flat `modules/broadcast/`: SendBroadcast uses UsersQuery and a delivery protocol;
-Telegram localization, HTML and API errors stay in its sender adapter. Its provider retains REQUEST scope.
+Broadcast lives in flat `modules/broadcast/`: SendBroadcast uses active IDs from UsersQuery and a delivery protocol;
+Telegram localization, HTML, one-photo delivery and API errors stay in its sender adapter. Its provider retains REQUEST scope.
+Broadcast accepts a text/photo draft and URL or existing callback buttons, with preview and explicit confirmation.
+User.bot_stopped is the shared persistent delivery flag. Recipient SQL and UserMessageDelivery suppress stopped users
+across broadcasts, Food menu, Schedule, OBIS and Eders; permanent recipient errors set it in the same request scope.
+A private-chat profile refresh clears it; group activity preserves it. Notification preferences and snapshot syncs stay intact.
 Food menu lives in `modules/food_menu/` with application, presentation, infrastructure, jobs and provider.
 Its client/parser retain APP scope; repositories and services retain REQUEST. BroadcastFoodMenu selects
 the menu/recipients, TelegramFoodMenuSender handles delivery/cleanup, and jobs are thin request-scope entry points.
@@ -167,7 +171,7 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
   only after the new survey finishes; cancellation leaves the old response intact. Callback session IDs reject stale
   buttons. Its deep-link router must precede the advertisement deep-link router, which claims other start payloads.
 - Feedback and `/broadcast` are restricted to `Settings.admin_chat_id`. Admins reply to forwarded feedback using
-  Telegram's native reply action. `/broadcast` is registered only for that chat and sends to all registered users.
+  Telegram's native reply action. `/broadcast` is registered only for that chat and sends to active registered users.
   Broadcast clears FSM before loading recipients and sends sequentially without retry. TelegramAPIError during
   delivery skips that recipient; locale lookup failures and unexpected errors abort without a summary.
 

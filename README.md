@@ -55,8 +55,8 @@ before starting the new Compose configuration. The old volume is preserved.
 
 Run these commands from the repository root.
 
-All project environment variables use the `MANASHELPER_` prefix, including GitHub Actions secrets and variables.
-When upgrading, rename keys in local/production `.env` files and GitHub settings in the same release; old
+Application environment variables use the `MANASHELPER_` prefix. GitHub Actions secret and variable names
+have no prefix. When upgrading, rename keys in local/production `.env` files in the same release; old
 unprefixed names are ignored. For rollback, restore the previous configuration with the previous application
 version. PostgreSQL container variables such as `POSTGRES_USER` and platform variables such as `GITHUB_SHA`
 keep their standard names.
@@ -110,6 +110,36 @@ each commit — install the git hook once with `pre-commit install`.
 Adding or changing a user-facing string? See the gettext catalog workflow in
 [`AGENTS.md`](AGENTS.md#localization-and-telegram-text).
 
+### Admin broadcasts
+
+`/broadcast` is available only in `MANASHELPER_ADMIN_CHAT_ID`. Send text or one photo with an optional caption,
+review the preview, and use **Buttons** to attach one button per line:
+
+```text
+University | https://www.manas.edu.kg
+Menu | callback:food_menu:today
+```
+
+Each button opens a URL or sends existing bot `callback_data` (1–64 UTF-8 bytes); adding a payload does not
+create a new callback handler. Up to 100 buttons are supported. **Without buttons** clears the keyboard.
+The final confirmation sends to active registered users. A photo is reused by Telegram file ID; if the text
+exceeds the photo caption limit, recipients receive the photo followed by the text with its buttons.
+
+A permanent delivery failure, such as a blocked bot, deactivated user or missing chat, sets `users.bot_stopped`.
+Manual broadcasts and all scheduled notification senders suppress delivery to stopped users. Rate limits,
+server errors and invalid message content do not set this flag. The next message or callback in a private chat
+clears the flag while preserving saved notification preferences; activity in a group does not reactivate it.
+Background snapshot refreshes may continue while delivery is paused. Existing users start with the flag disabled.
+The schema change is applied by the normal Alembic startup migration.
+
+To verify Telegram serialization and failure handling locally without contacting Telegram:
+
+```sh
+postman simulation run postman/simulations/telegram.sim.yaml --port 4903 --output ndjson --no-history
+# In another terminal with a migrated development database and compiled catalogs:
+MANASHELPER_TELEGRAM_SIMULATION_URL=http://127.0.0.1:4903/telegram uv run pytest -q tests/modules/broadcast/test_telegram_http_delivery.py
+```
+
 ### Deployment
 
 Compose files live in [`docker/`](docker/):
@@ -140,19 +170,19 @@ docker compose --project-directory . --env-file .env -f docker/docker-compose.pr
   pushes the versioned image and `latest` to Docker Hub. Images from `main` use a `sha-<commit>` tag;
   release tags use the version without the `v` prefix. Pushes to other branches do not trigger this workflow.
 - **Deployment files**: the runner copies `docker/docker-compose.prod.yaml` as `docker-compose.yaml` and writes
-  the `MANASHELPER_ENV_FILE` secret to `.env`. Both files are copied to `/opt/manashelper/` on the server. The secret must
+  the `ENV_FILE` secret to `.env`. Both files are copied to `/opt/manashelper/` on the server. The secret must
   contain the production configuration with `MANASHELPER_DATASOURCE_HOST=db`; CI exports `MANASHELPER_VERSION` from the build job.
 - **Server update** validates `docker-compose.yaml`, pulls the image, checks for an unmigrated PostgreSQL 17
   installation, starts containers with `docker compose -f docker-compose.yaml up -d --wait --remove-orphans`,
   and removes dangling images.
 
-Configure GitHub Actions secrets `MANASHELPER_DOCKERHUB_TOKEN`, `MANASHELPER_ENV_FILE`, `MANASHELPER_EC2_HOST`, `MANASHELPER_EC2_USER`, `MANASHELPER_EC2_SSH_KEY` and
-`MANASHELPER_EC2_PORT`. The SSH user needs Docker access and write permission to `/opt/manashelper`; the server needs
+Configure GitHub Actions secrets `DOCKERHUB_TOKEN`, `ENV_FILE`, `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY` and
+`EC2_PORT`. The SSH user needs Docker access and write permission to `/opt/manashelper`; the server needs
 Docker with the Compose plugin. The deployed `.env` has permissions `600`.
 
 The final `notify` job waits for Test, Build and Deploy, including failed or skipped jobs, then sends one
 Telegram message with their results: 🟢 success, 🔴 failure, ⚪ skipped, 🟡 cancelled. Set the bot token in the
-GitHub Actions secret `MANASHELPER_TELEGRAM_BOT_TOKEN` and the destination chat ID in the Actions variable `MANASHELPER_TELEGRAM_CHAT_ID`.
+GitHub Actions secret `TELEGRAM_BOT_TOKEN` and the destination chat ID in the Actions variable `TELEGRAM_CHAT_ID`.
 The bot must be able to send messages to that chat. If either setting is unavailable (for example, secrets on
 a fork pull request), the notification is skipped with a workflow warning. Delivery errors fail the notification
 job. The message uses Telegram's [`sendMessage`](https://core.telegram.org/bots/api#sendmessage) method.

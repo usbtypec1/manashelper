@@ -140,14 +140,20 @@ async def test_background_delivery_uses_each_recipients_saved_theme_and_restores
     with i18n.context(), i18n.use_locale("en"), i18n.use_theme(Theme.HALLOWEEN):
         for user_id in [982001, 982002, 982001]:
             if source == "food":
-                await TelegramFoodMenuSender(bot, locales, cleanup, themes).send(menu, user_id)
+                await TelegramFoodMenuSender(
+                    bot, locales, cleanup, themes, status=AsyncMock(is_stopped=AsyncMock(return_value=False))
+                ).send(menu, user_id)
             elif source == "schedule":
-                await TelegramScheduleChangeSender(bot, locales, themes).send(
-                    user_id, [LessonChange(1, "09:00-09:50", "Old", "New")]
-                )
+                await TelegramScheduleChangeSender(
+                    bot, locales, themes, status=AsyncMock(is_stopped=AsyncMock(return_value=False))
+                ).send(user_id, [LessonChange(1, "09:00-09:50", "Old", "New")])
             elif source == "obis":
                 sender = TelegramObisNotificationSender(
-                    bot, user_id, await locales.get_locale(user_id), await themes.get_theme(user_id)
+                    bot,
+                    user_id,
+                    await locales.get_locale(user_id),
+                    await themes.get_theme(user_id),
+                    status=AsyncMock(is_stopped=AsyncMock(return_value=False)),
                 )
                 await sender.exam_grade_changed(ExamGradeChange("Math", "Exam", "85"))
                 await sender.lesson_skips_changed(LessonSkipChange("Math", SkipType.THEORY, 12.5, 2))
@@ -155,9 +161,9 @@ async def test_background_delivery_uses_each_recipients_saved_theme_and_restores
                 event = EdersEvent("opened", item(), "opened", NOW, NOW)
                 delivered = [
                     entry
-                    async for entry in TelegramEdersNotificationSender(bot, themes).send(
-                        user_id, await locales.get_locale(user_id), [event]
-                    )
+                    async for entry in TelegramEdersNotificationSender(
+                        bot, themes, status=AsyncMock(is_stopped=AsyncMock(return_value=False))
+                    ).send(user_id, await locales.get_locale(user_id), [event])
                 ]
                 assert delivered == [event]
             assert i18n.current_theme == Theme.HALLOWEEN and i18n.current_locale == "en"
