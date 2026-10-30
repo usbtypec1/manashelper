@@ -1011,3 +1011,18 @@ msgstr "Ders haftası"
 
 msgid "data.preparing"
 msgstr "Veriler arka planda hazırlanıyor. Sonraki güncellemeden sonra tekrar deneyin (her 15 dakikada bir)."
+
+msgid "settings.theme"
+msgstr "🎨 Tema"
+
+msgid "theme.prompt"
+msgstr "Menü temasını seçin. Seçiminiz sonraki ziyaretler için kaydedilir."
+
+msgid "theme.basic"
+msgstr "Temel"
+
+msgid "theme.halloween"
+msgstr "🎃 Cadılar Bayramı"
+
+msgid "theme.selected"
+msgstr "Seçilen tema: {theme}"

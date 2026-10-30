@@ -24,6 +24,7 @@ class User(Base):
     # the Telegram client yet and the user hasn't picked one either — see
     # bot/middlewares/i18n.py; locale selection lives in Users presentation.
     locale: Mapped[str | None] = mapped_column(String(2))
+    theme: Mapped[str] = mapped_column(String(16), default="basic", server_default="basic")
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
 

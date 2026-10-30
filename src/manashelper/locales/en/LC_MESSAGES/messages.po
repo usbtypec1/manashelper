@@ -1012,3 +1012,18 @@ msgstr "Study week"
 
 msgid "data.preparing"
 msgstr "Data is being prepared in the background. Please try again after the next update (every 15 minutes)."
+
+msgid "settings.theme"
+msgstr "🎨 Theme"
+
+msgid "theme.prompt"
+msgstr "Choose a menu theme. Your choice is saved for future visits."
+
+msgid "theme.basic"
+msgstr "Basic"
+
+msgid "theme.halloween"
+msgstr "🎃 Halloween"
+
+msgid "theme.selected"
+msgstr "Theme selected: {theme}"

@@ -1013,3 +1013,18 @@ msgstr "Окуу аптасы"
 
 msgid "data.preparing"
 msgstr "Маалыматтар фондо даярдалып жатат. Кийинки жаңыртуудан кийин кайталап көрүңүз (ар 15 мүнөт сайын)."
+
+msgid "settings.theme"
+msgstr "🎨 Тема"
+
+msgid "theme.prompt"
+msgstr "Менюнун темасын тандаңыз. Тандооңуз кийинки кирүүлөр үчүн сакталат."
+
+msgid "theme.basic"
+msgstr "Негизги"
+
+msgid "theme.halloween"
+msgstr "🎃 Хэллоуин"
+
+msgid "theme.selected"
+msgstr "Тандалган тема: {theme}"

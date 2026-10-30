@@ -11,6 +11,7 @@ class SettingsAction(StrEnum):
     OPEN_COURSE_TRACKING = "open_course_tracking"
     OPEN_OBIS = "open_obis"
     OPEN_LANGUAGE = "open_language"
+    OPEN_THEME = "open_theme"
     OPEN_PHONE_NUMBERS = "open_phone_numbers"
     OPEN_FEEDBACK = "open_feedback"
     BACK_TO_SETTINGS = "back_to_settings"

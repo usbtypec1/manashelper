@@ -1001,3 +1001,18 @@ msgstr "学习周"
 
 msgid "data.preparing"
 msgstr "数据正在后台准备中。请在下次更新后重试（每15分钟更新一次）。"
+
+msgid "settings.theme"
+msgstr "🎨 主题"
+
+msgid "theme.prompt"
+msgstr "请选择菜单主题。您的选择将保存，下次使用时仍然生效。"
+
+msgid "theme.basic"
+msgstr "基础"
+
+msgid "theme.halloween"
+msgstr "🎃 万圣节"
+
+msgid "theme.selected"
+msgstr "已选择主题：{theme}"

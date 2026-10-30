@@ -1,15 +1,28 @@
 from collections.abc import Generator
 from contextlib import contextmanager
+from contextvars import ContextVar
 from gettext import GNUTranslations
 from pathlib import Path
 
 from aiogram.utils.i18n import I18n
 
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale
+from manashelper.localization.theme import Theme
+from manashelper.platform.i18n.themes import decorate_translation
 
 
 class CatalogI18n(I18n):
     """Resolve message keys through catalogs, with English as the translation fallback."""
+
+    _theme: ContextVar[Theme] = ContextVar("theme", default=Theme.BASIC)
+
+    @contextmanager
+    def use_theme(self, theme: Theme) -> Generator[None]:
+        token = self._theme.set(theme)
+        try:
+            yield
+        finally:
+            self._theme.reset(token)
 
     @contextmanager
     def context(self) -> Generator[I18n]:
@@ -33,7 +46,8 @@ class CatalogI18n(I18n):
         resolved_locale = locale if locale is not None else self.current_locale
         if resolved_locale not in self.locales:
             resolved_locale = Locale.EN.value
-        return super().gettext(singular, plural, n, resolved_locale)
+        text = super().gettext(singular, plural, n, resolved_locale)
+        return decorate_translation(singular, text, self._theme.get())
 
 
 i18n = CatalogI18n(path=Path(__file__).resolve().parents[2] / "locales", default_locale=DEFAULT_LOCALE.value)

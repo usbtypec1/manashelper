@@ -26,6 +26,11 @@ class UserRepository:
         if user is not None:
             user.locale = locale
 
+    async def set_theme(self, user_id: int, theme: str) -> None:
+        user = await self._session.get(User, user_id)
+        if user is not None:
+            user.theme = theme
+
     async def get_all_ids(self) -> list[int]:
         result = await self._session.execute(select(User.id))
         return list(result.scalars().all())

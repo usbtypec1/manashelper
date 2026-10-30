@@ -13,6 +13,7 @@ from babel.messages.mofile import write_mo
 from babel.messages.pofile import read_po
 
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale, resolve_from_language_code
+from manashelper.localization.theme import Theme
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.presentation.callbacks import LocaleCallback
 from manashelper.modules.users.presentation.keyboards.locale import build_locale_keyboard, native_language_name
@@ -123,7 +124,10 @@ def test_language_picker_shows_native_names_in_every_locale() -> None:
 
 @pytest.mark.parametrize("locale", list(Locale))
 @pytest.mark.parametrize("eders_enabled", [False, True])
-async def test_translated_reply_keyboard_buttons_match_filters(locale: Locale, eders_enabled, monkeypatch) -> None:
+@pytest.mark.parametrize("theme", list(Theme))
+async def test_translated_reply_keyboard_buttons_match_filters(
+    locale: Locale, eders_enabled, theme, monkeypatch
+) -> None:
     from pydantic import SecretStr
 
     from manashelper.core.config import get_settings
@@ -132,7 +136,7 @@ async def test_translated_reply_keyboard_buttons_match_filters(locale: Locale, e
     keys = ["menu.food", "menu.schedule", "menu.attendance", "menu.grades", "menu.marketplace", "menu.settings"]
     if eders_enabled:
         keys[4:4] = ["menu.eders", "menu.eders_materials", "menu.study_week"]
-    with i18n.context(), i18n.use_locale(locale.value):
+    with i18n.context(), i18n.use_locale(locale.value), i18n.use_theme(theme):
         labels = [button.text for row in build_main_keyboard().keyboard for button in row]
         assert labels == [i18n.gettext(key) for key in keys]
         for key, label in zip(keys, labels, strict=True):

@@ -1010,3 +1010,18 @@ msgstr "Учебная неделя"
 
 msgid "data.preparing"
 msgstr "Данные готовятся в фоне. Попробуйте после следующего обновления (каждые 15 минут)."
+
+msgid "settings.theme"
+msgstr "🎨 Тема"
+
+msgid "theme.prompt"
+msgstr "Выберите тему оформления меню. Выбор сохранится для следующих посещений."
+
+msgid "theme.basic"
+msgstr "Базовая"
+
+msgid "theme.halloween"
+msgstr "🎃 Хеллоуин"
+
+msgid "theme.selected"
+msgstr "Выбрана тема: {theme}"
