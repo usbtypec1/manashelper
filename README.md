@@ -180,7 +180,8 @@ Configure GitHub Actions secrets `DOCKERHUB_TOKEN`, `ENV_FILE`, `EC2_HOST`, `EC2
 `EC2_PORT`. The SSH user needs Docker access and write permission to `/opt/manashelper`; the server needs
 Docker with the Compose plugin. The deployed `.env` has permissions `600`.
 
-The final `notify` job waits for Test, Build and Deploy, including failed or skipped jobs, then sends one
+For pushes to `main` only, the final `notify` job waits for Test, Build and Deploy,
+including failed or skipped jobs, then sends one
 Telegram message with their results: 🟢 success, 🔴 failure, ⚪ skipped, 🟡 cancelled. Set the bot token in the
 GitHub Actions secret `TELEGRAM_BOT_TOKEN` and the destination chat ID in the Actions variable `TELEGRAM_CHAT_ID`.
 The bot must be able to send messages to that chat. If either setting is unavailable (for example, secrets on
