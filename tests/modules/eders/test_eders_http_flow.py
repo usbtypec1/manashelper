@@ -26,9 +26,9 @@ from manashelper.modules.users.infrastructure.user_repository import UserReposit
 from manashelper.modules.users.queries import UsersQuery
 from tests.modules.eders.factories import make_eders_client
 
-PORT = os.environ.get("EDERS_SIMULATION_PORT")
+PORT = os.environ.get("MANASHELPER_EDERS_SIMULATION_PORT")
 pytestmark = pytest.mark.skipif(
-    not PORT, reason="Start postman/simulations/eders.sim.yaml and set EDERS_SIMULATION_PORT"
+    not PORT, reason="Start postman/simulations/eders.sim.yaml and set MANASHELPER_EDERS_SIMULATION_PORT"
 )
 
 

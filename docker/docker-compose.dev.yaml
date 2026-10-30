@@ -7,9 +7,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_PASSWORD: ${DATASOURCE_PASSWORD:-pass123}
-      POSTGRES_USER: ${DATASOURCE_USERNAME:-user123}
-      POSTGRES_DB: ${DATASOURCE_NAME:-db123}
+      POSTGRES_PASSWORD: ${MANASHELPER_DATASOURCE_PASSWORD:-pass123}
+      POSTGRES_USER: ${MANASHELPER_DATASOURCE_USERNAME:-user123}
+      POSTGRES_DB: ${MANASHELPER_DATASOURCE_NAME:-db123}
     volumes:
       - postgres18_data:/var/lib/postgresql
     healthcheck:

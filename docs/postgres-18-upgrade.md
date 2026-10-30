@@ -9,8 +9,11 @@ retained for rollback. Changing the image alone does not upgrade a PostgreSQL cl
 
 Schedule downtime and prevent writes until restoration and verification finish. These
 commands are for the production Compose project in `/opt/manashelper`, with the same
-`.env` credentials as PostgreSQL 17. For development, use `-f docker-compose.dev.yml`
-on every Compose command and omit the `app` commands. Never run tests against production.
+`.env` credentials as PostgreSQL 17. Before replacing the old Compose file, use its explicit
+`-f` path; after replacement, use `-f docker-compose.yaml` on every production Compose command.
+For development, run from the repository root with
+`--project-directory . --env-file .env -f docker/docker-compose.dev.yaml` on every Compose command
+and omit the `app` commands. Never run tests against production.
 
 1. Before replacing the old Compose file, save it and record the current application
    image/version for rollback. Keep the same Compose project name throughout.
@@ -30,8 +33,8 @@ on every Compose command and omit the `app` commands. Never run tests against pr
 
    ```sh
    docker compose stop db
-   docker compose up -d --wait db
-   docker compose exec -T db sh -ec \
+   docker compose -f docker-compose.yaml up -d --wait db
+   docker compose -f docker-compose.yaml exec -T db sh -ec \
      'pg_restore --exit-on-error --single-transaction -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
      < /secure-backups/manashelper-pg17.dump
    ```

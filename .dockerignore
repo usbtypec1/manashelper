@@ -14,4 +14,5 @@ __pycache__/
 .env.*
 
 tests/
-docker-compose*.yml
+docker-compose*.yaml
+docker/docker-compose*.yaml

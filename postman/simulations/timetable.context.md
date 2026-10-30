@@ -8,7 +8,7 @@ was searched or verified; this is a local regression fixture, not evidence of th
 ## Execution
 
 Run `postman simulation run postman/simulations/timetable.sim.yaml --port 4902 --output ndjson --no-history`.
-Read the listening address, then set `$env:TIMETABLE_SIMULATION_URL='http://127.0.0.1:4902'` in PowerShell.
+Read the listening address, then set `$env:MANASHELPER_TIMETABLE_SIMULATION_URL='http://127.0.0.1:4902'` in PowerShell.
 Run `.venv/Scripts/python.exe -m pytest -q tests/modules/schedule/test_timetable_http_simulation.py` and stop the server with Ctrl+C.
 The test changes the URL template only in its own process; the client makes real HTTP requests.
 

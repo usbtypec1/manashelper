@@ -31,20 +31,20 @@ jobs:
           --health-retries=10
 
     env:
-      TELEGRAM_BOT_TOKEN: test-token
+      MANASHELPER_TELEGRAM_BOT_TOKEN: test-token
 
-      DATASOURCE_HOST: localhost
-      DATASOURCE_NAME: db123
-      DATASOURCE_USERNAME: user123
-      DATASOURCE_PASSWORD: pass123
+      MANASHELPER_DATASOURCE_HOST: localhost
+      MANASHELPER_DATASOURCE_NAME: db123
+      MANASHELPER_DATASOURCE_USERNAME: user123
+      MANASHELPER_DATASOURCE_PASSWORD: pass123
 
-      OBIS_ENCRYPTION_KEY: WN99UeaUfixAdP24uN3yBG8Gbbo9hTPf6jlsYrp9KOA=
-      EDERS_PASSWORD: fake-password
+      MANASHELPER_OBIS_ENCRYPTION_KEY: WN99UeaUfixAdP24uN3yBG8Gbbo9hTPf6jlsYrp9KOA=
+      MANASHELPER_EDERS_PASSWORD: fake-password
 
-      ADVERTISEMENT_CHANNEL_ID: "-1001234567890"
-      ADVERTISEMENT_CHANNEL_LINK: "https://t.me/manashelper_market"
-      MODERATION_CHAT_ID: "-1009876543210"
-      ADMIN_CHAT_ID: "-1001112223334"
+      MANASHELPER_ADVERTISEMENT_CHANNEL_ID: "-1001234567890"
+      MANASHELPER_ADVERTISEMENT_CHANNEL_LINK: "https://t.me/manashelper_market"
+      MANASHELPER_MODERATION_CHAT_ID: "-1009876543210"
+      MANASHELPER_ADMIN_CHAT_ID: "-1001112223334"
 
     steps:
       - name: Checkout
@@ -100,24 +100,24 @@ jobs:
           set -euo pipefail
 
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            VERSION="${GITHUB_REF_NAME#v}"
+            MANASHELPER_VERSION="${GITHUB_REF_NAME#v}"
           else
-            VERSION="sha-${GITHUB_SHA}"
+            MANASHELPER_VERSION="sha-${GITHUB_SHA}"
           fi
 
-          if [ -z "$VERSION" ]; then
+          if [ -z "$MANASHELPER_VERSION" ]; then
             echo "Failed to extract version"
             exit 1
           fi
 
-          echo "Version: $VERSION"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version: $MANASHELPER_VERSION"
+          echo "version=$MANASHELPER_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: usbtypec1
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          password: ${{ secrets.MANASHELPER_DOCKERHUB_TOKEN }}
 
       - name: Build Docker image
         run: |
@@ -148,26 +148,28 @@ jobs:
 
       - name: Prepare deployment files
         env:
-          ENV_FILE: ${{ secrets.ENV_FILE }}
+          MANASHELPER_ENV_FILE: ${{ secrets.MANASHELPER_ENV_FILE }}
         shell: bash
         run: |
           set -euo pipefail
 
-          echo "Checking docker-compose.yml..."
+          echo "Checking docker/docker-compose.prod.yaml..."
 
-          if [ ! -f docker-compose.yml ]; then
-            echo "docker-compose.yml not found"
+          if [ ! -f docker/docker-compose.prod.yaml ]; then
+            echo "docker/docker-compose.prod.yaml not found"
             exit 1
           fi
 
-          echo "Checking ENV_FILE secret..."
+          cp docker/docker-compose.prod.yaml docker-compose.yaml
 
-          if [ -z "${ENV_FILE:-}" ]; then
-            echo "ENV_FILE secret is empty"
+          echo "Checking MANASHELPER_ENV_FILE secret..."
+
+          if [ -z "${MANASHELPER_ENV_FILE:-}" ]; then
+            echo "MANASHELPER_ENV_FILE secret is empty"
             exit 1
           fi
 
-          printf '%s\n' "$ENV_FILE" > .env
+          printf '%s\n' "$MANASHELPER_ENV_FILE" > .env
           chmod 600 .env
 
           if [ ! -s .env ]; then
@@ -176,7 +178,7 @@ jobs:
           fi
 
           echo "Deployment files prepared:"
-          ls -la docker-compose.yml .env
+          ls -la docker-compose.yaml .env
 
       # -------------------------------------------------------
       # Verify SSH before trying SCP
@@ -185,10 +187,10 @@ jobs:
       - name: Test SSH connection
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.EC2_PORT }}
+          host: ${{ secrets.MANASHELPER_EC2_HOST }}
+          username: ${{ secrets.MANASHELPER_EC2_USER }}
+          key: ${{ secrets.MANASHELPER_EC2_SSH_KEY }}
+          port: ${{ secrets.MANASHELPER_EC2_PORT }}
           debug: true
 
           script: |
@@ -229,12 +231,12 @@ jobs:
       - name: Copy deployment files
         uses: appleboy/scp-action@v1
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.EC2_PORT }}
+          host: ${{ secrets.MANASHELPER_EC2_HOST }}
+          username: ${{ secrets.MANASHELPER_EC2_USER }}
+          key: ${{ secrets.MANASHELPER_EC2_SSH_KEY }}
+          port: ${{ secrets.MANASHELPER_EC2_PORT }}
 
-          source: "docker-compose.yml,.env"
+          source: "docker-compose.yaml,.env"
           target: "/opt/manashelper"
 
           overwrite: true
@@ -247,10 +249,10 @@ jobs:
       - name: Verify deployment files
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.EC2_PORT }}
+          host: ${{ secrets.MANASHELPER_EC2_HOST }}
+          username: ${{ secrets.MANASHELPER_EC2_USER }}
+          key: ${{ secrets.MANASHELPER_EC2_SSH_KEY }}
+          port: ${{ secrets.MANASHELPER_EC2_PORT }}
 
           script: |
             set -e
@@ -260,8 +262,8 @@ jobs:
             echo "Remote deployment directory:"
             ls -la
 
-            if [ ! -f docker-compose.yml ]; then
-              echo "docker-compose.yml was not copied"
+            if [ ! -f docker-compose.yaml ]; then
+              echo "docker-compose.yaml was not copied"
               exit 1
             fi
 
@@ -279,30 +281,30 @@ jobs:
       - name: Deploy
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.EC2_PORT }}
+          host: ${{ secrets.MANASHELPER_EC2_HOST }}
+          username: ${{ secrets.MANASHELPER_EC2_USER }}
+          key: ${{ secrets.MANASHELPER_EC2_SSH_KEY }}
+          port: ${{ secrets.MANASHELPER_EC2_PORT }}
 
           script: |
             set -e
 
             cd /opt/manashelper
 
-            VERSION="${{ needs.build.outputs.version }}"
-            export VERSION
+            MANASHELPER_VERSION="${{ needs.build.outputs.version }}"
+            export MANASHELPER_VERSION
 
-            echo "Deploying ManasHelper version: ${VERSION}"
+            echo "Deploying ManasHelper version: ${MANASHELPER_VERSION}"
 
-            echo "Validating docker-compose.yml..."
-            docker compose config > /dev/null
+            echo "Validating docker-compose.yaml..."
+            docker compose -f docker-compose.yaml config > /dev/null
 
             echo "Pulling Docker image..."
-            docker pull "usbtypec1/manashelper:${VERSION}"
+            docker pull "usbtypec1/manashelper:${MANASHELPER_VERSION}"
 
             # An existing PG17 cluster must be restored into PG18 before deployment.
             if docker volume inspect manashelper_postgres_data > /dev/null 2>&1; then
-              DB_CONTAINER="$(docker compose ps -a -q db)"
+              DB_CONTAINER="$(docker compose -f docker-compose.yaml ps -a -q db)"
               DB_IMAGE="$(docker inspect --format '{{.Config.Image}}' "$DB_CONTAINER" 2>/dev/null || true)"
               if [ "$DB_IMAGE" != "postgres:18-alpine" ]; then
                 echo "PostgreSQL 17 data found. Complete docs/postgres-18-upgrade.md before deploying."
@@ -311,12 +313,56 @@ jobs:
             fi
 
             echo "Starting containers..."
-            docker compose up -d --wait --remove-orphans
+            docker compose -f docker-compose.yaml up -d --wait --remove-orphans
 
             echo "Containers:"
-            docker compose ps
+            docker compose -f docker-compose.yaml ps
 
             echo "Removing dangling images..."
             docker image prune -f
 
             echo "Deployment completed successfully"
+
+
+  notify:
+    needs: [test, build, deploy]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send Telegram summary
+        env:
+          MANASHELPER_TELEGRAM_BOT_TOKEN: ${{ secrets.MANASHELPER_TELEGRAM_BOT_TOKEN }}
+          MANASHELPER_TELEGRAM_CHAT_ID: ${{ vars.MANASHELPER_TELEGRAM_CHAT_ID }}
+          MANASHELPER_TEST_RESULT: ${{ needs.test.result }}
+          MANASHELPER_BUILD_RESULT: ${{ needs.build.result }}
+          MANASHELPER_DEPLOY_RESULT: ${{ needs.deploy.result }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -z "$MANASHELPER_TELEGRAM_BOT_TOKEN" ] || [ -z "$MANASHELPER_TELEGRAM_CHAT_ID" ]; then
+            echo "::warning::Telegram summary skipped: set secrets.MANASHELPER_TELEGRAM_BOT_TOKEN and vars.MANASHELPER_TELEGRAM_CHAT_ID"
+            exit 0
+          fi
+
+          status_emoji() {
+            case "$1" in
+              success) printf '🟢' ;;
+              failure) printf '🔴' ;;
+              cancelled) printf '🟡' ;;
+              *) printf '⚪' ;;
+            esac
+          }
+
+          printf -v MESSAGE 'Manashelper CI/CD:\n%s Test\n%s Build\n%s Deploy' \
+            "$(status_emoji "$MANASHELPER_TEST_RESULT")" \
+            "$(status_emoji "$MANASHELPER_BUILD_RESULT")" \
+            "$(status_emoji "$MANASHELPER_DEPLOY_RESULT")"
+
+          curl --fail --silent --show-error \
+            --connect-timeout 10 --max-time 30 \
+            --request POST "https://api.telegram.org/bot${MANASHELPER_TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=$MANASHELPER_TELEGRAM_CHAT_ID" \
+            --data-urlencode "text=$MESSAGE" \
+            --output /dev/null

@@ -103,9 +103,9 @@ dependencies REQUEST. PollEdersUser preserves refresh→locale→pending→send�
 materials and yields delivered events for immediate acknowledgement. TelegramAPIError skips one message without ack;
 unexpected errors abort only that user. Preserve snapshot JSON, event keys, baseline/account/schema suppression,
 monotonic observations, user-row FOR UPDATE before first state, and the one-retry whole-snapshot login flow.
-The optional EDERS_PASSWORD env value is the shared Moodle password; obtain logintoken from the form for every login
+The optional MANASHELPER_EDERS_PASSWORD env value is the shared Moodle password; obtain logintoken from the form for every login
 and detect successful login by an authenticated page with sesskey, without a redirect URL allowlist.
-Missing or empty EDERS_PASSWORD disables Eders and Study week routers,
+Missing or empty MANASHELPER_EDERS_PASSWORD disables Eders and Study week routers,
 main-menu buttons, Eders notification settings and polling. Legacy commands remain hidden aliases when enabled.
 Eders polling requires only a nonempty saved student number; the snapshot marker is SHA-256 of that number.
 The first sync after switching from the ciphertext marker establishes a silent account baseline.
@@ -220,27 +220,27 @@ uv run python -m manashelper.main
 
 The app needs Postgres and the environment variables defined in `src/manashelper/core/config.py`: Telegram token,
 database credentials, OBIS encryption key, advertisement channel ID/link, moderation chat ID and admin chat ID.
-`DATASOURCE_HOST` defaults to the Docker service name `db`; use `localhost` when running outside Docker.
-`docker-compose.dev.yml` starts the development Postgres on port 5432. A local `.env` is read automatically and
+`MANASHELPER_DATASOURCE_HOST` defaults to the Docker service name `db`; use `localhost` when running outside Docker.
+`docker/docker-compose.dev.yaml` starts the development Postgres on port 5432. A local `.env` is read automatically and
 is ignored by Git.
 
-For local verification, use a development `.env` with `TELEGRAM_BOT_TOKEN`, `OBIS_ENCRYPTION_KEY` and
-the `DATASOURCE_NAME`, `DATASOURCE_USERNAME`, `DATASOURCE_PASSWORD` values matching the development database.
+For local verification, use a development `.env` with `MANASHELPER_TELEGRAM_BOT_TOKEN`, `MANASHELPER_OBIS_ENCRYPTION_KEY` and
+the `MANASHELPER_DATASOURCE_NAME`, `MANASHELPER_DATASOURCE_USERNAME`, `MANASHELPER_DATASOURCE_PASSWORD` values matching the development database.
 The commands below override the Docker hostname and provide placeholder Telegram chat/channel settings for tests:
 
 ```sh
-docker compose -f docker-compose.dev.yml up -d --wait db
+docker compose --project-directory . --env-file .env -f docker/docker-compose.dev.yaml up -d --wait db
 .venv/bin/pybabel compile -d src/manashelper/locales
-env DATASOURCE_HOST=localhost \
-  ADVERTISEMENT_CHANNEL_ID=-1000000000000 ADVERTISEMENT_CHANNEL_LINK=https://t.me/example \
-  MODERATION_CHAT_ID=-1000000000001 ADMIN_CHAT_ID=-1000000000002 \
+env MANASHELPER_DATASOURCE_HOST=localhost \
+  MANASHELPER_ADVERTISEMENT_CHANNEL_ID=-1000000000000 MANASHELPER_ADVERTISEMENT_CHANNEL_LINK=https://t.me/example \
+  MANASHELPER_MODERATION_CHAT_ID=-1000000000001 MANASHELPER_ADMIN_CHAT_ID=-1000000000002 \
   .venv/bin/alembic upgrade head
 .venv/bin/ruff check .
 .venv/bin/ruff format --check .
 .venv/bin/mypy src/manashelper
-env DATASOURCE_HOST=localhost \
-  ADVERTISEMENT_CHANNEL_ID=-1000000000000 ADVERTISEMENT_CHANNEL_LINK=https://t.me/example \
-  MODERATION_CHAT_ID=-1000000000001 ADMIN_CHAT_ID=-1000000000002 \
+env MANASHELPER_DATASOURCE_HOST=localhost \
+  MANASHELPER_ADVERTISEMENT_CHANNEL_ID=-1000000000000 MANASHELPER_ADVERTISEMENT_CHANNEL_LINK=https://t.me/example \
+  MANASHELPER_MODERATION_CHAT_ID=-1000000000001 MANASHELPER_ADMIN_CHAT_ID=-1000000000002 \
   .venv/bin/pytest -q --tb=line
 ```
 

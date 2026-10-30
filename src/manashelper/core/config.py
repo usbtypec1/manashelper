@@ -7,18 +7,18 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    telegram_bot_token: str = Field(alias="TELEGRAM_BOT_TOKEN")
-    datasource_host: str = Field(default="db", alias="DATASOURCE_HOST")
-    datasource_name: str = Field(alias="DATASOURCE_NAME")
-    datasource_username: str = Field(alias="DATASOURCE_USERNAME")
-    datasource_password: str = Field(alias="DATASOURCE_PASSWORD")
-    obis_encryption_key: str = Field(alias="OBIS_ENCRYPTION_KEY")
-    advertisement_channel_id: int = Field(alias="ADVERTISEMENT_CHANNEL_ID")
-    advertisement_channel_link: str = Field(alias="ADVERTISEMENT_CHANNEL_LINK")
-    moderation_chat_id: int = Field(alias="MODERATION_CHAT_ID")
-    admin_chat_id: int = Field(alias="ADMIN_CHAT_ID")
-    eders_password: SecretStr | None = Field(default=None, alias="EDERS_PASSWORD")
-    eders_poll_minutes: int | None = Field(default=15, alias="EDERS_POLL_MINUTES", ge=15, le=60)
+    telegram_bot_token: str = Field(alias="MANASHELPER_TELEGRAM_BOT_TOKEN")
+    datasource_host: str = Field(default="db", alias="MANASHELPER_DATASOURCE_HOST")
+    datasource_name: str = Field(alias="MANASHELPER_DATASOURCE_NAME")
+    datasource_username: str = Field(alias="MANASHELPER_DATASOURCE_USERNAME")
+    datasource_password: str = Field(alias="MANASHELPER_DATASOURCE_PASSWORD")
+    obis_encryption_key: str = Field(alias="MANASHELPER_OBIS_ENCRYPTION_KEY")
+    advertisement_channel_id: int = Field(alias="MANASHELPER_ADVERTISEMENT_CHANNEL_ID")
+    advertisement_channel_link: str = Field(alias="MANASHELPER_ADVERTISEMENT_CHANNEL_LINK")
+    moderation_chat_id: int = Field(alias="MANASHELPER_MODERATION_CHAT_ID")
+    admin_chat_id: int = Field(alias="MANASHELPER_ADMIN_CHAT_ID")
+    eders_password: SecretStr | None = Field(default=None, alias="MANASHELPER_EDERS_PASSWORD")
+    eders_poll_minutes: int | None = Field(default=15, alias="MANASHELPER_EDERS_POLL_MINUTES", ge=15, le=60)
 
     @property
     def eders_enabled(self) -> bool:

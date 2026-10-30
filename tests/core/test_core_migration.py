@@ -88,35 +88,36 @@ async def test_core_request_session_commits_before_closing():
 def test_settings_keep_cwd_dotenv_aliases_overrides_and_cache(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     values = {
-        "TELEGRAM_BOT_TOKEN": "123456:development-placeholder",
-        "DATASOURCE_NAME": "development",
-        "DATASOURCE_USERNAME": "student",
-        "DATASOURCE_PASSWORD": "placeholder",
-        "OBIS_ENCRYPTION_KEY": "placeholder",
-        "ADVERTISEMENT_CHANNEL_ID": "-1000000000000",
-        "ADVERTISEMENT_CHANNEL_LINK": "https://t.me/example",
-        "MODERATION_CHAT_ID": "-1000000000001",
-        "ADMIN_CHAT_ID": "-1000000000002",
+        "MANASHELPER_TELEGRAM_BOT_TOKEN": "123456:development-placeholder",
+        "MANASHELPER_DATASOURCE_NAME": "development",
+        "MANASHELPER_DATASOURCE_USERNAME": "student",
+        "MANASHELPER_DATASOURCE_PASSWORD": "placeholder",
+        "MANASHELPER_OBIS_ENCRYPTION_KEY": "placeholder",
+        "MANASHELPER_ADVERTISEMENT_CHANNEL_ID": "-1000000000000",
+        "MANASHELPER_ADVERTISEMENT_CHANNEL_LINK": "https://t.me/example",
+        "MANASHELPER_MODERATION_CHAT_ID": "-1000000000001",
+        "MANASHELPER_ADMIN_CHAT_ID": "-1000000000002",
     }
-    for key in (*values, "DATASOURCE_HOST", "EDERS_POLL_MINUTES", "EDERS_PASSWORD"):
+    for key in (*values, "MANASHELPER_DATASOURCE_HOST", "MANASHELPER_EDERS_POLL_MINUTES", "MANASHELPER_EDERS_PASSWORD"):
         monkeypatch.delenv(key, raising=False)
     Path(".env").write_text("\n".join(f"{key}={value}" for key, value in values.items()))
+    monkeypatch.setenv("DATASOURCE_HOST", "other-project-db")
     config.get_settings.cache_clear()
     try:
         settings = config.get_settings()
         assert settings.datasource_host == "db" and settings.eders_poll_minutes == 15
         assert not settings.eders_enabled
         assert settings.database_url == "postgresql+asyncpg://student:placeholder@db:5432/development"
-        monkeypatch.setenv("DATASOURCE_HOST", "localhost")
+        monkeypatch.setenv("MANASHELPER_DATASOURCE_HOST", "localhost")
         assert config.get_settings() is settings
         config.get_settings.cache_clear()
         assert config.get_settings().datasource_host == "localhost"
-        monkeypatch.setenv("EDERS_PASSWORD", "shared-eders-password")
+        monkeypatch.setenv("MANASHELPER_EDERS_PASSWORD", "shared-eders-password")
         config.get_settings.cache_clear()
         enabled = config.get_settings()
         assert enabled.eders_enabled and enabled.eders_password.get_secret_value() == "shared-eders-password"
         assert "shared-eders-password" not in repr(enabled)
-        monkeypatch.setenv("EDERS_PASSWORD", "")
+        monkeypatch.setenv("MANASHELPER_EDERS_PASSWORD", "")
         config.get_settings.cache_clear()
         assert not config.get_settings().eders_enabled
     finally:
