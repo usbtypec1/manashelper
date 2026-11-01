@@ -17,12 +17,12 @@ from manashelper.modules.schedule.presentation.callbacks import (
     TimetableMenuAction,
     TimetableMenuCallback,
 )
+from manashelper.modules.schedule.presentation.entrypoints import show_timetable_menu
 from manashelper.modules.schedule.presentation.keyboards.timetable import (
     build_course_keyboard,
     build_department_keyboard,
     build_no_tracked_courses_keyboard,
     build_schedule_days_keyboard,
-    build_timetable_menu_keyboard,
 )
 from manashelper.modules.schedule.presentation.timetable_formatter import format_day_schedule
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
@@ -41,7 +41,7 @@ def _current_weekday(now: datetime) -> int:
 @router.message(TranslatedText("menu.schedule"))
 @flags.private_chat_only
 async def on_timetable_menu_button(message: Message) -> None:
-    await message.answer(_("menu.schedule"), reply_markup=build_timetable_menu_keyboard())
+    await show_timetable_menu(message)
 
 
 @router.callback_query(TimetableMenuCallback.filter(F.action == TimetableMenuAction.OPEN_MY_SCHEDULE))

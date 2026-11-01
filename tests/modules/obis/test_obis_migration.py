@@ -15,7 +15,7 @@ from aiogram.types import CallbackQuery, Chat, Message, User
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from dishka import make_async_container
 
-from manashelper.core.database import Base
+from common.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.localization.locale import Locale

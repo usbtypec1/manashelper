@@ -15,6 +15,7 @@ router = Router(name="theme")
 
 @router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_THEME))
 @flags.private_chat_only
+@flags.preserve_ui_flow
 async def on_open_theme(callback_query: CallbackQuery, theme_service: FromDishka[ThemeService]) -> None:
     selected = await theme_service.get_theme(callback_query.from_user.id)
     if isinstance(callback_query.message, Message):
@@ -24,6 +25,7 @@ async def on_open_theme(callback_query: CallbackQuery, theme_service: FromDishka
 
 @router.callback_query(ThemeCallback.filter())
 @flags.private_chat_only
+@flags.refresh_ui_flow
 async def on_theme_selected(
     callback_query: CallbackQuery,
     callback_data: ThemeCallback,

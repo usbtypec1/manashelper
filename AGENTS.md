@@ -7,8 +7,9 @@ and [docs/BACKLOG.md](docs/BACKLOG.md) for deferred work. Check the code when do
 ## Project
 
 Manashelper is a Python 3.13 Telegram bot for Manas University students. It uses aiogram 3, async SQLAlchemy 2,
-Postgres, Dishka dependency injection, Alembic, APScheduler and gettext. There is no REST API. The entry point is
-`src/manashelper/main.py`; users interact with the bot through Telegram long polling.
+Postgres, Dishka dependency injection, Alembic, APScheduler and gettext. The bot entry point is
+`src/manashelper/main.py`; users interact through Telegram long polling. An optional, separate FastAPI
+process (`manashelper.admin_main`) serves the private UI-flow administration API; it never starts polling or jobs.
 
 Current features include the faculty/department/course catalog and course tracking, timetable and lesson search,
 cafeteria menus, OBIS grades and attendance, notification settings, scheduled change notifications, advertisements
@@ -16,6 +17,110 @@ with moderation and a channel, feedback and admin broadcasts. Read the relevant
 router, service, repository, and tests before changing a feature. `features/` holds some feature specifications.
 
 ## Architecture
+
+The reusable UI-flow engine lives in `src/ui_flows/` (domain/application/ports),
+without dependencies on manashelper, Telegram, FastAPI, ORM or DI. Shared SQLAlchemy Base
+lives in `src/common/database.py`. Application adapters, rollout, seed documents and DI
+remain in `src/manashelper/modules/ui_flows/`; survey delegates belong to student_questions.
+Persistence ports are aliases to the same REQUEST repositories; preserve their transaction
+with business delegates. See `features/UI_FLOW_EDITOR_PLAN.md`,
+`features/ui_flows/CONTRACT.md`, `features/ui_flows/RUNTIME.md`, `features/ui_flows/TELEGRAM.md`
+and `features/ui_flows/ADMIN_API.md`.
+The agreed next-stage plan is `features/ui_flows/ORCHESTRATION.md`: move all UI
+decisions and event routing into the engine, compose small typed scenarios with Python
+delegates, migrate every FSM form/cache, and finally use Dispatcher(disable_fsm=True).
+It also plans one aiohttp process for Telegram webhook/admin API/static assets, replacing
+FastAPI/Uvicorn, and an admin-only fullscreen Telegram Mini App with verified initData.
+These are future changes, not current behavior. Preserve the existing implementation
+until each planned migration stage has its compatibility checks.
+The interpreter, persistence and REQUEST provider are composed in main. Telegram's
+`/flow_demo` is a private admin-only pilot. Main/Studies menus now use a published `main_menu` flow for the
+private administrator by default. Release mode admin/all/off is persisted in ui_flow_rollout and managed in the
+editor; all enables public menu/survey entry, off denies new launches while active sessions continue.
+The survey deep link resumes an active runtime even when new launches are off; existing legacy surveys keep their owner.
+The administrative HTTP API and Vue editor (`src/admin-ui/`) are implemented. The eight owned tables are registered
+explicitly in bootstrap. Keep publication versions
+immutable, pin active sessions to their version, and serialize first launches with the
+transaction-scoped chat lock plus the partial unique active-session index. Delegate DB
+writes, state and event deduplication share one transaction; repository savepoints also
+roll back failed operations when an outer caller catches the error. Only transactional
+delegates are supported so far; do not run network calls while holding a chat lock.
+Runtime handlers enqueue work in AfterRequestActions. Keep AfterRequestMiddleware inside
+PerChatOrderingMiddleware and outside Dishka, so the profile/audit scope commits before
+the APP coordinator opens its own REQUEST. Never execute the coordinator from inside the
+update's original REQUEST: profile upserts can hold locks required by the new scope.
+State, event and screen intent commit together; claim persists unknown before Telegram I/O.
+Unknown attempts are never automatically resent; `/flow_demo` explicitly restores the step.
+Use saved displayed labels for reply actions and opaque delivery tokens for typed callbacks.
+Inline screens use a text message with ReplyKeyboardRemove, followed by a separate localized message with
+InlineKeyboardMarkup. Persist the second message ID. Telegram cannot edit a ReplyKeyboardRemove message;
+never attach inline buttons to it using editMessageReplyMarkup. The mock enforces this live-verified restriction.
+Mask runtime input in action_logs. Locale/theme selection preserves the runtime session;
+other matched legacy navigation cancels it after the original request commits.
+Web authentication lives in `platform/web/`, with two separately owned tables registered in bootstrap.
+Private admin-only `/editor` issues a five-minute, single-use ticket after the update REQUEST commits.
+The login page removes its fragment before exchanging it for an eight-hour Secure/HttpOnly/SameSite=Strict cookie.
+Persist only token digests. Check configured HTTPS Origin on mutations and CSRF on authenticated mutations.
+AdminRoute completes its REQUEST scope before returning any response, including login cookies; errors must escape
+the scope before being mapped to HTTP status codes. Preview builds a new registry from definitions and explicit stubs;
+never execute live delegate handlers there. Monitoring returns runtime metadata without session answers or screen text;
+legacy observation records only handler/state names after a successful committed private-chat handler.
+Both bot and web processes require the same
+optional admin web origin and signing key when web access is enabled. API startup does not apply migrations.
+The editor uses Vue 3, TypeScript and Vue Flow; use Bun for dependency management AND JavaScript execution,
+never npm or Node.js. Commit `src/admin-ui/bun.lock`, not package-lock.json. Run `bun run build`, `bun run test`,
+`bun run format:check` and `bun run test:e2e` in src/admin-ui. E2E builds first, runs Playwright through Bun and
+a real loopback FastAPI fixture with its own development PostgreSQL schema; no live Telegram is used.
+UI-flow session fixtures use isolated schemas too, preserving authored documents and observations in the development DB.
+The HTTP process serves only built index/assets from src/admin-ui/dist. Preserve script CSP, cookie/CSRF checks,
+fragment removal and memory-only credentials. Preview renders supported Telegram tags through Vue VNodes,
+never v-html or executable HTML. Graph edges map to explicit transition ports; coordinates belong only to layout.
+Keep generated API types in sync via `bun run generate`. The administration UI is English-only, including its
+fallback login page; editor system copy stays in the English gettext catalog. User-facing bot content, inline
+text variants and preview keep all five languages. Do not reintroduce an administration language selector.
+literal calls live in presentation/editor_copy.py. Compile catalogs, then run
+`python scripts/export_ui_flow_editor_copy.py` (or `--check`) for the browser bundle.
+Private admin-only `/flow_demo <id>` opens any published pilot scenario; a different active dialog must finish
+or be cancelled first. Empty arguments preserve the original seeded demo.
+Bot startup marks legacy positions unknown because MemoryStorage is lost, then seeds/publishes `main_menu` only
+if it is absent. Never overwrite an existing draft or publication. Runtime positions remain resumable.
+The same bootstrap seeds `student_questions` only after its root return flow is published. The initial document
+lives in the owning survey module; DB versions remain authoritative after creation. Preserve explicit replacement
+confirmation and save only through StudentQuestionsService at completion. Legacy survey callbacks preserve an
+unrelated runtime session when rejecting expired buttons. Keep the survey deep-link router before legacy/deep links.
+Telegram calls DialogService with follow_returns=True: terminal state, DB delegate, new pinned menu session,
+event and screen intent share one transaction. A return target must start at Menu/Input, preventing automatic
+cross-flow cycles. UiFlowEvent keeps the source session and optional result_session_id so repeated final events
+return the same target session without another write. Never copy form data into a return session or metadata.
+Migration 41edcfaadf86 adds that nullable FK; old rows/writers remain compatible. See features/ui_flows/SURVEY.md.
+Rollout changes use expected_revision and a short shared row lock during launch/return admission. Keep active input,
+reply and callback handlers independent of rollout mode; /editor and /flow_demo remain admin-only.
+Off/admin rollback suppresses a public form's automatic return session and sends its legacy menu instead.
+Cleanup runs at 04:15 Bishkek: clear closed payloads and remove their screens after seven days, retaining active state,
+business answers, metadata and event receipts. Auth cleanup runs at 04:20 and deletes only expired tickets/sessions.
+Docker builds frontend through Bun and includes dist in the Python runtime; the optional compose admin profile runs
+only Uvicorn on a loopback-published port. See features/ui_flows/RELEASE.md for rollout, retention and rollback.
+Current reply buttons precede global navigation; the admin menu router accepts only bare /start, preserving
+survey/ad payloads. Explicit root navigation cancels the old dialog and starts the current menu version atomically.
+`navigation_entries.study` references a Menu node and follows node renames. Existing features are entered through
+their shared public presentation entry points, never by calling handlers or synthesizing updates.
+Commit the terminal state/intent and claim before running a feature; pass the actual user ID even for callbacks
+whose message author is the bot. Keep Eders/Study week availability checks in the adapter as well as button guards.
+Runtime state/event/location/history share one transaction. UiFlowObservationMiddleware follows privacy/navigation
+guards and queues metadata after the original request commits. Skip active runtime and runtime-flagged handlers.
+Do not compare update IDs numerically to order locations: Telegram may randomize them after an idle week.
+Use chat ordering and receipts; history has its own keyset ID. Never copy FSM data into monitoring tables.
+The Users screen polls every five seconds while visible and reads immutable versions through the admin API;
+it must not mutate the draft, session or user position. Unobserved users and lost legacy state remain unknown.
+See `features/ui_flows/MONITORING.md` for menu adapters, projection semantics and migration/backfill.
+Generate `features/ui_flows/{flow.schema.json,openapi.json}` with
+`python scripts/export_ui_flow_contracts.py`; use `--check` to detect stale artifacts.
+Scenario-authored `InlineText` is versioned content with explicit locale/theme variants;
+it is the scoped exception to `.po` storage needed for future runtime text editing.
+System copy and `CatalogText` currently stay in gettext; preserve literal calls in the flow catalog.
+The next agreed stage moves all user-facing localization, including errors and notifications,
+to a versioned DB catalog; see features/ui_flows/LOCALIZATION.md. This refactor does not
+perform that migration. The administration interface remains English-only.
 
 Business features live in `modules/`; shared infrastructure lives in `core/` and `platform/`.
 The planned feature migration is complete. `bootstrap.py` explicitly loads ORM models; `jobs` keeps scheduler wiring,
@@ -71,7 +176,7 @@ text with `platform/telegram/html.py::escape_html` before inserting it into Tele
 
 Core lives in `core/`: config.py, database.py, logging.py and provider.py. CoreProvider owns APP settings,
 engine, session factory and the shared HTTP client, plus the REQUEST session. The last legacy `di.py` was removed;
-StudyWeekProvider owns its REQUEST use case. Keep the single Base from `core/database.py`.
+StudyWeekProvider owns its REQUEST use case. Keep the single Base from `common/database.py`.
 The `db` package was removed. Import ORM classes from their owning feature/platform modules, never from a global facade.
 Call `bootstrap.load_models()` at application/test/Alembic bootstrap before using ORM. It registers all model modules and
 configures string relationships without re-exporting classes. Standalone compositions must call it explicitly;
@@ -213,7 +318,8 @@ Check command definitions in `platform/telegram/command_catalog.py` and registra
 
 ## Run and verify
 
-Use `uv` for dependency management. From the repository root:
+Use `uv` 0.8.17+ for dependency management (the build contains three Python modules).
+From the repository root:
 
 ```sh
 uv sync
@@ -221,7 +327,7 @@ uv run alembic upgrade head
 uv run python -m manashelper.main
 .venv/bin/ruff check .
 .venv/bin/ruff format --check .
-.venv/bin/mypy src/manashelper
+.venv/bin/mypy src/manashelper src/ui_flows src/common
 .venv/bin/pytest
 ```
 
@@ -244,7 +350,7 @@ env MANASHELPER_DATASOURCE_HOST=localhost \
   .venv/bin/alembic upgrade head
 .venv/bin/ruff check .
 .venv/bin/ruff format --check .
-.venv/bin/mypy src/manashelper
+.venv/bin/mypy src/manashelper src/ui_flows src/common
 env MANASHELPER_DATASOURCE_HOST=localhost \
   MANASHELPER_ADVERTISEMENT_CHANNEL_ID=-1000000000000 MANASHELPER_ADVERTISEMENT_CHANNEL_LINK=https://t.me/example \
   MANASHELPER_MODERATION_CHAT_ID=-1000000000001 MANASHELPER_ADMIN_CHAT_ID=-1000000000002 \

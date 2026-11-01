@@ -5,7 +5,7 @@ from sqlalchemy import BigInteger, Float, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
-from manashelper.core.database import Base
+from common.database import Base
 
 
 class UserLessonAttendance(Base):

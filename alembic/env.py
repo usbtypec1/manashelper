@@ -6,9 +6,9 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
+from common.database import Base
 from manashelper.bootstrap import load_models
 from manashelper.core.config import get_settings
-from manashelper.core.database import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

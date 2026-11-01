@@ -5,7 +5,7 @@ from sqlalchemy import BigInteger, Boolean, String, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
-from manashelper.core.database import Base
+from common.database import Base
 from manashelper.modules.schedule.infrastructure.models.associations import user_courses
 
 if TYPE_CHECKING:

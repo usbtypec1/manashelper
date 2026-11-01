@@ -1,4 +1,3 @@
-from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 from aiogram import F, Router, flags
@@ -11,23 +10,17 @@ from dishka import FromDishka
 from manashelper.modules.eders.application.eders import EdersService, filter_activities
 from manashelper.modules.eders.application.models import DeadlineFilter, EdersSnapshot
 from manashelper.modules.eders.application.tracking import EdersTrackingService
-from manashelper.modules.eders.errors import (
-    EdersFetchError,
-    EdersParseError,
-    EdersSnapshotNotReadyError,
-    EdersUnsafeUrlError,
-)
 from manashelper.modules.eders.presentation.callbacks import EdersPageCallback, EdersSettingCallback
+from manashelper.modules.eders.presentation.entrypoints import SNAPSHOT_KEY, SNAPSHOT_OPENED_AT_KEY, show_eders
 from manashelper.modules.eders.presentation.formatter import format_activity_page
 from manashelper.modules.eders.presentation.keyboards import build_eders_keyboard, build_eders_settings_keyboard
-from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
-from manashelper.modules.obis.presentation.keyboards import build_no_credentials_keyboard
+from manashelper.modules.obis.errors import UserNotFoundError
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
 
 router = Router(name="eders")
-SNAPSHOT_KEY = "eders_snapshot"
-SNAPSHOT_OPENED_AT_KEY = "eders_snapshot_opened_at"
+
+
 SNAPSHOT_TTL = timedelta(minutes=15)
 
 
@@ -43,47 +36,13 @@ async def on_eders_command(
 ) -> None:
     if message.from_user is None:
         return
-    await state.update_data({SNAPSHOT_KEY: None})
-    try:
-        snapshot = await eders_service.get_snapshot(message.from_user.id)
-    except UserNotFoundError:
-        await message.answer(_("common.start_required"))
-        return
-    except EdersSnapshotNotReadyError:
-        await message.answer(_("data.preparing"))
-        return
-    except UserHasNoCredentialsError:
-        await message.answer(_("obis.credentials_missing"), reply_markup=build_no_credentials_keyboard())
-        return
-    except ObisLoginError:
-        await message.answer(_("obis.credentials_invalid"), reply_markup=build_no_credentials_keyboard())
-        return
-    except (EdersFetchError, EdersParseError, EdersUnsafeUrlError, ObisParseError):
-        await message.answer(_("eders.fetch_failed"))
-        return
-    command, separator, query = (message.text or "").partition(" ")
-    is_materials = command.split("@")[0] == "/materials" or message.text == _("menu.eders_materials")
+    source_text = getattr(message, "text", None) or ""
+    command, separator, query = source_text.partition(" ")
+    is_materials = command.split("@")[0] == "/materials" or source_text == _("menu.eders_materials")
     selected = DeadlineFilter.MATERIALS if is_materials else DeadlineFilter.ALL
     if not command.startswith("/"):
         query = ""
-    if query.strip():
-        search = query.strip().casefold()
-        snapshot = replace(
-            snapshot,
-            activities=tuple(
-                item
-                for item in snapshot.activities
-                if search in f"{item.course.name} {item.section} {item.name} {item.description}".casefold()
-            ),
-        )
-    await state.update_data({SNAPSHOT_KEY: snapshot, SNAPSHOT_OPENED_AT_KEY: datetime.now(UTC)})
-    settings = await tracking.get_settings(message.from_user.id)
-    activities = filter_activities(snapshot.activities, selected, datetime.now(UTC), settings.hide_archived)
-    await message.answer(
-        format_activity_page(activities, 0),
-        reply_markup=build_eders_keyboard(selected, 0, len(activities)),
-        link_preview_options=LinkPreviewOptions(is_disabled=True),
-    )
+    await show_eders(message, message.from_user.id, state, eders_service, tracking, selected, query)
 
 
 @router.callback_query(EdersPageCallback.filter())

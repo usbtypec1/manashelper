@@ -1,5 +1,13 @@
 [
   {
+    "command": "editor",
+    "description": "commands.editor"
+  },
+  {
+    "command": "flow_demo",
+    "description": "commands.flow_demo"
+  },
+  {
     "command": "broadcast",
     "description": "commands.broadcast"
   }

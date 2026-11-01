@@ -1,5 +1,5 @@
 purpose:
-  stands_in_for: Telegram Bot API sendMessage and sendPhoto delivery responses.
+  stands_in_for: Telegram Bot API sendMessage/sendPhoto delivery, editMessageReplyMarkup and answerCallbackQuery responses.
   unblocks: Local verification of aiogram serialization and persistent delivery opt-out without notifying real users.
 assumptions:
   - id: photo-and-keyboard-contract
@@ -23,8 +23,59 @@ assumptions:
     verification: On 2026-10-30, the HTTP simulation test asserted bot_stopped remained false for those synthetic responses. The mock does not establish real error frequency or recovery time.
     source: tests/modules/broadcast/test_telegram_http_delivery.py; https://core.telegram.org/bots/api#responseparameters
     updated_at: "2026-10-30"
+  - id: ui-flow-commit-and-delivery-boundary
+    status: supported
+    claim: In the modeled HTTP 500 and partial inline attachment failures, UI state remains persisted and the caller does not automatically resend the same update.
+    reason: The real aiogram HTTP client traversed the coordinator and PostgreSQL scopes; duplicate events produced no additional HTTP calls, while an explicit restore delivered the current input step.
+    verification: On 2026-11-01, tests/modules/ui_flows/test_telegram_http.py exercised send success, server failure, blocked recipient and send-success/edit-failure. State and unknown/failed/sent delivery rows were asserted; the simulation request log confirmed sendMessage and editMessageReplyMarkup paths. Five HTTP tests passed including the existing broadcast regression. No live Telegram requests were made.
+    source: tests/modules/ui_flows/test_telegram_http.py; src/manashelper/modules/ui_flows/presentation/coordinator.py; postman/mocks/telegram/default.js
+    updated_at: "2026-11-01"
+  - id: ui-menu-feature-handoff-caller
+    status: supported
+    claim: In the modeled successful Settings handoff, the caller sends the runtime menu and then the existing feature keyboard once, and records legacy ownership.
+    reason: The real aiogram aiohttp client, coordinator, feature entry point and PostgreSQL scopes ran together. The mock request log confirmed the sendMessage path and the caller inspected the serialized settings keyboard.
+    verification: On 2026-11-01, six HTTP tests passed against the local simulation, including the new test_real_http_handoff_to_settings_is_not_repeated and the broadcast regression. Repeating the handoff update produced no extra HTTP request; delivery became sent and the metadata owner became legacy. No live Telegram was contacted; real client display remains a release check. Fingerprint ui-flow-menu-handoff-2026-11-01.
+    source: tests/modules/ui_flows/test_telegram_http.py; src/manashelper/modules/ui_flows/presentation/features.py; postman/mocks/telegram/default.js
+    updated_at: "2026-11-01"
+  - id: ui-survey-return-caller
+    status: supported
+    claim: In the modeled successful survey completion, the caller saves one response and opens one runtime menu; replaying the final button sends no second completion message.
+    reason: The real aiohttp aiogram client traversed the survey coordinator and PostgreSQL transactions, using the existing local Telegram stand-in. Its request log and persisted response/location were inspected.
+    verification: On 2026-11-01, seven HTTP tests passed including the survey return, prior UI delivery failures/handoff and broadcast regression. The short survey path sent four messages, finished with the main-menu keyboard and runtime owner, and replayed its final callback without another message. No live Telegram or real users were contacted. Fingerprint ui-survey-return-2026-11-01.
+    source: tests/modules/ui_flows/test_telegram_http.py; src/manashelper/modules/ui_flows/presentation/coordinator.py; postman/mocks/telegram/default.js
+    updated_at: "2026-11-01"
+  - id: remove-reply-then-attach-inline-client-behavior
+    status: contradicted
+    claim: Every supported Telegram client removes the old reply keyboard when the bot sends ReplyKeyboardRemove and then attaches inline buttons to that same new message.
+    reason: The original stand-in wrongly allowed editing a ReplyKeyboardRemove message. The live Telegram Bot API rejects the second operation, so the proposed sequence cannot deliver its inline keyboard.
+    verification: On 2026-11-01, the initial simulated HTTP run accepted sendMessage with remove_keyboard=true followed by editMessageReplyMarkup. Later, a controlled message to the configured private test administrator reproduced Bad Request - message can't be edited against live Telegram; the probe message was removed. The mock now enforces the restriction. The sender uses two sendMessage calls and was accepted by live Telegram. Historical passing simulation results did not establish this editing contract.
+    source: https://core.telegram.org/bots/api#editmessagereplymarkup; tests/modules/ui_flows/test_telegram_http.py; features/ui_flows/TELEGRAM.md
+    updated_at: "2026-11-01"
+  - id: inline-direct-send-caller
+    status: supported
+    claim: The caller can remove a reply keyboard with one message and send the inline buttons directly on a separate localized message, recording the button message ID for callbacks.
+    reason: The corrected production send_screen function completed both requests against the live test bot; its returned ID matched the second response. The local stand-in independently rejects the old edit request.
+    verification: On 2026-11-01, the live probe used only the configured test bot and private administrator, then removed its two probe messages. Nine local HTTP tests passed including rejected ReplyKeyboardRemove edits, partial inline-send failure, explicit restore, no automatic retry, survey return/rollout and broadcast delivery. Full manual client interaction remains separate from server acceptance. Fingerprint inline-direct-send-2026-11-01.
+    source: https://core.telegram.org/bots/api#updating-messages; src/manashelper/modules/ui_flows/presentation/sender.py; tests/modules/ui_flows/test_telegram_http.py; postman/mocks/telegram/default.js
+    updated_at: "2026-11-01"
 fingerprints:
+  - id: inline-direct-send-2026-11-01
+    date: "2026-11-01"
+    commit: 146cdbd627838c953e0ed5103c46c1a3fcd9388e (working tree with UI flow stages 1-8 and corrected live Telegram delivery)
+    cli: Postman 1.75.0
+  - id: ui-survey-return-2026-11-01
+    date: "2026-11-01"
+    commit: 146cdbd627838c953e0ed5103c46c1a3fcd9388e (working tree with UI flow stages 1-7 and English-only administration)
+    cli: Postman 1.75.0
+  - id: ui-flow-menu-handoff-2026-11-01
+    date: "2026-11-01"
+    commit: 146cdbd627838c953e0ed5103c46c1a3fcd9388e (working tree with UI flow stages 1-6)
+    cli: Postman 1.75.0
   - id: broadcast-delivery-2026-10-30
     date: "2026-10-30"
     commit: e407141d68ba4f2c06fef19a32218b9a29a534a7 (working tree with broadcast/delivery changes)
+    cli: Postman 1.75.0
+  - id: ui-flow-telegram-2026-11-01
+    date: "2026-11-01"
+    commit: 146cdbd627838c953e0ed5103c46c1a3fcd9388e (working tree with UI flow stages 1-3)
     cli: Postman 1.75.0

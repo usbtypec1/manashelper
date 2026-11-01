@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field, SecretStr
+from pydantic import Field, HttpUrl, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -19,6 +19,24 @@ class Settings(BaseSettings):
     admin_chat_id: int = Field(alias="MANASHELPER_ADMIN_CHAT_ID")
     eders_password: SecretStr | None = Field(default=None, alias="MANASHELPER_EDERS_PASSWORD")
     eders_poll_minutes: int | None = Field(default=15, alias="MANASHELPER_EDERS_POLL_MINUTES", ge=15, le=60)
+    admin_web_origin: HttpUrl | None = Field(default=None, alias="MANASHELPER_ADMIN_WEB_ORIGIN")
+    admin_web_signing_key: SecretStr | None = Field(
+        default=None, alias="MANASHELPER_ADMIN_WEB_SIGNING_KEY", min_length=32
+    )
+
+    @field_validator("admin_web_origin")
+    @classmethod
+    def validate_admin_origin(cls, value: HttpUrl | None) -> HttpUrl | None:
+        if value is not None and (
+            value.scheme != "https"
+            or value.path not in (None, "/")
+            or value.query
+            or value.fragment
+            or value.username
+            or value.password
+        ):
+            raise ValueError("Admin web origin must be an HTTPS origin without credentials, path, query or fragment")
+        return value
 
     @property
     def eders_enabled(self) -> bool:

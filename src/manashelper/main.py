@@ -25,10 +25,12 @@ from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.student_questions.provider import StudentQuestionsProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
+from manashelper.modules.ui_flows.provider import UiFlowsProvider
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.telegram.commands import setup_commands
 from manashelper.platform.telegram.dispatcher import create_dispatcher
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
+from manashelper.platform.web.provider import WebPlatformProvider
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +58,7 @@ async def main() -> None:
         container = make_async_container(
             CoreProvider(),
             TelegramPlatformProvider(),
+            WebPlatformProvider(),
             ObisProvider(),
             EdersProvider(),
             StudyWeekProvider(),
@@ -64,11 +67,20 @@ async def main() -> None:
             FeedbackProvider(),
             AdvertisementsProvider(),
             StudentQuestionsProvider(),
+            UiFlowsProvider(),
             UsersProvider(),
             BroadcastProvider(),
             FoodMenuProvider(),
         )
         stack.push_async_callback(container.close)
+
+        from manashelper.modules.ui_flows.presentation.observation import ObservationCoordinator
+
+        await (await container.get(ObservationCoordinator)).restart()
+        if settings.admin_chat_id > 0:
+            from manashelper.modules.ui_flows.presentation.coordinator import FlowTelegramCoordinator
+
+            await (await container.get(FlowTelegramCoordinator)).install_defaults(settings.admin_chat_id)
 
         dispatcher = create_dispatcher(container)
         scheduler = create_scheduler(container, bot)

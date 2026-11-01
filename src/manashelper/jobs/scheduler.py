@@ -11,7 +11,9 @@ from manashelper.modules.eders.jobs import poll_eders_job
 from manashelper.modules.food_menu.jobs import broadcast_dinner_menu_job, broadcast_lunch_menu_job, sync_daily_menus_job
 from manashelper.modules.obis.jobs import poll_obis_notifications_job
 from manashelper.modules.schedule.jobs import sync_timetable_job
+from manashelper.modules.ui_flows.jobs import cleanup_ui_flow_data_job
 from manashelper.platform.telegram.deletions.jobs import cleanup_scheduled_message_deletions_job
+from manashelper.platform.web.jobs import cleanup_admin_auth_job
 
 
 def create_scheduler(container: AsyncContainer, bot: Bot) -> AsyncIOScheduler:
@@ -47,4 +49,10 @@ def create_scheduler(container: AsyncContainer, bot: Bot) -> AsyncIOScheduler:
     )
     scheduler.add_job(cleanup_expired_advertisements_job, "interval", hours=1, args=[container, bot], next_run_time=now)
 
+    scheduler.add_job(
+        cleanup_ui_flow_data_job, "cron", hour=4, minute=15, args=[container], max_instances=1, coalesce=True
+    )
+    scheduler.add_job(
+        cleanup_admin_auth_job, "cron", hour=4, minute=20, args=[container], max_instances=1, coalesce=True
+    )
     return scheduler

@@ -1,11 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase
 
 from manashelper.core.config import Settings
-
-
-class Base(DeclarativeBase):
-    pass
 
 
 def create_engine(settings: Settings) -> AsyncEngine:

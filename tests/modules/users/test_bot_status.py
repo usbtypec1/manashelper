@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
+from uuid import uuid4
 
 import pytest
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError, TelegramRetryAfter, TelegramServerError
@@ -7,7 +8,6 @@ from aiogram.methods import SendMessage
 from aiogram.types import Chat, Message
 from aiogram.types import User as TelegramUser
 from dishka.integrations.aiogram import CONTAINER_NAME
-from sqlalchemy import select
 
 from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme
@@ -17,6 +17,8 @@ from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notific
 from manashelper.modules.notifications.orm import NotificationSettings
 from manashelper.modules.notifications.repository import NotificationSettingsRepository
 from manashelper.modules.schedule.infrastructure.models.course import Course
+from manashelper.modules.schedule.infrastructure.models.department import Department
+from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
 from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
@@ -28,8 +30,13 @@ from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
 
 
 async def test_stopped_users_are_excluded_from_every_recipient_selection(session):
-    course = await session.scalar(select(Course).limit(1))
-    assert course is not None
+    course = Course(
+        id=946600,
+        number=1,
+        department=Department(
+            id=uuid4(), name="Recipient test department", faculty=Faculty(id=uuid4(), name="Recipient test faculty")
+        ),
+    )
     active = User(id=946601, full_name="Active", tracked_courses=[course])
     stopped = User(id=946602, full_name="Stopped", bot_stopped=True, tracked_courses=[course])
     session.add_all([active, stopped])

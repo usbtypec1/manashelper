@@ -103,6 +103,7 @@ async def on_student_questions_start(
 
 @router.callback_query(StudentQuestionsControlCallback.filter())
 @flags.private_chat_only
+@flags.preserve_ui_flow
 async def on_student_questions_control(
     callback_query: CallbackQuery, callback_data: StudentQuestionsControlCallback, state: FSMContext
 ) -> None:
@@ -132,6 +133,7 @@ async def on_student_questions_control(
 
 @router.callback_query(StudentQuestionsAnswerCallback.filter())
 @flags.private_chat_only
+@flags.preserve_ui_flow
 async def on_student_questions_answer(
     callback_query: CallbackQuery,
     callback_data: StudentQuestionsAnswerCallback,

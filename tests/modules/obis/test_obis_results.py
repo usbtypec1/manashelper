@@ -14,8 +14,8 @@ from aiogram.types import CallbackQuery, Chat, Message, User
 from manashelper.modules.obis.application.obis import ExamModel, LessonAttendanceModel, LessonExamsModel
 from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
 from manashelper.modules.obis.presentation.callbacks import ObisResultsPageCallback
+from manashelper.modules.obis.presentation.entrypoints import MAX_SAVED_RESULTS
 from manashelper.modules.obis.presentation.router import (
-    MAX_SAVED_RESULTS,
     RESULTS_KEY,
     on_attendance_button,
     on_exams_button,

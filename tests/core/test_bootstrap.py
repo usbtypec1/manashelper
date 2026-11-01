@@ -3,6 +3,8 @@ import sys
 from textwrap import dedent
 
 EXPECTED_TABLES = {
+    "admin_login_tickets",
+    "admin_web_sessions",
     "action_logs",
     "advertisement_channel_messages",
     "advertisement_contact_views",
@@ -26,6 +28,14 @@ EXPECTED_TABLES = {
     "obis_snapshots",
     "scheduled_message_deletions",
     "student_questions_responses",
+    "ui_dialog_sessions",
+    "ui_flow_events",
+    "ui_flow_rollout",
+    "ui_flow_versions",
+    "ui_flows",
+    "ui_screen_deliveries",
+    "ui_user_locations",
+    "ui_user_transitions",
     "user_courses",
     "user_exam_grades",
     "user_lesson_attendance",
@@ -36,7 +46,7 @@ EXPECTED_TABLES = {
 
 def test_cold_registry_loads_complete_metadata_and_relationships_without_reexports():
     script = dedent("""\
-        from manashelper.core.database import Base
+        from common.database import Base
         from manashelper import bootstrap
 
         assert not Base.metadata.tables
@@ -67,7 +77,7 @@ def test_model_registration_is_idempotent_in_a_cold_process():
     script = dedent("""\
         import importlib.util
 
-        from manashelper.core.database import Base
+        from common.database import Base
         from manashelper.bootstrap import load_models
 
         load_models()

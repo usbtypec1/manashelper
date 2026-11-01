@@ -37,10 +37,10 @@ from manashelper.modules.advertisements.presentation.callbacks import (
     AdvertisementFormCallback,
     AdvertisementsPageCallback,
 )
+from manashelper.modules.advertisements.presentation.entrypoints import send_marketplace_menu
 from manashelper.modules.advertisements.presentation.keyboards.advertisement import (
     build_advertisement_delete_confirm_keyboard,
     build_advertisement_detail_keyboard,
-    build_advertisement_menu_keyboard,
     build_cancel_form_keyboard,
     build_confirm_keyboard,
     build_expiry_keyboard,
@@ -112,11 +112,6 @@ async def _start_ad_details(message: Message, state: FSMContext) -> None:
         _("ads.title_prompt").format(max=TITLE_MAX_LENGTH),
         reply_markup=build_cancel_form_keyboard(),
     )
-
-
-async def send_marketplace_menu(message: Message, settings: Settings) -> None:
-    text = _("ads.marketplace_intro").format(link=settings.advertisement_channel_link)
-    await message.answer(text, reply_markup=build_advertisement_menu_keyboard())
 
 
 @router.message(TranslatedText("menu.marketplace"))

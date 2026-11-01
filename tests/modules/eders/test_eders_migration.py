@@ -9,7 +9,7 @@ from aiogram.methods import SendMessage
 from dishka import make_async_container
 from sqlalchemy.dialects import postgresql
 
-from manashelper.core.database import Base
+from common.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme

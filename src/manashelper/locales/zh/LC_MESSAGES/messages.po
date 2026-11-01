@@ -1082,3 +1082,66 @@ msgstr "发送这条广播吗？"
 
 msgid "menu.study"
 msgstr "📚 学习"
+
+msgid "commands.flow_demo"
+msgstr "测试界面流程"
+
+msgid "ui_flows.demo.intro"
+msgstr "测试菜单。打开表单或退出。使用 /flow_demo 可恢复当前步骤。"
+
+msgid "ui_flows.demo.form"
+msgstr "打开表单"
+
+msgid "ui_flows.demo.prompt"
+msgstr "请输入简短文本（1至120个字符）。"
+
+msgid "ui_flows.demo.invalid"
+msgstr "请输入1至120个字符。"
+
+msgid "ui_flows.demo.confirm"
+msgstr "是否在结果中显示您输入的文本？"
+
+msgid "ui_flows.demo.result"
+msgstr "完成。您的文本：{answer}"
+
+msgid "ui_flows.completed"
+msgstr "完成。"
+
+msgid "ui_flows.cancelled"
+msgstr "已取消。"
+
+msgid "ui_flows.expired"
+msgstr "这些按钮已失效。请使用 /flow_demo 恢复当前步骤。"
+
+msgid "ui_flows.choose_action"
+msgstr "请选择操作："
+
+msgid "ui_flows.use_buttons"
+msgstr "请使用当前页面上的按钮。"
+
+msgid "ui_flows.unavailable"
+msgstr "无法打开此页面。请使用 /flow_demo 恢复当前步骤。"
+
+msgid "commands.editor"
+msgstr "打开界面编辑器"
+
+msgid "ui_flows.editor_link"
+msgstr "<a href=\"{link}\">打开编辑器</a>\n登录链接有效期为5分钟，仅可使用一次。"
+
+msgid "ui_flows.editor_unavailable"
+msgstr "编辑器暂不可用。"
+
+msgid "ui_flows.web.title"
+msgstr "Manashelper 管理"
+
+msgid "ui_flows.web.waiting"
+msgstr "正在登录…"
+
+msgid "ui_flows.web.ready"
+msgstr "管理员会话已开启。"
+
+msgid "ui_flows.web.failed"
+msgstr "此登录链接无效或已过期。请通过 /editor 获取新链接。"
+
+msgid "ui_flows.web.login"
+msgstr "请在管理员私聊中使用 /editor 命令并打开登录链接。"

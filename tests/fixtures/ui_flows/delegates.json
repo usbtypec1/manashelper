@@ -1,0 +1,57 @@
+[
+  {
+    "id": "student_questions.has_submitted",
+    "effect": "read",
+    "inputs": {
+      "user_id": {
+        "type": "integer"
+      }
+    },
+    "outputs": {
+      "submitted": {
+        "type": "boolean"
+      }
+    },
+    "outcomes": [
+      "success"
+    ]
+  },
+  {
+    "id": "student_questions.submit",
+    "effect": "database_write",
+    "inputs": {
+      "user_id": {
+        "type": "integer"
+      },
+      "course": {
+        "type": "text"
+      },
+      "overwrite": {
+        "type": "boolean"
+      },
+      "had_questions": {
+        "type": "boolean"
+      },
+      "questions": {
+        "type": "text",
+        "nullable": true
+      },
+      "found_answers": {
+        "type": "boolean",
+        "nullable": true
+      },
+      "answer_sources": {
+        "type": "text",
+        "nullable": true
+      },
+      "wants_beta": {
+        "type": "boolean"
+      }
+    },
+    "outcomes": [
+      "success",
+      "already_submitted"
+    ]
+  }
+]
+

@@ -9,6 +9,10 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+src/admin-ui/node_modules/
+src/admin-ui/dist/
+src/admin-ui/test-results/
+src/admin-ui/playwright-report/
 
 .env
 .env.*

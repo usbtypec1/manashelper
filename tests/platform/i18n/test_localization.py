@@ -62,7 +62,12 @@ def _placeholders(text: str) -> set[str]:
 def test_catalogs_cover_every_key_and_preserve_placeholders(locale: Locale) -> None:
     english = _catalog(Locale.EN)
     catalog = _catalog(locale)
-    assert {message.id for message in catalog} == {message.id for message in english}
+
+    # Browser administration is English-only; user-facing bot copy still requires all five catalogs.
+    def shared_keys(messages):
+        return {message.id for message in messages if not str(message.id).startswith("ui_flows.editor.")}
+
+    assert shared_keys(catalog) == shared_keys(english)
     assert not catalog.fuzzy
     for message in catalog:
         if not message.id:

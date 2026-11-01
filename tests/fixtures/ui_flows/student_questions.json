@@ -1,0 +1,655 @@
+{
+  "schema_version": 1,
+  "id": "student_questions",
+  "entry": "check_submission",
+  "fields": {
+    "course": {
+      "type": "text"
+    },
+    "has_submitted": {
+      "type": "boolean"
+    },
+    "overwrite": {
+      "type": "boolean"
+    },
+    "had_questions": {
+      "type": "boolean"
+    },
+    "questions": {
+      "type": "text",
+      "nullable": true
+    },
+    "found_answers": {
+      "type": "boolean",
+      "nullable": true
+    },
+    "answer_sources": {
+      "type": "text",
+      "nullable": true
+    },
+    "wants_beta": {
+      "type": "boolean"
+    }
+  },
+  "initial_data": {
+    "overwrite": false,
+    "questions": null,
+    "found_answers": null,
+    "answer_sources": null
+  },
+  "nodes": [
+    {
+      "kind": "action",
+      "id": "check_submission",
+      "delegate": "student_questions.has_submitted",
+      "arguments": {
+        "user_id": {
+          "kind": "ref",
+          "scope": "user",
+          "field": "id"
+        }
+      },
+      "results": {
+        "submitted": "has_submitted"
+      },
+      "outcomes": {
+        "success": "choose_start"
+      }
+    },
+    {
+      "kind": "condition",
+      "id": "choose_start",
+      "branches": [
+        {
+          "when": {
+            "kind": "compare",
+            "left": {
+              "kind": "ref",
+              "scope": "data",
+              "field": "has_submitted"
+            },
+            "operator": "eq",
+            "right": {
+              "kind": "literal",
+              "value": true
+            }
+          },
+          "target": "overwrite"
+        }
+      ],
+      "default": "course"
+    },
+    {
+      "kind": "menu",
+      "id": "overwrite",
+      "text": [
+        {
+          "kind": "catalog",
+          "key": "student_questions.already_completed"
+        }
+      ],
+      "keyboard": "inline",
+      "buttons": [
+        [
+          {
+            "kind": "transition",
+            "id": "replace",
+            "label": {
+              "kind": "catalog",
+              "key": "student_questions.fill_again"
+            },
+            "target": "course",
+            "assignments": {
+              "overwrite": {
+                "kind": "literal",
+                "value": true
+              },
+              "questions": {
+                "kind": "literal",
+                "value": null
+              },
+              "found_answers": {
+                "kind": "literal",
+                "value": null
+              },
+              "answer_sources": {
+                "kind": "literal",
+                "value": null
+              }
+            }
+          }
+        ],
+        [
+          {
+            "kind": "transition",
+            "id": "cancel",
+            "label": {
+              "kind": "catalog",
+              "key": "common.cancel"
+            },
+            "target": "cancel",
+            "assignments": {}
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "menu",
+      "id": "course",
+      "text": [
+        {
+          "kind": "catalog",
+          "key": "student_questions.intro"
+        },
+        {
+          "kind": "catalog",
+          "key": "student_questions.course_prompt"
+        }
+      ],
+      "keyboard": "inline",
+      "buttons": [
+        [
+          {
+            "kind": "transition",
+            "id": "preparatory",
+            "label": {
+              "kind": "catalog",
+              "key": "student_questions.preparatory"
+            },
+            "target": "search",
+            "assignments": {
+              "course": {
+                "kind": "literal",
+                "value": "preparatory"
+              }
+            }
+          }
+        ],
+        [
+          {
+            "kind": "transition",
+            "id": "year_1",
+            "label": {
+              "kind": "catalog",
+              "key": "student_questions.year_1"
+            },
+            "target": "search",
+            "assignments": {
+              "course": {
+                "kind": "literal",
+                "value": "1"
+              }
+            }
+          },
+          {
+            "kind": "transition",
+            "id": "year_2",
+            "label": {
+              "kind": "catalog",
+              "key": "student_questions.year_2"
+            },
+            "target": "search",
+            "assignments": {
+              "course": {
+                "kind": "literal",
+                "value": "2"
+              }
+            }
+          },
+          {
+            "kind": "transition",
+            "id": "year_3",
+            "label": {
+              "kind": "catalog",
+              "key": "student_questions.year_3"
+            },
+            "target": "search",
+            "assignments": {
+              "course": {
+                "kind": "literal",
+                "value": "3"
+              }
+            }
+          }
+        ],
+        [
+          {
+            "kind": "transition",
+            "id": "year_4",
+            "label": {
+              "kind": "catalog",
+              "key": "student_questions.year_4"
+            },
+            "target": "search",
+            "assignments": {
+              "course": {
+                "kind": "literal",
+                "value": "4"
+              }
+            }
+          },
+          {
+            "kind": "transition",
+            "id": "year_5",
+            "label": {
+              "kind": "catalog",
+              "key": "student_questions.year_5"
+            },
+            "target": "search",
+            "assignments": {
+              "course": {
+                "kind": "literal",
+                "value": "5"
+              }
+            }
+          }
+        ],
+        [
+          {
+            "kind": "transition",
+            "id": "not_student",
+            "label": {
+              "kind": "catalog",
+              "key": "student_questions.not_student"
+            },
+            "target": "search",
+            "assignments": {
+              "course": {
+                "kind": "literal",
+                "value": "not_student"
+              }
+            }
+          }
+        ],
+        [
+          {
+            "kind": "transition",
+            "id": "cancel",
+            "label": {
+              "kind": "catalog",
+              "key": "common.cancel"
+            },
+            "target": "cancel",
+            "assignments": {}
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "menu",
+      "id": "search",
+      "text": [
+        {
+          "kind": "catalog",
+          "key": "student_questions.search_prompt"
+        }
+      ],
+      "keyboard": "inline",
+      "buttons": [
+        [
+          {
+            "kind": "transition",
+            "id": "yes",
+            "label": {
+              "kind": "catalog",
+              "key": "student_questions.yes"
+            },
+            "target": "questions",
+            "assignments": {
+              "had_questions": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          },
+          {
+            "kind": "transition",
+            "id": "no",
+            "label": {
+              "kind": "catalog",
+              "key": "student_questions.no"
+            },
+            "target": "beta",
+            "assignments": {
+              "had_questions": {
+                "kind": "literal",
+                "value": false
+              },
+              "questions": {
+                "kind": "literal",
+                "value": null
+              },
+              "found_answers": {
+                "kind": "literal",
+                "value": null
+              },
+              "answer_sources": {
+                "kind": "literal",
+                "value": null
+              }
+            }
+          }
+        ],
+        [
+          {
+            "kind": "transition",
+            "id": "cancel",
+            "label": {
+              "kind": "catalog",
+              "key": "common.cancel"
+            },
+            "target": "cancel",
+            "assignments": {}
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "input",
+      "id": "questions",
+      "text": [
+        {
+          "kind": "catalog",
+          "key": "student_questions.questions_prompt"
+        }
+      ],
+      "field": "questions",
+      "input_type": "text",
+      "next": "found",
+      "error": {
+        "kind": "catalog",
+        "key": "student_questions.invalid_text",
+        "parameters": {
+          "max": {
+            "kind": "literal",
+            "value": 4000
+          }
+        }
+      },
+      "buttons": [
+        [
+          {
+            "kind": "transition",
+            "id": "cancel",
+            "label": {
+              "kind": "catalog",
+              "key": "common.cancel"
+            },
+            "target": "cancel",
+            "assignments": {}
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "menu",
+      "id": "found",
+      "text": [
+        {
+          "kind": "catalog",
+          "key": "student_questions.found_prompt"
+        }
+      ],
+      "keyboard": "inline",
+      "buttons": [
+        [
+          {
+            "kind": "transition",
+            "id": "yes",
+            "label": {
+              "kind": "catalog",
+              "key": "student_questions.yes"
+            },
+            "target": "answer_sources",
+            "assignments": {
+              "found_answers": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          },
+          {
+            "kind": "transition",
+            "id": "no",
+            "label": {
+              "kind": "catalog",
+              "key": "student_questions.no"
+            },
+            "target": "beta",
+            "assignments": {
+              "found_answers": {
+                "kind": "literal",
+                "value": false
+              },
+              "answer_sources": {
+                "kind": "literal",
+                "value": null
+              }
+            }
+          }
+        ],
+        [
+          {
+            "kind": "transition",
+            "id": "cancel",
+            "label": {
+              "kind": "catalog",
+              "key": "common.cancel"
+            },
+            "target": "cancel",
+            "assignments": {}
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "input",
+      "id": "answer_sources",
+      "text": [
+        {
+          "kind": "catalog",
+          "key": "student_questions.sources_prompt"
+        }
+      ],
+      "field": "answer_sources",
+      "input_type": "text",
+      "next": "beta",
+      "error": {
+        "kind": "catalog",
+        "key": "student_questions.invalid_text",
+        "parameters": {
+          "max": {
+            "kind": "literal",
+            "value": 4000
+          }
+        }
+      },
+      "buttons": [
+        [
+          {
+            "kind": "transition",
+            "id": "cancel",
+            "label": {
+              "kind": "catalog",
+              "key": "common.cancel"
+            },
+            "target": "cancel",
+            "assignments": {}
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "menu",
+      "id": "beta",
+      "text": [
+        {
+          "kind": "catalog",
+          "key": "student_questions.beta_prompt"
+        }
+      ],
+      "keyboard": "inline",
+      "buttons": [
+        [
+          {
+            "kind": "transition",
+            "id": "yes",
+            "label": {
+              "kind": "catalog",
+              "key": "student_questions.yes"
+            },
+            "target": "submit",
+            "assignments": {
+              "wants_beta": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          },
+          {
+            "kind": "transition",
+            "id": "no",
+            "label": {
+              "kind": "catalog",
+              "key": "student_questions.no"
+            },
+            "target": "submit",
+            "assignments": {
+              "wants_beta": {
+                "kind": "literal",
+                "value": false
+              }
+            }
+          }
+        ],
+        [
+          {
+            "kind": "transition",
+            "id": "cancel",
+            "label": {
+              "kind": "catalog",
+              "key": "common.cancel"
+            },
+            "target": "cancel",
+            "assignments": {}
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "action",
+      "id": "submit",
+      "delegate": "student_questions.submit",
+      "arguments": {
+        "course": {
+          "kind": "ref",
+          "scope": "data",
+          "field": "course"
+        },
+        "overwrite": {
+          "kind": "ref",
+          "scope": "data",
+          "field": "overwrite"
+        },
+        "had_questions": {
+          "kind": "ref",
+          "scope": "data",
+          "field": "had_questions"
+        },
+        "questions": {
+          "kind": "ref",
+          "scope": "data",
+          "field": "questions"
+        },
+        "found_answers": {
+          "kind": "ref",
+          "scope": "data",
+          "field": "found_answers"
+        },
+        "answer_sources": {
+          "kind": "ref",
+          "scope": "data",
+          "field": "answer_sources"
+        },
+        "wants_beta": {
+          "kind": "ref",
+          "scope": "data",
+          "field": "wants_beta"
+        },
+        "user_id": {
+          "kind": "ref",
+          "scope": "user",
+          "field": "id"
+        }
+      },
+      "outcomes": {
+        "success": "choose_thanks",
+        "already_submitted": "overwrite"
+      }
+    },
+    {
+      "kind": "condition",
+      "id": "choose_thanks",
+      "branches": [
+        {
+          "when": {
+            "kind": "compare",
+            "left": {
+              "kind": "ref",
+              "scope": "data",
+              "field": "wants_beta"
+            },
+            "operator": "eq",
+            "right": {
+              "kind": "literal",
+              "value": true
+            }
+          },
+          "target": "thanks_beta"
+        }
+      ],
+      "default": "thanks"
+    },
+    {
+      "kind": "end",
+      "id": "thanks",
+      "status": "completed",
+      "text": [
+        {
+          "kind": "catalog",
+          "key": "student_questions.thanks"
+        }
+      ],
+      "return_flow": "main_menu"
+    },
+    {
+      "kind": "end",
+      "id": "thanks_beta",
+      "status": "completed",
+      "text": [
+        {
+          "kind": "catalog",
+          "key": "student_questions.thanks"
+        },
+        {
+          "kind": "catalog",
+          "key": "student_questions.beta_follow_up"
+        }
+      ],
+      "return_flow": "main_menu"
+    },
+    {
+      "kind": "end",
+      "id": "cancel",
+      "status": "cancelled",
+      "text": [
+        {
+          "kind": "catalog",
+          "key": "student_questions.cancelled"
+        }
+      ],
+      "return_flow": "main_menu"
+    }
+  ]
+}
+

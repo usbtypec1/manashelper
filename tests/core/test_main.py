@@ -9,7 +9,7 @@ from manashelper import main as app
 
 
 @pytest.mark.parametrize(
-    "failure", [None, "dispatcher", "commands", "polling", "scheduler_shutdown", "container_close"]
+    "failure", [None, "ui_startup", "dispatcher", "commands", "polling", "scheduler_shutdown", "container_close"]
 )
 async def test_resources_close_on_exit_and_failures(failure: str | None, monkeypatch: pytest.MonkeyPatch) -> None:
     load_models = Mock()
@@ -18,9 +18,12 @@ async def test_resources_close_on_exit_and_failures(failure: str | None, monkeyp
     close_session = AsyncMock()
     monkeypatch.setattr(bot.session, "close", close_session)
     monkeypatch.setattr(app, "Bot", Mock(return_value=bot))
-    monkeypatch.setattr(app, "get_settings", Mock(return_value=SimpleNamespace(telegram_bot_token=bot.token)))
+    monkeypatch.setattr(
+        app, "get_settings", Mock(return_value=SimpleNamespace(telegram_bot_token=bot.token, admin_chat_id=123456))
+    )
 
-    container = SimpleNamespace(close=AsyncMock())
+    startup = SimpleNamespace(restart=AsyncMock(), install_defaults=AsyncMock())
+    container = SimpleNamespace(close=AsyncMock(), get=AsyncMock(return_value=startup))
     dispatcher = SimpleNamespace(start_polling=AsyncMock())
     scheduler = SimpleNamespace(start=Mock(), shutdown=Mock())
     create_dispatcher = Mock(return_value=dispatcher)
@@ -31,6 +34,7 @@ async def test_resources_close_on_exit_and_failures(failure: str | None, monkeyp
     monkeypatch.setattr(app, "setup_commands", setup_commands)
 
     failures = {
+        "ui_startup": startup.restart,
         "dispatcher": create_dispatcher,
         "commands": setup_commands,
         "polling": dispatcher.start_polling,
@@ -60,13 +64,18 @@ async def test_resources_close_on_exit_and_failures(failure: str | None, monkeyp
         == 1
     )
     close_session.assert_awaited_once()
-    if failure == "dispatcher":
+    startup.restart.assert_awaited_once()
+    if failure == "ui_startup":
+        startup.install_defaults.assert_not_awaited()
+    else:
+        startup.install_defaults.assert_awaited_once_with(123456)
+    if failure in {"dispatcher", "ui_startup"}:
         scheduler.start.assert_not_called()
         scheduler.shutdown.assert_not_called()
     else:
         scheduler.shutdown.assert_called_once()
 
-    if failure in {"dispatcher", "commands"}:
+    if failure in {"dispatcher", "commands", "ui_startup"}:
         dispatcher.start_polling.assert_not_awaited()
     else:
         dispatcher.start_polling.assert_awaited_once_with(bot, close_bot_session=False)

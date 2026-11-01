@@ -25,10 +25,17 @@ from manashelper.modules.schedule.presentation.routers.lesson_search import rout
 from manashelper.modules.schedule.presentation.routers.timetable import router as timetable_router
 from manashelper.modules.student_questions.router import router as student_questions_router
 from manashelper.modules.study_week.router import router as study_week_router
+from manashelper.modules.ui_flows.presentation.menu_router import router as ui_flow_menus_router
+from manashelper.modules.ui_flows.presentation.navigation import UiFlowNavigationMiddleware
+from manashelper.modules.ui_flows.presentation.observation import UiFlowObservationMiddleware
+from manashelper.modules.ui_flows.presentation.router import reply_router as ui_flow_reply_router
+from manashelper.modules.ui_flows.presentation.router import router as ui_flows_router
+from manashelper.modules.ui_flows.presentation.survey_router import router as ui_flow_survey_router
 from manashelper.modules.users.presentation.routers.locale import router as locale_router
 from manashelper.modules.users.presentation.routers.phone_numbers import router as phone_numbers_router
 from manashelper.modules.users.presentation.routers.theme import router as theme_router
 from manashelper.platform.telegram.middlewares.action_log import ActionLogMiddleware
+from manashelper.platform.telegram.middlewares.after_request import AfterRequestMiddleware
 from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
 from manashelper.platform.telegram.middlewares.per_chat_ordering import PerChatOrderingMiddleware
 from manashelper.platform.telegram.middlewares.private_chat_only import PrivateChatOnlyMiddleware
@@ -51,21 +58,28 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
         # Reject excess updates before they queue for a per-chat lock.
         observer.outer_middleware(RateLimitMiddleware())
         observer.outer_middleware(PerChatOrderingMiddleware())
+        observer.outer_middleware(AfterRequestMiddleware())
 
         # Handler flags are available only in inner middleware. Log only updates
         # that pass the private-chat check and reach a handler.
         observer.middleware(PrivateChatOnlyMiddleware())
+        observer.middleware(UiFlowNavigationMiddleware())
+        observer.middleware(UiFlowObservationMiddleware())
         observer.middleware(ActionLogMiddleware())
 
     dispatcher.errors.register(on_error)
     dispatcher.include_routers(
+        ui_flow_reply_router,
+        ui_flow_menus_router,
         # Survey and advertisement deep links must precede handlers claiming all /start payloads.
+        ui_flow_survey_router,
         student_questions_router,
         advertisement_contact_router,
         start_router,
         locale_router,
         theme_router,
         navigation_router,
+        ui_flows_router,
         timetable_router,
         lesson_search_router,
         food_menu_router,

@@ -40,14 +40,17 @@ Everything happens directly in the Telegram chat — there's no separate app or 
 
 Built with Python 3.13, [aiogram 3](https://docs.aiogram.dev/) for the Telegram bot layer, SQLAlchemy 2 (async)
 + Postgres for storage, and [Dishka](https://github.com/reagento/dishka) for dependency injection. There is no
-REST API — all interaction happens through Telegram long-polling. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+public REST API; a separate private FastAPI process serves the scenario editor.
+The engine lives in `src/ui_flows/`, shared ORM metadata in `src/common/`, application
+adapters in `src/manashelper/`, and the Bun/Vue editor in `src/admin-ui/`.
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 for the current package layout, [`docs/MIGRATION.md`](docs/MIGRATION.md) for the completed refactor and
 [`docs/BACKLOG.md`](docs/BACKLOG.md) for deferred fixes and verification.
 
 ### Requirements
 
 - Python 3.13+
-- [`uv`](https://docs.astral.sh/uv/)
+- [`uv`](https://docs.astral.sh/uv/) 0.8.17+ (multiple Python modules in one distribution)
 - Docker with the Compose plugin (to run a local PostgreSQL 18 instance)
 - A Telegram bot token from [@BotFather](https://t.me/BotFather)
 
@@ -104,7 +107,7 @@ the Compose files into `docker/`. `--env-file .env` explicitly loads the root co
 uv run pytest                  # tests (needs the dev Postgres running, and the translation catalogs compiled)
 uv run ruff check .            # lint
 uv run ruff format .           # format
-uv run mypy src/manashelper    # type check
+uv run mypy src/manashelper src/ui_flows src/common    # type check
 ```
 
 A [`.pre-commit-config.yaml`](.pre-commit-config.yaml) is included to run all three checks automatically before

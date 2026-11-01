@@ -7,7 +7,7 @@ import pytest
 from dishka import Provider, Scope, make_async_container, provide
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from manashelper.core.database import Base
+from common.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.feedback.orm import FeedbackMessage
@@ -114,10 +114,12 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry(monkeypa
                 dispatcher = create_dispatcher(container)
                 for observer in (dispatcher.message, dispatcher.callback_query):
                     assert [type(item).__name__ for item in observer.outer_middleware] == [
-                        "RateLimitMiddleware", "PerChatOrderingMiddleware", "ContainerMiddleware", "LocaleMiddleware"
+                        "RateLimitMiddleware", "PerChatOrderingMiddleware", "AfterRequestMiddleware",
+                        "ContainerMiddleware", "LocaleMiddleware"
                     ]
                     assert [type(item).__name__ for item in observer.middleware] == [
-                        "PrivateChatOnlyMiddleware", "ActionLogMiddleware"
+                        "PrivateChatOnlyMiddleware", "UiFlowNavigationMiddleware",
+                        "UiFlowObservationMiddleware", "ActionLogMiddleware"
                     ]
                 for index in (0, 1):
                     assert (

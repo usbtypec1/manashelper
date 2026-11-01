@@ -18,3 +18,6 @@ class UsersQuery:
 
     async def exists(self, user_id: int) -> bool:
         return await self._users.get_by_id(user_id) is not None
+
+    async def ids_after(self, after: int | None, limit: int) -> list[int]:
+        return await self._users.ids_after(after, limit)

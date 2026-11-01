@@ -9,8 +9,8 @@ from dishka import FromDishka
 from manashelper.core.config import Settings
 from manashelper.modules.advertisements.application.advertisement import AdvertisementNotFoundError
 from manashelper.modules.advertisements.application.advertisement_contact import AdvertisementContactService
-from manashelper.modules.advertisements.presentation.advertisement import send_marketplace_menu
 from manashelper.modules.advertisements.presentation.advertisement_formatter import format_contact_reveal
+from manashelper.modules.advertisements.presentation.entrypoints import send_marketplace_menu
 from manashelper.platform.telegram.navigation import send_welcome
 
 router = Router(name="advertisement_contact")

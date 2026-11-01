@@ -9,6 +9,7 @@ from manashelper.modules.obis.presentation.keyboards import build_obis_settings_
 from manashelper.modules.schedule.application.faculty import FacultyService
 from manashelper.modules.schedule.presentation.keyboards.timetable import build_faculty_keyboard
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
+from manashelper.platform.telegram.entrypoints import show_settings
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
 from manashelper.platform.telegram.keyboards.settings import build_settings_keyboard
 
@@ -18,7 +19,7 @@ router = Router(name="settings")
 @router.message(TranslatedText("menu.settings"))
 @flags.private_chat_only
 async def on_settings_button(message: Message) -> None:
-    await message.answer(_("settings.title"), reply_markup=build_settings_keyboard())
+    await show_settings(message)
 
 
 @router.callback_query(SettingsCallback.filter(F.action == SettingsAction.BACK_TO_SETTINGS))

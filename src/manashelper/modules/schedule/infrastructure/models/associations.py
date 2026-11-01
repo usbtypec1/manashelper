@@ -1,6 +1,6 @@
 from sqlalchemy import BigInteger, Column, ForeignKey, Integer, Table
 
-from manashelper.core.database import Base
+from common.database import Base
 
 user_courses = Table(
     "user_courses",

@@ -1,8 +1,6 @@
 import logging
-from collections.abc import Awaitable, Callable
 from contextlib import suppress
 
-import httpx
 from aiogram import F, Router, flags
 from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 from aiogram.filters import StateFilter
@@ -15,17 +13,13 @@ from dishka import FromDishka
 from manashelper.modules.obis.application.obis import ObisService
 from manashelper.modules.obis.errors import (
     ObisLoginError,
-    ObisParseError,
-    ObisSnapshotNotReadyError,
-    UserHasNoCredentialsError,
     UserNotFoundError,
 )
 from manashelper.modules.obis.presentation.callbacks import ObisAction, ObisCallback, ObisResultsPageCallback
-from manashelper.modules.obis.presentation.formatter import format_attendance_pages, format_exam_grades_pages
+from manashelper.modules.obis.presentation.entrypoints import RESULTS_KEY, show_attendance, show_grades
 from manashelper.modules.obis.presentation.keyboards import (
     build_cancel_keyboard,
     build_confirm_clear_credentials_keyboard,
-    build_no_credentials_keyboard,
     build_obis_results_keyboard,
     build_obis_settings_keyboard,
     build_terms_keyboard,
@@ -34,8 +28,6 @@ from manashelper.platform.telegram.filters.translated_text import TranslatedText
 
 router = Router(name="obis")
 logger = logging.getLogger(__name__)
-RESULTS_KEY = "obis_result_pages"
-MAX_SAVED_RESULTS = 5
 
 
 class ObisCredentialsForm(StatesGroup):
@@ -43,68 +35,18 @@ class ObisCredentialsForm(StatesGroup):
     password = State()
 
 
-async def _show_obis_results[T](
-    message: Message,
-    state: FSMContext,
-    fetch: Callable[[int], Awaitable[list[T]]],
-    format_results: Callable[[list[T]], list[str]],
-    loading_text: str,
-) -> None:
-    if message.from_user is None:
-        return
-    sent = await message.answer(loading_text, parse_mode=None)
-    try:
-        lessons = await fetch(message.from_user.id)
-    except UserNotFoundError:
-        await sent.edit_text(_("common.start_required"))
-        return
-    except ObisSnapshotNotReadyError:
-        await sent.edit_text(_("data.preparing"))
-        return
-    except UserHasNoCredentialsError:
-        await sent.edit_text(
-            _("obis.credentials_missing"),
-            reply_markup=build_no_credentials_keyboard(),
-        )
-        return
-    except ObisLoginError:
-        await sent.edit_text(
-            _("obis.credentials_invalid"),
-            reply_markup=build_no_credentials_keyboard(),
-        )
-        return
-    except (ObisParseError, httpx.HTTPError):
-        logger.warning("Failed to load requested OBIS data", exc_info=True)
-        await sent.edit_text(_("obis.fetch_failed"))
-        return
-    except Exception:
-        await sent.edit_text(_("obis.fetch_failed"))
-        raise
-    pages = format_results(lessons)
-    if len(pages) > 1:
-        data = await state.get_data()
-        snapshots: dict[str, list[str]] = dict(data.get(RESULTS_KEY, {}))
-        snapshots[str(sent.message_id)] = pages
-        while len(snapshots) > MAX_SAVED_RESULTS:
-            snapshots.pop(next(iter(snapshots)))
-        await state.update_data({RESULTS_KEY: snapshots})
-    await sent.edit_text(pages[0], parse_mode=None, reply_markup=build_obis_results_keyboard(0, len(pages)))
-
-
 @router.message(TranslatedText("menu.attendance"))
 @flags.private_chat_only
 async def on_attendance_button(message: Message, state: FSMContext, obis_service: FromDishka[ObisService]) -> None:
-    await _show_obis_results(
-        message, state, obis_service.get_attendance, format_attendance_pages, _("obis.loading_attendance")
-    )
+    if message.from_user is not None:
+        await show_attendance(message, message.from_user.id, state, obis_service)
 
 
 @router.message(TranslatedText("menu.grades"))
 @flags.private_chat_only
 async def on_exams_button(message: Message, state: FSMContext, obis_service: FromDishka[ObisService]) -> None:
-    await _show_obis_results(
-        message, state, obis_service.get_exam_grades, format_exam_grades_pages, _("obis.loading_grades")
-    )
+    if message.from_user is not None:
+        await show_grades(message, message.from_user.id, state, obis_service)
 
 
 @router.callback_query(ObisResultsPageCallback.filter())

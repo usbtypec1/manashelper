@@ -5,7 +5,7 @@
 
 
 def load_models() -> None:
-    from manashelper.core.database import Base
+    from common.database import Base
     from manashelper.modules.advertisements.infrastructure.advertisement import Advertisement
     from manashelper.modules.advertisements.infrastructure.advertisement_channel_message import (
         AdvertisementChannelMessage,
@@ -32,9 +32,17 @@ def load_models() -> None:
     from manashelper.modules.schedule.infrastructure.models.lesson import Lesson
     from manashelper.modules.schedule.infrastructure.models.lesson_history import LessonHistory
     from manashelper.modules.student_questions.orm import StudentQuestionsResponse
+    from manashelper.modules.ui_flows.infrastructure.orm import (
+        UiDialogSession,
+        UiFlow,
+        UiFlowEvent,
+        UiFlowVersion,
+        UiScreenDelivery,
+    )
     from manashelper.modules.users.infrastructure.user import User
     from manashelper.modules.users.infrastructure.user_phone_number import UserPhoneNumber
     from manashelper.platform.telegram.audit.orm import ActionLog
     from manashelper.platform.telegram.deletions.orm import ScheduledMessageDeletion
+    from manashelper.platform.web.orm import AdminLoginTicket, AdminWebSession
 
     Base.registry.configure()

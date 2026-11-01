@@ -1092,3 +1092,66 @@ msgstr "Bu duyuru gönderilsin mi?"
 
 msgid "menu.study"
 msgstr "📚 Eğitim"
+
+msgid "commands.flow_demo"
+msgstr "Arayüz akışını dene"
+
+msgid "ui_flows.demo.intro"
+msgstr "Deneme menüsü. Formu açın veya çıkın. /flow_demo komutu mevcut adımı geri getirir."
+
+msgid "ui_flows.demo.form"
+msgstr "Formu aç"
+
+msgid "ui_flows.demo.prompt"
+msgstr "Kısa bir metin girin (1–120 karakter)."
+
+msgid "ui_flows.demo.invalid"
+msgstr "1 ile 120 karakter arasında bir metin girin."
+
+msgid "ui_flows.demo.confirm"
+msgstr "Girdiğiniz metin sonuçta gösterilsin mi?"
+
+msgid "ui_flows.demo.result"
+msgstr "Tamamlandı. Metniniz: {answer}"
+
+msgid "ui_flows.completed"
+msgstr "Tamamlandı."
+
+msgid "ui_flows.cancelled"
+msgstr "İptal edildi."
+
+msgid "ui_flows.expired"
+msgstr "Bu düğmeler artık etkin değil. Mevcut adıma dönmek için /flow_demo kullanın."
+
+msgid "ui_flows.choose_action"
+msgstr "Bir işlem seçin:"
+
+msgid "ui_flows.use_buttons"
+msgstr "Mevcut ekrandaki düğmeleri kullanın."
+
+msgid "ui_flows.unavailable"
+msgstr "Ekran açılamadı. Mevcut adıma dönmek için /flow_demo kullanın."
+
+msgid "commands.editor"
+msgstr "Arayüz düzenleyicisini aç"
+
+msgid "ui_flows.editor_link"
+msgstr "<a href=\"{link}\">Düzenleyiciyi aç</a>\nGiriş bağlantısı 5 dakika geçerlidir ve bir kez kullanılabilir."
+
+msgid "ui_flows.editor_unavailable"
+msgstr "Düzenleyici henüz kullanılamıyor."
+
+msgid "ui_flows.web.title"
+msgstr "Manashelper yönetimi"
+
+msgid "ui_flows.web.waiting"
+msgstr "Giriş yapılıyor…"
+
+msgid "ui_flows.web.ready"
+msgstr "Yönetici oturumunuz açıldı."
+
+msgid "ui_flows.web.failed"
+msgstr "Bu bağlantı geçersiz veya süresi dolmuş. /editor ile yeni bir bağlantı isteyin."
+
+msgid "ui_flows.web.login"
+msgstr "Özel yönetici sohbetinizde /editor komutundan gelen giriş bağlantısını açın."

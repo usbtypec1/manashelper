@@ -6,7 +6,7 @@ from sqlalchemy import BigInteger, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
-from manashelper.core.database import Base
+from common.database import Base
 from manashelper.modules.advertisements.domain.enums import AdvertisementStatus
 
 if TYPE_CHECKING:

@@ -32,6 +32,24 @@ services:
     volumes:
       - app_logs:/app/logs
 
+  admin:
+    image: usbtypec1/manashelper:${MANASHELPER_VERSION}
+    profiles: ["admin"]
+    restart: always
+    env_file:
+      - .env
+    entrypoint: ["python", "-m", "uvicorn", "manashelper.admin_main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8080"]
+    ports:
+      - "127.0.0.1:${MANASHELPER_ADMIN_WEB_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/admin/', timeout=5)"]
+      interval: 15s
+      timeout: 6s
+      retries: 3
+
 volumes:
   postgres18_data:
   app_logs:

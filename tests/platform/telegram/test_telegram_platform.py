@@ -18,7 +18,7 @@ from dishka.integrations.aiogram import CONTAINER_NAME
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import manashelper
-from manashelper.core.database import Base
+from common.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.platform.i18n import catalog as catalog

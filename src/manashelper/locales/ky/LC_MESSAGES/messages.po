@@ -1094,3 +1094,66 @@ msgstr "Бул билдирүүнү таратуубу?"
 
 msgid "menu.study"
 msgstr "📚 Окуу"
+
+msgid "commands.flow_demo"
+msgstr "Интерфейс сценарийин текшерүү"
+
+msgid "ui_flows.demo.intro"
+msgstr "Сыноо менюсу. Форманы ачыңыз же чыгыңыз. /flow_demo буйругу учурдагы кадамды калыбына келтирет."
+
+msgid "ui_flows.demo.form"
+msgstr "Форманы ачуу"
+
+msgid "ui_flows.demo.prompt"
+msgstr "Кыска текст жазыңыз (1–120 белги)."
+
+msgid "ui_flows.demo.invalid"
+msgstr "1ден 120га чейин белги жазыңыз."
+
+msgid "ui_flows.demo.confirm"
+msgstr "Жазылган текст жыйынтыкта көрсөтүлсүнбү?"
+
+msgid "ui_flows.demo.result"
+msgstr "Даяр. Сиздин текстиңиз: {answer}"
+
+msgid "ui_flows.completed"
+msgstr "Даяр."
+
+msgid "ui_flows.cancelled"
+msgstr "Жокко чыгарылды."
+
+msgid "ui_flows.expired"
+msgstr "Бул баскычтар эскирген. /flow_demo буйругу учурдагы кадамды калыбына келтирет."
+
+msgid "ui_flows.choose_action"
+msgstr "Аракетти тандаңыз:"
+
+msgid "ui_flows.use_buttons"
+msgstr "Учурдагы экрандын баскычтарын колдонуңуз."
+
+msgid "ui_flows.unavailable"
+msgstr "Экранды ачуу мүмкүн болгон жок. /flow_demo буйругу учурдагы кадамды калыбына келтирет."
+
+msgid "commands.editor"
+msgstr "Интерфейс редакторун ачуу"
+
+msgid "ui_flows.editor_link"
+msgstr "<a href=\"{link}\">Редакторду ачуу</a>\nКирүү шилтемеси 5 мүнөткө жарактуу жана бир жолу колдонулат."
+
+msgid "ui_flows.editor_unavailable"
+msgstr "Редактор азырынча жеткиликсиз."
+
+msgid "ui_flows.web.title"
+msgstr "Manashelper башкаруу"
+
+msgid "ui_flows.web.waiting"
+msgstr "Кирүү жүрүп жатат…"
+
+msgid "ui_flows.web.ready"
+msgstr "Администратор сессиясы ачылды."
+
+msgid "ui_flows.web.failed"
+msgstr "Шилтеме жараксыз же мөөнөтү бүттү. /editor буйругу менен жаңысын сураңыз."
+
+msgid "ui_flows.web.login"
+msgstr "Жеке администратор чатыңызда /editor буйругунан келген шилтемени ачыңыз."

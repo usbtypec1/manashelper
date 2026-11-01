@@ -15,7 +15,7 @@ from aiogram.types import CallbackQuery, Chat, Message, ReplyKeyboardRemove, Use
 from dishka import make_async_container
 from dishka.integrations.aiogram import CONTAINER_NAME
 
-from manashelper.core.database import Base
+from common.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale
 from manashelper.localization.theme import Theme
@@ -331,10 +331,10 @@ def test_users_standalone_import_uses_explicit_model_registration(module):
     script = (
         "import importlib; from sqlalchemy.orm import configure_mappers; "
         f"importlib.import_module({module!r}); "
-        "from manashelper.core.database import Base; "
+        "from common.database import Base; "
         "assert len(Base.metadata.tables) < 27; "
         "from manashelper.bootstrap import load_models; load_models(); configure_mappers(); "
-        "assert len(Base.metadata.tables) == 28; "
+        "assert len(Base.metadata.tables) == 38; "
         "assert Base.metadata.tables['user_courses'].c.user_id.references(Base.metadata.tables['users'].c.id)"
     )
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)

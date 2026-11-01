@@ -282,9 +282,9 @@ async def test_broadcast_command_is_registered_only_in_configured_admin_chat():
         commands = {command.command for command in call.kwargs["commands"]}
         scope = call.kwargs["scope"]
         if isinstance(scope, BotCommandScopeChat):
-            assert scope.chat_id == ADMIN_CHAT_ID and commands == {"broadcast"}
+            assert scope.chat_id == ADMIN_CHAT_ID and commands == {"broadcast", "flow_demo", "editor"}
         else:
-            assert "broadcast" not in commands
+            assert commands.isdisjoint({"broadcast", "flow_demo", "editor"})
 
 
 async def test_photo_with_buttons_is_previewed_and_delivered(context):

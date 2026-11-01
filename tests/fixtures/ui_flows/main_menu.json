@@ -1,0 +1,252 @@
+{
+  "schema_version": 1,
+  "id": "main_menu",
+  "entry": "main",
+  "navigation_entries": {"study": "study"},
+  "nodes": [
+    {
+      "kind": "menu",
+      "id": "main",
+      "text": [
+        {
+          "kind": "catalog",
+          "key": "common.welcome"
+        }
+      ],
+      "keyboard": "reply",
+      "buttons": [
+        [
+          {
+            "kind": "transition",
+            "id": "food",
+            "label": {
+              "kind": "catalog",
+              "key": "menu.food"
+            },
+            "target": "food",
+            "assignments": {}
+          },
+          {
+            "kind": "transition",
+            "id": "study",
+            "label": {
+              "kind": "catalog",
+              "key": "menu.study"
+            },
+            "target": "study",
+            "assignments": {}
+          }
+        ],
+        [
+          {
+            "kind": "transition",
+            "id": "marketplace",
+            "label": {
+              "kind": "catalog",
+              "key": "menu.marketplace"
+            },
+            "target": "marketplace",
+            "assignments": {}
+          }
+        ],
+        [
+          {
+            "kind": "transition",
+            "id": "settings",
+            "label": {
+              "kind": "catalog",
+              "key": "menu.settings"
+            },
+            "target": "settings",
+            "assignments": {}
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "menu",
+      "id": "study",
+      "text": [
+        {
+          "kind": "catalog",
+          "key": "menu.study"
+        }
+      ],
+      "keyboard": "reply",
+      "buttons": [
+        [
+          {
+            "kind": "transition",
+            "id": "schedule",
+            "label": {
+              "kind": "catalog",
+              "key": "menu.schedule"
+            },
+            "target": "schedule",
+            "assignments": {}
+          },
+          {
+            "kind": "transition",
+            "id": "week",
+            "label": {
+              "kind": "catalog",
+              "key": "menu.study_week"
+            },
+            "target": "week",
+            "assignments": {},
+            "when": {
+              "kind": "compare",
+              "left": {
+                "kind": "ref",
+                "scope": "capabilities",
+                "field": "eders_enabled"
+              },
+              "operator": "eq",
+              "right": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          }
+        ],
+        [
+          {
+            "kind": "transition",
+            "id": "attendance",
+            "label": {
+              "kind": "catalog",
+              "key": "menu.attendance"
+            },
+            "target": "attendance",
+            "assignments": {}
+          },
+          {
+            "kind": "transition",
+            "id": "grades",
+            "label": {
+              "kind": "catalog",
+              "key": "menu.grades"
+            },
+            "target": "grades",
+            "assignments": {}
+          }
+        ],
+        [
+          {
+            "kind": "transition",
+            "id": "eders",
+            "label": {
+              "kind": "catalog",
+              "key": "menu.eders"
+            },
+            "target": "eders",
+            "assignments": {},
+            "when": {
+              "kind": "compare",
+              "left": {
+                "kind": "ref",
+                "scope": "capabilities",
+                "field": "eders_enabled"
+              },
+              "operator": "eq",
+              "right": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          },
+          {
+            "kind": "transition",
+            "id": "materials",
+            "label": {
+              "kind": "catalog",
+              "key": "menu.eders_materials"
+            },
+            "target": "materials",
+            "assignments": {},
+            "when": {
+              "kind": "compare",
+              "left": {
+                "kind": "ref",
+                "scope": "capabilities",
+                "field": "eders_enabled"
+              },
+              "operator": "eq",
+              "right": {
+                "kind": "literal",
+                "value": true
+              }
+            }
+          }
+        ],
+        [
+          {
+            "kind": "transition",
+            "id": "back",
+            "label": {
+              "kind": "catalog",
+              "key": "common.back_to_menu"
+            },
+            "target": "main",
+            "assignments": {}
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "end",
+      "id": "food",
+      "status": "handed_off",
+      "feature": "food_menu"
+    },
+    {
+      "kind": "end",
+      "id": "marketplace",
+      "status": "handed_off",
+      "feature": "marketplace"
+    },
+    {
+      "kind": "end",
+      "id": "settings",
+      "status": "handed_off",
+      "feature": "settings"
+    },
+    {
+      "kind": "end",
+      "id": "schedule",
+      "status": "handed_off",
+      "feature": "schedule"
+    },
+    {
+      "kind": "end",
+      "id": "week",
+      "status": "handed_off",
+      "feature": "study_week"
+    },
+    {
+      "kind": "end",
+      "id": "attendance",
+      "status": "handed_off",
+      "feature": "attendance"
+    },
+    {
+      "kind": "end",
+      "id": "grades",
+      "status": "handed_off",
+      "feature": "grades"
+    },
+    {
+      "kind": "end",
+      "id": "eders",
+      "status": "handed_off",
+      "feature": "eders"
+    },
+    {
+      "kind": "end",
+      "id": "materials",
+      "status": "handed_off",
+      "feature": "eders_materials"
+    }
+  ]
+}
+

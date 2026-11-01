@@ -8,7 +8,7 @@ from aiogram.types import User as TelegramUser
 from dishka import make_async_container
 from sqlalchemy import select
 
-from manashelper.core.database import Base
+from common.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.notifications import router

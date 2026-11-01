@@ -35,6 +35,10 @@ class UserRepository:
         result = await self._session.execute(select(User.id))
         return list(result.scalars().all())
 
+    async def ids_after(self, after: int | None, limit: int) -> list[int]:
+        query = select(User.id).where(User.id > (after or 0)).order_by(User.id).limit(limit)
+        return list(await self._session.scalars(query))
+
     async def get_active_ids(self) -> list[int]:
         result = await self._session.execute(select(User.id).where(User.bot_stopped.is_(False)))
         return list(result.scalars().all())

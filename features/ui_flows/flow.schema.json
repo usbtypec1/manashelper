@@ -1,0 +1,1163 @@
+{
+  "$defs": {
+    "ActionNode": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "action",
+          "title": "Kind",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "delegate": {
+          "maxLength": 120,
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$",
+          "title": "Delegate",
+          "type": "string"
+        },
+        "contract_version": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Contract Version",
+          "type": "integer"
+        },
+        "arguments": {
+          "patternProperties": {
+            "^[a-z][a-z0-9_]{0,31}$": {
+              "discriminator": {
+                "mapping": {
+                  "literal": "#/$defs/LiteralValue",
+                  "ref": "#/$defs/ReferenceValue"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/LiteralValue"
+                },
+                {
+                  "$ref": "#/$defs/ReferenceValue"
+                }
+              ]
+            }
+          },
+          "title": "Arguments",
+          "type": "object"
+        },
+        "results": {
+          "patternProperties": {
+            "^[a-z][a-z0-9_]{0,31}$": {
+              "pattern": "^[a-z][a-z0-9_]{0,31}$",
+              "type": "string"
+            }
+          },
+          "title": "Results",
+          "type": "object"
+        },
+        "outcomes": {
+          "minProperties": 1,
+          "patternProperties": {
+            "^[a-z][a-z0-9_]{0,31}$": {
+              "pattern": "^[a-z][a-z0-9_]{0,31}$",
+              "type": "string"
+            }
+          },
+          "title": "Outcomes",
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "delegate",
+        "outcomes"
+      ],
+      "title": "ActionNode",
+      "type": "object"
+    },
+    "Branch": {
+      "additionalProperties": false,
+      "properties": {
+        "when": {
+          "discriminator": {
+            "mapping": {
+              "all": "#/$defs/ConditionGroup",
+              "any": "#/$defs/ConditionGroup",
+              "compare": "#/$defs/Compare",
+              "exists": "#/$defs/Exists"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Compare"
+            },
+            {
+              "$ref": "#/$defs/Exists"
+            },
+            {
+              "$ref": "#/$defs/ConditionGroup"
+            }
+          ],
+          "title": "When"
+        },
+        "target": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Target",
+          "type": "string"
+        }
+      },
+      "required": [
+        "when",
+        "target"
+      ],
+      "title": "Branch",
+      "type": "object"
+    },
+    "CatalogText": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "catalog",
+          "title": "Kind",
+          "type": "string"
+        },
+        "key": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Key",
+          "type": "string"
+        },
+        "parameters": {
+          "patternProperties": {
+            "^[a-z][a-z0-9_]{0,31}$": {
+              "discriminator": {
+                "mapping": {
+                  "literal": "#/$defs/LiteralValue",
+                  "ref": "#/$defs/ReferenceValue"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/LiteralValue"
+                },
+                {
+                  "$ref": "#/$defs/ReferenceValue"
+                }
+              ]
+            }
+          },
+          "title": "Parameters",
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind",
+        "key"
+      ],
+      "title": "CatalogText",
+      "type": "object"
+    },
+    "Compare": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "compare",
+          "title": "Kind",
+          "type": "string"
+        },
+        "left": {
+          "$ref": "#/$defs/ReferenceValue"
+        },
+        "operator": {
+          "enum": [
+            "eq",
+            "ne",
+            "in",
+            "lt",
+            "le",
+            "gt",
+            "ge"
+          ],
+          "title": "Operator",
+          "type": "string"
+        },
+        "right": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "literal": "#/$defs/LiteralValue",
+                  "ref": "#/$defs/ReferenceValue"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/LiteralValue"
+                },
+                {
+                  "$ref": "#/$defs/ReferenceValue"
+                }
+              ]
+            },
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            }
+          ],
+          "title": "Right"
+        }
+      },
+      "required": [
+        "kind",
+        "left",
+        "operator",
+        "right"
+      ],
+      "title": "Compare",
+      "type": "object"
+    },
+    "ConditionGroup": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "all",
+            "any"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "conditions": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "compare": "#/$defs/Compare",
+                "exists": "#/$defs/Exists"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/Compare"
+              },
+              {
+                "$ref": "#/$defs/Exists"
+              }
+            ]
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Conditions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "conditions"
+      ],
+      "title": "ConditionGroup",
+      "type": "object"
+    },
+    "ConditionNode": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "condition",
+          "title": "Kind",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "branches": {
+          "items": {
+            "$ref": "#/$defs/Branch"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Branches",
+          "type": "array"
+        },
+        "default": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Default"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "branches",
+        "default"
+      ],
+      "title": "ConditionNode",
+      "type": "object"
+    },
+    "DataField": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "text",
+            "integer",
+            "number",
+            "boolean"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "nullable": {
+          "default": false,
+          "title": "Nullable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "DataField",
+      "type": "object"
+    },
+    "EndNode": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "end",
+          "title": "Kind",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "cancelled",
+            "handed_off"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "text": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "catalog": "#/$defs/CatalogText",
+                "inline": "#/$defs/InlineText"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/CatalogText"
+              },
+              {
+                "$ref": "#/$defs/InlineText"
+              }
+            ]
+          },
+          "title": "Text",
+          "type": "array"
+        },
+        "return_flow": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z][a-z0-9_]{0,31}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Return Flow"
+        },
+        "feature": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z][a-z0-9_]{0,31}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Feature"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "status"
+      ],
+      "title": "EndNode",
+      "type": "object"
+    },
+    "Exists": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "exists",
+          "title": "Kind",
+          "type": "string"
+        },
+        "reference": {
+          "$ref": "#/$defs/ReferenceValue"
+        }
+      },
+      "required": [
+        "kind",
+        "reference"
+      ],
+      "title": "Exists",
+      "type": "object"
+    },
+    "InlineText": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "inline",
+          "title": "Kind",
+          "type": "string"
+        },
+        "translations": {
+          "additionalProperties": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          },
+          "propertyNames": {
+            "enum": [
+              "en",
+              "ru",
+              "ky",
+              "tr",
+              "zh"
+            ]
+          },
+          "title": "Translations",
+          "type": "object"
+        },
+        "themes": {
+          "additionalProperties": {
+            "additionalProperties": {
+              "maxLength": 4096,
+              "minLength": 1,
+              "type": "string"
+            },
+            "propertyNames": {
+              "enum": [
+                "en",
+                "ru",
+                "ky",
+                "tr",
+                "zh"
+              ]
+            },
+            "type": "object"
+          },
+          "propertyNames": {
+            "const": "halloween"
+          },
+          "title": "Themes",
+          "type": "object"
+        },
+        "parameters": {
+          "patternProperties": {
+            "^[a-z][a-z0-9_]{0,31}$": {
+              "discriminator": {
+                "mapping": {
+                  "literal": "#/$defs/LiteralValue",
+                  "ref": "#/$defs/ReferenceValue"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/LiteralValue"
+                },
+                {
+                  "$ref": "#/$defs/ReferenceValue"
+                }
+              ]
+            }
+          },
+          "title": "Parameters",
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind",
+        "translations"
+      ],
+      "title": "InlineText",
+      "type": "object"
+    },
+    "InputNode": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "input",
+          "title": "Kind",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "text": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "catalog": "#/$defs/CatalogText",
+                "inline": "#/$defs/InlineText"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/CatalogText"
+              },
+              {
+                "$ref": "#/$defs/InlineText"
+              }
+            ]
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Text",
+          "type": "array"
+        },
+        "field": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Field",
+          "type": "string"
+        },
+        "input_type": {
+          "enum": [
+            "text",
+            "integer",
+            "choice"
+          ],
+          "title": "Input Type",
+          "type": "string"
+        },
+        "next": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Next",
+          "type": "string"
+        },
+        "error": {
+          "discriminator": {
+            "mapping": {
+              "catalog": "#/$defs/CatalogText",
+              "inline": "#/$defs/InlineText"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CatalogText"
+            },
+            {
+              "$ref": "#/$defs/InlineText"
+            }
+          ],
+          "title": "Error"
+        },
+        "buttons": {
+          "items": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "transition": "#/$defs/TransitionButton",
+                  "url": "#/$defs/UrlButton"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/TransitionButton"
+                },
+                {
+                  "$ref": "#/$defs/UrlButton"
+                }
+              ]
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "type": "array"
+          },
+          "maxItems": 20,
+          "title": "Buttons",
+          "type": "array"
+        },
+        "min_length": {
+          "default": 1,
+          "minimum": 0,
+          "title": "Min Length",
+          "type": "integer"
+        },
+        "max_length": {
+          "default": 4000,
+          "maximum": 4000,
+          "minimum": 1,
+          "title": "Max Length",
+          "type": "integer"
+        },
+        "minimum": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Minimum"
+        },
+        "maximum": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maximum"
+        },
+        "choices": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Choices",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "text",
+        "field",
+        "input_type",
+        "next",
+        "error"
+      ],
+      "title": "InputNode",
+      "type": "object"
+    },
+    "LiteralValue": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "literal",
+          "title": "Kind",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "kind",
+        "value"
+      ],
+      "title": "LiteralValue",
+      "type": "object"
+    },
+    "MenuNode": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "menu",
+          "title": "Kind",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "text": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "catalog": "#/$defs/CatalogText",
+                "inline": "#/$defs/InlineText"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/CatalogText"
+              },
+              {
+                "$ref": "#/$defs/InlineText"
+              }
+            ]
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Text",
+          "type": "array"
+        },
+        "keyboard": {
+          "enum": [
+            "reply",
+            "inline"
+          ],
+          "title": "Keyboard",
+          "type": "string"
+        },
+        "buttons": {
+          "items": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "transition": "#/$defs/TransitionButton",
+                  "url": "#/$defs/UrlButton"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/TransitionButton"
+                },
+                {
+                  "$ref": "#/$defs/UrlButton"
+                }
+              ]
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "type": "array"
+          },
+          "maxItems": 20,
+          "title": "Buttons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "text",
+        "keyboard",
+        "buttons"
+      ],
+      "title": "MenuNode",
+      "type": "object"
+    },
+    "Position": {
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "Position",
+      "type": "object"
+    },
+    "ReferenceValue": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "ref",
+          "title": "Kind",
+          "type": "string"
+        },
+        "scope": {
+          "enum": [
+            "data",
+            "user",
+            "capabilities"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "field": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Field",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "scope",
+        "field"
+      ],
+      "title": "ReferenceValue",
+      "type": "object"
+    },
+    "TransitionButton": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "transition",
+          "title": "Kind",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "discriminator": {
+            "mapping": {
+              "catalog": "#/$defs/CatalogText",
+              "inline": "#/$defs/InlineText"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CatalogText"
+            },
+            {
+              "$ref": "#/$defs/InlineText"
+            }
+          ],
+          "title": "Label"
+        },
+        "target": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Target",
+          "type": "string"
+        },
+        "assignments": {
+          "patternProperties": {
+            "^[a-z][a-z0-9_]{0,31}$": {
+              "discriminator": {
+                "mapping": {
+                  "literal": "#/$defs/LiteralValue",
+                  "ref": "#/$defs/ReferenceValue"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/LiteralValue"
+                },
+                {
+                  "$ref": "#/$defs/ReferenceValue"
+                }
+              ]
+            }
+          },
+          "title": "Assignments",
+          "type": "object"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "all": "#/$defs/ConditionGroup",
+                  "any": "#/$defs/ConditionGroup",
+                  "compare": "#/$defs/Compare",
+                  "exists": "#/$defs/Exists"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Compare"
+                },
+                {
+                  "$ref": "#/$defs/Exists"
+                },
+                {
+                  "$ref": "#/$defs/ConditionGroup"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "When"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "label",
+        "target"
+      ],
+      "title": "TransitionButton",
+      "type": "object"
+    },
+    "UrlButton": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "url",
+          "title": "Kind",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "discriminator": {
+            "mapping": {
+              "catalog": "#/$defs/CatalogText",
+              "inline": "#/$defs/InlineText"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CatalogText"
+            },
+            {
+              "$ref": "#/$defs/InlineText"
+            }
+          ],
+          "title": "Label"
+        },
+        "url": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Url",
+          "type": "string"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "all": "#/$defs/ConditionGroup",
+                  "any": "#/$defs/ConditionGroup",
+                  "compare": "#/$defs/Compare",
+                  "exists": "#/$defs/Exists"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Compare"
+                },
+                {
+                  "$ref": "#/$defs/Exists"
+                },
+                {
+                  "$ref": "#/$defs/ConditionGroup"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "When"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "label",
+        "url"
+      ],
+      "title": "UrlButton",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "id": {
+      "pattern": "^[a-z][a-z0-9_]{0,31}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "entry": {
+      "pattern": "^[a-z][a-z0-9_]{0,31}$",
+      "title": "Entry",
+      "type": "string"
+    },
+    "navigation_entries": {
+      "additionalProperties": {
+        "pattern": "^[a-z][a-z0-9_]{0,31}$",
+        "type": "string"
+      },
+      "propertyNames": {
+        "const": "study"
+      },
+      "title": "Navigation Entries",
+      "type": "object"
+    },
+    "fields": {
+      "patternProperties": {
+        "^[a-z][a-z0-9_]{0,31}$": {
+          "$ref": "#/$defs/DataField"
+        }
+      },
+      "title": "Fields",
+      "type": "object"
+    },
+    "initial_data": {
+      "patternProperties": {
+        "^[a-z][a-z0-9_]{0,31}$": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "Initial Data",
+      "type": "object"
+    },
+    "nodes": {
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "action": "#/$defs/ActionNode",
+            "condition": "#/$defs/ConditionNode",
+            "end": "#/$defs/EndNode",
+            "input": "#/$defs/InputNode",
+            "menu": "#/$defs/MenuNode"
+          },
+          "propertyName": "kind"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/MenuNode"
+          },
+          {
+            "$ref": "#/$defs/InputNode"
+          },
+          {
+            "$ref": "#/$defs/ConditionNode"
+          },
+          {
+            "$ref": "#/$defs/ActionNode"
+          },
+          {
+            "$ref": "#/$defs/EndNode"
+          }
+        ]
+      },
+      "maxItems": 200,
+      "minItems": 1,
+      "title": "Nodes",
+      "type": "array"
+    },
+    "layout": {
+      "patternProperties": {
+        "^[a-z][a-z0-9_]{0,31}$": {
+          "$ref": "#/$defs/Position"
+        }
+      },
+      "title": "Layout",
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "entry",
+    "nodes"
+  ],
+  "title": "FlowDocument",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
