@@ -437,6 +437,9 @@ async def test_study_entry_follows_scenario_navigation_after_node_rename(ingress
         for node in document["nodes"]:
             if node["id"] == "study":
                 node["id"] = "academics"
+            for outcome, target in node.get("outcomes", {}).items():
+                if target == "study":
+                    node["outcomes"][outcome] = "academics"
             for row in node.get("buttons", []):
                 for button in row:
                     if button.get("target") == "study":

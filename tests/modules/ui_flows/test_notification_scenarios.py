@@ -1,7 +1,8 @@
 import pytest
 from sqlalchemy import func, select
 
-from manashelper.modules.food_menu.ui_scenarios import food_menu_notification_scenario
+from manashelper.modules.food_menu.application.food_menu_cleanup_settings import FoodMenuCleanupSettingsService
+from manashelper.modules.food_menu.ui_scenarios import food_menu_cleanup_scenario, food_menu_notification_scenario
 from manashelper.modules.notifications.orm import NotificationSettings
 from manashelper.modules.notifications.ui_delegates import NotificationUiDelegates
 from manashelper.modules.notifications.ui_scenarios import notifications_document
@@ -14,6 +15,7 @@ from tests.modules.ui_flows.telegram_factory import container_for
 from ui_flows.application.dialogs import DialogService
 from ui_flows.application.flows import FlowService
 from ui_flows.domain.contracts import ButtonEvent
+from ui_flows.domain.state import ExecutionResult
 
 USER_ID = 991_802
 SETTINGS = ("schedule_changes", "exam_grades", "lesson_skips")
@@ -119,3 +121,37 @@ async def test_food_call_returns_to_notifications_and_keeps_locale_and_theme(iso
         assert (screen.locale, screen.theme) == ("tr", "halloween")
         assert "eders" not in [button.id for row in screen.buttons for button in row]
         assert all(result.state.data[name] is True for name in SETTINGS)
+
+
+async def test_food_cleanup_selection_survives_restart(isolated_flow_pool):
+    await seed(isolated_flow_pool)
+    async with container_for(isolated_flow_pool) as container, catalog_request(container) as request:
+        flows = await request.get(FlowService)
+        document = food_menu_cleanup_scenario()
+        await flows.create(document)
+        await flows.publish(document.id, 0, USER_ID)
+        user = await FlowTelegramCoordinator._user(request, USER_ID)
+        dialogs = await request.get(DialogService)
+        waiting = await dialogs.start(document.id, user, 81300)
+        node = next(node for node in document.nodes if node.id == waiting.state.node_id)
+        screen = FlowRenderer().render(document, ExecutionResult(waiting.state, node, "resumed"), user, {})
+        button = next(button for row in screen.buttons for button in row if button.id == "r0_4_0")
+        changed = await dialogs.handle(
+            ButtonEvent(
+                kind="button",
+                update_id=81301,
+                user_id=USER_ID,
+                chat_id=USER_ID,
+                session_id=str(waiting.state.id),
+                expected_revision=waiting.state.revision,
+                button_id=button.id,
+                snapshot=button.snapshot,
+            ),
+            user,
+        )
+        assert changed.state.data["option"] == "disabled"
+    async with container_for(isolated_flow_pool) as container, catalog_request(container) as request:
+        assert (await (await request.get(FoodMenuCleanupSettingsService)).get_option(USER_ID)).value == "disabled"
+        user = await FlowTelegramCoordinator._user(request, USER_ID)
+        restored = await (await request.get(DialogService)).get(changed.state.id, user)
+        assert restored == changed.state

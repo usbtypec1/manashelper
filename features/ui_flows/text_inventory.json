@@ -8127,7 +8127,7 @@
     },
     {
       "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
-      "line": 549,
+      "line": 550,
       "owner": "ui_flows",
       "scope": "user",
       "method": "gettext",

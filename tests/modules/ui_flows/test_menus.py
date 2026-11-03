@@ -18,7 +18,6 @@ async def latest(pool):
     [
         ("food_menu", "food", False),
         ("marketplace", "marketplace", False),
-        ("schedule", "schedule", True),
         ("attendance", "attendance", True),
         ("grades", "grades", True),
         ("study_week", "week", True),
@@ -61,6 +60,30 @@ async def test_imported_menu_opens_existing_features_and_returns_to_runtime(
     async with container() as request:
         state = await (await request.get(DialogService)).active(RuntimeUser(harness.user_id, harness.user_id))
         assert state.flow_id == "main_menu" and state.node_id == "main"
+
+
+async def test_schedule_menu_is_a_runtime_call_and_returns_to_studies(telegram_flow):
+    from manashelper.modules.ui_flows.presentation.callbacks import UiFlowCallback
+    from ui_flows.domain.delivery import Screen
+
+    harness, container, pool = telegram_flow
+    await harness.message("/start", 200)
+    screen = Screen.model_validate((await latest(pool)).screen)
+    await harness.message(next(button.label for row in screen.buttons for button in row if button.id == "study"), 201)
+    screen = Screen.model_validate((await latest(pool)).screen)
+    label = next(button.label for row in screen.buttons for button in row if button.id == "schedule")
+    await harness.message(label, 202)
+    delivery = await latest(pool)
+    screen = Screen.model_validate(delivery.screen)
+    async with container() as request:
+        state = await (await request.get(DialogService)).active(RuntimeUser(harness.user_id, harness.user_id))
+        assert state.flow_id == "schedule_menu" and state.node_id == "menu"
+    buttons = [button for row in screen.buttons for button in row]
+    index = next(index for index, button in enumerate(buttons) if button.id == "back")
+    await harness.callback(UiFlowCallback(token=delivery.token, index=index).pack(), delivery.message_id, 203)
+    async with container() as request:
+        state = await (await request.get(DialogService)).active(RuntimeUser(harness.user_id, harness.user_id))
+        assert state.flow_id == "main_menu" and state.node_id == "study"
 
 
 async def test_disabled_eders_buttons_are_hidden_and_other_users_keep_legacy_start(telegram_flow, monkeypatch):

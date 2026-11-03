@@ -3,10 +3,15 @@
 from collections.abc import Mapping
 
 from manashelper.localization.weekdays import weekday_abbr
+from manashelper.modules.food_menu.application.food_menu_cleanup_settings import (
+    FoodMenuCleanupOption,
+    FoodMenuCleanupSettingsService,
+)
 from manashelper.modules.food_menu.application.food_menu_notification_settings import (
     FoodMenuMeal,
     FoodMenuNotificationSettingsService,
 )
+from manashelper.modules.food_menu.presentation.keyboards.food_menu_cleanup import _option_label
 from ui_flows.application.delegates import DelegateBinding
 from ui_flows.domain.contracts import DelegateContext, DelegateDefinition, DelegateParameter, DelegateResult
 from ui_flows.domain.schema import DataField, DataValue
@@ -22,11 +27,36 @@ DAY_ROW = DataField(
     },
 )
 DAY_ROWS = DataField(type="list", items=DAY_ROW, max_items=7)
+CLEANUP_OPTIONS = DataField(
+    type="list",
+    items=DataField(type="object", properties={"id": DataField(type="text"), "label": DataField(type="text")}),
+    max_items=5,
+)
 
 
 class FoodMenuUiDelegates:
-    def __init__(self, settings: FoodMenuNotificationSettingsService) -> None:
+    def __init__(self, settings: FoodMenuNotificationSettingsService, cleanup: FoodMenuCleanupSettingsService) -> None:
         self._settings = settings
+        self._cleanup = cleanup
+
+    async def read_cleanup(self, context: DelegateContext, arguments: Mapping[str, DataValue]) -> DelegateResult:
+        selected = await self._cleanup.get_option(context.chat_id)
+        options: list[DataValue] = [
+            {"id": option.value, "label": ("✅ " if selected == option else "") + _option_label(option)}
+            for option in FoodMenuCleanupOption
+        ]
+        return DelegateResult("success", {"options": options})
+
+    async def change_cleanup(self, context: DelegateContext, arguments: Mapping[str, DataValue]) -> DelegateResult:
+        value = arguments.get("option")
+        if not isinstance(value, str):
+            raise FlowExecutionError("Invalid food menu cleanup option")
+        try:
+            option = FoodMenuCleanupOption(value)
+        except ValueError:
+            raise FlowExecutionError("Invalid food menu cleanup option") from None
+        await self._cleanup.set_option(context.chat_id, option)
+        return DelegateResult("success", {})
 
     async def read_notifications(self, context: DelegateContext, arguments: Mapping[str, DataValue]) -> DelegateResult:
         summary = await self._settings.get_settings(context.user_id)
@@ -70,6 +100,24 @@ class FoodMenuUiDelegates:
 
     def bindings(self) -> list[DelegateBinding]:
         return [
+            DelegateBinding(
+                DelegateDefinition(
+                    id="food_menu.cleanup.read",
+                    effect="read",
+                    outputs={"options": CLEANUP_OPTIONS},
+                    outcomes=["success"],
+                ),
+                self.read_cleanup,
+            ),
+            DelegateBinding(
+                DelegateDefinition(
+                    id="food_menu.cleanup.change",
+                    effect="database_write",
+                    inputs={"option": DelegateParameter(type="text")},
+                    outcomes=["success"],
+                ),
+                self.change_cleanup,
+            ),
             DelegateBinding(
                 DelegateDefinition(
                     id="food_menu.notifications.read", effect="read", outputs={"days": DAY_ROWS}, outcomes=["success"]

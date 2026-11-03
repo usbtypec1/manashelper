@@ -417,6 +417,9 @@ async def test_return_flow_with_automatic_entry_cannot_be_published_via_http(adm
 
 
 async def test_survey_return_is_publishable_and_preview_remains_a_stub(admin_api):
+    from manashelper.modules.food_menu.ui_scenarios import food_menu_notification_scenario
+    from manashelper.modules.notifications.ui_scenarios import notifications_document
+    from manashelper.modules.schedule.ui_scenarios import schedule_scenarios
     from manashelper.modules.student_questions.flow import survey_document
     from manashelper.modules.ui_flows.menus import main_menu_document
     from manashelper.modules.users.ui_scenarios import user_scenarios
@@ -424,7 +427,15 @@ async def test_survey_return_is_publishable_and_preview_remains_a_stub(admin_api
 
     api = admin_api
     await api.login()
-    for document in (*user_scenarios(), settings_document(), main_menu_document(), survey_document()):
+    for document in (
+        *user_scenarios(),
+        *schedule_scenarios(),
+        food_menu_notification_scenario(),
+        notifications_document(),
+        settings_document(),
+        main_menu_document(),
+        survey_document(),
+    ):
         response = await api.client.post(BASE + "/flows", json={"document": document.model_dump(mode="json")})
         assert response.status_code == 201
         response = await api.client.post(BASE + f"/flows/{document.id}/publish", json={"expected_revision": 0})

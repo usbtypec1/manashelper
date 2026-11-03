@@ -10,7 +10,7 @@ from dishka import AsyncContainer
 
 from manashelper.core.config import Settings
 from manashelper.localization.theme import Theme
-from manashelper.modules.food_menu.ui_scenarios import food_menu_notification_scenario
+from manashelper.modules.food_menu.ui_scenarios import food_menu_cleanup_scenario, food_menu_notification_scenario
 from manashelper.modules.notifications.ui_scenarios import notifications_document
 from manashelper.modules.schedule.ui_scenarios import schedule_scenarios
 from manashelper.modules.student_questions.flow import SURVEY_FLOW_ID, survey_document
@@ -233,6 +233,7 @@ class FlowTelegramCoordinator:
             for document in (
                 *user_scenarios(),
                 *schedule_scenarios(),
+                food_menu_cleanup_scenario(),
                 food_menu_notification_scenario(),
                 notifications_document(),
                 settings_document(),

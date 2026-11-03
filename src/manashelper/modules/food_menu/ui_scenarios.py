@@ -1,6 +1,6 @@
 """Initial food notification scenario; database publications remain authoritative."""
 
-from manashelper.modules.food_menu.ui_delegates import DAY_ROWS
+from manashelper.modules.food_menu.ui_delegates import CLEANUP_OPTIONS, DAY_ROWS
 from ui_flows.domain.schema import (
     ActionNode,
     Button,
@@ -111,6 +111,64 @@ def food_menu_notification_scenario() -> FlowDocument:
                 arguments={
                     name: ReferenceValue(kind="ref", scope="data", field=name) for name in ("action", "weekday", "meal")
                 },
+                outcomes={"success": "load"},
+            ),
+            ReturnNode(kind="return", id="completed", outcome="completed"),
+        ],
+    )
+
+
+def food_menu_cleanup_scenario() -> FlowDocument:
+    return FlowDocument(
+        schema_version=2,
+        id="food_menu_cleanup",
+        entry="load",
+        fields={"options": CLEANUP_OPTIONS, "option": DataField(type="text")},
+        initial_data={"options": [], "option": ""},
+        outcomes=["completed"],
+        nodes=[
+            ActionNode(
+                kind="action",
+                id="load",
+                delegate="food_menu.cleanup.read",
+                results={"options": "options"},
+                outcomes={"success": "menu"},
+            ),
+            MenuNode(
+                kind="menu",
+                id="menu",
+                keyboard="inline",
+                text=[CatalogText(kind="catalog", key="food.auto_delete_prompt")],
+                buttons=[
+                    [
+                        TransitionButton(
+                            kind="transition",
+                            id="back",
+                            label=CatalogText(kind="catalog", key="common.back"),
+                            target="completed",
+                        )
+                    ]
+                ],
+                repeated=[
+                    RepeatedButtons(
+                        source=ReferenceValue(kind="ref", scope="data", field="options"),
+                        buttons=[
+                            TransitionButton(
+                                kind="transition",
+                                id="select",
+                                label=_label("label"),
+                                target="change",
+                                assignments={"option": ReferenceValue(kind="ref", scope="item", field="id")},
+                            )
+                        ],
+                    )
+                ],
+            ),
+            ActionNode(
+                kind="action",
+                id="change",
+                delegate="food_menu.cleanup.change",
+                arguments={"option": ReferenceValue(kind="ref", scope="data", field="option")},
                 outcomes={"success": "load"},
             ),
             ReturnNode(kind="return", id="completed", outcome="completed"),

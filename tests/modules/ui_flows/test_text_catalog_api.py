@@ -1,5 +1,8 @@
 from sqlalchemy import func, select
 
+from manashelper.modules.food_menu.ui_scenarios import food_menu_notification_scenario
+from manashelper.modules.notifications.ui_scenarios import notifications_document
+from manashelper.modules.schedule.ui_scenarios import schedule_scenarios
 from manashelper.modules.ui_flows.infrastructure.orm import UiDialogSession
 from manashelper.modules.ui_flows.menus import main_menu_document
 from manashelper.modules.ui_flows.presentation.rendering import FlowRenderer
@@ -49,7 +52,13 @@ async def test_catalog_authorization_validation_and_conflict_preserve_draft(admi
 async def test_catalog_publication_pins_scenarios_and_historical_preview(admin_api):
     api = admin_api
     await api.login()
-    for dependency in (*user_scenarios(), settings_document()):
+    for dependency in (
+        *user_scenarios(),
+        *schedule_scenarios(),
+        food_menu_notification_scenario(),
+        notifications_document(),
+        settings_document(),
+    ):
         response = await api.client.post(BASE + "/flows", json={"document": dependency.model_dump(mode="json")})
         assert response.status_code == 201, response.text
         response = await api.client.post(BASE + f"/flows/{dependency.id}/publish", json={"expected_revision": 0})
