@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, Boolean, ForeignKey
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
@@ -14,5 +14,6 @@ class NotificationSettings(Base):
     schedule_changes_enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     exam_grades_enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     lesson_skips_enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    broadcast_muted_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())

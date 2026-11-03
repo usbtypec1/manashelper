@@ -2,7 +2,6 @@ import asyncio
 import importlib.util
 import shutil
 import uuid
-from contextlib import asynccontextmanager
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
@@ -10,8 +9,6 @@ from unittest.mock import AsyncMock
 import pytest
 from aiogram import Bot
 from aiogram.enums import ChatType
-from aiogram.exceptions import TelegramBadRequest
-from aiogram.methods import DeleteMessages
 from aiogram.types import CallbackQuery, Chat, Message, User
 from dishka import make_async_container
 from dishka.integrations.aiogram import CONTAINER_NAME
@@ -26,9 +23,6 @@ from manashelper.platform.telegram import command_catalog
 from manashelper.platform.telegram.audit.orm import ActionLog
 from manashelper.platform.telegram.audit.repository import ActionLogRepository
 from manashelper.platform.telegram.audit.service import ActionLogService
-from manashelper.platform.telegram.deletions import jobs as deletions
-from manashelper.platform.telegram.deletions.repository import ScheduledMessageDeletionRepository
-from manashelper.platform.telegram.deletions.service import MessageDeletionService
 from manashelper.platform.telegram.middlewares.action_log import ActionLogMiddleware
 from manashelper.platform.telegram.middlewares.per_chat_ordering import PerChatOrderingMiddleware
 from manashelper.platform.telegram.middlewares.private_chat_only import PrivateChatOnlyMiddleware
@@ -185,52 +179,6 @@ async def test_per_chat_ordering_serializes_one_chat_and_allows_another():
     assert trace.index(("first", "exit")) < trace.index(("second", "enter"))
 
 
-@pytest.mark.parametrize("failure", [None, "telegram", "transport", "load", "remove", "empty"])
-async def test_deletion_sweep_keeps_batches_and_error_boundaries(monkeypatch, caplog, failure):
-    repository = AsyncMock(spec=ScheduledMessageDeletionRepository)
-    grouped = {1: [(uuid.uuid4(), n) for n in range(201)], 2: [(uuid.uuid4(), 7), (uuid.uuid4(), 8)]}
-    repository.get_due_grouped_by_chat.return_value = {} if failure == "empty" else grouped
-    if failure == "load":
-        repository.get_due_grouped_by_chat.side_effect = RuntimeError("Load failed")
-    if failure == "remove":
-        repository.delete_by_ids.side_effect = RuntimeError("Remove failed")
-    bot = AsyncMock()
-    if failure in {"telegram", "transport"}:
-        error = (
-            TelegramBadRequest(method=DeleteMessages(chat_id=1, message_ids=[0]), message="gone")
-            if failure == "telegram"
-            else RuntimeError("Transport failed")
-        )
-        bot.delete_messages.side_effect = [error, None, None, None]
-    scopes = []
-
-    @asynccontextmanager
-    async def container():
-        scopes.append(object())
-        yield SimpleNamespace(
-            get=AsyncMock(side_effect={MessageDeletionService: MessageDeletionService(repository)}.__getitem__)
-        )
-
-    await deletions.cleanup_scheduled_message_deletions_job(container, bot)
-    assert len(scopes) == 1
-    now = repository.get_due_grouped_by_chat.await_args.args[0]
-    assert now.tzinfo is None
-    if failure in {"load", "empty"}:
-        bot.delete_messages.assert_not_awaited()
-        repository.delete_by_ids.assert_not_awaited()
-    elif failure == "transport":
-        assert bot.delete_messages.await_count == 1
-        repository.delete_by_ids.assert_not_awaited()
-    else:
-        calls = [call.kwargs for call in bot.delete_messages.await_args_list]
-        assert [len(call["message_ids"]) for call in calls] == [100, 100, 1, 2]
-        assert [call["chat_id"] for call in calls] == [1, 1, 1, 2]
-        assert calls[2]["message_ids"] == [200] and calls[3]["message_ids"] == [7, 8]
-        repository.delete_by_ids.assert_awaited_once_with([key for tasks in grouped.values() for key, _ in tasks])
-    if failure in {"load", "transport", "remove"}:
-        assert "Failed to clean up scheduled message deletions" in caplog.text
-
-
 def load_runtime_module(source, runtime):
     relative = Path(source.__file__).relative_to(Path(manashelper.__file__).parent)
     target = runtime / "src" / "manashelper" / relative
@@ -262,30 +210,10 @@ def test_gettext_keeps_runtime_locales_path_after_relocation(tmp_path, monkeypat
     assert module.i18n.gettext("common.welcome", locale="en") == "Welcome to Manashelper!"
 
 
-async def test_deletion_use_case_accepts_plain_async_delivery_and_acknowledges_after_all_chats():
-    from datetime import datetime
-
-    repository = AsyncMock(spec=ScheduledMessageDeletionRepository)
-    first, second = uuid.uuid4(), uuid.uuid4()
-    repository.get_due_grouped_by_chat.return_value = {1: [(first, 10)], 2: [(second, 20)]}
-    trace = []
-
-    async def deliver(chat_id, message_ids):
-        trace.append((chat_id, message_ids))
-
-    repository.delete_by_ids.side_effect = lambda keys: trace.append(("ack", keys))
-    now = datetime(2026, 1, 1)
-    await MessageDeletionService(repository).delete_due(now, deliver)
-    repository.get_due_grouped_by_chat.assert_awaited_once_with(now)
-    assert trace == [(1, [10]), (2, [20]), ("ack", [first, second])]
-
-
 async def test_platform_provider_keeps_request_scope_and_global_model_registry():
-    from manashelper.platform.telegram.deletions.orm import ScheduledMessageDeletion
 
     assert Base.metadata.tables["action_logs"] is ActionLog.__table__
-    assert Base.metadata.tables["scheduled_message_deletions"] is ScheduledMessageDeletion.__table__
-    dependencies = (ActionLogService, ActionLogRepository, MessageDeletionService, ScheduledMessageDeletionRepository)
+    dependencies = (ActionLogService, ActionLogRepository)
     async with make_async_container(CoreProvider(), TelegramPlatformProvider()) as container:
         async with container() as request:
             first = [await request.get(dependency) for dependency in dependencies]
@@ -296,9 +224,6 @@ async def test_platform_provider_keeps_request_scope_and_global_model_registry()
                 assert instance is not await request.get(dependency)
 
 
-def test_deletion_cleanup_scheduler_keeps_five_minute_interval():
+def test_scheduler_has_no_scheduled_message_deletion_job():
     scheduler = create_scheduler("container", "bot")
-    matching = [job for job in scheduler.get_jobs() if job.func is deletions.cleanup_scheduled_message_deletions_job]
-    assert len(matching) == 1
-    assert matching[0].trigger.interval.total_seconds() == 300
-    assert matching[0].args == ("container", "bot")
+    assert all(job.func.__name__ != "cleanup_scheduled_message_deletions_job" for job in scheduler.get_jobs())

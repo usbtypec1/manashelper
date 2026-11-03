@@ -1,5 +1,5 @@
 from manashelper.localization.theme import Theme
-from manashelper.modules.users.infrastructure.user_repository import UserRepository
+from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 
 
 class ThemeService:

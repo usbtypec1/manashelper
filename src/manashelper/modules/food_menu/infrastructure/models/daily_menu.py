@@ -11,15 +11,15 @@ if TYPE_CHECKING:
     from manashelper.modules.food_menu.infrastructure.models.dish import Dish
 
 daily_menu_dishes = Table(
-    "daily_menu_dishes",
+    "food_daily_menu_dishes",
     Base.metadata,
-    Column("menu_id", ForeignKey("daily_menus.id"), primary_key=True),
-    Column("dish_id", ForeignKey("dishes.id"), primary_key=True),
+    Column("menu_id", ForeignKey("food_daily_menus.id"), primary_key=True),
+    Column("dish_id", ForeignKey("food_dishes.id"), primary_key=True),
 )
 
 
 class DailyMenu(Base):
-    __tablename__ = "daily_menus"
+    __tablename__ = "food_daily_menus"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
     date: Mapped[datetime.date] = mapped_column(unique=True)

@@ -8,7 +8,7 @@ from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message, ReplyKeyboardRemove
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
@@ -21,6 +21,13 @@ from manashelper.modules.advertisements.application.advertisement import (
     AdvertisementService,
     AdvertisementSummary,
     TooManyAdvertisementsError,
+    UserNotFoundError,
+)
+from manashelper.modules.advertisements.domain.contact import (
+    ContactStatus,
+    InvalidPhoneNumberError,
+    MissingContactError,
+    is_valid_phone_number,
 )
 from manashelper.modules.advertisements.domain.enums import AdvertisementMediaType, AdvertisementStatus
 from manashelper.modules.advertisements.presentation.advertisement_formatter import (
@@ -43,19 +50,13 @@ from manashelper.modules.advertisements.presentation.keyboards.advertisement imp
     build_advertisement_menu_keyboard,
     build_cancel_form_keyboard,
     build_confirm_keyboard,
+    build_contact_keyboard,
     build_expiry_keyboard,
     build_media_keyboard,
     build_my_ads_keyboard,
     build_skip_price_keyboard,
 )
 from manashelper.modules.advertisements.presentation.keyboards.advertisement_moderation import build_moderation_keyboard
-from manashelper.modules.users.application.user_contact import (
-    ContactStatus,
-    InvalidPhoneNumberError,
-    UserContactService,
-    UserNotFoundError,
-)
-from manashelper.modules.users.presentation.keyboards.phone_numbers import build_contact_request_keyboard
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
 
@@ -131,80 +132,75 @@ async def on_create_requested(
     message: Message,
     state: FSMContext,
     advertisement_service: FromDishka[AdvertisementService],
-    user_contact_service: FromDishka[UserContactService],
 ) -> None:
     if message.from_user is None:
         return
     user_id = message.from_user.id
     try:
         await advertisement_service.assert_can_post(user_id)
+        contact = await advertisement_service.get_contact_status(user_id)
     except TooManyAdvertisementsError:
         await message.answer(_("ads.hourly_limit"))
         return
-
-    try:
-        contact = await user_contact_service.get_contact_status(user_id)
     except UserNotFoundError:
         await message.answer(_("common.start_required"))
         return
 
-    if contact.has_contact:
-        await _start_ad_details(message, state)
-    else:
-        await state.set_state(AdvertisementForm.phone_number)
-        await message.answer(
-            _("ads.contact_prompt"),
-            reply_markup=build_contact_request_keyboard(),
-        )
+    await state.clear()
+    await state.set_state(AdvertisementForm.phone_number)
+    await state.update_data(phone_number=None, contact_username=contact.username)
+    await message.answer(
+        _("ads.contact_prompt"),
+        reply_markup=build_contact_keyboard(can_skip=bool(contact.username)),
+    )
+
+
+async def _save_draft_phone_number(message: Message, state: FSMContext, phone_number: str) -> None:
+    phone_number = phone_number.strip()
+    if not is_valid_phone_number(phone_number):
+        await message.answer(_("ads.invalid_phone"))
+        return
+    await state.update_data(phone_number=phone_number)
+    await _start_ad_details(message, state)
 
 
 @router.message(F.contact, StateFilter(AdvertisementForm.phone_number))
 @flags.private_chat_only
-async def on_phone_number_shared(
-    message: Message, state: FSMContext, user_contact_service: FromDishka[UserContactService]
-) -> None:
-    if message.contact is None or message.from_user is None:
-        return
-    try:
-        await user_contact_service.add_phone_number(message.from_user.id, message.contact.phone_number)
-    except UserNotFoundError:
-        await state.clear()
-        await message.answer(_("common.start_required"), reply_markup=ReplyKeyboardRemove())
-        return
-    except InvalidPhoneNumberError:
-        # A shared Telegram contact's phone number is always well-formed - this shouldn't happen,
-        # but if it somehow does, fall back to asking for manual entry instead of getting stuck.
-        await message.answer(
-            _("phone.save_failed"),
-            reply_markup=ReplyKeyboardRemove(),
-        )
-        return
-    await message.answer(_("phone.saved"), reply_markup=ReplyKeyboardRemove())
-    await _start_ad_details(message, state)
+async def on_phone_number_shared(message: Message, state: FSMContext) -> None:
+    if message.contact is not None and message.from_user is not None:
+        await _save_draft_phone_number(message, state, message.contact.phone_number)
 
 
 @router.message(StateFilter(AdvertisementForm.phone_number))
 @flags.private_chat_only
-async def on_phone_number_entered(
-    message: Message, state: FSMContext, user_contact_service: FromDishka[UserContactService]
+async def on_phone_number_entered(message: Message, state: FSMContext) -> None:
+    if message.from_user is not None:
+        await _save_draft_phone_number(message, state, message.text or "")
+
+
+@router.callback_query(AdvertisementFormCallback.filter(F.action == AdvertisementFormAction.SKIP_PHONE))
+@flags.private_chat_only
+async def on_phone_number_skipped(
+    callback_query: CallbackQuery,
+    state: FSMContext,
+    advertisement_service: FromDishka[AdvertisementService],
 ) -> None:
-    phone_number = message.text.strip() if message.text else ""
-    if message.from_user is None:
+    if await state.get_state() != AdvertisementForm.phone_number.state:
+        await callback_query.answer(_("common.error_retry"), show_alert=True)
         return
     try:
-        await user_contact_service.add_phone_number(message.from_user.id, phone_number)
+        contact = await advertisement_service.get_contact_status(callback_query.from_user.id)
     except UserNotFoundError:
-        await state.clear()
-        await message.answer(_("common.start_required"), reply_markup=ReplyKeyboardRemove())
+        await callback_query.answer(_("common.start_required"), show_alert=True)
         return
-    except InvalidPhoneNumberError:
-        await message.answer(
-            _("phone.invalid"),
-            reply_markup=build_contact_request_keyboard(),
-        )
+    if not contact.username:
+        await callback_query.answer(_("ads.phone_required"), show_alert=True)
         return
-    await message.answer(_("phone.saved"), reply_markup=ReplyKeyboardRemove())
-    await _start_ad_details(message, state)
+    if isinstance(callback_query.message, Message):
+        await state.update_data(phone_number=None, contact_username=contact.username)
+        await callback_query.message.edit_reply_markup(reply_markup=None)
+        await _start_ad_details(callback_query.message, state)
+    await callback_query.answer()
 
 
 @router.message(StateFilter(AdvertisementForm.title))
@@ -370,7 +366,10 @@ async def _enter_confirm_state(target: Message, state: FSMContext, *, edit: bool
     await state.set_state(AdvertisementForm.confirm)
     data = await state.get_data()
     preview = _draft_summary(data)
-    text = _("ads.preview") + "\n\n" + format_advertisement(preview)
+    contact = ContactStatus(
+        username=data.get("contact_username"), phone_numbers=[data["phone_number"]] if data.get("phone_number") else []
+    )
+    text = _("ads.preview") + "\n\n" + format_advertisement(preview, contact=contact)
     if edit:
         await target.edit_text(text, reply_markup=build_confirm_keyboard())
     else:
@@ -394,7 +393,6 @@ async def on_form_submitted(
     bot: Bot,
     settings: FromDishka[Settings],
     advertisement_service: FromDishka[AdvertisementService],
-    user_contact_service: FromDishka[UserContactService],
 ) -> None:
     user_id = callback_query.from_user.id
     data = await state.get_data()
@@ -412,9 +410,16 @@ async def on_form_submitted(
             price=data.get("price"),
             expires_at=data.get("expires_at"),
             media_items=media_items,
+            phone_number=data.get("phone_number"),
         )
     except TooManyAdvertisementsError:
         await callback_query.answer(_("ads.hourly_limit"), show_alert=True)
+        return
+    except (MissingContactError, InvalidPhoneNumberError):
+        await callback_query.answer(_("ads.phone_required"), show_alert=True)
+        return
+    except UserNotFoundError:
+        await callback_query.answer(_("common.start_required"), show_alert=True)
         return
 
     await state.clear()
@@ -422,7 +427,9 @@ async def on_form_submitted(
         await callback_query.message.edit_text(_("ads.submitted"))
         await send_marketplace_menu(callback_query.message, settings)
 
-    contact = await user_contact_service.get_contact_status(user_id)
+    contact = await advertisement_service.get_contact_status(
+        user_id, [data["phone_number"]] if data.get("phone_number") else []
+    )
     await _notify_moderation_chat(bot, settings, summary, contact)
 
 

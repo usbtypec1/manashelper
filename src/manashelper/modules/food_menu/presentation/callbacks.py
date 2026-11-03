@@ -3,7 +3,6 @@ from enum import StrEnum
 
 from aiogram.filters.callback_data import CallbackData
 
-from manashelper.modules.food_menu.application.food_menu_cleanup_settings import FoodMenuCleanupOption
 from manashelper.modules.food_menu.application.food_menu_notification_settings import FoodMenuMeal
 
 
@@ -56,11 +55,3 @@ class FoodMenuNotificationMealCallback(CallbackData, prefix="food_menu_notificat
 
 class FoodMenuNotificationNoopCallback(CallbackData, prefix="food_menu_notification_noop"):
     pass
-
-
-class FoodMenuCleanupOpenCallback(CallbackData, prefix="food_menu_cleanup_open"):
-    pass
-
-
-class FoodMenuCleanupSetCallback(CallbackData, prefix="food_menu_cleanup_set"):
-    option: FoodMenuCleanupOption

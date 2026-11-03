@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from manashelper.core.provider import CoreProvider
-from manashelper.modules.users.infrastructure.user import User
+from manashelper.modules.users.infrastructure.models.user import User
 
 
 def container_with_pool(pool):

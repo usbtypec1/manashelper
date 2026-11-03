@@ -3,6 +3,7 @@
 import base64
 import os
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import httpx
 import pytest
@@ -11,18 +12,18 @@ from manashelper.modules.eders.application.eders import EdersService
 from manashelper.modules.eders.application.tracking import EdersTrackingService
 from manashelper.modules.eders.errors import EdersFetchError, EdersSessionExpiredError
 from manashelper.modules.eders.infrastructure import client as eders_client
-from manashelper.modules.eders.infrastructure.repository import EdersRepository
+from manashelper.modules.eders.infrastructure.repositories.eders import EdersRepository
 from manashelper.modules.eders.infrastructure.serialization import serialize_snapshot
 from manashelper.modules.obis.application.credentials import ObisCredentialsService
 from manashelper.modules.obis.application.obis import ObisService
 from manashelper.modules.obis.errors import ObisLoginError, ObisParseError
 from manashelper.modules.obis.infrastructure import client as obis_client
 from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL, ObisClient
-from manashelper.modules.obis.infrastructure.credentials_repository import ObisCredentialsRepository
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
-from manashelper.modules.obis.infrastructure.snapshot_repository import ObisSnapshotRepository
-from manashelper.modules.users.infrastructure.user import User
-from manashelper.modules.users.infrastructure.user_repository import UserRepository
+from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
+from manashelper.modules.obis.infrastructure.repositories.snapshot import ObisSnapshotRepository
+from manashelper.modules.users.infrastructure.models.user import User
+from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.modules.users.queries import UsersQuery
 from tests.modules.eders.factories import make_eders_client
 
@@ -169,7 +170,7 @@ async def test_eders_background_refresh_persists_snapshot_and_read_survives_upst
     await session.flush()
     crypto = CryptoService(SimpleNamespace(obis_encryption_key=base64.b64encode(bytes(range(32))).decode()))
     account = ObisCredentialsService(ObisCredentialsRepository(session), ObisClient(), crypto)
-    tracking = EdersTrackingService(EdersRepository(session), UsersQuery(UserRepository(session)))
+    tracking = EdersTrackingService(EdersRepository(session), UsersQuery(UserRepository(session)), AsyncMock())
     service = EdersService(account, make_eders_client(), tracking)
     refreshed = await service.refresh_snapshot(user.id)
     await session.flush()
@@ -199,7 +200,7 @@ async def test_http_failed_direct_login_falls_back_to_obis_sso(session, monkeypa
     session.add(user)
     await session.flush()
     account = ObisCredentialsService(ObisCredentialsRepository(session), ObisClient(), crypto)
-    tracking = EdersTrackingService(EdersRepository(session), UsersQuery(UserRepository(session)))
+    tracking = EdersTrackingService(EdersRepository(session), UsersQuery(UserRepository(session)), AsyncMock())
     service = EdersService(account, make_eders_client(), tracking)
     snapshot = await service.refresh_snapshot(user.id)
     await session.flush()
@@ -236,7 +237,7 @@ async def test_http_both_login_paths_fail_without_replacing_previous_snapshot(se
     session.add(user)
     await session.flush()
     account = ObisCredentialsService(ObisCredentialsRepository(session), ObisClient(), crypto)
-    tracking = EdersTrackingService(EdersRepository(session), UsersQuery(UserRepository(session)))
+    tracking = EdersTrackingService(EdersRepository(session), UsersQuery(UserRepository(session)), AsyncMock())
     service = EdersService(account, make_eders_client(), tracking)
     previous = await service.refresh_snapshot(user.id)
     await session.flush()

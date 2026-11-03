@@ -6,9 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.modules.broadcast.provider import BroadcastProvider
 from manashelper.modules.broadcast.service import BroadcastResult, BroadcastSender, SendBroadcast
-from manashelper.modules.users.infrastructure.user import User
-from manashelper.modules.users.infrastructure.user_repository import UserRepository
-from manashelper.modules.users.queries import UsersQuery
+from manashelper.modules.notifications.queries import NotificationRecipientsQuery
+from manashelper.modules.notifications.repository import NotificationSettingsRepository
+from manashelper.modules.users.infrastructure.models.user import User
 
 
 async def test_broadcast_reaches_every_registered_user(session: AsyncSession) -> None:
@@ -22,7 +22,9 @@ async def test_broadcast_reaches_every_registered_user(session: AsyncSession) ->
 
     sender = AsyncMock(spec=BroadcastSender)
     sender.send.return_value = True
-    result = await SendBroadcast(UsersQuery(UserRepository(session))).execute("All users", sender)
+    result = await SendBroadcast(NotificationRecipientsQuery(NotificationSettingsRepository(session))).execute(
+        "All users", sender
+    )
     recipient_ids = [delivery.args[0] for delivery in sender.send.await_args_list]
 
     assert {950_001, 950_002}.issubset(set(recipient_ids))
@@ -31,8 +33,8 @@ async def test_broadcast_reaches_every_registered_user(session: AsyncSession) ->
 
 @pytest.mark.parametrize("outcomes", [[], [True, True], [True, False, True]])
 async def test_application_preserves_order_body_and_counts_failed_deliveries(outcomes):
-    users = AsyncMock(spec=UsersQuery)
-    users.get_active_ids.return_value = list(range(len(outcomes)))
+    users = AsyncMock(spec=NotificationRecipientsQuery)
+    users.for_broadcasts.return_value = list(range(len(outcomes)))
     sender = AsyncMock(spec=BroadcastSender)
     sender.send.side_effect = outcomes
     body = "  <raw> & body\n "
@@ -41,12 +43,12 @@ async def test_application_preserves_order_body_and_counts_failed_deliveries(out
 
     assert result == BroadcastResult(sent=sum(outcomes), total=len(outcomes))
     assert sender.send.await_args_list == [call(user_id, body) for user_id in range(len(outcomes))]
-    users.get_active_ids.assert_awaited_once()
+    users.for_broadcasts.assert_awaited_once()
 
 
 async def test_application_propagates_unexpected_sender_failure_and_stops_delivery():
-    users = AsyncMock(spec=UsersQuery)
-    users.get_active_ids.return_value = [1, 2, 3]
+    users = AsyncMock(spec=NotificationRecipientsQuery)
+    users.for_broadcasts.return_value = [1, 2, 3]
     sender = AsyncMock(spec=BroadcastSender)
     sender.send.side_effect = [True, RuntimeError("unexpected delivery failure"), True]
 
@@ -59,8 +61,8 @@ async def test_application_propagates_unexpected_sender_failure_and_stops_delive
 async def test_broadcast_use_case_retains_request_scope():
     class TestUsersProvider(Provider):
         @provide(scope=Scope.APP)
-        def users(self) -> UsersQuery:
-            return AsyncMock(spec=UsersQuery)
+        def users(self) -> NotificationRecipientsQuery:
+            return AsyncMock(spec=NotificationRecipientsQuery)
 
     async with make_async_container(BroadcastProvider(), TestUsersProvider()) as container:
         async with container() as request:

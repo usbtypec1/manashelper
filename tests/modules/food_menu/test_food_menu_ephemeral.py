@@ -69,7 +69,7 @@ def _methods(request, method_type):
 @pytest.mark.parametrize("chat_type", ["group", "supergroup"])
 @pytest.mark.parametrize("source", ["ephemeral", "administrator"])
 @pytest.mark.parametrize("found", [False, True])
-async def test_group_command_sends_private_menu_without_regular_cleanup(monkeypatch, chat_type, source, found) -> None:
+async def test_group_command_sends_private_menu(monkeypatch, chat_type, source, found) -> None:
     bot, request = _bot(monkeypatch, administrator=source == "administrator")
     incoming = Message(
         message_id=0 if source == "ephemeral" else 10,
@@ -79,14 +79,14 @@ async def test_group_command_sends_private_menu_without_regular_cleanup(monkeypa
         chat=Chat(id=CHAT_ID, type=chat_type),
         text="/yemek today",
     ).as_(bot)
-    service, cleanup = AsyncMock(), AsyncMock()
+    service = AsyncMock()
     menu = _menu()
     if found:
         service.get_daily_menu_by_skipping_days.return_value = menu
     else:
         service.get_daily_menu_by_skipping_days.side_effect = DailyMenuNotFoundError(menu.date)
     with i18n.context(), i18n.use_locale("en"):
-        await cmd_yemek(incoming, CommandObject(command="yemek", args="today"), service, cleanup)
+        await cmd_yemek(incoming, CommandObject(command="yemek", args="today"), service)
     service.get_daily_menu_by_skipping_days.assert_awaited_once_with(0, user_id=USER.id)
     sent = _methods(request, SendRichMessage if found else SendMessage)[0]
     assert sent.chat_id == CHAT_ID
@@ -103,15 +103,14 @@ async def test_group_command_sends_private_menu_without_regular_cleanup(monkeypa
         rows = [block for block in sent.rich_message.blocks if block.type == "buttons"]
         assert len(rows) == 1
         assert rows[0].buttons[3].style == "success"
-    cleanup.schedule_cleanup.assert_not_awaited()
 
 
 async def test_ordinary_group_command_uses_day_selector_when_bot_is_not_admin(monkeypatch) -> None:
     bot, request = _bot(monkeypatch)
     incoming = Message(message_id=10, from_user=USER, date=0, chat=Chat(id=CHAT_ID, type="group")).as_(bot)
-    service, cleanup = AsyncMock(), AsyncMock()
+    service = AsyncMock()
     with i18n.context(), i18n.use_locale("en"):
-        await cmd_yemek(incoming, CommandObject(command="yemek", args="today"), service, cleanup)
+        await cmd_yemek(incoming, CommandObject(command="yemek", args="today"), service)
     prompt = _methods(request, SendRichMessage)[0]
     assert prompt.ephemeral_message_parameters is None
     rows = [block for block in prompt.rich_message.blocks if block.type == "buttons"]
@@ -119,7 +118,6 @@ async def test_ordinary_group_command_uses_day_selector_when_bot_is_not_admin(mo
     assert rows[0].buttons[0].callback_data == FoodMenuOpenCallback().pack()
     service.get_available_dates.assert_not_awaited()
     service.get_daily_menu_by_skipping_days.assert_not_awaited()
-    cleanup.schedule_cleanup.assert_not_awaited()
 
 
 @pytest.mark.parametrize("existing_ephemeral", [False, True])
@@ -137,13 +135,13 @@ async def test_group_day_callback_targets_person_who_clicked_even_when_bot_is_no
         chat=Chat(id=CHAT_ID, type="supergroup"),
     ).as_(bot)
     callback = CallbackQuery(id="pick-day", from_user=USER, chat_instance="chat", message=prompt).as_(bot)
-    service, cleanup = AsyncMock(), AsyncMock()
+    service = AsyncMock()
     if found:
         service.get_daily_menu_by_skipping_days.return_value = _menu()
     else:
         service.get_daily_menu_by_skipping_days.side_effect = DailyMenuNotFoundError(date(2026, 10, 2))
     with i18n.context(), i18n.use_locale("en"):
-        await on_food_menu_day_callback(callback, FoodMenuCallback(day=FoodMenuDay.TOMORROW), service, cleanup)
+        await on_food_menu_day_callback(callback, FoodMenuCallback(day=FoodMenuDay.TOMORROW), service)
     sent = _methods(request, SendRichMessage if found else SendMessage)[0]
     parameters = sent.ephemeral_message_parameters
     assert parameters.receiver_user_id == USER.id
@@ -151,7 +149,6 @@ async def test_group_day_callback_targets_person_who_clicked_even_when_bot_is_no
     assert parameters.replace_callback_query_message is (not existing_ephemeral)
     service.get_daily_menu_by_skipping_days.assert_awaited_once_with(1, user_id=USER.id)
     assert not _methods(request, GetChatMember)
-    cleanup.schedule_cleanup.assert_not_awaited()
 
 
 @pytest.mark.parametrize("args", [None, "invalid"])
@@ -168,7 +165,7 @@ async def test_ephemeral_command_usage_and_day_picker_remain_private(monkeypatch
     today = date(2026, 10, 1)
     service.get_available_dates.return_value = DailyMenuAvailability(today, [today, today + timedelta(days=6)])
     with i18n.context(), i18n.use_locale("en"):
-        await cmd_yemek(incoming, CommandObject(command="yemek", args=args), service, AsyncMock())
+        await cmd_yemek(incoming, CommandObject(command="yemek", args=args), service)
     prompt = _methods(request, SendRichMessage)[0]
     assert prompt.ephemeral_message_parameters.receiver_user_id == USER.id
     assert prompt.reply_parameters.ephemeral_message_id == 11
@@ -210,11 +207,11 @@ async def test_date_selection_opens_original_date_even_after_midnight(monkeypatc
     bot, request = _bot(monkeypatch)
     message = Message(message_id=42, date=0, chat=Chat(id=CHAT_ID, type=chat_type)).as_(bot)
     callback = CallbackQuery(id="pick-date", from_user=USER, chat_instance="chat", message=message).as_(bot)
-    service, cleanup = AsyncMock(), AsyncMock()
+    service = AsyncMock()
     menu = _menu()
     service.get_daily_menu_by_date.return_value = menu
     with i18n.context(), i18n.use_locale("en"):
-        await on_food_menu_date_callback(callback, FoodMenuDateCallback(menu_date="2026-10-01"), service, cleanup)
+        await on_food_menu_date_callback(callback, FoodMenuDateCallback(menu_date="2026-10-01"), service)
     service.get_daily_menu_by_date.assert_awaited_once_with(
         date(2026, 10, 1), user_id=USER.id if chat_type == "supergroup" else CHAT_ID
     )
@@ -222,10 +219,8 @@ async def test_date_selection_opens_original_date_even_after_midnight(monkeypatc
     sent = _methods(request, SendRichMessage)[0]
     if chat_type == "supergroup":
         assert sent.ephemeral_message_parameters.receiver_user_id == USER.id
-        cleanup.schedule_cleanup.assert_not_awaited()
     else:
         assert sent.ephemeral_message_parameters is None
-        cleanup.schedule_cleanup.assert_awaited_once_with(CHAT_ID, [42])
 
 
 @pytest.mark.parametrize("chat_type", ["private", "group", "supergroup"])
@@ -236,7 +231,7 @@ async def test_day_picker_is_ephemeral_in_groups_and_normal_in_private_chat(monk
     today = date(2026, 10, 1)
     service.get_available_dates.return_value = DailyMenuAvailability(today, [today])
     with i18n.context(), i18n.use_locale("en"):
-        await cmd_yemek(incoming, CommandObject(command="yemek"), service, AsyncMock())
+        await cmd_yemek(incoming, CommandObject(command="yemek"), service)
     prompt = _methods(request, SendRichMessage)[0]
     assert (prompt.ephemeral_message_parameters is None) is (chat_type == "private")
     assert prompt.reply_parameters is None

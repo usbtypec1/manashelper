@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from manashelper.modules.users.queries import UsersQuery
+from manashelper.modules.notifications.queries import NotificationRecipientsQuery
 
 
 @dataclass(frozen=True, slots=True)
@@ -15,11 +15,11 @@ class BroadcastSender(Protocol):
 
 
 class SendBroadcast:
-    def __init__(self, users: UsersQuery) -> None:
-        self._users = users
+    def __init__(self, recipients: NotificationRecipientsQuery) -> None:
+        self._recipients = recipients
 
     async def execute(self, body: str, sender: BroadcastSender) -> BroadcastResult:
-        recipient_ids = await self._users.get_active_ids()
+        recipient_ids = await self._recipients.for_broadcasts()
         sent_count = 0
         for user_id in recipient_ids:
             if await sender.send(user_id, body):

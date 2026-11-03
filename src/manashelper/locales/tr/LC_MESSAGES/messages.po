@@ -218,21 +218,6 @@ msgstr "📆 Yarın"
 msgid "food.day_after_tomorrow"
 msgstr "🗓 Öbür gün"
 
-msgid "food.auto_delete_settings"
-msgstr "🧹 Otomatik silme ayarları"
-
-msgid "common.duration.minutes_15"
-msgstr "15 dakika"
-
-msgid "common.duration.hours_3"
-msgstr "3 saat"
-
-msgid "common.duration.days_1"
-msgstr "1 gün"
-
-msgid "common.off"
-msgstr "Kapalı"
-
 msgid "food.lunch"
 msgstr "Öğle"
 
@@ -266,12 +251,6 @@ msgstr "✅ Koşulları kabul et"
 msgid "obis.clear_credentials"
 msgstr "🗑 Bilgileri sil"
 
-msgid "phone.add"
-msgstr "➕ Telefon numarası ekle"
-
-msgid "phone.share"
-msgstr "📱 Telefon numarasını paylaş"
-
 msgid "settings.notifications"
 msgstr "🔔 Bildirimler"
 
@@ -280,9 +259,6 @@ msgstr "📚 Derslerim"
 
 msgid "settings.obis_credentials"
 msgstr "🔑 OBIS bilgileri"
-
-msgid "settings.phone_numbers"
-msgstr "📱 Telefon numaralarım"
 
 msgid "settings.language"
 msgstr "🌐 Dil"
@@ -352,9 +328,6 @@ msgstr ""
 msgid "menu.main"
 msgstr "🏠 Ana menü"
 
-msgid "phone.saved"
-msgstr "✅ Telefon numarası kaydedildi."
-
 msgid "ads.price_prompt"
 msgstr "💵 Fiyatı som cinsinden gönderin (yalnızca rakam) veya pazarlık konusuysa ya da uygulanmıyorsa Atla'ya dokunun:"
 
@@ -365,11 +338,7 @@ msgid "ads.list_page"
 msgstr "📋 <b>İlanlarım</b> (sayfa {page}/{total})"
 
 msgid "ads.contact_prompt"
-msgstr ""
-"📞 İlan verebilmeniz için alıcıların size ulaşabileceği bir yol olmalı.\n"
-"\n"
-"Şu anda genel bir Telegram kullanıcı adınız yok, bu yüzden lütfen aşağıdaki düğmeyi kullanarak bir telefon numarası "
-"paylaşın veya elle girin (örn. +996700123456):"
+msgstr "Bu ilan için bir telefon numarası girin veya kişi gönderin. Telegram kullanıcı adınız varsa bu adımı atlayabilirsiniz."
 
 msgid "ads.invalid_price"
 msgstr "Lütfen bir tam sayı gönderin (yalnızca rakam) veya Atla'ya dokunun:"
@@ -397,12 +366,6 @@ msgstr "Bu saat için maksimum 5 ilan verdiniz. Lütfen biraz sonra tekrar deney
 
 msgid "common.start_required"
 msgstr "Lütfen /start komutuyla başlayın"
-
-msgid "phone.save_failed"
-msgstr "Bu numara kaydedilirken bir sorun oluştu. Lütfen telefon numaranızı elle girin:"
-
-msgid "phone.invalid"
-msgstr "Bu geçerli bir telefon numarasına benzemiyor (örn. +996700123456). Lütfen tekrar deneyin:"
 
 msgid "ads.description_prompt"
 msgstr ""
@@ -478,10 +441,10 @@ msgid "broadcast.cancelled"
 msgstr "❌ Duyuru iptal edildi."
 
 msgid "broadcast.sending"
-msgstr "📤 Duyuru gönderiliyor…"
+msgstr "📤 Duyuru hazırlanıyor…"
 
 msgid "broadcast.sent"
-msgstr "✅ Duyuru {sent}/{total} kullanıcıya gönderildi."
+msgstr "✅ Duyuru {sent}/{total} kullanıcı için sıraya alındı. Gönderim arka planda devam edecek."
 
 msgid "broadcast.text_required"
 msgstr "Metin veya tek bir fotoğraf gönderin."
@@ -529,12 +492,6 @@ msgstr "Günün menüsüne 1 ile 5 arasında puan verin. Puanınızı değiştir
 
 msgid "food.rating_thanks"
 msgstr "Değerlendirmeniz için teşekkürler!"
-
-msgid "food.auto_delete_prompt"
-msgstr "🧹 Bu sohbette yemek menüsü mesajlarını şu süre sonra otomatik sil:"
-
-msgid "common.saved"
-msgstr "Kaydedildi"
 
 msgid "common.not_a_button"
 msgstr "buna basma"
@@ -598,18 +555,6 @@ msgstr "OBIS'ten veri alınamadı. Lütfen daha sonra tekrar deneyin."
 
 msgid "obis.login_failed"
 msgstr "OBIS bilgileri hatalı. Öğrenci numaranızı tekrar girin:"
-
-msgid "phone.list"
-msgstr ""
-"📱 <b>Telefon numaralarım</b>\n"
-"\n"
-"Bunlar, verdiğiniz ilanlarda alıcılara gösterilir."
-
-msgid "phone.number_prompt"
-msgstr "Aşağıdaki düğmeyi kullanarak bir telefon numarası paylaşın veya elle girin (örn. +996700123456):"
-
-msgid "phone.not_found"
-msgstr "Bu telefon numarası artık kayıtlı değil"
 
 msgid "menu.settings"
 msgstr "⚙️ Ayarlar"
@@ -899,80 +844,6 @@ msgstr "Sayfa {page}/{total}"
 msgid "obis.result_expired"
 msgstr "Bu sonuç artık mevcut değil. Menüden notları veya devamsızlık bilgilerini yeniden isteyin."
 
-msgid "student_questions.preparatory"
-msgstr "Hazırlık"
-
-msgid "student_questions.year_1"
-msgstr "1. sınıf"
-
-msgid "student_questions.year_2"
-msgstr "2. sınıf"
-
-msgid "student_questions.year_3"
-msgstr "3. sınıf"
-
-msgid "student_questions.year_4"
-msgstr "4. sınıf"
-
-msgid "student_questions.year_5"
-msgstr "5. sınıf"
-
-msgid "student_questions.not_student"
-msgstr "Öğrenci değilim"
-
-msgid "student_questions.yes"
-msgstr "Evet"
-
-msgid "student_questions.no"
-msgstr "Hayır"
-
-msgid "student_questions.intro"
-msgstr "Üniversite hakkındaki sorulara cevap bulma üzerine kısa bir anket. Lütfen birkaç soruyu cevaplayın."
-
-msgid "student_questions.course_prompt"
-msgstr "1. Kaçıncı sınıftasınız?"
-
-msgid "student_questions.search_prompt"
-msgstr "2. Başvuru veya öğrenim sürecinde cevabını uzun süre aradığınız sorular oldu mu?"
-
-msgid "student_questions.questions_prompt"
-msgstr "3. Lütfen bu soruları listeleyin."
-
-msgid "student_questions.found_prompt"
-msgstr "4. Sonunda bu soruların cevaplarını buldunuz mu?"
-
-msgid "student_questions.sources_prompt"
-msgstr "5. Sorularınızın cevaplarını nerede buldunuz?"
-
-msgid "student_questions.beta_prompt"
-msgstr "6. Üniversite hakkında neredeyse her şeyi bilen deneysel bir botun beta testine katılmak ister misiniz?"
-
-msgid "student_questions.thanks"
-msgstr "7. Cevaplarınız için teşekkür ederiz!"
-
-msgid "student_questions.beta_follow_up"
-msgstr "Beta testine katılım için bir ay içinde sizinle iletişime geçeceğiz."
-
-msgid "student_questions.already_completed"
-msgstr ""
-"Bu anketi daha önce doldurdunuz. Tekrar doldurmak ister misiniz? Tamamladığınızda yeni yanıtlar önceki yanıtların "
-"yerini alacak."
-
-msgid "student_questions.fill_again"
-msgstr "Tekrar doldur"
-
-msgid "student_questions.expired"
-msgstr "Bu düğmelerin süresi doldu. Anket bağlantısını tekrar açın."
-
-msgid "student_questions.cancelled"
-msgstr "Anket iptal edildi. Kaydedilmiş yanıtlarınız değişmedi."
-
-msgid "student_questions.invalid_text"
-msgstr "Lütfen 1 ile {max} karakter arasında bir metin gönderin."
-
-msgid "student_questions.use_buttons"
-msgstr "Lütfen düğmeleri kullanarak bir cevap seçin."
-
 msgid "eders.filter_today"
 msgstr "Bugün"
 
@@ -1092,3 +963,25 @@ msgstr "Bu duyuru gönderilsin mi?"
 
 msgid "menu.study"
 msgstr "📚 Eğitim"
+
+
+msgid "ads.invalid_phone"
+msgstr "Geçerli bir telefon numarası girin, örneğin +996700123456."
+
+msgid "ads.phone_required"
+msgstr "Bu adımı atlamak için telefon numarası girin veya Telegram kullanıcı adı belirleyin."
+
+msgid "notifications.mute_broadcasts"
+msgstr "Toplu mesaj gönderme"
+
+msgid "notifications.broadcast_muted"
+msgstr "14 gün boyunca toplu mesaj aboneliğinden çıktınız"
+
+msgid "notifications.resume_broadcasts"
+msgstr "Toplu mesajları yeniden aç"
+
+msgid "notifications.broadcast_muted_until"
+msgstr "Toplu mesajlar {until} tarihine kadar kapalı (Bişkek saati)."
+
+msgid "notifications.broadcast_resumed"
+msgstr "Toplu mesajlar yeniden açıldı"

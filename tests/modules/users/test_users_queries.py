@@ -1,5 +1,5 @@
-from manashelper.modules.users.infrastructure.user import User
-from manashelper.modules.users.infrastructure.user_repository import UserRepository
+from manashelper.modules.users.infrastructure.models.user import User
+from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.modules.users.queries import UsersQuery
 
 

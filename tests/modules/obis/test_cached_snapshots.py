@@ -11,12 +11,12 @@ from manashelper.modules.obis.application.obis import ObisService
 from manashelper.modules.obis.application.polling import PollObisUser
 from manashelper.modules.obis.errors import ObisSnapshotNotReadyError, UserHasNoCredentialsError
 from manashelper.modules.obis.infrastructure.client import ObisClient
-from manashelper.modules.obis.infrastructure.credentials_repository import ObisCredentialsRepository
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
-from manashelper.modules.obis.infrastructure.snapshot_repository import ObisSnapshotRepository
-from manashelper.modules.obis.infrastructure.user_exam_grade_repository import UserExamGradeRepository
-from manashelper.modules.obis.infrastructure.user_lesson_attendance_repository import UserLessonAttendanceRepository
-from manashelper.modules.users.infrastructure.user import User
+from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
+from manashelper.modules.obis.infrastructure.repositories.snapshot import ObisSnapshotRepository
+from manashelper.modules.obis.infrastructure.repositories.user_exam_grade import UserExamGradeRepository
+from manashelper.modules.obis.infrastructure.repositories.user_lesson_attendance import UserLessonAttendanceRepository
+from manashelper.modules.users.infrastructure.models.user import User
 from tests.paths import FIXTURES_DIR
 
 

@@ -5,8 +5,6 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
-from aiogram.exceptions import TelegramBadRequest
-from aiogram.methods import SendMessage
 from aiogram.types import CallbackQuery, Message
 from dishka import make_async_container
 
@@ -22,7 +20,6 @@ from manashelper.modules.food_menu.application.daily_menu import (
     DailyMenuModel,
     DailyMenuNotFoundError,
 )
-from manashelper.modules.food_menu.application.food_menu_cleanup_settings import FoodMenuCleanupSettingsService
 from manashelper.modules.food_menu.application.food_menu_notification_settings import (
     FoodMenuMeal,
     FoodMenuNotificationSettingsService,
@@ -31,9 +28,9 @@ from manashelper.modules.food_menu.application.food_menu_notification_settings i
 from manashelper.modules.food_menu.application.food_menu_sync import FoodMenuSyncService
 from manashelper.modules.food_menu.infrastructure.food_menu_client import FoodMenuClient
 from manashelper.modules.food_menu.infrastructure.food_menu_parser import FoodMenuParser, ScrapedDailyMenu, ScrapedDish
-from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_repository import DailyMenuRepository
-from manashelper.modules.food_menu.infrastructure.repositories.dish_repository import DishRepository
-from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notification_settings_repository import (
+from manashelper.modules.food_menu.infrastructure.repositories.daily_menu import DailyMenuRepository
+from manashelper.modules.food_menu.infrastructure.repositories.dish import DishRepository
+from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notification_settings import (
     FoodMenuNotificationSettingsRepository,
 )
 from manashelper.modules.food_menu.presentation.callbacks import FoodMenuNotificationDayCallback
@@ -47,14 +44,15 @@ from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
-from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
-from manashelper.modules.users.infrastructure.user import User
-from manashelper.modules.users.infrastructure.user_repository import UserRepository
+from manashelper.modules.users.infrastructure.models.user import User
+from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.outbox.provider import OutboxProvider
+from manashelper.platform.telegram.outbox.service import OutboxService
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
 
 
@@ -202,7 +200,7 @@ async def test_recipients_default_enabled_and_filter_only_requested_weekday(sess
 @pytest.mark.parametrize("missing", [False, True])
 async def test_broadcast_job_selects_today_and_skips_missing_menu(monkeypatch, meal, missing):
     menu = DailyMenuModel(uuid.uuid4(), date(2026, 10, 25), [], 0, 0, 0)
-    daily, users, settings, cleanup = (AsyncMock() for _ in range(4))
+    daily, users, settings = (AsyncMock() for _ in range(3))
     daily.get_daily_menu_by_skipping_days.return_value = menu
     if missing:
         daily.get_daily_menu_by_skipping_days.side_effect = DailyMenuNotFoundError(menu.date)
@@ -212,8 +210,7 @@ async def test_broadcast_job_selects_today_and_skips_missing_menu(monkeypatch, m
         BroadcastFoodMenu: BroadcastFoodMenu(daily, settings),
         LocaleService: users,
         ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
-        BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
-        FoodMenuCleanupSettingsService: cleanup,
+        OutboxService: AsyncMock(spec=OutboxService),
     }
 
     @asynccontextmanager
@@ -235,44 +232,24 @@ async def test_broadcast_job_selects_today_and_skips_missing_menu(monkeypatch, m
         send.assert_awaited_once_with(menu, 960011)
 
 
-@pytest.mark.parametrize("stage", ["locale", "theme", "send", "cleanup"])
-@pytest.mark.parametrize("telegram_error", [False, True])
-async def test_broadcast_delivery_exception_boundary(stage, telegram_error):
-    bot, users, cleanup = AsyncMock(), AsyncMock(), AsyncMock()
+@pytest.mark.parametrize("stage", ["locale", "theme", "enqueue"])
+async def test_broadcast_queue_exception_boundary(stage):
+    bot, users = AsyncMock(), AsyncMock()
     users.get_locale.return_value = Locale.RU
     themes = AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC))
-    bot.send_rich_message.return_value = SimpleNamespace(message_id=42)
-    error = (
-        TelegramBadRequest(method=SendMessage(chat_id=1, text="x"), message="fixture failure")
-        if telegram_error
-        else RuntimeError("fixture failure")
-    )
+    error = RuntimeError("fixture failure")
     failing = {
         "locale": users.get_locale,
         "theme": themes.get_theme,
-        "send": bot.send_rich_message,
-        "cleanup": cleanup.schedule_cleanup,
+        "enqueue": bot.enqueue,
     }[stage]
-    success = {"locale": Locale.RU, "theme": Theme.BASIC, "send": SimpleNamespace(message_id=42), "cleanup": None}[
-        stage
-    ]
+    success = {"locale": Locale.RU, "theme": Theme.BASIC, "enqueue": True}[stage]
     failing.side_effect = [error, success]
     menu = DailyMenuModel(uuid.uuid4(), date(2026, 10, 25), [], 0, 0, 0)
-    if telegram_error:
+    with pytest.raises(RuntimeError, match="fixture failure"):
         for user_id in [1, 2]:
-            await TelegramFoodMenuSender(
-                bot, users, cleanup, themes, status=AsyncMock(is_stopped=AsyncMock(return_value=False))
-            ).send(menu, user_id)
-        assert users.get_locale.await_count == 2
-        assert bot.send_rich_message.await_args_list[-1].kwargs["chat_id"] == 2
-        cleanup.schedule_cleanup.assert_any_await(2, [42])
-    else:
-        with pytest.raises(RuntimeError, match="fixture failure"):
-            for user_id in [1, 2]:
-                await TelegramFoodMenuSender(
-                    bot, users, cleanup, themes, status=AsyncMock(is_stopped=AsyncMock(return_value=False))
-                ).send(menu, user_id)
-        assert users.get_locale.await_count == 1
+            await TelegramFoodMenuSender(bot, users, themes).send(menu, user_id)
+    assert users.get_locale.await_count == 1
 
 
 async def test_sync_normalized_names_preserve_existing_dishes_and_replace_changed_menu(session):
@@ -296,6 +273,7 @@ async def test_food_menu_provider_preserves_app_and_request_lifetimes():
         TelegramPlatformProvider(),
         ObisProvider(),
         EdersProvider(),
+        OutboxProvider(),
         StudyWeekProvider(),
         ScheduleProvider(),
         NotificationsProvider(),

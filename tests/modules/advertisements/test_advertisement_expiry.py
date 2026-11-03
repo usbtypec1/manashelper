@@ -15,17 +15,22 @@ from manashelper.core.provider import CoreProvider
 from manashelper.modules.advertisements import jobs as job
 from manashelper.modules.advertisements.application.advertisement import AdvertisementService
 from manashelper.modules.advertisements.application.expiry import ExpireAdvertisements, PublicationRemover
-from manashelper.modules.advertisements.infrastructure.advertisement import Advertisement
-from manashelper.modules.advertisements.infrastructure.advertisement_channel_message import AdvertisementChannelMessage
-from manashelper.modules.advertisements.infrastructure.advertisement_repository import AdvertisementRepository
+from manashelper.modules.advertisements.infrastructure.models.advertisement import Advertisement
+from manashelper.modules.advertisements.infrastructure.models.advertisement_channel_message import (
+    AdvertisementChannelMessage,
+)
+from manashelper.modules.advertisements.infrastructure.repositories.advertisement import AdvertisementRepository
 from manashelper.modules.advertisements.provider import AdvertisementsProvider
 from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
-from manashelper.modules.users.infrastructure.user import User
+from manashelper.modules.users.infrastructure.models.user import User
+from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.modules.users.provider import UsersProvider
+from manashelper.modules.users.queries import UsersQuery
+from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
 
 CHANNEL_ID = -100943001
@@ -36,10 +41,10 @@ async def test_expiry_deletes_publications_in_batches_before_removing_rows(sessi
     session.add(User(id=943_001, full_name="Expiry owner", username=None))
     await session.flush()
     repository = AdvertisementRepository(session)
-    service = AdvertisementService(repository)
+    service = AdvertisementService(repository, UsersQuery(UserRepository(session)))
     now = datetime.now(UTC).replace(tzinfo=None)
     expired = await service.create_advertisement(
-        943_001, "Expired", "Published item", None, now - timedelta(minutes=1), []
+        943_001, "Expired", "Published item", None, now - timedelta(minutes=1), [], phone_number="+996700123456"
     )
     expired_row = await repository.get_by_id(expired.id)
     expired_row.status = "published"
@@ -47,9 +52,11 @@ async def test_expiry_deletes_publications_in_batches_before_removing_rows(sessi
         AdvertisementChannelMessage(id=uuid.uuid4(), message_id=index) for index in range(205)
     ]
     pending = await service.create_advertisement(
-        943_001, "Pending expired", "Also removed", None, now - timedelta(minutes=1), []
+        943_001, "Pending expired", "Also removed", None, now - timedelta(minutes=1), [], phone_number="+996700123456"
     )
-    active = await service.create_advertisement(943_001, "Still active", "Keep this", None, now + timedelta(days=1), [])
+    active = await service.create_advertisement(
+        943_001, "Still active", "Keep this", None, now + timedelta(days=1), [], phone_number="+996700123456"
+    )
     await session.flush()
 
     class TestSessionProvider(Provider):
@@ -77,6 +84,7 @@ async def test_expiry_deletes_publications_in_batches_before_removing_rows(sessi
         TelegramPlatformProvider(),
         ObisProvider(),
         EdersProvider(),
+        OutboxProvider(),
         StudyWeekProvider(),
         ScheduleProvider(),
         NotificationsProvider(),

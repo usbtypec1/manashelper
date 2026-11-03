@@ -12,11 +12,11 @@ if TYPE_CHECKING:
 
 
 class Department(Base):
-    __tablename__ = "departments"
+    __tablename__ = "timetable_departments"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(128))
-    faculty_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("faculties.id"))
+    faculty_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("timetable_faculties.id"))
 
     faculty: Mapped["Faculty"] = relationship(back_populates="departments")
     courses: Mapped[list["Course"]] = relationship(back_populates="department")

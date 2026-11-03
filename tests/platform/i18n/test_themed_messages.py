@@ -32,8 +32,8 @@ from manashelper.modules.schedule.application.timetable_sync import LessonChange
 from manashelper.modules.schedule.presentation.sender import TelegramScheduleChangeSender
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
-from manashelper.modules.users.infrastructure.user import User
-from manashelper.modules.users.infrastructure.user_repository import UserRepository
+from manashelper.modules.users.infrastructure.models.user import User
+from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.platform.i18n.catalog import i18n
 from tests.modules.eders.factories import NOW, item
 
@@ -58,7 +58,7 @@ def build_menu(menu):
     return build_daily_menu_rich_message(
         menu,
         build_menu_rating_buttons(menu.id, menu.user_rating),
-        build_food_menu_settings_buttons(include_notifications=True),
+        build_food_menu_settings_buttons(),
     )
 
 
@@ -135,25 +135,22 @@ async def test_background_delivery_uses_each_recipients_saved_theme_and_restores
     await session.flush()
     repository = UserRepository(session)
     locales, themes = LocaleService(repository), ThemeService(repository)
-    bot, cleanup = AsyncMock(), AsyncMock()
+    bot = AsyncMock()
     bot.send_rich_message.return_value.message_id = 42
     with i18n.context(), i18n.use_locale("en"), i18n.use_theme(Theme.HALLOWEEN):
         for user_id in [982001, 982002, 982001]:
             if source == "food":
-                await TelegramFoodMenuSender(
-                    bot, locales, cleanup, themes, status=AsyncMock(is_stopped=AsyncMock(return_value=False))
-                ).send(menu, user_id)
+                await TelegramFoodMenuSender(bot, locales, themes).send(menu, user_id)
             elif source == "schedule":
-                await TelegramScheduleChangeSender(
-                    bot, locales, themes, status=AsyncMock(is_stopped=AsyncMock(return_value=False))
-                ).send(user_id, [LessonChange(1, "09:00-09:50", "Old", "New")])
+                await TelegramScheduleChangeSender(bot, locales, themes).send(
+                    user_id, [LessonChange(1, "09:00-09:50", "Old", "New")]
+                )
             elif source == "obis":
                 sender = TelegramObisNotificationSender(
                     bot,
                     user_id,
                     await locales.get_locale(user_id),
                     await themes.get_theme(user_id),
-                    status=AsyncMock(is_stopped=AsyncMock(return_value=False)),
                 )
                 await sender.exam_grade_changed(ExamGradeChange("Math", "Exam", "85"))
                 await sender.lesson_skips_changed(LessonSkipChange("Math", SkipType.THEORY, 12.5, 2))
@@ -161,18 +158,17 @@ async def test_background_delivery_uses_each_recipients_saved_theme_and_restores
                 event = EdersEvent("opened", item(), "opened", NOW, NOW)
                 delivered = [
                     entry
-                    async for entry in TelegramEdersNotificationSender(
-                        bot, themes, status=AsyncMock(is_stopped=AsyncMock(return_value=False))
-                    ).send(user_id, await locales.get_locale(user_id), [event])
+                    async for entry in TelegramEdersNotificationSender(bot, themes).send(
+                        user_id, await locales.get_locale(user_id), [event]
+                    )
                 ]
                 assert delivered == [event]
             assert i18n.current_theme == Theme.HALLOWEEN and i18n.current_locale == "en"
     if source == "food":
-        messages = [call.kwargs["rich_message"].blocks[0].text for call in bot.send_rich_message.await_args_list]
+        messages = [call.args[1][0].rich_message.blocks[0].text for call in bot.enqueue.await_args_list]
         assert [message.startswith("🎃 ") for message in messages] == [True, False, True]
-        assert cleanup.schedule_cleanup.await_count == 3
     else:
-        messages = [call.args[1] for call in bot.send_message.await_args_list]
+        messages = [call.args[1][0].text for call in bot.enqueue.await_args_list]
         if source == "obis":
             assert [message.startswith("🍬 ") for message in messages[::2]] == [True, False, True]
             assert [message.startswith("👻 ") for message in messages[1::2]] == [True, False, True]

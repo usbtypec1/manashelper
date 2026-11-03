@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from typing import Protocol
 
-from manashelper.modules.advertisements.infrastructure.advertisement_repository import AdvertisementRepository
+from manashelper.modules.advertisements.infrastructure.repositories.advertisement import AdvertisementRepository
 
 
 class PublicationRemover(Protocol):

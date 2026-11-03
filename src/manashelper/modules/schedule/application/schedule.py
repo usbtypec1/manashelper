@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
 from manashelper.modules.schedule.application.course import UserNotFoundError
-from manashelper.modules.schedule.infrastructure.repositories.course_tracking_repository import CourseTrackingRepository
-from manashelper.modules.schedule.infrastructure.repositories.lesson_repository import LessonRepository
+from manashelper.modules.schedule.infrastructure.repositories.course_tracking import CourseTrackingRepository
+from manashelper.modules.schedule.infrastructure.repositories.lesson import LessonRepository
 
 LUNCH_START_MINUTES = 12 * 60 + 25
 LUNCH_END_MINUTES = 14 * 60 + 25

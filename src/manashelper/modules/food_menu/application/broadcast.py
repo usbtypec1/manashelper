@@ -9,7 +9,7 @@ from manashelper.modules.food_menu.application.daily_menu import (
     DailyMenuService,
 )
 from manashelper.modules.food_menu.application.food_menu_notification_settings import FoodMenuMeal
-from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notification_settings_repository import (
+from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notification_settings import (
     FoodMenuNotificationSettingsRepository,
 )
 

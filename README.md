@@ -125,8 +125,12 @@ Menu | callback:food_menu:today
 
 Each button opens a URL or sends existing bot `callback_data` (1–64 UTF-8 bytes); adding a payload does not
 create a new callback handler. Up to 100 buttons are supported. **Without buttons** clears the keyboard.
-The final confirmation sends to active registered users. A photo is reused by Telegram file ID; if the text
+The final confirmation queues delivery to active registered users. A photo is reused by Telegram file ID; if the text
 exceeds the photo caption limit, recipients receive the photo followed by the text with its buttons.
+
+Background notifications and broadcasts use a [transactional outbox](docs/outbox.md) with shared token buckets,
+rate-limit retries, exponential backoff, expiration and daily cleanup. The admin summary counts queued recipients;
+delivery continues in the background. Interactive replies and previews remain immediate.
 
 A permanent delivery failure, such as a blocked bot, deactivated user or missing chat, sets `users.bot_stopped`.
 Manual broadcasts and all scheduled notification senders suppress delivery to stopped users. Rate limits,
@@ -140,7 +144,7 @@ To verify Telegram serialization and failure handling locally without contacting
 ```sh
 postman simulation run postman/simulations/telegram.sim.yaml --port 4903 --output ndjson --no-history
 # In another terminal with a migrated development database and compiled catalogs:
-MANASHELPER_TELEGRAM_SIMULATION_URL=http://127.0.0.1:4903/telegram uv run pytest -q tests/modules/broadcast/test_telegram_http_delivery.py
+MANASHELPER_TELEGRAM_SIMULATION_URL=http://127.0.0.1:4903/telegram uv run pytest -q tests/platform/telegram/test_outbox_http.py
 ```
 
 ### Deployment

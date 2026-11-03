@@ -5,11 +5,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 from aiogram import Bot
-from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.base import StorageKey
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.methods import SendMessage
 from aiogram.types import CallbackQuery, Message
 from dishka import make_async_container
 from pydantic import SecretStr
@@ -40,15 +38,14 @@ from manashelper.modules.obis.errors import UserHasNoCredentialsError
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.application.schedule import NoTrackedCoursesError
 from manashelper.modules.schedule.provider import ScheduleProvider
-from manashelper.modules.student_questions.provider import StudentQuestionsProvider
-from manashelper.modules.student_questions.service import StudentQuestionsService
 from manashelper.modules.study_week.application import GetStudyWeek
 from manashelper.modules.study_week.provider import StudyWeekProvider
-from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.theme import ThemeService
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.dispatcher import create_dispatcher
+from manashelper.platform.telegram.outbox.provider import OutboxProvider
+from manashelper.platform.telegram.outbox.service import OutboxService
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
 
 
@@ -197,10 +194,9 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
     service.refresh_snapshot.side_effect = fetch
     locales.get_locale.side_effect = recipient_locale
     tracking.pending_events.return_value = [event]
-    bot.send_message.side_effect = [TelegramBadRequest(SendMessage(chat_id=1, text="test"), "test failure"), object()]
     dependencies = {
         ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
-        BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
+        OutboxService: AsyncMock(spec=OutboxService),
         EdersTrackingService: tracking,
         PollEdersUser: PollEdersUser(service, tracking, locales),
     }
@@ -213,10 +209,12 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
     async def container():
         yield Request()
 
+    outbox = dependencies[OutboxService]
+    outbox.enqueue.side_effect = [False, True]
     await poll_eders_job(container, bot)
-    assert [call.args[0] for call in bot.send_message.await_args_list] == [1, 3]
-    assert "Напоминание eders" in bot.send_message.await_args_list[0].args[1]
-    assert "eders 截止提醒" in bot.send_message.await_args_list[1].args[1]
+    assert [call.args[0] for call in outbox.enqueue.await_args_list] == [1, 3]
+    assert "Напоминание eders" in outbox.enqueue.await_args_list[0].args[1][0].text
+    assert "eders 截止提醒" in outbox.enqueue.await_args_list[1].args[1][0].text
     assert tracking.mark_sent.await_count == 1 and tracking.mark_sent.call_args.args[:2] == (3, "key")
 
 
@@ -226,10 +224,10 @@ async def test_application_resolves_new_services_and_registers_fifteen_minute_po
         TelegramPlatformProvider(),
         ObisProvider(),
         EdersProvider(),
+        OutboxProvider(),
         StudyWeekProvider(),
         ScheduleProvider(),
         NotificationsProvider(),
-        StudentQuestionsProvider(),
         UsersProvider(),
     )
     bot = Bot(token="123456789:test-token")
@@ -237,10 +235,9 @@ async def test_application_resolves_new_services_and_registers_fifteen_minute_po
         dispatcher = create_dispatcher(container)
         assert "eders" in {router.name for router in dispatcher.sub_routers}
         router_names = [router.name for router in dispatcher.sub_routers]
-        assert router_names.index("student_questions") < router_names.index("advertisement_contact")
-        assert router_names.index("student_questions") < router_names.index("start")
+        assert "student_questions" not in router_names
+        assert router_names.index("advertisement_contact") < router_names.index("start")
         async with container() as request:
-            assert isinstance(await request.get(StudentQuestionsService), StudentQuestionsService)
             assert isinstance(await request.get(EdersService), EdersService)
             assert isinstance(await request.get(GetStudyWeek), GetStudyWeek)
         scheduler = create_scheduler(container, bot)
@@ -281,7 +278,7 @@ async def test_job_groups_new_materials_and_acknowledges_all_events_only_on_succ
     locales.get_locale.return_value = Locale.EN
     dependencies = {
         ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
-        BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
+        OutboxService: AsyncMock(spec=OutboxService),
         EdersTrackingService: tracking,
         PollEdersUser: PollEdersUser(service, tracking, locales),
     }
@@ -291,13 +288,14 @@ async def test_job_groups_new_materials_and_acknowledges_all_events_only_on_succ
         yield SimpleNamespace(get=AsyncMock(side_effect=lambda cls: dependencies[cls]))
 
     bot = AsyncMock(spec=Bot)
-    bot.send_message.side_effect = TelegramBadRequest(method=SendMessage(chat_id=1, text="test"), message="failure")
+    outbox = dependencies[OutboxService]
+    outbox.enqueue.return_value = False
     await poll_eders_job(scope, bot)
     tracking.mark_sent.assert_not_awaited()
-    bot.send_message.side_effect = None
-    bot.send_message.reset_mock()
+    outbox.enqueue.return_value = True
+    outbox.enqueue.reset_mock()
     await poll_eders_job(scope, bot)
-    bot.send_message.assert_awaited_once()
+    outbox.enqueue.assert_awaited_once()
     assert [call.args[1] for call in tracking.mark_sent.await_args_list] == ["first", "second"]
 
 

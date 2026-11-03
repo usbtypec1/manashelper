@@ -38,6 +38,19 @@ def build_cancel_form_keyboard() -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
+def build_contact_keyboard(*, can_skip: bool) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    if can_skip:
+        builder.button(
+            text=_("common.skip"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.SKIP_PHONE)
+        )
+    builder.button(
+        text=_("common.cancel"), callback_data=AdvertisementFormCallback(action=AdvertisementFormAction.CANCEL)
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
 def build_skip_price_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(

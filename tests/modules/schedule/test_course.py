@@ -7,9 +7,9 @@ from manashelper.modules.schedule.application.course import CourseNotFoundError,
 from manashelper.modules.schedule.infrastructure.models.course import Course
 from manashelper.modules.schedule.infrastructure.models.department import Department
 from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
-from manashelper.modules.schedule.infrastructure.repositories.course_repository import CourseRepository
-from manashelper.modules.schedule.infrastructure.repositories.course_tracking_repository import CourseTrackingRepository
-from manashelper.modules.users.infrastructure.user import User
+from manashelper.modules.schedule.infrastructure.repositories.course import CourseRepository
+from manashelper.modules.schedule.infrastructure.repositories.course_tracking import CourseTrackingRepository
+from manashelper.modules.users.infrastructure.models.user import User
 
 
 async def _make_department(session: AsyncSession) -> Department:

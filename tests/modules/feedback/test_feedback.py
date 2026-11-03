@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.modules.feedback.repository import FeedbackRepository
 from manashelper.modules.feedback.service import FeedbackNotFoundError, FeedbackService
-from manashelper.modules.users.infrastructure.user import User
+from manashelper.modules.users.infrastructure.models.user import User
 
 
 async def _make_user(session: AsyncSession, user_id: int) -> User:

@@ -4,13 +4,26 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
+from manashelper.modules.advertisements.domain.contact import (
+    ContactStatus,
+    InvalidPhoneNumberError,
+    MissingContactError,
+    is_valid_phone_number,
+)
 from manashelper.modules.advertisements.domain.enums import AdvertisementMediaType, AdvertisementStatus
-from manashelper.modules.advertisements.infrastructure.advertisement import Advertisement
-from manashelper.modules.advertisements.infrastructure.advertisement_channel_message import AdvertisementChannelMessage
-from manashelper.modules.advertisements.infrastructure.advertisement_media import AdvertisementMedia
-from manashelper.modules.advertisements.infrastructure.advertisement_repository import AdvertisementRepository
+from manashelper.modules.advertisements.infrastructure.models.advertisement import Advertisement
+from manashelper.modules.advertisements.infrastructure.models.advertisement_channel_message import (
+    AdvertisementChannelMessage,
+)
+from manashelper.modules.advertisements.infrastructure.models.advertisement_media import AdvertisementMedia
+from manashelper.modules.advertisements.infrastructure.repositories.advertisement import AdvertisementRepository
+from manashelper.modules.users.queries import UsersQuery
 
 PAGE_SIZE = 10
+
+
+class UserNotFoundError(Exception):
+    pass
 
 
 class AdvertisementNotFoundError(Exception):
@@ -91,8 +104,14 @@ class AdvertisementService:
     MAX_ADS_PER_HOUR = 5
     MAX_MEDIA_ITEMS = 10
 
-    def __init__(self, advertisement_repository: AdvertisementRepository) -> None:
+    def __init__(self, advertisement_repository: AdvertisementRepository, users: UsersQuery) -> None:
         self._advertisement_repository = advertisement_repository
+        self._users = users
+
+    async def get_contact_status(self, user_id: int, phone_numbers: Sequence[str] = ()) -> ContactStatus:
+        if not await self._users.exists(user_id):
+            raise UserNotFoundError(user_id)
+        return ContactStatus(username=await self._users.get_username(user_id), phone_numbers=list(phone_numbers))
 
     async def assert_can_post(self, user_id: int) -> None:
         since = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=1)
@@ -107,8 +126,16 @@ class AdvertisementService:
         price: int | None,
         expires_at: datetime | None,
         media_items: Sequence[AdvertisementMediaItem],
+        *,
+        phone_number: str | None = None,
     ) -> AdvertisementSummary:
         await self.assert_can_post(user_id)
+        phone_number = phone_number.strip() if phone_number is not None else None
+        if phone_number is not None and not is_valid_phone_number(phone_number):
+            raise InvalidPhoneNumberError(phone_number)
+        numbers = [phone_number] if phone_number is not None else []
+        if not (await self.get_contact_status(user_id, numbers)).has_contact:
+            raise MissingContactError("A phone number or Telegram username is required")
 
         advertisement = Advertisement(
             id=uuid.uuid4(),
@@ -116,6 +143,7 @@ class AdvertisementService:
             title=title,
             description=description,
             price=price,
+            phone_numbers=numbers,
             status=AdvertisementStatus.PENDING.value,
             expires_at=expires_at,
         )

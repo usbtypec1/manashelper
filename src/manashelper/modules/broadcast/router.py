@@ -19,10 +19,10 @@ from manashelper.modules.broadcast.keyboards import (
 )
 from manashelper.modules.broadcast.sender import TelegramBroadcastSender
 from manashelper.modules.broadcast.service import BroadcastSender, SendBroadcast
-from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.html import escape_html
+from manashelper.platform.telegram.outbox.service import OutboxService
 
 router = Router(name="broadcast")
 
@@ -184,7 +184,7 @@ async def on_broadcast_confirmed(
     settings: FromDishka[Settings],
     send_broadcast: FromDishka[SendBroadcast],
     locale_service: FromDishka[LocaleService],
-    bot_status: FromDishka[BotStatusService],
+    outbox: FromDishka[OutboxService],
 ) -> None:
     if not isinstance(callback_query.message, Message) or not _is_admin_chat(callback_query.message.chat.id, settings):
         await callback_query.answer()
@@ -202,9 +202,7 @@ async def on_broadcast_confirmed(
     with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):
         await _set_status(callback_query.message, _("broadcast.sending"))
 
-    sender: BroadcastSender = TelegramBroadcastSender(
-        bot, locale_service, bot_status, photo_id=photo_id, keyboard=keyboard
-    )
+    sender: BroadcastSender = TelegramBroadcastSender(outbox, locale_service, photo_id=photo_id, keyboard=keyboard)
     result = await send_broadcast.execute(body or "", sender)
 
     with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):

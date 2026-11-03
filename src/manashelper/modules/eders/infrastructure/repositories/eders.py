@@ -1,0 +1,36 @@
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from manashelper.modules.eders.infrastructure.models.eders import EdersNotification, EdersState
+from manashelper.modules.users.infrastructure.models.user import User
+
+
+class EdersRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def read_state(self, user_id: int) -> EdersState | None:
+        # Readers must not wait for a background HTTP fetch holding the user's lock.
+        return await self._session.get(EdersState, user_id)
+
+    async def get_state(self, user_id: int) -> EdersState:
+        # The user row also locks first observations, when no state row exists yet.
+        await self._session.execute(select(User.id).where(User.id == user_id).with_for_update())
+        state = await self._session.get(EdersState, user_id, populate_existing=True)
+        if state is None:
+            state = EdersState(user_id=user_id)
+            self._session.add(state)
+            await self._session.flush()
+        return state
+
+    async def get_notifications(self, user_id: int) -> list[EdersNotification]:
+        result = await self._session.execute(select(EdersNotification).where(EdersNotification.user_id == user_id))
+        return list(result.scalars())
+
+    def add_notification(self, notification: EdersNotification) -> None:
+        self._session.add(notification)
+
+    async def get_poll_user_ids(self) -> list[int]:
+        query = select(User.id).where(User.student_number.is_not(None), User.student_number != "")
+        result = await self._session.execute(query)
+        return list(result.scalars())

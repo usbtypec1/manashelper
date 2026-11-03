@@ -15,11 +15,11 @@ from manashelper.modules.broadcast import router as handlers
 from manashelper.modules.broadcast.callbacks import BroadcastAction, BroadcastCallback
 from manashelper.modules.broadcast.keyboards import build_broadcast_confirm_keyboard
 from manashelper.modules.broadcast.service import SendBroadcast
-from manashelper.modules.users.application.bot_status import BotStatusService
+from manashelper.modules.notifications.queries import NotificationRecipientsQuery
 from manashelper.modules.users.application.locale import LocaleService
-from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.commands import setup_commands
+from manashelper.platform.telegram.outbox.service import OutboxService
 
 ADMIN_CHAT_ID = -100947000
 ACTOR_ID = 947_001
@@ -49,10 +49,16 @@ def context(monkeypatch):
             return Message(message_id=42, date=0, chat=message.chat).as_(bot)
         return True
 
+    async def enqueue(user_id, outgoing, **kwargs):
+        sending_states.append((await state.get_state(), await state.get_data()))
+        return True
+
+    outbox = AsyncMock(spec=OutboxService)
+    outbox.enqueue.side_effect = enqueue
     request = AsyncMock(side_effect=respond)
     monkeypatch.setattr(bot.session, "make_request", request)
-    users = AsyncMock(spec=UsersQuery)
-    users.get_active_ids.return_value = RECIPIENT_IDS
+    users = AsyncMock(spec=NotificationRecipientsQuery)
+    users.for_broadcasts.return_value = RECIPIENT_IDS
     locales = AsyncMock(spec=LocaleService)
     locales.get_locale.side_effect = LOCALES.__getitem__
     callback = CallbackQuery(id="broadcast", from_user=message.from_user, chat_instance="chat", message=message).as_(
@@ -66,7 +72,7 @@ def context(monkeypatch):
             request=request,
             users=users,
             service=SendBroadcast(users),
-            status=AsyncMock(spec=BotStatusService, is_stopped=AsyncMock(return_value=False)),
+            outbox=outbox,
             locales=locales,
             callback=callback,
             settings=SimpleNamespace(admin_chat_id=ADMIN_CHAT_ID),
@@ -75,7 +81,10 @@ def context(monkeypatch):
 
 
 def methods(context, kind):
-    return [call.args[1] for call in context.request.await_args_list if isinstance(call.args[1], kind)]
+    queued = [
+        method for call in context.outbox.enqueue.await_args_list for method in call.args[1] if isinstance(method, kind)
+    ]
+    return queued + [call.args[1] for call in context.request.await_args_list if isinstance(call.args[1], kind)]
 
 
 async def draft(context, body=BODY):
@@ -91,7 +100,7 @@ async def confirm(context, callback=None):
         context.settings,
         context.service,
         context.locales,
-        context.status,
+        context.outbox,
     )
 
 
@@ -111,7 +120,7 @@ async def test_command_starts_form_in_admin_locale(context):
     await handlers.on_broadcast_command(context.message, context.state, context.settings)
     assert await context.state.get_state() == "BroadcastForm:message"
     assert methods(context, SendMessage)[0].text == i18n.gettext("broadcast.message_prompt", locale="ru")
-    context.users.get_active_ids.assert_not_awaited()
+    context.users.for_broadcasts.assert_not_awaited()
 
 
 @pytest.mark.parametrize("action", ["command", "message", "cancel", "confirm"])
@@ -130,7 +139,7 @@ async def test_other_chat_cannot_start_preview_cancel_or_send(context, action):
         await confirm(context, callback)
     assert await context.state.get_state() == "Other:state"
     assert await context.state.get_data() == {"body": "keep"}
-    context.users.get_active_ids.assert_not_awaited()
+    context.users.for_broadcasts.assert_not_awaited()
     assert not methods(context, SendMessage) and not methods(context, EditMessageText)
     assert len(methods(context, AnswerCallbackQuery)) == int(action in {"cancel", "confirm"})
 
@@ -152,7 +161,7 @@ async def test_preview_preserves_raw_text_caption_fallback_whitespace_and_html(c
         "broadcast:confirm",
         "broadcast:cancel",
     ]
-    context.users.get_active_ids.assert_not_awaited()
+    context.users.for_broadcasts.assert_not_awaited()
 
 
 @pytest.mark.parametrize("body", [None, ""])
@@ -163,7 +172,7 @@ async def test_empty_preview_keeps_existing_draft(context, body):
     )
     assert await context.state.get_data() == {"body": "previous"}
     assert methods(context, SendMessage)[0].text == i18n.gettext("broadcast.text_required", locale="ru")
-    context.users.get_active_ids.assert_not_awaited()
+    context.users.for_broadcasts.assert_not_awaited()
 
 
 async def test_cancel_clears_form_and_uses_admin_locale(context):
@@ -172,7 +181,7 @@ async def test_cancel_clears_form_and_uses_admin_locale(context):
     assert await context.state.get_state() is None and await context.state.get_data() == {}
     assert methods(context, EditMessageText)[0].text == i18n.gettext("broadcast.cancelled", locale="ru")
     assert len(methods(context, AnswerCallbackQuery)) == 1
-    context.users.get_active_ids.assert_not_awaited()
+    context.users.for_broadcasts.assert_not_awaited()
 
 
 @pytest.mark.parametrize("failed_recipient", [None, RECIPIENT_IDS[1]])
@@ -190,7 +199,14 @@ async def test_delivery_keeps_recipient_order_locales_state_clear_and_success_co
         return RECIPIENT_IDS
 
     context.request.side_effect = deliver
-    context.users.get_active_ids.side_effect = recipients
+    original_enqueue = context.outbox.enqueue.side_effect
+
+    async def accept(user_id, outgoing, **kwargs):
+        await original_enqueue(user_id, outgoing, **kwargs)
+        return user_id != failed_recipient
+
+    context.outbox.enqueue.side_effect = accept
+    context.users.for_broadcasts.side_effect = recipients
     await confirm(context)
     sent = methods(context, SendMessage)
     assert [method.chat_id for method in sent] == [*RECIPIENT_IDS, ADMIN_CHAT_ID]
@@ -198,6 +214,9 @@ async def test_delivery_keeps_recipient_order_locales_state_clear_and_success_co
         assert method.text == i18n.gettext("broadcast.admin_message", locale=LOCALES[method.chat_id].value).format(
             body=ESCAPED_BODY
         )
+        unsubscribe = method.reply_markup.inline_keyboard[-1][0]
+        assert unsubscribe.callback_data == "broadcast_mute:1"
+        assert unsubscribe.text == i18n.gettext("notifications.mute_broadcasts", locale=LOCALES[method.chat_id].value)
     assert sent[-1].text == i18n.gettext("broadcast.sent", locale="ru").format(
         sent=5 - int(failed_recipient is not None), total=5
     )
@@ -206,7 +225,7 @@ async def test_delivery_keeps_recipient_order_locales_state_clear_and_success_co
     assert isinstance(calls[0], AnswerCallbackQuery) and isinstance(calls[1], EditMessageText)
     assert calls[1].text == i18n.gettext("broadcast.sending", locale="ru")
     assert i18n.current_locale == "tr"
-    context.users.get_active_ids.assert_awaited_once()
+    context.users.for_broadcasts.assert_awaited_once()
 
 
 async def test_duplicate_confirmation_does_not_send_again(context):
@@ -215,7 +234,7 @@ async def test_duplicate_confirmation_does_not_send_again(context):
     sent_count = len(methods(context, SendMessage))
     await confirm(context)
     assert len(methods(context, SendMessage)) == sent_count
-    context.users.get_active_ids.assert_awaited_once()
+    context.users.for_broadcasts.assert_awaited_once()
     assert len(methods(context, AnswerCallbackQuery)) == 2
 
 
@@ -224,14 +243,14 @@ async def test_empty_confirmation_clears_state_without_loading_recipients(contex
     await draft(context, body)
     await confirm(context)
     assert await context.state.get_state() is None and await context.state.get_data() == {}
-    context.users.get_active_ids.assert_not_awaited()
+    context.users.for_broadcasts.assert_not_awaited()
     assert not methods(context, SendMessage) and not methods(context, EditMessageText)
     assert len(methods(context, AnswerCallbackQuery)) == 1
 
 
 async def test_empty_recipient_list_still_reports_zero_statistics(context):
     await draft(context)
-    context.users.get_active_ids.return_value = []
+    context.users.for_broadcasts.return_value = []
     await confirm(context)
     assert methods(context, SendMessage)[0].text == i18n.gettext("broadcast.sent", locale="ru").format(sent=0, total=0)
     context.locales.get_locale.assert_not_awaited()
@@ -246,7 +265,7 @@ async def test_missing_callback_message_only_answers_callback(context, action):
     else:
         await confirm(context, callback)
     assert await context.state.get_data() == {"body": BODY}
-    context.users.get_active_ids.assert_not_awaited()
+    context.users.for_broadcasts.assert_not_awaited()
     assert len(methods(context, AnswerCallbackQuery)) == 1
     assert not methods(context, SendMessage)
 
@@ -255,7 +274,7 @@ async def test_missing_callback_message_only_answers_callback(context, action):
 async def test_unexpected_failure_aborts_without_summary_after_state_clear(context, failure):
     await draft(context)
     if failure == "recipients":
-        context.users.get_active_ids.side_effect = RuntimeError("test: unexpected")
+        context.users.for_broadcasts.side_effect = RuntimeError("test: unexpected")
     elif failure == "locale":
         context.locales.get_locale.side_effect = RuntimeError("test: unexpected")
     else:
@@ -266,7 +285,7 @@ async def test_unexpected_failure_aborts_without_summary_after_state_clear(conte
                 raise RuntimeError("test: unexpected")
             return await respond(_bot, method, **kwargs)
 
-        context.request.side_effect = fail_transport
+        context.outbox.enqueue.side_effect = RuntimeError("test: unexpected")
     with pytest.raises(RuntimeError, match="test: unexpected"):
         await confirm(context)
     assert await context.state.get_state() is None and await context.state.get_data() == {}
@@ -309,6 +328,7 @@ async def test_photo_with_buttons_is_previewed_and_delivered(context):
             body=ESCAPED_BODY
         )
         rows = entry.reply_markup.inline_keyboard
+        assert rows[-1][0].callback_data == "broadcast_mute:1"
         assert rows[0][0].url == "https://example.com"
         assert rows[1][0].callback_data == "food_menu:0"
         assert all(button.callback_data != "broadcast:confirm" for row in rows for button in row)
@@ -333,10 +353,10 @@ async def test_invalid_buttons_keep_editor_and_do_not_load_recipients(context):
     )
     assert await context.state.get_state() == handlers.BroadcastForm.buttons.state
     assert await context.state.get_data() == before
-    context.users.get_active_ids.assert_not_awaited()
+    context.users.for_broadcasts.assert_not_awaited()
 
 
-async def test_photo_failure_marks_recipient_stopped(context):
+async def test_photo_is_queued_without_contacting_telegram(context):
     from aiogram.exceptions import TelegramForbiddenError
 
     await draft(context)
@@ -350,7 +370,7 @@ async def test_photo_failure_marks_recipient_stopped(context):
 
     context.request.side_effect = fail_photo
     await confirm(context)
-    context.status.stop.assert_awaited_once_with(RECIPIENT_IDS[0])
+    assert not [call for call in context.request.await_args_list if isinstance(call.args[1], SendPhoto)]
     assert len(methods(context, SendPhoto)) == len(RECIPIENT_IDS)
 
 
@@ -371,6 +391,7 @@ async def test_long_photo_caption_keeps_buttons_on_following_text(context):
     assert len(photos) == len(texts) == len(RECIPIENT_IDS)
     assert all(photo.caption is None and photo.reply_markup is None for photo in photos)
     assert all(text.reply_markup.inline_keyboard[0][0].url == "https://example.com" for text in texts)
+    assert all(text.reply_markup.inline_keyboard[-1][0].callback_data == "broadcast_mute:1" for text in texts)
 
 
 @pytest.mark.parametrize("action", ["request_buttons", "without_buttons", "buttons_input"])
@@ -385,5 +406,5 @@ async def test_other_chat_cannot_edit_broadcast_buttons(context, action):
     else:
         await handlers.on_broadcast_buttons_entered(message, context.state, context.settings)
     assert await context.state.get_data() == {"body": "keep"}
-    context.users.get_active_ids.assert_not_awaited()
+    context.users.for_broadcasts.assert_not_awaited()
     assert not methods(context, SendMessage) and not methods(context, SendPhoto)

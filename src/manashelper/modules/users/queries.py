@@ -1,4 +1,4 @@
-from manashelper.modules.users.infrastructure.user_repository import UserRepository
+from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 
 
 class UsersQuery:
@@ -18,3 +18,7 @@ class UsersQuery:
 
     async def exists(self, user_id: int) -> bool:
         return await self._users.get_by_id(user_id) is not None
+
+    async def get_username(self, user_id: int) -> str | None:
+        user = await self._users.get_by_id(user_id)
+        return user.username if user is not None else None

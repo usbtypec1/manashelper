@@ -9,10 +9,10 @@ from manashelper.core.database import Base
 
 
 class LessonHistory(Base):
-    __tablename__ = "lesson_history"
+    __tablename__ = "timetable_lesson_history"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
-    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"))
+    course_id: Mapped[int] = mapped_column(ForeignKey("timetable_courses.id"))
     weekday: Mapped[int]
     time_range: Mapped[str] = mapped_column(String(16))
     previous_content: Mapped[str | None] = mapped_column(Text)

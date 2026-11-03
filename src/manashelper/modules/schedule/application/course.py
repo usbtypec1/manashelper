@@ -3,8 +3,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from manashelper.modules.schedule.infrastructure.models.course import Course
-from manashelper.modules.schedule.infrastructure.repositories.course_repository import CourseRepository
-from manashelper.modules.schedule.infrastructure.repositories.course_tracking_repository import CourseTrackingRepository
+from manashelper.modules.schedule.infrastructure.repositories.course import CourseRepository
+from manashelper.modules.schedule.infrastructure.repositories.course_tracking import CourseTrackingRepository
 
 
 class CourseNotFoundError(Exception):

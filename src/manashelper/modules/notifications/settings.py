@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 
 from manashelper.modules.notifications.orm import NotificationSettings
@@ -23,6 +24,7 @@ class NotificationSettingsSummary:
     schedule_changes_enabled: bool
     exam_grades_enabled: bool
     lesson_skips_enabled: bool
+    broadcast_muted_until: datetime | None = None
 
 
 def _to_summary(settings: NotificationSettings) -> NotificationSettingsSummary:
@@ -30,6 +32,7 @@ def _to_summary(settings: NotificationSettings) -> NotificationSettingsSummary:
         schedule_changes_enabled=settings.schedule_changes_enabled,
         exam_grades_enabled=settings.exam_grades_enabled,
         lesson_skips_enabled=settings.lesson_skips_enabled,
+        broadcast_muted_until=settings.broadcast_muted_until,
     )
 
 
@@ -55,6 +58,11 @@ class NotificationSettingsService:
                 settings.exam_grades_enabled = not settings.exam_grades_enabled
             case NotificationSetting.LESSON_SKIPS:
                 settings.lesson_skips_enabled = not settings.lesson_skips_enabled
+        return _to_summary(settings)
+
+    async def set_broadcast_mute(self, user_id: int, muted: bool) -> NotificationSettingsSummary:
+        settings = await self._get_or_create(user_id)
+        settings.broadcast_muted_until = datetime.now(UTC) + timedelta(days=14) if muted else None
         return _to_summary(settings)
 
     async def _get_or_create(self, user_id: int) -> NotificationSettings:

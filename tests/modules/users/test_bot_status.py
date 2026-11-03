@@ -11,7 +11,7 @@ from sqlalchemy import select
 
 from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme
-from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notification_settings_repository import (
+from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notification_settings import (
     FoodMenuNotificationSettingsRepository,
 )
 from manashelper.modules.notifications.orm import NotificationSettings
@@ -20,8 +20,8 @@ from manashelper.modules.schedule.infrastructure.models.course import Course
 from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
-from manashelper.modules.users.infrastructure.user import User
-from manashelper.modules.users.infrastructure.user_repository import UserRepository
+from manashelper.modules.users.infrastructure.models.user import User
+from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.telegram.delivery import UserMessageDelivery
 from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
