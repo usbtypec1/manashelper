@@ -1,6 +1,15 @@
 # План перехода всего UI на оркестратор
 
-Статус: план следующего цикла разработки. Описанная целевая система ещё не реализована.
+Статус: этапы 1–4 выполнены 2026-11-02: [матрица UI-входов](INVENTORY.md), общий aiohttp host,
+защищённый webhook, Mini App, [DB-каталог текстов](LOCALIZATION.md) и
+[единые события, triggers и launch policy](TRIGGERS.md).
+Этапы 5–6 реализуют v2-композицию, typed data, snapshots, внешние эффекты и rich delivery.
+Реализован срез этапа 7: Settings и вызовы выбора locale/theme, включая durable
+interrupt активного runtime. Итоговая приёмка этапа фиксируется после полного прогона
+в [PROGRESS.md](../../PROGRESS.md). Остальные feature UI/FSM сохраняются.
+По уточнённым пользовательским требованиям legacy-анкета сохраняется для уже
+начатых форм и fallback; её удаление не является условием этапа 7.
+Локальные проверки описаны в [RELEASE.md](RELEASE.md); live webhook/fullscreen требуют отдельной приёмки.
 Документ продолжает [первоначальный план редактора](../UI_FLOW_EDITOR_PLAN.md)
 и учитывает перенос движка в `src/ui_flows/`. Текущее устройство описано отдельно
 в [ARCHITECTURE.md](../../docs/ARCHITECTURE.md).
@@ -30,20 +39,21 @@
 
 ## 2. Что уже есть и чего не хватает
 
-Уже реализованы строгий контракт графа v1, пять типов узлов, интерпретатор,
-версионирование, PostgreSQL-сессии, два делегата анкеты, дедупликация update,
-screen intents, preview, редактор и мониторинг. Это основа перехода.
+Уже реализованы контракты v1/v2, Call/Return/Replace, pinned dependencies,
+PostgreSQL-сессии и frames, transactional/external delegates, дедупликация update,
+screen intents, preview, редактор и мониторинг. Settings вызывает переиспользуемые
+сценарии locale/theme; глобальный preference-вход приостанавливает текущий runtime.
 
 | Область | Текущий предел | Требуемое расширение |
 | --- | --- | --- |
-| Входы | Несколько специальных routers меню/опроса | Единый реестр команд, payload и действий |
-| Граф | Статические кнопки и scalar-поля | Типизированные коллекции, динамические кнопки, вызов сценария |
-| Делегаты | Транзакционные read/database_write | Те же режимы плюс явно описанные внешние операции |
-| Контекст | Один приватный чат и одна сессия | Исполнение со стеком вызовов и разрешёнными групповыми действиями |
-| Экран | Текст и клавиатура | Фото, альбомы, пагинация, редактирование и связанные сообщения |
-| Локализация | InlineText в БД, CatalogText в gettext | Полный версионируемый DB-каталог |
-| Запуск | Polling и отдельный FastAPI | Общий lifecycle aiohttp и webhook |
-| Админка | Браузерный вход по билету | Mini App, серверная проверка initData, fullscreen |
+| Входы | Единый resolver и версионируемый DB-реестр, runtime/legacy admission | Этап 4 выполнен; тела legacy-форм ещё у прежних владельцев |
+| Граф | Typed collections, динамические actions, Call/Return/Replace | Перенос owning feature-сценариев |
+| Делегаты | read/database_write и durable external operations | Feature adapters сохраняют прежние business invariants |
+| Контекст | Приватный чат, durable Calls и preference interrupts | Разрешённые групповые действия и остальные legacy-формы |
+| Экран | Текст, клавиатура, chunks, фото/альбом и message IDs | Feature pagination/edit/ephemeral semantics |
+| Локализация | InlineText и полный версионируемый каталог в БД | Этап 3 выполнен; новые UI-сценарии используют тот же каталог |
+| Запуск | Общий lifecycle aiohttp и webhook, явный dev polling | Foundation выполнен на этапе 2 |
+| Админка | Mini App с initData/bearer, SDK fullscreen и browser fallback | Foundation выполнен; live client acceptance отдельно |
 
 Существующий `end.feature` передаёт управление старому presentation entry point.
 Он остаётся временным мостом на время миграции. В конечной архитектуре все такие
@@ -62,7 +72,7 @@ screen intents, preview, редактор и мониторинг. Это осн
 | Broadcast | BroadcastForm: 2 | Текст/фото, кнопки, preview и подтверждение |
 | Advertisements | AdvertisementForm: 7 | Номер, заголовок, описание, цена, медиа, срок, подтверждение |
 | Moderation | AdvertisementModerationForm: 1 | Комментарий к отклонению в чате модерации |
-| Student questions | StudentQuestionsForm: 7 | Оставшийся legacy-путь уже существующего runtime-опроса |
+| Student questions | StudentQuestionsForm: 7 | Сохранённый совместимый owner уже начатых форм и rollout fallback runtime-опроса |
 
 Кроме State есть данные без активного состояния: кеши OBIS по message ID,
 снимок Eders с временем открытия, результаты поиска, черновики и накопленные медиа.
@@ -378,8 +388,43 @@ Frame хранит flow/version, node, локальные данные, inputs, 
 Вызов не подхватывает произвольную новую публикацию на середине формы. Идентификаторы
 существующих сценариев сохраняются; для новых задач используются допустимые
 стабильные IDs, например schedule_menu и select_course. Предел
-глубины вызовов задаётся явно; автоматический бюджет применяется ко всей цепочке,
-а не обнуляется при Call. В первой реализации запретить рекурсивный граф Call.
+глубины вызовов — 16 сценариев; бюджет 32 автоматических шагов применяется ко всей
+цепочке и не обнуляется при Call. Рекурсивный dependency graph запрещён.
+
+### Реализованный preference interrupt этапа 7
+
+Main menu вызывает Settings через Call; Settings вызывает select_locale/select_theme
+и возвращается к своей закреплённой версии. Пользовательский Settings «назад»
+возвращает родительское меню, пока ветка не передала владение legacy feature.
+После legacy leaf глобальный back_to_settings запускает опубликованный Settings
+через согласованный trigger; внутренние формы leaf остаются у прежнего владельца.
+
+Глобальные /language и Settings preference actions используют policy call.
+DialogService.interrupt сохраняет прежние flow/version/node/data, статус ожидания,
+revision, trigger pin и effect_revision в durable frame той же сессии. Return
+восстанавливает точное ожидание без повторного Action, увеличивая общую ревизию;
+старые callbacks становятся stale. Вложенные preference calls/cancel и restart
+сохраняют locals и все прежние pins. Confirmation ребёнка показывается перед
+восстановленным экраном в новой locale/theme, с собственным text pin ребёнка.
+
+Waiting_effect может быть приостановлен. Worker выполняет допустимую pending
+операцию единожды и сохраняет результат; apply откладывается до возврата владельца
+ожидания. effect_revision сохраняет исходную корреляцию, даже когда UI revision
+увеличилась. Unknown операция не повторяется. Совместимый legacy picker обслуживает
+preference-вход из ещё активной legacy-формы, сохраняя её FSM и данные.
+
+Начальные документы seeding создаёт только при отсутствии. Порядок новой установки:
+select_locale/theme → Settings → main_menu → student_questions, затем Triggers.
+Если authored dependency существует, но не опубликована, её не заменяют; зависимые
+seed-публикации ждут готовности, startup использует совместимый legacy manifest.
+Повторный startup после ручной публикации создаёт недостающие defaults, но не
+меняет уже существующий manifest, draft или publication.
+
+Принятие новых defaults в существующей БД требует отдельного reviewed изменения
+редактором: опубликовать дочерние сценарии и Settings, сохранить свежую ревизию
+main_menu и опубликовать её, затем сохранить/опубликовать свежую Triggers revision.
+При изменении DB-текстов их публикуют первыми. Наличие нового Python seed не
+переключает существующих пользователей и не переписывает операторские правки.
 
 ### Группы и отдельные сообщения
 
@@ -491,13 +536,13 @@ reply keyboard учитывается отдельно от inline message. Уд
 
 | № | Этап | Проверяемый результат |
 | --- | --- | --- |
-| 1 | Реестр текущих UI-входов | Каждый router, callback prefix, command, payload, FSM key и presenter имеет владельца и целевой сценарий |
-| 2 | Общий aiohttp host и Mini App | Один lifecycle, совместимый admin API, static dist, защищённый webhook, initData auth и fullscreen shell |
-| 3 | Локализация в БД | Импорт пяти языков, immutable releases, привязка версии текстов, единый resolver для preview/runtime |
-| 4 | События, triggers и launch policy | Commands/deep links/reply/inline входят через один сервис; конфликтные bindings не публикуются |
-| 5 | Контракт v2 и композиция | Call/Return/Replace, pinned dependencies и durable frames; v1-сессии продолжаются |
-| 6 | Динамические UI-модели и эффекты | Typed collections, action snapshots, richer delivery, waiting_effect, защищённый sensitive input |
-| 7 | Первый сквозной набор | main_menu, Studies, locale/theme, Settings и анкета работают через оркестратор; legacy survey удалён |
+| 1 | Реестр текущих UI-входов — выполнен | [Матрица](INVENTORY.md): router, callback prefix, command, payload, FSM key и presenter имеют владельца и целевой сценарий; актуальность проверяется по AST |
+| 2 | Общий aiohttp host и Mini App — выполнен | Один lifecycle, совместимый admin API, static dist, защищённый webhook, initData auth и fullscreen shell; [запуск и проверки](RELEASE.md) |
+| 3 | Локализация в БД — выполнена | Импорт пяти языков/тем, immutable releases, editor/API публикации и отката, pinned preview/runtime и задания без пользовательских .mo; [совместимость](LOCALIZATION.md) |
+| 4 | События, triggers и launch policy — выполнен | Commands/deep links/reply/inline входят через один сервис; конфликтные bindings не публикуются; [контракт](TRIGGERS.md) |
+| 5 | Контракт v2 и композиция — реализован | Call/Return/Replace, pinned dependencies и durable frames; v1-сессии продолжаются |
+| 6 | Динамические UI-модели и эффекты — реализован | Typed collections, action snapshots, richer delivery, waiting_effect, защищённый sensitive input |
+| 7 | Первый сквозной набор — реализован, итоговая приёмка отдельно | main_menu/Studies, Settings Calls, durable locale/theme interrupt и runtime-анкета; начатые legacy-анкеты и fallback сохранены по уточнённым требованиям |
 | 8 | Schedule, Food menu, Notifications | Выбор каталога, поиск/страницы, даты, оценки блюд и настройки покрыты сценариями |
 | 9 | Users contact, OBIS, Eders, Study week | Credentials/contact формы и snapshot-пагинация работают после рестарта без FSM |
 | 10 | Advertisements и модерация | Полный черновик с альбомами, deep link контакта, pending guards и групповые комментарии |
@@ -519,7 +564,9 @@ reply keyboard учитывается отдельно от inline message. Уд
 ### Что сохраняется в предметных функциях
 
 - Опрос: явное подтверждение replacement, запись только в конце, cancel сохраняет
-  прежний ответ; runtime deep link восстанавливает существующий проход.
+  прежний ответ; runtime deep link восстанавливает существующий проход. Начатая
+  legacy-анкета продолжает своего owner; при rollout off/admin fallback допускает
+  прежний survey-путь. Удаление legacy survey не входит в этап 7.
 - Объявления: contact gate, пять объявлений в час, десять медиа, модерация по
   настроенному чату, IDs сообщений канала, удаление/expiry.
 - OBIS/Eders: snapshot-only экраны, отдельное шифрование credentials, отсутствие
@@ -563,6 +610,17 @@ Rollback сначала возвращает traffic/bindings на совмес�
 политикой. Откат на бинарник, не читающий frames v2, при живых v2 sessions запрещён.
 Потребуется сохранённая совместимая версия runtime на период отката.
 
+Миграция `a7572f78b034` добавляет nullable effect_revision для корреляции ожидания
+после interrupt; прежние writers оставляют NULL. Downmigration берёт table lock и
+до DDL отказывает при effect_revision, отличном от NULL, или frames с resume_status.
+Старый бинарник, который не понимает interrupt frames, нельзя включать поверх таких
+сессий. Сначала нужен совместимый runtime и завершение/согласованное разрешение
+продолжений; удаление frames/данных ради downgrade запрещено.
+
+Текущий rollout off запрещает новые runtime launches, сохраняя legacy fallback
+существующих bindings. Active actions/resume и preference interrupt уже активного
+runtime продолжаются; начатые legacy-анкеты не переводятся в другого owner.
+
 После полного удаления legacy режим Off больше не означает возврат к старым
 routers. Его целевая семантика: запрет новых публичных запусков, управляемый
 maintenance-ответ и возможность завершить/восстановить активное исполнение.
@@ -604,5 +662,13 @@ maintenance-ответ и возможность завершить/восста
 8. FastAPI/Uvicorn и отдельная production admin-служба удалены, Mini App и webhook
    работают на одном aiohttp host, все проверки пройдены.
 
-Начало реализации — этап 1, затем aiohttp/Mini App foundation. Этот документ
-не запускает сервисы, не регистрирует webhook и не меняет рабочую схему БД.
+Этапы 5–6 реализованы: контракт v2, immutable dependencies, Call/Return/Replace,
+durable frames, typed collections и action snapshots, защищённый ввод, внешние
+операции и rich delivery. Проверки и оставшиеся этапы записаны в корневом
+`PROGRESS.md`. Этап 7 добавляет Settings Calls и durable preference interrupts;
+legacy survey сохранён для совместимости по уточнённым требованиям. Полную приёмку
+этапа фиксируют после завершения проверок. Следующий функциональный этап — 8.
+Рабочий бот и production-схема при локальных проверках не изменялись; webhook
+не регистрировался. Полный перенос оставшихся feature UI и удаление FSM остаются
+этапами 8–12; решение о сохранённом legacy survey требует отдельного согласования
+перед окончательным cutover.

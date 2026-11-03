@@ -33,6 +33,7 @@ from manashelper.modules.users.infrastructure.user import User
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
 from tests.modules.eders.factories import NOW, item
+from tests.text_catalog import text_dependencies
 
 
 async def test_first_state_locks_user_before_loading_and_flushes_defaults():
@@ -107,12 +108,14 @@ async def test_poll_failure_aborts_only_current_user_and_preserves_call_order(fa
     service.refresh_snapshot.side_effect = refresh
     locales.get_locale.side_effect = locale
     tracking.pending_events.side_effect = pending
-    dependencies = {
-        EdersTrackingService: tracking,
-        PollEdersUser: PollEdersUser(service, tracking, locales),
-        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
-        BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
-    }
+    dependencies = text_dependencies(
+        {
+            EdersTrackingService: tracking,
+            PollEdersUser: PollEdersUser(service, tracking, locales),
+            ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+            BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
+        }
+    )
     scopes = []
 
     @asynccontextmanager
@@ -253,7 +256,7 @@ async def test_eders_provider_keeps_app_request_scopes_and_model_registry():
 async def test_recipient_load_failure_does_not_open_user_scope():
     tracking = AsyncMock()
     tracking.get_poll_user_ids.side_effect = RuntimeError("database unavailable")
-    get = AsyncMock(return_value=tracking)
+    get = AsyncMock(side_effect=text_dependencies({EdersTrackingService: tracking}).__getitem__)
 
     @asynccontextmanager
     async def container():
@@ -261,5 +264,6 @@ async def test_recipient_load_failure_does_not_open_user_scope():
 
     bot = AsyncMock()
     await poll_eders_job(container, bot)
-    get.assert_awaited_once_with(EdersTrackingService)
+    assert get.await_args_list[-1].args == (EdersTrackingService,)
+    assert get.await_count == 2
     bot.send_message.assert_not_awaited()

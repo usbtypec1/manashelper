@@ -75,7 +75,12 @@ async def isolated_flow_pool(engine):
     try:
         async with scoped_engine.begin() as connection:
             await connection.run_sync(Base.metadata.create_all)
-        yield async_sessionmaker(scoped_engine, expire_on_commit=False)
+        pool = async_sessionmaker(scoped_engine, expire_on_commit=False)
+        from manashelper.platform.i18n.repository import initialize_catalog
+
+        async with pool.begin() as session:
+            await initialize_catalog(session)
+        yield pool
     finally:
         async with engine.begin() as connection:
             await connection.execute(DropSchema(name, cascade=True))
@@ -116,11 +121,9 @@ async def telegram_flow(isolated_flow_pool, monkeypatch):
 
 @pytest_asyncio.fixture
 async def admin_api(isolated_flow_pool, monkeypatch, tmp_path):
-    import httpx
-
-    from manashelper.admin_main import create_app
     from manashelper.core.config import get_settings
-    from tests.modules.ui_flows.admin_factory import AdminHarness, admin_container
+    from manashelper.platform.web.application import create_admin_app
+    from tests.modules.ui_flows.admin_factory import AdminHarness, admin_container, aiohttp_client
 
     user_id = 991_460
     monkeypatch.setenv("MANASHELPER_ADMIN_CHAT_ID", str(user_id))
@@ -131,15 +134,8 @@ async def admin_api(isolated_flow_pool, monkeypatch, tmp_path):
         session.add(User(id=user_id, full_name="API admin", locale="en"))
     try:
         async with admin_container(isolated_flow_pool) as container:
-            app = create_app(get_settings(), container, ui_directory=tmp_path / "unbuilt")
-            async with (
-                app.router.lifespan_context(app),
-                httpx.AsyncClient(
-                    transport=httpx.ASGITransport(app=app, raise_app_exceptions=False),
-                    base_url="https://admin.test",
-                    headers={"Origin": "https://admin.test"},
-                ) as client,
-            ):
+            app = create_admin_app(get_settings(), container, ui_directory=tmp_path / "unbuilt")
+            async with aiohttp_client(app) as client:
                 yield AdminHarness(client, container, isolated_flow_pool, app, user_id)
     finally:
         get_settings.cache_clear()

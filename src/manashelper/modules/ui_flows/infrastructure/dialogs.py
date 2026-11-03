@@ -1,5 +1,6 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from dataclasses import asdict
 from typing import cast
 from uuid import UUID
 
@@ -9,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from manashelper.modules.ui_flows.infrastructure.locations import LocationRepository
 from manashelper.modules.ui_flows.infrastructure.orm import UiDialogSession, UiFlowEvent
 from ui_flows.domain.contracts import SessionStatus
-from ui_flows.domain.state import ACTIVE_STATUSES, DialogState
+from ui_flows.domain.state import ACTIVE_STATUSES, CallFrame, DialogState
 from ui_flows.errors import DialogNotFoundError
 
 
@@ -24,7 +25,18 @@ def _state(row: UiDialogSession) -> DialogState:
         cast(SessionStatus, row.status),
         row.revision,
         dict(row.data),
+        row.trigger_release,
+        tuple(CallFrame(**frame) for frame in (row.frames or [])),
+        row.effect_revision,
     )
+
+
+def _frame(frame: CallFrame) -> dict[str, object]:
+    values = asdict(frame)
+    if frame.resume_status is None:
+        for key in ("resume_status", "revision", "trigger_release", "effect_revision"):
+            values.pop(key)
+    return values
 
 
 class DialogRepository:
@@ -88,6 +100,9 @@ class DialogRepository:
                 status=state.status,
                 revision=state.revision,
                 data=dict(state.data),
+                trigger_release=state.trigger_release,
+                frames=[_frame(frame) for frame in state.frames],
+                effect_revision=state.effect_revision,
             )
         )
         await self._session.flush()
@@ -97,10 +112,15 @@ class DialogRepository:
             update(UiDialogSession)
             .where(UiDialogSession.id == state.id)
             .values(
+                flow_id=state.flow_id,
+                flow_version=state.flow_version,
                 node_id=state.node_id,
                 status=state.status,
                 revision=state.revision,
                 data=dict(state.data),
+                frames=[_frame(frame) for frame in state.frames],
+                effect_revision=state.effect_revision,
+                trigger_release=state.trigger_release,
                 updated_at=func.now(),
             )
         )
@@ -129,3 +149,6 @@ class DialogRepository:
         )
         await self._session.flush()
         await LocationRepository(self._session).runtime(result_state or state, update_id, from_step, outcome)
+
+    async def record_effect(self, state: DialogState, operation_id: UUID, from_step: str, outcome: str) -> None:
+        await LocationRepository(self._session).runtime(state, None, from_step, outcome, operation_id=operation_id)

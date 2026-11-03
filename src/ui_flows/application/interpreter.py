@@ -3,21 +3,28 @@
 import math
 import re
 from collections.abc import Mapping
-from dataclasses import replace
+from dataclasses import dataclass, replace
 
 from ui_flows.application.delegates import DelegateRegistry
 from ui_flows.application.validation import accepts_scalar
 from ui_flows.domain.contracts import (
     ButtonEvent,
+    ContactEvent,
     DelegateContext,
+    DelegateDefinition,
+    DelegateResult,
     FlowEvent,
     InputEvent,
+    MediaEvent,
     NavigationEvent,
+    SecretEvent,
     SessionStatus,
 )
 from ui_flows.domain.schema import (
+    CallNode,
     ConditionGroup,
     ConditionNode,
+    DataValue,
     EndNode,
     Exists,
     FlowDocument,
@@ -25,6 +32,8 @@ from ui_flows.domain.schema import (
     LiteralValue,
     MenuNode,
     Predicate,
+    ReplaceNode,
+    ReturnNode,
     Scalar,
     TransitionButton,
     Value,
@@ -33,7 +42,7 @@ from ui_flows.domain.state import ACTIVE_STATUSES, DialogState, ExecutionResult,
 from ui_flows.errors import FlowExecutionError, InvalidEventError
 
 
-def _equal(left: Scalar, right: Scalar) -> bool:
+def _equal(left: DataValue, right: DataValue) -> bool:
     if isinstance(left, bool) != isinstance(right, bool):
         return False
     return left == right
@@ -41,22 +50,40 @@ def _equal(left: Scalar, right: Scalar) -> bool:
 
 class EvaluationContext:
     def __init__(
-        self, document: FlowDocument, data: dict[str, Scalar], user: RuntimeUser, capabilities: Mapping[str, Scalar]
+        self,
+        document: FlowDocument,
+        data: dict[str, DataValue],
+        user: RuntimeUser,
+        capabilities: Mapping[str, Scalar],
+        *,
+        item: Mapping[str, DataValue] | None = None,
     ) -> None:
         self.document = document
         self.data = data
-        self.sources: dict[str, Mapping[str, Scalar]] = {
+        self.sources: dict[str, Mapping[str, DataValue]] = {
             "data": data,
             "user": {"id": user.id, "chat_id": user.chat_id, "locale": user.locale, "theme": user.theme},
             "capabilities": capabilities,
+            "item": item or {},
         }
 
-    def resolve(self, value: Value, *, missing_ok: bool = False) -> Scalar:
+    def resolve(self, value: Value, *, missing_ok: bool = False) -> DataValue:
         if isinstance(value, LiteralValue):
             return value.value
         source = self.sources[value.scope]
         if value.field in source:
-            return source[value.field]
+            resolved = source[value.field]
+            for component in value.path:
+                if isinstance(resolved, dict) and isinstance(component, str) and component in resolved:
+                    resolved = resolved[component]
+                    continue
+                if isinstance(resolved, list) and type(component) is int and 0 <= component < len(resolved):
+                    resolved = resolved[component]
+                    continue
+                if missing_ok:
+                    return None
+                raise FlowExecutionError("Required structured value is unavailable")
+            return resolved
         declaration = self.document.fields.get(value.field) if value.scope == "data" else None
         if missing_ok or (declaration is not None and declaration.nullable):
             return None
@@ -102,6 +129,16 @@ class EvaluationContext:
         self.data.update(resolved)
 
 
+@dataclass(slots=True)
+class StepBudget:
+    remaining: int = 32
+
+    def consume(self) -> None:
+        if self.remaining <= 0:
+            raise FlowExecutionError("Automatic step budget exhausted")
+        self.remaining -= 1
+
+
 class FlowInterpreter:
     def __init__(self, registry: DelegateRegistry) -> None:
         self._registry = registry
@@ -113,11 +150,13 @@ class FlowInterpreter:
         user: RuntimeUser,
         capabilities: Mapping[str, Scalar],
         event_id: str,
+        budget: StepBudget | None = None,
     ) -> DialogState:
+        budget = budget or StepBudget()
         context = EvaluationContext(document, dict(state.data), user, capabilities)
         nodes = {node.id: node for node in document.nodes}
         node_id = state.node_id
-        for automatic_steps in range(33):
+        while True:
             node = nodes.get(node_id)
             if node is None:
                 raise FlowExecutionError("Current node is unavailable")
@@ -126,17 +165,20 @@ class FlowInterpreter:
                 return replace(state, node_id=node_id, data=context.data, status=status)
             if isinstance(node, EndNode):
                 return replace(state, node_id=node_id, data=context.data, status=node.status)
-            if automatic_steps == 32:
-                break
+            if isinstance(node, (CallNode, ReturnNode, ReplaceNode)):
+                return replace(state, node_id=node_id, data=context.data, status="running")
+            budget.consume()
             if isinstance(node, ConditionNode):
                 node_id = next(
                     (branch.target for branch in node.branches if context.matches(branch.when)), node.default
                 )
                 continue
+            if self._registry.definition(node.delegate, node.contract_version).effect == "external":
+                return replace(state, node_id=node_id, data=context.data, status="waiting_effect")
             result = await self._registry.execute(
                 node.delegate,
                 node.contract_version,
-                DelegateContext(user.id, user.chat_id, str(state.id), event_id),
+                DelegateContext(user.id, user.chat_id, str(state.id), event_id, locale=user.locale, theme=user.theme),
                 {name: context.resolve(value) for name, value in node.arguments.items()},
             )
             for name, destination in node.results.items():
@@ -147,7 +189,6 @@ class FlowInterpreter:
                     raise FlowExecutionError("Delegate output cannot be assigned to the destination")
                 context.data[destination] = value
             node_id = node.outcomes[result.outcome]
-        raise FlowExecutionError("Automatic step budget exhausted")
 
     async def advance(
         self,
@@ -156,6 +197,7 @@ class FlowInterpreter:
         event: FlowEvent,
         user: RuntimeUser,
         capabilities: Mapping[str, Scalar],
+        budget: StepBudget | None = None,
     ) -> ExecutionResult:
         nodes = {node.id: node for node in document.nodes}
         node = nodes[state.node_id]
@@ -167,19 +209,71 @@ class FlowInterpreter:
             return ExecutionResult(replace(state, status="cancelled", revision=state.revision + 1), node, "cancelled")
         context = EvaluationContext(document, dict(state.data), user, capabilities)
         if isinstance(event, ButtonEvent) and isinstance(node, (MenuNode, InputNode)):
-            button = next((button for row in node.buttons for button in row if button.id == event.button_id), None)
+            candidates = [button for row in node.buttons for button in row]
+            if isinstance(node, MenuNode) and event.snapshot is not None:
+                candidates.extend(button for group in node.repeated for button in group.buttons)
+            template_id = event.snapshot.template_id if event.snapshot is not None else event.button_id
+            button = next((button for button in candidates if button.id == template_id), None)
+            if event.snapshot is not None:
+                context = EvaluationContext(document, dict(state.data), user, capabilities, item=event.snapshot.item)
             if not isinstance(button, TransitionButton) or (
                 button.when is not None and not context.matches(button.when)
             ):
                 raise InvalidEventError("The button is not available on the current screen")
-            context.assign(button.assignments)
+            if event.snapshot is not None:
+                if (
+                    event.snapshot.target != button.target
+                    or event.snapshot.assignments.keys() != button.assignments.keys()
+                ):
+                    raise InvalidEventError("Saved action does not match its published transition")
+                context.assign(
+                    {
+                        name: LiteralValue(kind="literal", value=value)
+                        for name, value in event.snapshot.assignments.items()
+                    }
+                )
+            else:
+                context.assign(button.assignments)
             target = button.target
         elif isinstance(event, InputEvent) and isinstance(node, InputNode):
+            if node.input_type in {"secret", "media"}:
+                raise InvalidEventError("This input requires its typed transport event")
             valid, value = self._parse_input(node, document, event.text)
             if not valid:
                 return ExecutionResult(state, node, "invalid_input")
             context.data[node.field] = value
             target = node.next
+        elif isinstance(event, SecretEvent) and isinstance(node, InputNode) and node.input_type == "secret":
+            if not accepts_scalar(document.fields[node.field], event.handle):
+                raise InvalidEventError("Secret handle is invalid")
+            context.data[node.field] = event.handle
+            target = node.next
+        elif isinstance(event, ContactEvent) and isinstance(node, InputNode) and node.input_type == "contact":
+            if event.owner_id != user.id:
+                return ExecutionResult(state, node, "invalid_input")
+            context.data[node.field] = event.phone
+            target = node.next
+        elif isinstance(event, MediaEvent) and isinstance(node, InputNode) and node.input_type == "media":
+            item: dict[str, DataValue] = {
+                "message_id": event.message_id,
+                "type": event.media_type,
+                "file_id": event.file_id,
+                "media_group_id": event.media_group_id,
+                "caption": event.caption,
+            }
+            if node.multiple:
+                previous = context.data.get(node.field, [])
+                if not isinstance(previous, list):
+                    raise FlowExecutionError("Media collection has invalid state")
+                if any(isinstance(saved, dict) and saved.get("message_id") == event.message_id for saved in previous):
+                    return ExecutionResult(state, node, "duplicate")
+                collected: DataValue = [*previous, item]
+            else:
+                collected = item
+            if not accepts_scalar(document.fields[node.field], collected):
+                return ExecutionResult(state, node, "invalid_input")
+            context.data[node.field] = collected
+            target = node.id if node.multiple else node.next
         else:
             raise InvalidEventError("The event is not accepted by the current step")
         advanced = await self.settle(
@@ -188,6 +282,7 @@ class FlowInterpreter:
             user,
             capabilities,
             str(event.update_id),
+            budget,
         )
         return ExecutionResult(advanced, nodes[advanced.node_id], "advanced")
 
@@ -224,3 +319,12 @@ class FlowInterpreter:
         if node.input_type == "choice" and not any(_equal(value, choice) for choice in node.choices):
             return False, None
         return True, value
+
+    def definition(self, delegate_id: str, version: int) -> DelegateDefinition:
+        return self._registry.definition(delegate_id, version)
+
+    def validate_result(self, delegate_id: str, version: int, result: DelegateResult) -> DelegateResult:
+        return self._registry.validate_result(delegate_id, version, result)
+
+    def validate_arguments(self, delegate_id: str, version: int, arguments: Mapping[str, DataValue]) -> None:
+        self._registry.validate_arguments(delegate_id, version, arguments)

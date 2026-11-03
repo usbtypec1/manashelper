@@ -68,6 +68,27 @@
           },
           "title": "Outcomes",
           "type": "object"
+        },
+        "waiting_text": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "catalog": "#/$defs/CatalogText",
+                "inline": "#/$defs/InlineText"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/CatalogText"
+              },
+              {
+                "$ref": "#/$defs/InlineText"
+              }
+            ]
+          },
+          "title": "Waiting Text",
+          "type": "array"
         }
       },
       "required": [
@@ -116,6 +137,78 @@
         "target"
       ],
       "title": "Branch",
+      "type": "object"
+    },
+    "CallNode": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "call",
+          "title": "Kind",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "flow": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Flow",
+          "type": "string"
+        },
+        "arguments": {
+          "patternProperties": {
+            "^[a-z][a-z0-9_]{0,31}$": {
+              "discriminator": {
+                "mapping": {
+                  "literal": "#/$defs/LiteralValue",
+                  "ref": "#/$defs/ReferenceValue"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/LiteralValue"
+                },
+                {
+                  "$ref": "#/$defs/ReferenceValue"
+                }
+              ]
+            }
+          },
+          "title": "Arguments",
+          "type": "object"
+        },
+        "results": {
+          "patternProperties": {
+            "^[a-z][a-z0-9_]{0,31}$": {
+              "pattern": "^[a-z][a-z0-9_]{0,31}$",
+              "type": "string"
+            }
+          },
+          "title": "Results",
+          "type": "object"
+        },
+        "outcomes": {
+          "minProperties": 1,
+          "patternProperties": {
+            "^[a-z][a-z0-9_]{0,31}$": {
+              "pattern": "^[a-z][a-z0-9_]{0,31}$",
+              "type": "string"
+            }
+          },
+          "title": "Outcomes",
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "flow",
+        "outcomes"
+      ],
+      "title": "CallNode",
       "type": "object"
     },
     "CatalogText": {
@@ -328,7 +421,10 @@
             "text",
             "integer",
             "number",
-            "boolean"
+            "boolean",
+            "list",
+            "object",
+            "secret"
           ],
           "title": "Type",
           "type": "string"
@@ -337,6 +433,34 @@
           "default": false,
           "title": "Nullable",
           "type": "boolean"
+        },
+        "items": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DataField"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "properties": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z][a-z0-9_]{0,31}$": {
+              "$ref": "#/$defs/DataField"
+            }
+          },
+          "maxProperties": 64,
+          "title": "Properties"
+        },
+        "max_items": {
+          "default": 100,
+          "maximum": 1000,
+          "minimum": 1,
+          "title": "Max Items",
+          "type": "integer"
         }
       },
       "required": [
@@ -344,6 +468,37 @@
       ],
       "title": "DataField",
       "type": "object"
+    },
+    "DataValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "items": {
+            "$ref": "#/$defs/DataValue"
+          },
+          "type": "array"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/DataValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "EndNode": {
       "additionalProperties": false,
@@ -568,7 +723,10 @@
           "enum": [
             "text",
             "integer",
-            "choice"
+            "choice",
+            "contact",
+            "media",
+            "secret"
           ],
           "title": "Input Type",
           "type": "string"
@@ -682,6 +840,55 @@
           },
           "title": "Choices",
           "type": "array"
+        },
+        "multiple": {
+          "default": false,
+          "title": "Multiple",
+          "type": "boolean"
+        },
+        "media": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReferenceValue"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "messages": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "catalog": "#/$defs/CatalogText",
+                "inline": "#/$defs/InlineText"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/CatalogText"
+              },
+              {
+                "$ref": "#/$defs/InlineText"
+              }
+            ]
+          },
+          "maxItems": 20,
+          "title": "Messages",
+          "type": "array"
+        },
+        "message_source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReferenceValue"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
@@ -705,24 +912,7 @@
           "type": "string"
         },
         "value": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "integer"
-            },
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Value"
+          "$ref": "#/$defs/DataValue"
         }
       },
       "required": [
@@ -802,6 +992,58 @@
           "maxItems": 20,
           "title": "Buttons",
           "type": "array"
+        },
+        "repeated": {
+          "items": {
+            "$ref": "#/$defs/RepeatedButtons"
+          },
+          "maxItems": 20,
+          "title": "Repeated",
+          "type": "array"
+        },
+        "media": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReferenceValue"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "messages": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "catalog": "#/$defs/CatalogText",
+                "inline": "#/$defs/InlineText"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/CatalogText"
+              },
+              {
+                "$ref": "#/$defs/InlineText"
+              }
+            ]
+          },
+          "maxItems": 20,
+          "title": "Messages",
+          "type": "array"
+        },
+        "message_source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReferenceValue"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
@@ -845,7 +1087,8 @@
           "enum": [
             "data",
             "user",
-            "capabilities"
+            "capabilities",
+            "item"
           ],
           "title": "Scope",
           "type": "string"
@@ -854,6 +1097,24 @@
           "pattern": "^[a-z][a-z0-9_]{0,31}$",
           "title": "Field",
           "type": "string"
+        },
+        "path": {
+          "items": {
+            "anyOf": [
+              {
+                "pattern": "^[a-z][a-z0-9_]{0,31}$",
+                "type": "string"
+              },
+              {
+                "maximum": 999,
+                "minimum": 0,
+                "type": "integer"
+              }
+            ]
+          },
+          "maxItems": 8,
+          "title": "Path",
+          "type": "array"
         }
       },
       "required": [
@@ -862,6 +1123,164 @@
         "field"
       ],
       "title": "ReferenceValue",
+      "type": "object"
+    },
+    "RepeatedButtons": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/ReferenceValue"
+        },
+        "buttons": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "transition": "#/$defs/TransitionButton",
+                "url": "#/$defs/UrlButton"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/TransitionButton"
+              },
+              {
+                "$ref": "#/$defs/UrlButton"
+              }
+            ]
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Buttons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "source",
+        "buttons"
+      ],
+      "title": "RepeatedButtons",
+      "type": "object"
+    },
+    "ReplaceNode": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "replace",
+          "title": "Kind",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "flow": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Flow",
+          "type": "string"
+        },
+        "arguments": {
+          "patternProperties": {
+            "^[a-z][a-z0-9_]{0,31}$": {
+              "discriminator": {
+                "mapping": {
+                  "literal": "#/$defs/LiteralValue",
+                  "ref": "#/$defs/ReferenceValue"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/LiteralValue"
+                },
+                {
+                  "$ref": "#/$defs/ReferenceValue"
+                }
+              ]
+            }
+          },
+          "title": "Arguments",
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "flow"
+      ],
+      "title": "ReplaceNode",
+      "type": "object"
+    },
+    "ReturnNode": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "return",
+          "title": "Kind",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "outcome": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Outcome",
+          "type": "string"
+        },
+        "values": {
+          "patternProperties": {
+            "^[a-z][a-z0-9_]{0,31}$": {
+              "discriminator": {
+                "mapping": {
+                  "literal": "#/$defs/LiteralValue",
+                  "ref": "#/$defs/ReferenceValue"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/LiteralValue"
+                },
+                {
+                  "$ref": "#/$defs/ReferenceValue"
+                }
+              ]
+            }
+          },
+          "title": "Values",
+          "type": "object"
+        },
+        "text": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "catalog": "#/$defs/CatalogText",
+                "inline": "#/$defs/InlineText"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/CatalogText"
+              },
+              {
+                "$ref": "#/$defs/InlineText"
+              }
+            ]
+          },
+          "title": "Text",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "outcome"
+      ],
+      "title": "ReturnNode",
       "type": "object"
     },
     "TransitionButton": {
@@ -1047,7 +1466,10 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "const": 1,
+      "enum": [
+        1,
+        2
+      ],
       "title": "Schema Version",
       "type": "integer"
     },
@@ -1081,26 +1503,38 @@
       "title": "Fields",
       "type": "object"
     },
+    "inputs": {
+      "patternProperties": {
+        "^[a-z][a-z0-9_]{0,31}$": {
+          "$ref": "#/$defs/DataField"
+        }
+      },
+      "title": "Inputs",
+      "type": "object"
+    },
+    "outputs": {
+      "patternProperties": {
+        "^[a-z][a-z0-9_]{0,31}$": {
+          "$ref": "#/$defs/DataField"
+        }
+      },
+      "title": "Outputs",
+      "type": "object"
+    },
+    "outcomes": {
+      "items": {
+        "pattern": "^[a-z][a-z0-9_]{0,31}$",
+        "type": "string"
+      },
+      "maxItems": 32,
+      "minItems": 1,
+      "title": "Outcomes",
+      "type": "array"
+    },
     "initial_data": {
       "patternProperties": {
         "^[a-z][a-z0-9_]{0,31}$": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "integer"
-            },
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/DataValue"
         }
       },
       "title": "Initial Data",
@@ -1111,10 +1545,13 @@
         "discriminator": {
           "mapping": {
             "action": "#/$defs/ActionNode",
+            "call": "#/$defs/CallNode",
             "condition": "#/$defs/ConditionNode",
             "end": "#/$defs/EndNode",
             "input": "#/$defs/InputNode",
-            "menu": "#/$defs/MenuNode"
+            "menu": "#/$defs/MenuNode",
+            "replace": "#/$defs/ReplaceNode",
+            "return": "#/$defs/ReturnNode"
           },
           "propertyName": "kind"
         },
@@ -1133,6 +1570,15 @@
           },
           {
             "$ref": "#/$defs/EndNode"
+          },
+          {
+            "$ref": "#/$defs/CallNode"
+          },
+          {
+            "$ref": "#/$defs/ReturnNode"
+          },
+          {
+            "$ref": "#/$defs/ReplaceNode"
           }
         ]
       },

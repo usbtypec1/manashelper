@@ -115,7 +115,7 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry(monkeypa
                 for observer in (dispatcher.message, dispatcher.callback_query):
                     assert [type(item).__name__ for item in observer.outer_middleware] == [
                         "RateLimitMiddleware", "PerChatOrderingMiddleware", "AfterRequestMiddleware",
-                        "ContainerMiddleware", "LocaleMiddleware"
+                        "ContainerMiddleware", "LocaleMiddleware", "IngressMiddleware"
                     ]
                     assert [type(item).__name__ for item in observer.middleware] == [
                         "PrivateChatOnlyMiddleware", "UiFlowNavigationMiddleware",

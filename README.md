@@ -40,7 +40,10 @@ Everything happens directly in the Telegram chat — there's no separate app or 
 
 Built with Python 3.13, [aiogram 3](https://docs.aiogram.dev/) for the Telegram bot layer, SQLAlchemy 2 (async)
 + Postgres for storage, and [Dishka](https://github.com/reagento/dishka) for dependency injection. There is no
-public REST API; a separate private FastAPI process serves the scenario editor.
+public REST API; the same aiohttp process serves the Telegram webhook and optional private scenario editor Mini App.
+Production uses webhook; development explicitly selects `MANASHELPER_TELEGRAM_TRANSPORT=polling`.
+Webhook registration and HTTPS routing are operator actions; startup never discards pending updates.
+See [release instructions](features/ui_flows/RELEASE.md) for the shared host and Mini App authentication.
 The engine lives in `src/ui_flows/`, shared ORM metadata in `src/common/`, application
 adapters in `src/manashelper/`, and the Bun/Vue editor in `src/admin-ui/`.
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
@@ -91,7 +94,7 @@ keep their standard names.
    docker compose --project-directory . --env-file .env -f docker/docker-compose.dev.yaml up -d --wait db
    ```
 3. Install dependencies: `uv sync`
-4. Compile the translation catalogs (required before the bot or the test suite can run):
+4. Compile the English administration bundle and compatibility catalogs:
    ```
    uv run pybabel compile -d src/manashelper/locales
    ```
@@ -113,8 +116,14 @@ uv run mypy src/manashelper src/ui_flows src/common    # type check
 A [`.pre-commit-config.yaml`](.pre-commit-config.yaml) is included to run all three checks automatically before
 each commit — install the git hook once with `pre-commit install`.
 
-Adding or changing a user-facing string? See the gettext catalog workflow in
-[`AGENTS.md`](AGENTS.md#localization-and-telegram-text).
+User translations now live in a versioned PostgreSQL catalog. In the admin Mini App,
+open **Texts**, save a translation and confirm publication. Save the scenario draft
+again and publish it, then save and publish a fresh **Triggers** revision to adopt the release
+for new entries; active dialogs keep their pinned texts. See
+[`LOCALIZATION.md`](features/ui_flows/LOCALIZATION.md) for import, rollback and new-key contracts.
+**Triggers** manages command/deep-link/reply entries, access and launch policy through immutable
+manifests. Existing forms retain their legacy owners; scenario composition is the next stage.
+See [`TRIGGERS.md`](features/ui_flows/TRIGGERS.md) for compatibility, API and rollback.
 
 ### Admin broadcasts
 

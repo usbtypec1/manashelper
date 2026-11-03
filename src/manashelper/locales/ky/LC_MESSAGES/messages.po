@@ -1157,3 +1157,6 @@ msgstr "Шилтеме жараксыз же мөөнөтү бүттү. /editor 
 
 msgid "ui_flows.web.login"
 msgstr "Жеке администратор чатыңызда /editor буйругунан келген шилтемени ачыңыз."
+
+msgid "ui_flows.open_editor"
+msgstr "Редакторду ачуу"

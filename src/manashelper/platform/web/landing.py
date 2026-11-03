@@ -2,14 +2,13 @@ import json
 import secrets
 
 from aiogram.utils.i18n import gettext as _
-from fastapi import Request
-from fastapi.responses import HTMLResponse
+from aiohttp import web
 
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.html import escape_html
 
 
-async def login_page(request: Request) -> HTMLResponse:
+async def login_page(request: web.Request) -> web.Response:
     with i18n.context(), i18n.use_locale("en"):
         title = _("ui_flows.web.title")
         messages = {
@@ -38,8 +37,9 @@ document.getElementById('status').textContent=response.ok?copy.ready:(ticket?cop
 }}catch{{document.getElementById('status').textContent=copy.failed;}}
 }})();
 </script></body></html>'''
-    return HTMLResponse(
-        content,
+    return web.Response(
+        text=content,
+        content_type="text/html",
         headers={
             "Cache-Control": "no-store",
             "Referrer-Policy": "no-referrer",

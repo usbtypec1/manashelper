@@ -1,6 +1,7 @@
 import secrets
+from uuid import UUID
 
-from ui_flows.domain.delivery import Screen, ScreenDelivery
+from ui_flows.domain.delivery import Screen, ScreenButton, ScreenDelivery
 from ui_flows.domain.state import ACTIVE_STATUSES, DialogState, ExecutionResult, RuntimeUser
 from ui_flows.errors import InvalidEventError, StaleEventError
 from ui_flows.ports.repositories import DeliveryStore, DialogStore
@@ -11,8 +12,16 @@ class ScreenDeliveryService:
         self._deliveries = deliveries
         self._dialogs = dialogs
 
-    async def prepare(self, result: ExecutionResult, screen: Screen, update_id: int) -> ScreenDelivery:
-        existing = await self._deliveries.by_update(update_id)
+    async def prepare(
+        self, result: ExecutionResult, screen: Screen, update_id: int | None, *, operation_id: UUID | None = None
+    ) -> ScreenDelivery:
+        if (update_id is None) == (operation_id is None):
+            raise InvalidEventError("A screen requires one update or external operation identity")
+        if update_id is not None:
+            existing = await self._deliveries.by_update(update_id)
+        else:
+            assert operation_id is not None
+            existing = await self._deliveries.by_operation(operation_id)
         if existing is not None:
             return existing
         delivery = ScreenDelivery(
@@ -24,11 +33,14 @@ class ScreenDeliveryService:
             screen,
             "pending",
             None,
+            operation_id,
         )
         await self._deliveries.create(delivery)
         return delivery
 
-    async def callback(self, token: str, index: int, message_id: int, user: RuntimeUser) -> tuple[DialogState, str]:
+    async def callback(
+        self, token: str, index: int, message_id: int, user: RuntimeUser
+    ) -> tuple[DialogState, ScreenButton]:
         delivery = await self._deliveries.get(token)
         if delivery is None or delivery.chat_id != user.chat_id or delivery.status not in {"sent", "unknown"}:
             raise StaleEventError("Screen is unavailable")
@@ -40,13 +52,13 @@ class ScreenDeliveryService:
         buttons = [button for row in delivery.screen.buttons for button in row]
         if delivery.screen.keyboard != "inline" or not 0 <= index < len(buttons) or buttons[index].url is not None:
             raise InvalidEventError("Invalid screen button")
-        return state, buttons[index].id
+        return state, buttons[index]
 
-    async def reply_button(self, state: DialogState, text: str) -> str | None:
+    async def reply_button(self, state: DialogState, text: str) -> ScreenButton | None:
         delivery = await self._deliveries.latest(state.id, state.revision)
         if delivery is None or delivery.screen.keyboard != "reply":
             return None
-        return next((button.id for row in delivery.screen.buttons for button in row if button.label == text), None)
+        return next((button for row in delivery.screen.buttons for button in row if button.label == text), None)
 
     async def claim(self, token: str) -> ScreenDelivery | None:
         delivery = await self._deliveries.get(token)
@@ -65,8 +77,11 @@ class ScreenDeliveryService:
         await self._deliveries.set_status(token, "unknown")
         return delivery
 
-    async def acknowledge(self, token: str, message_id: int | None) -> None:
-        await self._deliveries.set_status(token, "sent", message_id)
+    async def acknowledge(self, token: str, message_id: int | None, *, message_ids: tuple[int, ...] = ()) -> None:
+        await self._deliveries.set_status(token, "sent", message_id, message_ids=message_ids)
+
+    async def partial(self, token: str, message_ids: tuple[int, ...]) -> None:
+        await self._deliveries.set_status(token, "unknown", message_ids=message_ids)
 
     async def reject(self, token: str) -> None:
         await self._deliveries.set_status(token, "failed")

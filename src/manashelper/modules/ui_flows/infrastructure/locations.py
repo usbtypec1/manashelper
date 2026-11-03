@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +14,15 @@ class LocationRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def runtime(self, state: DialogState, update_id: int, from_step: str | None, outcome: str) -> None:
+    async def runtime(
+        self,
+        state: DialogState,
+        update_id: int | None,
+        from_step: str | None,
+        outcome: str,
+        *,
+        operation_id: UUID | None = None,
+    ) -> None:
         values = dict(
             user_id=state.user_id,
             chat_id=state.chat_id,
@@ -21,6 +31,7 @@ class LocationRepository:
             legacy_state=None,
             handler=None,
             update_id=update_id,
+            operation_id=operation_id,
             updated_at=func.now(),
         )
         await self._session.execute(
@@ -35,6 +46,7 @@ class LocationRepository:
             insert(UiUserTransition)
             .values(
                 update_id=update_id,
+                operation_id=operation_id,
                 user_id=state.user_id,
                 owner="runtime",
                 flow_id=state.flow_id,
@@ -43,7 +55,7 @@ class LocationRepository:
                 to_step=state.node_id,
                 outcome=outcome,
             )
-            .on_conflict_do_nothing(index_elements=[UiUserTransition.update_id])
+            .on_conflict_do_nothing()
         )
 
     async def observe(self, user_id: int, chat_id: int, update_id: int, handler: str, state: str | None) -> None:
@@ -75,6 +87,7 @@ class LocationRepository:
             legacy_state=state,
             handler=handler,
             update_id=update_id,
+            operation_id=None,
             updated_at=func.now(),
         )
         await self._session.execute(

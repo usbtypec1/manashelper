@@ -1,5 +1,5 @@
 purpose:
-  stands_in_for: Telegram Bot API sendMessage/sendPhoto delivery, editMessageReplyMarkup and answerCallbackQuery responses.
+  stands_in_for: Telegram Bot API sendMessage/sendPhoto/sendVideo/sendMediaGroup delivery, editMessageReplyMarkup and answerCallbackQuery responses.
   unblocks: Local verification of aiogram serialization and persistent delivery opt-out without notifying real users.
 assumptions:
   - id: photo-and-keyboard-contract
@@ -58,7 +58,62 @@ assumptions:
     verification: On 2026-11-01, the live probe used only the configured test bot and private administrator, then removed its two probe messages. Nine local HTTP tests passed including rejected ReplyKeyboardRemove edits, partial inline-send failure, explicit restore, no automatic retry, survey return/rollout and broadcast delivery. Full manual client interaction remains separate from server acceptance. Fingerprint inline-direct-send-2026-11-01.
     source: https://core.telegram.org/bots/api#updating-messages; src/manashelper/modules/ui_flows/presentation/sender.py; tests/modules/ui_flows/test_telegram_http.py; postman/mocks/telegram/default.js
     updated_at: "2026-11-01"
+  - id: miniapp-webhook-caller
+    status: supported
+    claim: In the modeled HTTP run, /editor sends an HTTPS web_app button alongside a digest-only one-use browser ticket; replaying the runtime survey final webhook does not duplicate its answer or send another screen.
+    reason: Real aiogram serialization and the aiohttp webhook traversed the real Dispatcher, coordinator and PostgreSQL transactions; only Telegram delivery used the existing local stand-in.
+    verification: On 2026-11-02, ten tests/modules/ui_flows/test_telegram_http.py cases passed against Postman 1.74.0. The new /editor test checked web_app.url and ticket consumption. The webhook test saved one response and one final event, then replayed the same final update. Its request log contained seven sendMessage and four answerCallbackQuery calls, including the acknowledged replay. No live Telegram or real account was contacted.
+    source: tests/modules/ui_flows/test_telegram_http.py; src/manashelper/platform/web/webhook.py; src/manashelper/platform/web/login.py; https://core.telegram.org/bots/api#inlinekeyboardbutton
+    updated_at: "2026-11-02"
+  - id: pinned-db-text-delivery-caller
+    status: supported
+    claim: In the modeled HTTP run, runtime menus retain their published DB text release after a newer catalog is published, and expired callback responses format without ambient or file-based user translations.
+    reason: The real coordinator and aiogram aiohttp client read committed PostgreSQL snapshots. The test removed its ambient catalog and rejected file translation reads; recorded requests still contained the pinned button label and a localized callback alert.
+    verification: On 2026-11-02, all eleven tests/modules/ui_flows/test_telegram_http.py cases passed through the existing local Telegram stand-in. The new test published catalog releases 2 and 3, observed two menus using release 2 and checked persisted delivery pins. It also inspected answerCallbackQuery text after the REQUEST scope closed. No live Telegram or real users were contacted. Fingerprint db-text-catalog-2026-11-02.
+    source: tests/modules/ui_flows/test_telegram_http.py::test_real_http_delivery_uses_pinned_db_texts_without_file_translations; src/manashelper/modules/ui_flows/presentation/coordinator.py; postman/mocks/telegram/default.js
+    updated_at: "2026-11-02"
+  - id: unified-ingress-webhook-caller
+    status: supported
+    claim: In the modeled unified-ingress webhook path, the caller pins the survey return manifest, records metadata-only admission receipts and does not repeat the final answer or screen on replay.
+    reason: The real aiohttp webhook, Dispatcher, resolver, coordinator and PostgreSQL transactions ran together. Only Telegram delivery used the existing local stand-in; persisted receipts, session pins, answers and final events were inspected by the test.
+    verification: On 2026-11-02, twelve tests/modules/ui_flows/test_telegram_http.py cases passed through Postman 1.74.0, including both legacy-compatible and unified webhook dispatch. The unified survey produced four ingress receipts, one answer, one final event and a main-menu session pinned to manifest 1. Replaying the final callback added no sendMessage. The simulation log confirmed sendMessage and answerCallbackQuery, plus the modeled failure responses. No live Telegram or real users were contacted. Fingerprint unified-ingress-2026-11-02.
+    source: tests/modules/ui_flows/test_telegram_http.py::test_webhook_survey_final_callback_replay_preserves_one_response_and_delivery; tests/modules/ui_flows/test_ingress.py; postman/mocks/telegram/default.js
+    updated_at: "2026-11-02"
+  - id: rich-screen-delivery-caller
+    status: supported
+    claim: In the modeled rich-screen path, the caller sends text chunks before media and the primary screen, retains every acknowledged message ID, and never automatically retries a partially delivered inline screen.
+    reason: The real aiogram aiohttp client, coordinator and PostgreSQL scopes ran against the local stand-in. The tests inspected multipart serialization, returned album IDs, persisted unknown/sent states and duplicate delivery claims.
+    verification: On 2026-11-03, all seventeen tests/modules/ui_flows/test_telegram_http.py cases passed. New cases covered one photo, one video, mixed two-item and ten-item albums, plus a successful mixed album followed by a modeled inline-send HTTP 500. The simulation log confirmed three sendMediaGroup, one sendPhoto and one sendVideo request; the failure case retained prior IDs and issued no retry. This proves caller behavior against the stand-in, not live file validity or client rendering. Fingerprint rich-screen-2026-11-03.
+    source: tests/modules/ui_flows/test_telegram_http.py::test_rich_screen_real_http_serialization_ids_and_partial_failure; src/manashelper/modules/ui_flows/presentation/sender.py; postman/mocks/telegram/default.js
+    updated_at: "2026-11-03"
+  - id: stage7-settings-caller
+    status: supported
+    claim: In the modeled menu-to-Settings path, the caller sends the runtime Settings screen and does not resend it when the same update is repeated.
+    reason: The real aiogram aiohttp client, coordinator and PostgreSQL scopes executed against the local stand-in. The test inspects requests and the persisted runtime location and delivery.
+    verification: On 2026-11-03, all seventeen UI-flow HTTP cases passed. The Settings case observed the main menu, reply-keyboard removal and inline Settings message, followed by no additional request on replay. The local stand-in does not establish live Telegram client behavior. Fingerprint stage7-settings-2026-11-03.
+    source: tests/modules/ui_flows/test_telegram_http.py::test_real_http_settings_scenario_is_not_repeated; src/manashelper/modules/ui_flows/presentation/coordinator.py; postman/mocks/telegram/default.js
+    updated_at: "2026-11-03"
 fingerprints:
+  - id: stage7-settings-2026-11-03
+    date: "2026-11-03"
+    commit: be0a335 (working tree with orchestration stage 7)
+    cli: Postman 1.74.0
+  - id: rich-screen-2026-11-03
+    date: "2026-11-03"
+    commit: be0a335 (working tree with orchestration stages 5 and 6)
+    cli: Postman 1.74.0
+  - id: unified-ingress-2026-11-02
+    date: "2026-11-02"
+    commit: be0a335 (working tree with versioned triggers and unified ingress)
+    cli: Postman 1.74.0
+  - id: db-text-catalog-2026-11-02
+    date: "2026-11-02"
+    commit: be0a335 (working tree with versioned DB localization)
+    cli: Postman 1.74.0
+  - id: miniapp-webhook-2026-11-02
+    date: "2026-11-02"
+    commit: be0a335 (working tree with aiohttp host and Mini App)
+    cli: Postman 1.74.0
   - id: inline-direct-send-2026-11-01
     date: "2026-11-01"
     commit: 146cdbd627838c953e0ed5103c46c1a3fcd9388e (working tree with UI flow stages 1-8 and corrected live Telegram delivery)

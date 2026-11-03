@@ -1479,7 +1479,7 @@ msgid "ui_flows.editor.session_expired"
 msgstr "Administrative session required"
 
 msgid "ui_flows.editor.sign_in_hint"
-msgstr "Send /editor to the bot in your private admin chat, then open the one-use link."
+msgstr "Open /editor in Telegram, or use a fresh browser sign-in link."
 
 msgid "ui_flows.editor.logout"
 msgstr "Sign out"
@@ -1657,3 +1657,216 @@ msgstr "Failed"
 
 msgid "ui_flows.editor.handoff_completed"
 msgstr "Passed to existing feature"
+
+msgid "ui_flows.editor.add_nodes"
+msgstr "Add nodes"
+
+msgid "ui_flows.open_editor"
+msgstr "Open editor"
+
+msgid "ui_flows.editor.texts"
+msgstr "Texts"
+
+msgid "ui_flows.editor.text_catalog"
+msgstr "User text catalog"
+
+msgid "ui_flows.editor.text_catalog_hint"
+msgstr "Edit translations, then publish a release. Active dialogs keep their existing release. Save and publish the scenario, then publish Triggers to use new texts."
+
+msgid "ui_flows.editor.text_search"
+msgstr "Search keys or text"
+
+msgid "ui_flows.editor.text_key"
+msgstr "Text key"
+
+msgid "ui_flows.editor.text_owner"
+msgstr "Owner"
+
+msgid "ui_flows.editor.text_content_type"
+msgstr "Content type"
+
+msgid "ui_flows.editor.text_parameters"
+msgstr "Parameters"
+
+msgid "ui_flows.editor.text_form"
+msgstr "Plural form"
+
+msgid "ui_flows.editor.text_current_release"
+msgstr "Current release"
+
+msgid "ui_flows.editor.text_releases"
+msgstr "Catalog releases"
+
+msgid "ui_flows.editor.text_publish_confirm"
+msgstr "Publish this text catalog?"
+
+msgid "ui_flows.editor.text_activate_confirm"
+msgstr "Activate this catalog release?"
+
+msgid "ui_flows.editor.text_no_matches"
+msgstr "No matching texts"
+
+msgid "ui_flows.editor.triggers"
+msgstr "Triggers"
+
+msgid "ui_flows.editor.trigger_hint"
+msgstr "Publish scenarios first. Save this draft again and publish a manifest to use their latest versions. Active dialogs keep their release."
+
+msgid "ui_flows.editor.trigger_add"
+msgstr "Add entry"
+
+msgid "ui_flows.editor.trigger_id"
+msgstr "Entry ID"
+
+msgid "ui_flows.editor.trigger_matcher"
+msgstr "Entry type"
+
+msgid "ui_flows.editor.trigger_key"
+msgstr "Command, payload or catalog key"
+
+msgid "ui_flows.editor.trigger_target"
+msgstr "Target scenario"
+
+msgid "ui_flows.editor.trigger_access"
+msgstr "Who can launch"
+
+msgid "ui_flows.editor.trigger_policy"
+msgstr "When another dialog is open"
+
+msgid "ui_flows.editor.trigger_command"
+msgstr "Command"
+
+msgid "ui_flows.editor.trigger_deep_link"
+msgstr "Exact start payload"
+
+msgid "ui_flows.editor.trigger_prefix"
+msgstr "Start payload prefix with UUID"
+
+msgid "ui_flows.editor.trigger_reply_label"
+msgstr "Translated reply label"
+
+msgid "ui_flows.editor.trigger_no_argument"
+msgstr "No argument"
+
+msgid "ui_flows.editor.trigger_reject_busy"
+msgstr "Keep the open dialog"
+
+msgid "ui_flows.editor.trigger_resume"
+msgstr "Resume this scenario"
+
+msgid "ui_flows.editor.trigger_replace"
+msgstr "Replace the open dialog"
+
+msgid "ui_flows.editor.trigger_argument_field"
+msgstr "Scenario field for the checked argument"
+
+msgid "ui_flows.editor.trigger_actor_field"
+msgstr "Scenario field for the acting user ID"
+
+msgid "ui_flows.editor.trigger_chat_field"
+msgstr "Scenario field for the chat ID"
+
+msgid "ui_flows.editor.trigger_legacy"
+msgstr "Compatibility entry; its registered adapter contract is read-only:"
+
+msgid "ui_flows.editor.trigger_releases"
+msgstr "Trigger releases"
+
+msgid "ui_flows.editor.trigger_publish_confirm"
+msgstr "Publish this trigger manifest for new entries?"
+
+msgid "ui_flows.editor.trigger_activate_confirm"
+msgstr "Activate this trigger release? Active dialogs keep their current release."
+
+msgid "ui_flows.editor.trigger_remove_confirm"
+msgstr "Remove this entry from the draft?"
+
+msgid "ui_flows.editor.call"
+msgstr "Call scenario"
+
+msgid "ui_flows.editor.return"
+msgstr "Return to caller"
+
+msgid "ui_flows.editor.replace"
+msgstr "Replace scenario"
+
+msgid "ui_flows.editor.return_values"
+msgstr "Returned values"
+
+msgid "ui_flows.editor.scenario_inputs"
+msgstr "Scenario inputs"
+
+msgid "ui_flows.editor.scenario_outputs"
+msgstr "Scenario outputs"
+
+msgid "ui_flows.editor.scenario_outcomes"
+msgstr "Scenario outcomes"
+
+msgid "ui_flows.editor.item_type"
+msgstr "Item type"
+
+msgid "ui_flows.editor.max_items"
+msgstr "Maximum items"
+
+msgid "ui_flows.editor.reference_path"
+msgstr "Reference path"
+
+msgid "ui_flows.editor.json_value"
+msgstr "JSON value"
+
+msgid "ui_flows.editor.properties"
+msgstr "Properties"
+
+msgid "ui_flows.editor.secret"
+msgstr "Secret handle"
+
+msgid "ui_flows.editor.repeat_actions"
+msgstr "Repeated actions"
+
+msgid "ui_flows.editor.add_repeated"
+msgstr "Add repeated actions"
+
+msgid "ui_flows.editor.pending_text"
+msgstr "Waiting message"
+
+msgid "ui_flows.editor.collect_media"
+msgstr "Collect multiple media messages"
+
+msgid "ui_flows.editor.rich_screen"
+msgstr "Additional content"
+
+msgid "ui_flows.editor.media_source"
+msgstr "Media source"
+
+msgid "ui_flows.editor.message_source"
+msgstr "Message source"
+
+msgid "ui_flows.editor.additional_messages"
+msgstr "Additional messages"
+
+msgid "ui_flows.editor.add_message"
+msgstr "Add message"
+
+msgid "ui_flows.editor.preview_synthetic"
+msgstr "Preview uses sample data. No files or secrets are sent."
+
+msgid "ui_flows.editor.sample_contact"
+msgstr "Use sample contact"
+
+msgid "ui_flows.editor.sample_photo"
+msgstr "Add sample photo"
+
+msgid "ui_flows.editor.sample_video"
+msgstr "Add sample video"
+
+msgid "ui_flows.editor.sample_secret"
+msgstr "Use sample secret"
+
+msgid "ui_flows.editor.media_photo"
+msgstr "Photo"
+
+msgid "ui_flows.editor.media_video"
+msgstr "Video"
+
+msgid "ui_flows.editor.trigger_call"
+msgstr "Call and return to current dialog"

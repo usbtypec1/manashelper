@@ -18,7 +18,6 @@ async def latest(pool):
     [
         ("food_menu", "food", False),
         ("marketplace", "marketplace", False),
-        ("settings", "settings", False),
         ("schedule", "schedule", True),
         ("attendance", "attendance", True),
         ("grades", "grades", True),

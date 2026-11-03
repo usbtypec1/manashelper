@@ -1155,3 +1155,6 @@ msgstr "Bu bağlantı geçersiz veya süresi dolmuş. /editor ile yeni bir bağl
 
 msgid "ui_flows.web.login"
 msgstr "Özel yönetici sohbetinizde /editor komutundan gelen giriş bağlantısını açın."
+
+msgid "ui_flows.open_editor"
+msgstr "Düzenleyiciyi aç"

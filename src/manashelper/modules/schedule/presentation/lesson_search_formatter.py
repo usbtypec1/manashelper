@@ -4,6 +4,7 @@ from aiogram.utils.i18n import gettext as _
 
 from manashelper.localization.weekdays import weekday_abbr
 from manashelper.modules.schedule.application.lesson_search import LessonSearchResult
+from manashelper.platform.telegram.html import escape_html
 
 GROUPS_PER_PAGE = 7
 
@@ -16,12 +17,14 @@ def _format_result(result: LessonSearchResult) -> list[str]:
     course_year = _("schedule.course_year").format(number=result.course_number)
     lines = [
         _("schedule.search_course").format(
-            faculty=result.faculty_name, department=result.department_name, course_year=course_year
+            faculty=escape_html(result.faculty_name),
+            department=escape_html(result.department_name),
+            course_year=course_year,
         ),
         _("schedule.search_weekday").format(weekday=weekday_abbr(result.weekday)),
-        result.content,
+        escape_html(result.content),
     ]
-    lines.extend(f"- {time_range}" for time_range in result.time_ranges)
+    lines.extend(f"- {escape_html(time_range)}" for time_range in result.time_ranges)
     return lines
 
 

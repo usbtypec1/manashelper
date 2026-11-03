@@ -5,7 +5,6 @@ from aiogram.enums import ChatType
 from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
@@ -15,6 +14,7 @@ from manashelper.localization.locale import DEFAULT_LOCALE
 from manashelper.modules.feedback.callbacks import FeedbackAction, FeedbackCallback
 from manashelper.modules.feedback.keyboards import build_feedback_cancel_keyboard
 from manashelper.modules.feedback.service import BODY_MAX_LENGTH, FeedbackService
+from manashelper.modules.feedback.states import FeedbackForm
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
@@ -26,17 +26,22 @@ logger = logging.getLogger(__name__)
 router = Router(name="feedback")
 
 
-class FeedbackForm(StatesGroup):
-    message = State()
-
-
 def _is_admin_chat(message: Message, settings: Settings) -> bool:
     return message.chat.id == settings.admin_chat_id
 
 
+def _is_private_admin(message: Message, user_id: int, settings: Settings) -> bool:
+    return message.chat.type == ChatType.PRIVATE and message.chat.id == user_id == settings.admin_chat_id
+
+
 @router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_FEEDBACK))
 @flags.private_chat_only
-async def on_open_feedback(callback_query: CallbackQuery, state: FSMContext) -> None:
+async def on_open_feedback(callback_query: CallbackQuery, state: FSMContext, settings: FromDishka[Settings]) -> None:
+    if not isinstance(callback_query.message, Message) or not _is_private_admin(
+        callback_query.message, callback_query.from_user.id, settings
+    ):
+        await callback_query.answer()
+        return
     await state.set_state(FeedbackForm.message)
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(
@@ -48,7 +53,14 @@ async def on_open_feedback(callback_query: CallbackQuery, state: FSMContext) -> 
 
 @router.callback_query(FeedbackCallback.filter(F.action == FeedbackAction.CANCEL))
 @flags.private_chat_only
-async def on_feedback_cancelled(callback_query: CallbackQuery, state: FSMContext) -> None:
+async def on_feedback_cancelled(
+    callback_query: CallbackQuery, state: FSMContext, settings: FromDishka[Settings]
+) -> None:
+    if not isinstance(callback_query.message, Message) or not _is_private_admin(
+        callback_query.message, callback_query.from_user.id, settings
+    ):
+        await callback_query.answer()
+        return
     await state.clear()
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(_("settings.title"), reply_markup=build_settings_keyboard())
@@ -64,6 +76,8 @@ async def on_feedback_entered(
     settings: FromDishka[Settings],
     feedback_service: FromDishka[FeedbackService],
 ) -> None:
+    if message.from_user is None or not _is_private_admin(message, message.from_user.id, settings):
+        return
     body = message.text.strip() if message.text else ""
     if not body or len(body) > BODY_MAX_LENGTH:
         await message.answer(
@@ -71,9 +85,6 @@ async def on_feedback_entered(
             reply_markup=build_feedback_cancel_keyboard(),
         )
         return
-    if message.from_user is None:
-        return
-
     await state.clear()
     summary = await feedback_service.submit(message.from_user.id, body)
     await message.answer(_("feedback.sent"))

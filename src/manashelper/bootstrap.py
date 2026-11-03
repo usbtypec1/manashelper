@@ -32,6 +32,7 @@ def load_models() -> None:
     from manashelper.modules.schedule.infrastructure.models.lesson import Lesson
     from manashelper.modules.schedule.infrastructure.models.lesson_history import LessonHistory
     from manashelper.modules.student_questions.orm import StudentQuestionsResponse
+    from manashelper.modules.ui_flows.infrastructure.effect_orm import UiExternalOperation, UiInputSecret
     from manashelper.modules.ui_flows.infrastructure.orm import (
         UiDialogSession,
         UiFlow,
@@ -39,8 +40,14 @@ def load_models() -> None:
         UiFlowVersion,
         UiScreenDelivery,
     )
+    from manashelper.modules.ui_flows.infrastructure.trigger_orm import (
+        UiIngressReceipt,
+        UiTriggerRelease,
+        UiTriggerState,
+    )
     from manashelper.modules.users.infrastructure.user import User
     from manashelper.modules.users.infrastructure.user_phone_number import UserPhoneNumber
+    from manashelper.platform.i18n.orm import TextCatalogRelease, TextCatalogState
     from manashelper.platform.telegram.audit.orm import ActionLog
     from manashelper.platform.telegram.deletions.orm import ScheduledMessageDeletion
     from manashelper.platform.web.orm import AdminLoginTicket, AdminWebSession

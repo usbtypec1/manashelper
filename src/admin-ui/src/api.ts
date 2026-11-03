@@ -12,6 +12,8 @@ export class ApiError extends Error {
 export class AdminApi {
   csrf = ''
   onUnauthorized: () => void = () => {}
+  private accessToken = ''
+  private authMode: 'cookie' | 'bearer' = 'cookie'
 
   async request<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
     const controller = new AbortController()
@@ -19,16 +21,26 @@ export class AdminApi {
     try {
       const response = await fetch('/admin/api/v1' + path, {
         method,
-        credentials: 'same-origin',
+        credentials: this.authMode === 'bearer' ? 'omit' : 'same-origin',
         signal: controller.signal,
         headers: {
           ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
-          ...(method === 'GET' ? {} : { 'X-CSRF-Token': this.csrf }),
+          ...(this.authMode === 'bearer'
+            ? this.accessToken
+              ? { Authorization: 'Bearer ' + this.accessToken }
+              : {}
+            : method === 'GET'
+              ? {}
+              : { 'X-CSRF-Token': this.csrf }),
         },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       })
       if (!response.ok) {
-        if (response.status === 401) this.onUnauthorized()
+        if (response.status === 401) {
+          this.accessToken = ''
+          this.csrf = ''
+          this.onUnauthorized()
+        }
         const error = await response.json().catch(() => ({}))
         throw new ApiError(response.status, Array.isArray(error.issues) ? error.issues : [])
       }
@@ -38,7 +50,17 @@ export class AdminApi {
     }
   }
 
-  async login(ticket: string | null): Promise<Schemas['AdminSession']> {
+  async login(ticket: string | null, initData?: string): Promise<Schemas['AdminSession']> {
+    this.accessToken = ''
+    this.csrf = ''
+    this.authMode = initData ? 'bearer' : 'cookie'
+    if (initData) {
+      const session = await this.request<
+        Omit<Schemas['AdminSession'], 'csrf_token'> & { access_token: string }
+      >('/auth/telegram', 'POST', { init_data: initData })
+      this.accessToken = session.access_token
+      return { user_id: session.user_id, expires_at: session.expires_at, csrf_token: '' }
+    }
     const session = await this.request<Schemas['AdminSession']>(
       ticket ? '/auth/exchange' : '/auth/session',
       ticket ? 'POST' : 'GET',
@@ -46,6 +68,15 @@ export class AdminApi {
     )
     this.csrf = session.csrf_token
     return session
+  }
+
+  async logout(): Promise<void> {
+    try {
+      await this.request('/auth/logout', 'POST')
+    } finally {
+      this.accessToken = ''
+      this.csrf = ''
+    }
   }
 
   async all<T>(path: string): Promise<T[]> {

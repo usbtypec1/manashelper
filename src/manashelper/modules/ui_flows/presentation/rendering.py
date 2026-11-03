@@ -1,6 +1,4 @@
-from html.parser import HTMLParser
 from typing import Literal
-from urllib.parse import urlsplit
 
 from aiogram.utils.i18n import gettext as _
 
@@ -10,19 +8,28 @@ from manashelper.modules.ui_flows.catalog import get_catalog_texts
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.html import escape_html
 from ui_flows.application.interpreter import EvaluationContext
-from ui_flows.domain.delivery import Screen, ScreenButton
+from ui_flows.application.texts import TextValidationError, text_units
+from ui_flows.application.texts import validate_message as validate_text_message
+from ui_flows.application.validation import accepts_scalar, reference_type, sample_value
+from ui_flows.domain.contracts import ActionSnapshot
+from ui_flows.domain.delivery import Screen, ScreenButton, ScreenMedia
 from ui_flows.domain.schema import (
+    ActionNode,
+    Button,
     CatalogText,
     EndNode,
     FlowDocument,
     InputNode,
     MenuNode,
-    Scalar,
+    ReturnNode,
     Text,
+    TransitionButton,
     template_parameters,
 )
 from ui_flows.domain.state import ExecutionResult, RuntimeUser
+from ui_flows.domain.texts import resolve_inline
 from ui_flows.errors import FlowExecutionError
+from ui_flows.ports.texts import TextCatalog
 
 
 class InvalidScreenError(FlowExecutionError):
@@ -31,83 +38,17 @@ class InvalidScreenError(FlowExecutionError):
 
 
 def _units(text: str) -> int:
-    return len(text.encode("utf-16-le")) // 2
+    try:
+        return text_units(text)
+    except TextValidationError as error:
+        raise InvalidScreenError(str(error)) from error
 
 
-class _TelegramHtml(HTMLParser):
-    def __init__(self) -> None:
-        super().__init__(convert_charrefs=False)
-        self.stack: list[str] = []
-        self.length = 0
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag not in {
-            "b",
-            "strong",
-            "i",
-            "em",
-            "u",
-            "ins",
-            "s",
-            "strike",
-            "del",
-            "tg-spoiler",
-            "code",
-            "pre",
-            "blockquote",
-            "a",
-        }:
-            raise InvalidScreenError("Unsupported Telegram HTML tag")
-        attributes = dict(attrs)
-        if len(attributes) != len(attrs):
-            raise InvalidScreenError("Repeated HTML attribute")
-        if tag == "a":
-            if set(attributes) != {"href"} or urlsplit(attributes["href"] or "").scheme not in {"http", "https", "tg"}:
-                raise InvalidScreenError("Unsupported Telegram link")
-        elif attributes:
-            raise InvalidScreenError("Unsupported Telegram HTML attribute")
-        self.stack.append(tag)
-
-    def handle_endtag(self, tag: str) -> None:
-        if not self.stack or self.stack.pop() != tag:
-            raise InvalidScreenError("Unbalanced Telegram HTML")
-
-    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        raise InvalidScreenError("Self-closing tags are not supported")
-
-    def handle_comment(self, data: str) -> None:
-        raise InvalidScreenError("HTML comments are not supported")
-
-    def handle_data(self, data: str) -> None:
-        if "<" in data:
-            raise InvalidScreenError("Unescaped HTML delimiter")
-        self.length += _units(data)
-
-    def handle_entityref(self, name: str) -> None:
-        if name not in {"lt", "gt", "amp", "quot"}:
-            raise InvalidScreenError("Unsupported Telegram HTML entity")
-        self.length += 1
-
-    def handle_charref(self, name: str) -> None:
-        try:
-            value = int(name[1:], 16) if name.startswith(("x", "X")) else int(name)
-            self.length += _units(chr(value))
-        except (ValueError, UnicodeError):
-            raise InvalidScreenError("Invalid Unicode entity") from None
-
-    def handle_decl(self, decl: str) -> None:
-        raise InvalidScreenError("HTML declarations are not supported")
-
-    def handle_pi(self, data: str) -> None:
-        raise InvalidScreenError("HTML instructions are not supported")
-
-
-def validate_message(text: str) -> None:
-    parser = _TelegramHtml()
-    parser.feed(text)
-    parser.close()
-    if parser.stack or not 1 <= parser.length <= 4096:
-        raise InvalidScreenError("Invalid Telegram message length or markup")
+def validate_message(text: str, *, max_length: int = 4096) -> None:
+    try:
+        validate_text_message(text, max_length=max_length)
+    except TextValidationError as error:
+        raise InvalidScreenError(str(error)) from error
 
 
 def _render(text: Text, context: EvaluationContext, catalog: dict[str, str], user: RuntimeUser, *, html: bool) -> str:
@@ -115,16 +56,21 @@ def _render(text: Text, context: EvaluationContext, catalog: dict[str, str], use
         template = catalog.get(text.key)
         if template is None:
             raise InvalidScreenError("Unknown catalog template")
+        entry = i18n.current_catalog.entry(text.key)
+        if entry.plural_key is not None:
+            quantity = context.resolve(text.parameters["count"]) if "count" in text.parameters else None
+            if type(quantity) is not int:
+                raise InvalidScreenError("Plural text requires an integer count")
+            template = i18n.current_catalog.gettext(text.key, user.locale, user.theme, quantity)
     else:
-        themed = text.themes.get("halloween", {}) if user.theme == "halloween" else {}
-        template = (
-            themed.get(user.locale) or text.translations.get(user.locale) or themed.get("en") or text.translations["en"]
-        )
+        template = resolve_inline(text.translations, text.themes, user.locale, user.theme)
     if template_parameters(template) != text.parameters.keys():
         raise InvalidScreenError("Template parameters do not match the bindings")
     parameters = {}
     for name, binding in text.parameters.items():
         value = context.resolve(binding)
+        if isinstance(value, (dict, list)):
+            raise InvalidScreenError("Text parameters require scalar values")
         if isinstance(value, bool):
             formatted = _("student_questions.yes") if value else _("student_questions.no")
         else:
@@ -133,12 +79,16 @@ def _render(text: Text, context: EvaluationContext, catalog: dict[str, str], use
     return template.format_map(parameters)
 
 
+def validate_reply_label(label: str) -> None:
+    if label.startswith("/"):
+        raise InvalidScreenError("Reply button labels must not be commands")
+
+
 class FlowRenderer:
     def validate_document(
         self, document: FlowDocument, capabilities: dict[str, str | bool | int | float | None]
     ) -> None:
-        samples: dict[str, Scalar] = {"text": "value", "integer": 1, "number": 1.0, "boolean": True}
-        data = {name: samples[field.type] for name, field in document.fields.items()}
+        data = {name: sample_value(field) for name, field in document.fields.items()}
         for locale in Locale:
             for theme in Theme:
                 user = RuntimeUser(1, 1, locale.value, theme.value)
@@ -146,7 +96,11 @@ class FlowRenderer:
                     catalog = get_catalog_texts()
                     context = EvaluationContext(document, data, user, capabilities)
                     for index, node in enumerate(document.nodes):
-                        if not isinstance(node, (MenuNode, InputNode, EndNode)):
+                        if isinstance(node, ActionNode):
+                            for text in node.waiting_text:
+                                validate_message(_render(text, context, catalog, user, html=True))
+                            continue
+                        if not isinstance(node, (MenuNode, InputNode, EndNode, ReturnNode)):
                             continue
                         try:
                             body = "\n\n".join(_render(text, context, catalog, user, html=True) for text in node.text)
@@ -155,12 +109,16 @@ class FlowRenderer:
                             if isinstance(node, InputNode):
                                 validate_message(_render(node.error, context, catalog, user, html=True) + "\n\n" + body)
                             if isinstance(node, (MenuNode, InputNode)):
+                                for text in node.messages:
+                                    validate_message(_render(text, context, catalog, user, html=True))
                                 unconditional_labels = set()
                                 for row in node.buttons:
                                     for button in row:
                                         label = _render(button.label, context, catalog, user, html=False)
                                         if not label.strip() or _units(label) > 64:
                                             raise InvalidScreenError("Button label exceeds editor limits")
+                                        if isinstance(node, MenuNode) and node.keyboard == "reply":
+                                            validate_reply_label(label)
                                         if (
                                             isinstance(node, MenuNode)
                                             and node.keyboard == "reply"
@@ -179,14 +137,36 @@ class FlowRenderer:
         result: ExecutionResult,
         user: RuntimeUser,
         capabilities: dict[str, str | bool | int | float | None],
+        text_catalog: TextCatalog | None = None,
     ) -> Screen:
-        with i18n.context(), i18n.use_locale(user.locale), i18n.use_theme(Theme(user.theme)):
+        with (
+            i18n.context(),
+            i18n.use_catalog(text_catalog or i18n.current_catalog),
+            i18n.use_locale(user.locale),
+            i18n.use_theme(Theme(user.theme)),
+        ):
             catalog = get_catalog_texts()
             context = EvaluationContext(document, result.state.data, user, capabilities)
             node = result.node
+            if isinstance(node, ActionNode) and result.state.status == "waiting_effect":
+                body = "\n\n".join(_render(text, context, catalog, user, html=True) for text in node.waiting_text)
+                validate_message(body)
+                return Screen(
+                    text=body,
+                    keyboard="none",
+                    locale=user.locale,
+                    theme=user.theme,
+                    text_catalog_release=i18n.current_catalog.release_id,
+                )
             if result.outcome == "cancelled" and result.returned_from is None:
-                return Screen(text=_("ui_flows.cancelled"), keyboard="main", locale=user.locale, theme=user.theme)
-            if not isinstance(node, (MenuNode, InputNode, EndNode)):
+                return Screen(
+                    text=_("ui_flows.cancelled"),
+                    keyboard="main",
+                    locale=user.locale,
+                    theme=user.theme,
+                    text_catalog_release=i18n.current_catalog.release_id,
+                )
+            if not isinstance(node, (MenuNode, InputNode, EndNode, ReturnNode)):
                 raise InvalidScreenError("Automatic nodes cannot be displayed")
             parts = [_render(text, context, catalog, user, html=True) for text in node.text]
             if result.outcome == "invalid_input" and isinstance(node, InputNode):
@@ -198,26 +178,110 @@ class FlowRenderer:
             keyboard: Literal["reply", "inline", "main", "none"] = (
                 node.keyboard
                 if isinstance(node, MenuNode)
-                else ("none" if feature else ("main" if isinstance(node, EndNode) else "inline"))
+                else ("none" if feature else ("main" if isinstance(node, (EndNode, ReturnNode)) else "inline"))
             )
             rows = []
             labels = set()
             if isinstance(node, (MenuNode, InputNode)):
-                for row in node.buttons:
+                groups: list[tuple[list[Button], EvaluationContext, str | None]] = [
+                    (row, context, None) for row in node.buttons
+                ]
+                if isinstance(node, MenuNode):
+                    for group_index, group in enumerate(node.repeated):
+                        items = context.resolve(group.source)
+                        if not isinstance(items, list):
+                            raise InvalidScreenError("Repeated action source is not a collection")
+                        declaration = reference_type(document, group.source, {})
+                        if declaration is None or not accepts_scalar(declaration, items):
+                            raise InvalidScreenError("Repeated action source does not match its declared type")
+                        for item_index, item in enumerate(items):
+                            if not isinstance(item, dict):
+                                raise InvalidScreenError("Repeated action items must be objects")
+                            item_context = EvaluationContext(
+                                document, dict(result.state.data), user, capabilities, item=item
+                            )
+                            groups.append((group.buttons, item_context, f"r{group_index}_{item_index}"))
+                for row, button_context, prefix in groups:
                     rendered_row = []
-                    for button in row:
-                        if button.when is not None and not context.matches(button.when):
+                    for button_index, button in enumerate(row):
+                        if button.when is not None and not button_context.matches(button.when):
                             continue
-                        label = _render(button.label, context, catalog, user, html=False)
+                        label = _render(button.label, button_context, catalog, user, html=False)
                         if not label.strip() or _units(label) > 64:
                             raise InvalidScreenError("Button label exceeds editor limits")
+                        if keyboard == "reply":
+                            validate_reply_label(label)
                         if keyboard == "reply" and label in labels:
                             raise InvalidScreenError("Reply button labels are ambiguous")
                         labels.add(label)
                         url = str(button.url) if hasattr(button, "url") else None
-                        rendered_row.append(ScreenButton(id=button.id, label=label, url=url))
+                        snapshot = None
+                        if prefix is not None and isinstance(button, TransitionButton):
+                            assignments = {
+                                name: button_context.resolve(value) for name, value in button.assignments.items()
+                            }
+                            if any(
+                                not accepts_scalar(document.fields[name], value) for name, value in assignments.items()
+                            ):
+                                raise InvalidScreenError("Repeated action values do not match their destination")
+                            snapshot = ActionSnapshot(
+                                template_id=button.id,
+                                target=button.target,
+                                assignments=assignments,
+                                item=dict(button_context.sources["item"]),
+                            )
+                        rendered_row.append(
+                            ScreenButton(
+                                id=f"{prefix}_{button_index}" if prefix is not None else button.id,
+                                label=label,
+                                url=url,
+                                snapshot=snapshot,
+                            )
+                        )
                     if rendered_row:
                         rows.append(rendered_row)
+            if len(rows) > 20 or sum(len(row) for row in rows) > 160:
+                raise InvalidScreenError("Rendered action collection exceeds keyboard limits")
+            media = []
+            messages = []
+            if isinstance(node, (MenuNode, InputNode)):
+                messages = [_render(text, context, catalog, user, html=True) for text in node.messages]
+                if node.message_source is not None:
+                    chunks = context.resolve(node.message_source)
+                    if (
+                        not isinstance(chunks, list)
+                        or len(chunks) > 20
+                        or any(not isinstance(item, str) for item in chunks)
+                    ):
+                        raise InvalidScreenError("Message source requires at most twenty text chunks")
+                    messages.extend(escape_html(str(item)) for item in chunks)
+                if len(messages) > 20:
+                    raise InvalidScreenError("Authored and sourced messages exceed twenty chunks")
+                for message in messages:
+                    validate_message(message)
+                if node.media is not None:
+                    collection = context.resolve(node.media)
+                    if not isinstance(collection, list) or len(collection) > 10:
+                        raise InvalidScreenError("Screen media requires at most ten typed items")
+                    for item in collection:
+                        if not isinstance(item, dict) or item.get("type") not in {"photo", "video"}:
+                            raise InvalidScreenError("Screen media item is invalid")
+                        file_id = item.get("file_id")
+                        if not isinstance(file_id, str):
+                            raise InvalidScreenError("Screen media file is invalid")
+                        caption = item.get("caption")
+                        if caption is not None and not isinstance(caption, str):
+                            raise InvalidScreenError("Media caption must be text")
+                        rendered_caption = escape_html(caption) if caption else None
+                        if rendered_caption is not None:
+                            validate_message(rendered_caption, max_length=1024)
+                        media.append(
+                            ScreenMedia(
+                                kind="photo" if item["type"] == "photo" else "video",
+                                file_id=file_id,
+                                caption=rendered_caption,
+                            )
+                        )
             if not rows and keyboard in {"reply", "inline"}:
                 keyboard = "none"
             return Screen(
@@ -228,4 +292,10 @@ class FlowRenderer:
                 theme=user.theme,
                 feature=feature,
                 return_flow=node.return_flow if isinstance(node, EndNode) else None,
+                text_catalog_release=i18n.current_catalog.release_id,
+                media=media,
+                messages=messages,
+                contact_request=_("phone.share")
+                if isinstance(node, InputNode) and node.input_type == "contact"
+                else None,
             )

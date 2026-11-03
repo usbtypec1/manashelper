@@ -25,12 +25,11 @@ from manashelper.modules.schedule.presentation.routers.lesson_search import rout
 from manashelper.modules.schedule.presentation.routers.timetable import router as timetable_router
 from manashelper.modules.student_questions.router import router as student_questions_router
 from manashelper.modules.study_week.router import router as study_week_router
-from manashelper.modules.ui_flows.presentation.menu_router import router as ui_flow_menus_router
+from manashelper.modules.ui_flows.presentation.ingress import IngressMiddleware, LegacyRoute
+from manashelper.modules.ui_flows.presentation.ingress import router as ingress_router
 from manashelper.modules.ui_flows.presentation.navigation import UiFlowNavigationMiddleware
 from manashelper.modules.ui_flows.presentation.observation import UiFlowObservationMiddleware
-from manashelper.modules.ui_flows.presentation.router import reply_router as ui_flow_reply_router
 from manashelper.modules.ui_flows.presentation.router import router as ui_flows_router
-from manashelper.modules.ui_flows.presentation.survey_router import router as ui_flow_survey_router
 from manashelper.modules.users.presentation.routers.locale import router as locale_router
 from manashelper.modules.users.presentation.routers.phone_numbers import router as phone_numbers_router
 from manashelper.modules.users.presentation.routers.theme import router as theme_router
@@ -47,8 +46,10 @@ from manashelper.platform.telegram.routers.start import router as start_router
 logger = logging.getLogger(__name__)
 
 
-async def on_error(event: ErrorEvent) -> None:
+async def on_error(event: ErrorEvent, webhook: bool = False) -> None:
     logger.error("Unhandled exception while processing an update", exc_info=event.exception)
+    if webhook:
+        raise event.exception
 
 
 def create_dispatcher(container: AsyncContainer) -> Dispatcher:
@@ -57,7 +58,7 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
     for observer in (dispatcher.message, dispatcher.callback_query):
         # Reject excess updates before they queue for a per-chat lock.
         observer.outer_middleware(RateLimitMiddleware())
-        observer.outer_middleware(PerChatOrderingMiddleware())
+        observer.outer_middleware(PerChatOrderingMiddleware(container))
         observer.outer_middleware(AfterRequestMiddleware())
 
         # Handler flags are available only in inner middleware. Log only updates
@@ -69,10 +70,8 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
 
     dispatcher.errors.register(on_error)
     dispatcher.include_routers(
-        ui_flow_reply_router,
-        ui_flow_menus_router,
+        ingress_router,
         # Survey and advertisement deep links must precede handlers claiming all /start payloads.
-        ui_flow_survey_router,
         student_questions_router,
         advertisement_contact_router,
         start_router,
@@ -96,6 +95,11 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
         feedback_router,
     )
 
+    for feature in dispatcher.sub_routers:
+        if feature is not ingress_router:
+            for name in ("message", "callback_query"):
+                getattr(feature, name).filter(LegacyRoute(feature.name or ""))
+
     # Explicit injection avoids auto_inject's conflict with startup callbacks.
     setup_dishka(container, dispatcher)
     inject_router(dispatcher)
@@ -103,5 +107,6 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
     # Locale resolution needs Dishka's request container in middleware data.
     for observer in (dispatcher.message, dispatcher.callback_query):
         observer.outer_middleware(LocaleMiddleware())
+        observer.outer_middleware(IngressMiddleware())
 
     return dispatcher

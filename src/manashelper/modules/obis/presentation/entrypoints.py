@@ -15,11 +15,21 @@ from manashelper.modules.obis.errors import (
     UserNotFoundError,
 )
 from manashelper.modules.obis.presentation.formatter import format_attendance_pages, format_exam_grades_pages
-from manashelper.modules.obis.presentation.keyboards import build_no_credentials_keyboard, build_obis_results_keyboard
+from manashelper.modules.obis.presentation.keyboards import (
+    build_no_credentials_keyboard,
+    build_obis_results_keyboard,
+    build_obis_settings_keyboard,
+)
 
 logger = logging.getLogger(__name__)
 RESULTS_KEY = "obis_result_pages"
 MAX_SAVED_RESULTS = 5
+
+
+async def show_obis_settings(message: Message, user_id: int, obis: ObisService) -> None:
+    await message.answer(
+        _("obis.settings"), reply_markup=build_obis_settings_keyboard(await obis.has_credentials(user_id))
+    )
 
 
 async def _show_obis_results[T](

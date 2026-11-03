@@ -1,27 +1,26 @@
-"""Serve the locally built Vue editor without exposing the source tree."""
+"""Serve only built editor assets; the official Mini App SDK has a narrow CSP source."""
 
 from pathlib import Path
 
-from fastapi import FastAPI
-from starlette.responses import FileResponse
-from starlette.staticfiles import StaticFiles
+from aiohttp import web
 
 EDITOR_CSP = (
-    "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
-    "connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"
+    "default-src 'none'; script-src 'self' https://telegram.org/js/telegram-web-app.js; "
+    "style-src 'self' 'unsafe-inline'; connect-src 'self'; base-uri 'none'; "
+    "frame-ancestors https://web.telegram.org; form-action 'none'"
 )
 
 
-def install_editor(app: FastAPI, directory: Path) -> bool:
-    index = directory / "index.html"
-    assets = directory / "assets"
+def install_editor(app: web.Application, directory: Path) -> bool:
+    index, assets = directory / "index.html", directory / "assets"
+    if directory.is_symlink() or index.is_symlink() or assets.is_symlink():
+        return False
     if not index.is_file() or not assets.is_dir():
         return False
 
-    async def page() -> FileResponse:
-        # Vue Flow positions nodes through style attributes; scripts remain external and same-origin.
-        return FileResponse(index, headers={"Content-Security-Policy": EDITOR_CSP})
+    async def page(request: web.Request) -> web.FileResponse:
+        return web.FileResponse(index, headers={"Content-Security-Policy": EDITOR_CSP})
 
-    app.add_api_route("/admin/", page, methods=["GET"], include_in_schema=False)
-    app.mount("/admin/assets", StaticFiles(directory=assets), name="admin-assets")
+    app.router.add_get("/admin/", page)
+    app.router.add_static("/admin/assets/", assets, show_index=False, follow_symlinks=False)
     return True

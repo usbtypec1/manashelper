@@ -1,6 +1,10 @@
+import asyncio
 from datetime import datetime
+from typing import Any
 
 from aiogram import Bot
+from apscheduler.events import EVENT_SCHEDULER_SHUTDOWN
+from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dishka import AsyncContainer
 
@@ -16,10 +20,34 @@ from manashelper.platform.telegram.deletions.jobs import cleanup_scheduled_messa
 from manashelper.platform.web.jobs import cleanup_admin_auth_job
 
 
-def create_scheduler(container: AsyncContainer, bot: Bot) -> AsyncIOScheduler:
+class DrainingExecutor(AsyncIOExecutor):  # type: ignore[misc]  # APScheduler 3 has no type declarations.
+    """APScheduler 3 cancels coroutine jobs without awaiting their finalizers."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.closing: tuple[asyncio.Future[Any], ...] = ()
+
+    def shutdown(self, wait: bool = True) -> None:
+        # Snapshot before the installed executor clears its pending collection.
+        self.closing = tuple(self._pending_futures)
+        super().shutdown(wait)
+
+
+class ApplicationScheduler(AsyncIOScheduler):  # type: ignore[misc]  # APScheduler 3 has no type declarations.
+    async def aclose(self) -> None:
+        stopped = asyncio.Event()
+        self.add_listener(lambda event: stopped.set(), EVENT_SCHEDULER_SHUTDOWN)
+        self.shutdown(wait=False)
+        await stopped.wait()
+        executor = self._executors["default"]
+        if isinstance(executor, DrainingExecutor):
+            await asyncio.gather(*executor.closing, return_exceptions=True)
+
+
+def create_scheduler(container: AsyncContainer, bot: Bot) -> ApplicationScheduler:
     # Run interval jobs immediately so startup doesn't leave data empty for an hour.
     now = datetime.now(BISHKEK_TZ)
-    scheduler = AsyncIOScheduler(timezone=BISHKEK_TZ)
+    scheduler = ApplicationScheduler(timezone=BISHKEK_TZ, executors={"default": DrainingExecutor()})
     scheduler.add_job(sync_daily_menus_job, "interval", minutes=10, args=[container], next_run_time=now)
     scheduler.add_job(broadcast_lunch_menu_job, "cron", hour=11, minute=0, timezone=BISHKEK_TZ, args=[container, bot])
     scheduler.add_job(broadcast_dinner_menu_job, "cron", hour=17, minute=0, timezone=BISHKEK_TZ, args=[container, bot])

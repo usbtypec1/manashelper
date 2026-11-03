@@ -16,7 +16,7 @@ from ui_flows.domain.contracts import (
     DelegateParameter,
     DelegateResult,
 )
-from ui_flows.domain.schema import DataField, Scalar
+from ui_flows.domain.schema import DataField, DataValue
 from ui_flows.errors import FlowExecutionError
 
 
@@ -25,15 +25,15 @@ class SurveyDelegates:
         self._service = service
 
     @staticmethod
-    def _check_user(context: DelegateContext, arguments: Mapping[str, Scalar]) -> None:
+    def _check_user(context: DelegateContext, arguments: Mapping[str, DataValue]) -> None:
         if arguments["user_id"] != context.user_id:
             raise FlowExecutionError("Survey delegate cannot act for another user")
 
-    async def has_submitted(self, context: DelegateContext, arguments: Mapping[str, Scalar]) -> DelegateResult:
+    async def has_submitted(self, context: DelegateContext, arguments: Mapping[str, DataValue]) -> DelegateResult:
         self._check_user(context, arguments)
         return DelegateResult("success", {"submitted": await self._service.has_submitted(context.user_id)})
 
-    async def submit(self, context: DelegateContext, arguments: Mapping[str, Scalar]) -> DelegateResult:
+    async def submit(self, context: DelegateContext, arguments: Mapping[str, DataValue]) -> DelegateResult:
         self._check_user(context, arguments)
         answers = StudentQuestionsAnswers(
             course=StudentCourse(cast(str, arguments["course"])),

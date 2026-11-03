@@ -5,6 +5,7 @@ from manashelper.platform.web.auth import AdminAuthService
 from manashelper.platform.web.auth_repository import AdminAuthRepository
 from manashelper.platform.web.cursors import CursorCodec
 from manashelper.platform.web.login import AdminLoginCoordinator
+from manashelper.platform.web.miniapp import TelegramMiniAppAuth
 
 
 class WebPlatformProvider(Provider):
@@ -12,6 +13,7 @@ class WebPlatformProvider(Provider):
 
     auth_repository = provide(AdminAuthRepository)
     auth_service = provide(AdminAuthService)
+    miniapp = provide(TelegramMiniAppAuth, scope=Scope.APP)
 
     @provide(scope=Scope.APP)
     def login(self, container: AsyncContainer) -> AdminLoginCoordinator:

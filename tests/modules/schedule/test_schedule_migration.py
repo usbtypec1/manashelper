@@ -47,6 +47,7 @@ from manashelper.modules.users.infrastructure.user import User as DbUser
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
+from tests.text_catalog import text_dependencies
 
 
 @pytest.fixture
@@ -167,13 +168,15 @@ async def test_sync_job_keeps_course_scopes_and_failure_isolation(failure):
             raise RuntimeError("unexpected transport")
 
     bot.send_message.side_effect = send
-    dependencies = {
-        CourseService: courses,
-        SyncCourseTimetable: SyncCourseTimetable(sync, NotificationRecipientsQuery(notifications)),
-        LocaleService: LocaleService(users),
-        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
-        BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
-    }
+    dependencies = text_dependencies(
+        {
+            CourseService: courses,
+            SyncCourseTimetable: SyncCourseTimetable(sync, NotificationRecipientsQuery(notifications)),
+            LocaleService: LocaleService(users),
+            ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+            BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
+        }
+    )
     scopes = []
 
     @asynccontextmanager

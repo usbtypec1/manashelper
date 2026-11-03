@@ -22,13 +22,20 @@ const result = ref<Schemas['PreviewResult'] | null>(null),
   input = ref('')
 const stubs = ref<Record<string, Schemas['PreviewDelegateResult']>>({})
 const data = ref<Record<string, Scalar>>({})
+let eventId = 0
 const node = computed(() => props.document.nodes.find((node) => node.id === result.value?.node_id))
+const nodeKind = computed(() => result.value?.node_kind ?? node.value?.kind)
 const used = computed(() =>
   props.delegates.filter((item) =>
-    props.document.nodes.some((node) => node.kind === 'action' && node.delegate === item.id),
+    props.document.nodes.some(
+      (node) =>
+        node.kind === 'call' ||
+        node.kind === 'replace' ||
+        (node.kind === 'action' && node.delegate === item.id),
+    ),
   ),
 )
-const finished = computed(() => node.value?.kind === 'end' && !!result.value?.screen)
+const finished = computed(() => ['end', 'return'].includes(nodeKind.value ?? '') && !!result.value?.screen)
 watch(
   () => JSON.stringify(props.document),
   () => {
@@ -61,7 +68,11 @@ function stub(definition: Schemas['DelegateDefinition'], enabled: boolean) {
     ),
   }
 }
-async function run(kind?: 'button' | 'input', button?: string) {
+async function run(
+  kind?: 'button' | 'input' | 'contact' | 'photo' | 'video' | 'secret',
+  button?: string,
+  snapshot?: Schemas['ActionSnapshot'] | null,
+) {
   if (busy.value) return
   busy.value = true
   try {
@@ -71,20 +82,32 @@ async function run(kind?: 'button' | 'input', button?: string) {
       eders_enabled: eders.value,
       delegate_results: clone(stubs.value),
       data: clone(result.value?.data ?? data.value),
-      node_id: result.value?.node_id ?? null,
+      node_id: result.value?.position ? null : (result.value?.node_id ?? null),
+      position: clone(result.value?.position ?? null),
     }
     if (kind) {
       const identity = {
-        update_id: 1,
+        update_id: ++eventId,
         user_id: userId.value,
         chat_id: userId.value,
         session_id: 'preview',
         expected_revision: 0,
       }
-      body.event =
-        kind === 'button'
-          ? { ...identity, kind, button_id: button! }
-          : { ...identity, kind, text: input.value }
+      if (kind === 'button') body.event = { ...identity, kind, button_id: button!, snapshot }
+      else if (kind === 'contact')
+        body.event = { ...identity, kind, owner_id: userId.value, phone: '+996000000000' }
+      else if (kind === 'secret') body.event = { ...identity, kind, handle: crypto.randomUUID() }
+      else if (kind === 'photo' || kind === 'video')
+        body.event = {
+          ...identity,
+          kind: 'media',
+          media_type: kind,
+          message_id: identity.update_id,
+          file_id: `preview-${kind}-${identity.update_id}`,
+          caption: null,
+          media_group_id: null,
+        }
+      else body.event = { ...identity, kind, text: input.value }
     }
     const response = await props.api.request<Schemas['PreviewResult']>(
       `/flows/${props.document.id}/preview`,
@@ -92,7 +115,8 @@ async function run(kind?: 'button' | 'input', button?: string) {
       body,
     )
     result.value = response
-    if (!response.issues.length) emit('select', response.node_id)
+    if (!response.issues.length && response.position?.flow_id === props.document.id)
+      emit('select', response.node_id)
     input.value = ''
   } catch (error) {
     emit('failure', error)
@@ -101,6 +125,7 @@ async function run(kind?: 'button' | 'input', button?: string) {
   }
 }
 function restart() {
+  eventId = 0
   result.value = null
   void run()
 }
@@ -197,6 +222,22 @@ function restart() {
         <span class="online-dot" />
       </div>
       <div class="chat-surface">
+        <div
+          v-for="(message, index) in result.screen.messages ?? []"
+          :key="'text-' + index"
+          class="message-bubble"
+        >
+          <TelegramText :text="message" />
+        </div>
+        <div
+          v-for="(media, index) in result.screen.media ?? []"
+          :key="'media-' + index"
+          class="message-bubble media-placeholder"
+          :aria-label="media.kind === 'photo' ? t('mediaPhoto') : t('mediaVideo')"
+        >
+          <strong>{{ media.kind === 'photo' ? t('mediaPhoto') : t('mediaVideo') }}</strong>
+          <TelegramText v-if="media.caption" :text="media.caption" />
+        </div>
         <div class="message-bubble"><TelegramText :text="result.screen.text" /></div>
         <div v-for="(row, index) in result.screen.buttons" :key="index" class="preview-button-row">
           <button
@@ -205,7 +246,7 @@ function restart() {
             type="button"
             :title="button.url ?? ''"
             :disabled="busy || !!button.url || finished"
-            @click="run('button', button.id)"
+            @click="run('button', button.id, button.snapshot)"
           >
             {{ button.label }}<span v-if="button.url"> ↗</span>
           </button>
@@ -215,7 +256,39 @@ function restart() {
           <p v-if="result.screen.return_flow">{{ t('returnFlow') }}: {{ result.screen.return_flow }}</p>
         </div>
       </div>
-      <form v-if="node?.kind === 'input' && !finished" class="preview-input" @submit.prevent="run('input')">
+      <div
+        v-if="
+          nodeKind === 'input' &&
+          !finished &&
+          ['contact', 'media', 'secret'].includes(result.screen.input_type ?? '')
+        "
+        class="synthetic-input stack"
+      >
+        <p class="hint">{{ t('previewSynthetic') }}</p>
+        <div class="preview-button-row">
+          <button
+            v-if="result.screen.input_type === 'contact'"
+            type="button"
+            :disabled="busy"
+            :aria-label="t('sampleContact')"
+            @click="run('contact')"
+          >
+            {{ result.screen.contact_request ?? t('sampleContact') }}
+          </button>
+          <template v-else-if="result.screen.input_type === 'media'">
+            <button type="button" :disabled="busy" @click="run('photo')">{{ t('samplePhoto') }}</button>
+            <button type="button" :disabled="busy" @click="run('video')">{{ t('sampleVideo') }}</button>
+          </template>
+          <button v-else type="button" :disabled="busy" @click="run('secret')">
+            {{ t('sampleSecret') }}
+          </button>
+        </div>
+      </div>
+      <form
+        v-else-if="nodeKind === 'input' && !finished"
+        class="preview-input"
+        @submit.prevent="run('input')"
+      >
         <input v-model="input" :aria-label="t('input')" :disabled="busy" /><button
           type="submit"
           :disabled="busy"
@@ -227,3 +300,13 @@ function restart() {
     </div>
   </div>
 </template>
+<style scoped>
+.synthetic-input {
+  padding: 8px;
+  background: white;
+}
+.media-placeholder > strong {
+  display: block;
+  font-size: 12px;
+}
+</style>

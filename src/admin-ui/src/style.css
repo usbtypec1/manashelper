@@ -1430,8 +1430,34 @@ dialog.modal::backdrop {
     min-height: 110px;
   }
   .app-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     padding: 10px;
     gap: 6px;
+  }
+  .app-header > .row {
+    display: contents;
+  }
+  .app-header .brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .app-header .text-button {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+  .app-header .header-modes {
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+  }
+  .app-header .release-control {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .app-header .release-control > summary {
+    white-space: nowrap;
   }
   .brand {
     gap: 6px;
@@ -1448,5 +1474,41 @@ dialog.modal::backdrop {
   }
   .versions-panel {
     max-height: 200px;
+  }
+}
+
+/* Telegram provides stable viewport and two independent safe-area insets. */
+.app-shell[data-mini-app='true'] {
+  height: var(--app-viewport-height, 100dvh);
+  min-height: 0;
+  padding: var(--app-safe-area-top, 0px) var(--app-safe-area-right, 0px) var(--app-safe-area-bottom, 0px)
+    var(--app-safe-area-left, 0px);
+  overflow: hidden;
+}
+.mobile-editor-tools {
+  display: none;
+}
+@media (max-width: 650px) {
+  .app-shell[data-mini-app='true'] .workspace,
+  .app-shell[data-mini-app='true'] .editor-main {
+    min-height: 0;
+    overflow: auto;
+  }
+  .mobile-editor-tools {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .editor-body .palette,
+  .editor-body .properties-panel {
+    display: none;
+  }
+  .editor-body.mobile-palette .palette,
+  .editor-body.mobile-properties .properties-panel {
+    display: block;
+  }
+  .editor-body.mobile-properties .properties-panel {
+    max-height: min(70vh, var(--app-viewport-height, 100dvh));
   }
 }

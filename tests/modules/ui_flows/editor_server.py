@@ -2,24 +2,18 @@
 
 import asyncio
 import os
+import signal
 import ssl
 import tempfile
-from datetime import UTC, datetime, timedelta
-from ipaddress import ip_address
 from pathlib import Path
 from uuid import uuid4
 
-import uvicorn
-from cryptography import x509
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from fastapi.responses import JSONResponse
+from aiohttp import web
 from sqlalchemy import delete, update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.schema import CreateSchema, DropSchema
 
 from common.database import Base
-from manashelper.admin_main import create_app
 from manashelper.bootstrap import load_models
 from manashelper.core.config import get_settings
 from manashelper.modules.student_questions.orm import StudentQuestionsResponse
@@ -33,35 +27,18 @@ from manashelper.modules.ui_flows.infrastructure.orm import (
     UiUserLocation,
     UiUserTransition,
 )
+from manashelper.modules.ui_flows.infrastructure.trigger_orm import UiIngressReceipt, UiTriggerRelease, UiTriggerState
 from manashelper.modules.users.infrastructure.user import User
+from manashelper.platform.i18n.orm import TextCatalogRelease, TextCatalogState
+from manashelper.platform.i18n.repository import initialize_catalog
+from manashelper.platform.i18n.request import catalog_request
+from manashelper.platform.web.application import create_admin_app
 from manashelper.platform.web.auth import AdminAuthService
 from manashelper.platform.web.orm import AdminLoginTicket, AdminWebSession
-from tests.modules.ui_flows.admin_factory import admin_container
+from tests.modules.ui_flows.admin_factory import admin_container, certificate
+from tests.modules.ui_flows.webapp_factory import signed_init_data
 
 ADMIN_ID = 991_470
-
-
-def certificate(directory: Path) -> tuple[Path, Path]:
-    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    subject = x509.Name([x509.NameAttribute(x509.NameOID.COMMON_NAME, "127.0.0.1")])
-    now = datetime.now(UTC)
-    cert = (
-        x509.CertificateBuilder()
-        .subject_name(subject)
-        .issuer_name(subject)
-        .public_key(key.public_key())
-        .serial_number(x509.random_serial_number())
-        .not_valid_before(now - timedelta(minutes=1))
-        .not_valid_after(now + timedelta(hours=1))
-        .add_extension(x509.SubjectAlternativeName([x509.IPAddress(ip_address("127.0.0.1"))]), critical=False)
-        .sign(key, hashes.SHA256())
-    )
-    cert_path, key_path = directory / "cert.pem", directory / "key.pem"
-    cert_path.write_bytes(cert.public_bytes(serialization.Encoding.PEM))
-    key_path.write_bytes(
-        key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption())
-    )
-    return cert_path, key_path
 
 
 async def main() -> None:
@@ -91,18 +68,25 @@ async def main() -> None:
         async with scoped_engine.begin() as connection:
             await connection.run_sync(Base.metadata.create_all)
         async with pool.begin() as session:
+            await initialize_catalog(session)
             session.add(User(id=ADMIN_ID, full_name="Editor test admin", locale="ru"))
         async with admin_container(pool) as container:
-            app = create_app(settings, container)
+            app = create_admin_app(settings, container)
+            routes = web.RouteTableDef()
+            stopped = asyncio.Event()
 
-            @app.get("/__test__/ticket", include_in_schema=False)
-            async def ticket() -> JSONResponse:
-                async with container() as request:
+            @routes.get("/__test__/ticket")
+            async def ticket(_request: web.Request) -> web.Response:
+                async with catalog_request(container) as request:
                     raw = await (await request.get(AdminAuthService)).issue(ADMIN_ID)
-                return JSONResponse({"ticket": raw})
+                return web.json_response({"ticket": raw})
 
-            @app.post("/__test__/reset", include_in_schema=False)
-            async def reset() -> JSONResponse:
+            @routes.get("/__test__/init-data")
+            async def init_data(_request: web.Request) -> web.Response:
+                return web.json_response({"init_data": signed_init_data(settings.telegram_bot_token, ADMIN_ID)})
+
+            @routes.post("/__test__/reset")
+            async def reset(_request: web.Request) -> web.Response:
                 async with pool.begin() as session:
                     await session.execute(update(UiFlow).values(published_version=None))
                     for model in (
@@ -117,79 +101,96 @@ async def main() -> None:
                         StudentQuestionsResponse,
                         AdminLoginTicket,
                         AdminWebSession,
+                        UiIngressReceipt,
+                        UiTriggerState,
+                        UiTriggerRelease,
+                        TextCatalogState,
+                        TextCatalogRelease,
                     ):
                         await session.execute(delete(model))
-                return JSONResponse({"ok": True})
+                    await initialize_catalog(session)
+                return web.json_response({"ok": True})
 
-            @app.post("/__test__/monitor/start", include_in_schema=False)
-            async def start_monitor() -> JSONResponse:
+            @routes.post("/__test__/triggers/start")
+            async def start_triggers(_request: web.Request) -> web.Response:
+                from manashelper.modules.ui_flows.presentation.coordinator import FlowTelegramCoordinator
+
+                await (await container.get(FlowTelegramCoordinator)).install_defaults(ADMIN_ID)
+                return web.json_response({"ok": True})
+
+            @routes.post("/__test__/monitor/start")
+            async def start_monitor(_request: web.Request) -> web.Response:
                 from manashelper.modules.ui_flows.demo import demo_document
                 from ui_flows.application.dialogs import DialogService
                 from ui_flows.application.flows import FlowService
                 from ui_flows.domain.state import RuntimeUser
 
-                async with container() as request:
+                async with catalog_request(container) as request:
                     flows = await request.get(FlowService)
                     document = demo_document().model_copy(update={"id": "monitor_form"})
                     await flows.create(document)
                     await flows.publish(document.id, 0, ADMIN_ID)
                     await (await request.get(DialogService)).start(document.id, RuntimeUser(ADMIN_ID, ADMIN_ID), 900000)
-                return JSONResponse({"ok": True})
+                return web.json_response({"ok": True})
 
-            @app.post("/__test__/monitor/advance", include_in_schema=False)
-            async def advance_monitor() -> JSONResponse:
+            @routes.post("/__test__/monitor/advance")
+            async def advance_monitor(_request: web.Request) -> web.Response:
                 from tests.modules.ui_flows.factories import button
                 from ui_flows.application.dialogs import DialogService
                 from ui_flows.domain.state import RuntimeUser
 
-                async with container() as request:
+                async with catalog_request(container) as request:
                     dialogs = await request.get(DialogService)
                     user = RuntimeUser(ADMIN_ID, ADMIN_ID)
                     await dialogs.handle(button(await dialogs.active(user), 900001, "form"), user)
-                return JSONResponse({"ok": True})
+                return web.json_response({"ok": True})
 
-            @app.post("/__test__/monitor/legacy", include_in_schema=False)
-            async def legacy_monitor() -> JSONResponse:
+            @routes.post("/__test__/monitor/legacy")
+            async def legacy_monitor(_request: web.Request) -> web.Response:
                 from ui_flows.application.dialogs import DialogService
                 from ui_flows.application.locations import LocationService
                 from ui_flows.domain.state import RuntimeUser
 
-                async with container() as request:
+                async with catalog_request(container) as request:
                     await (await request.get(DialogService)).cancel_active(RuntimeUser(ADMIN_ID, ADMIN_ID), 900002)
                     await (await request.get(LocationService)).observe(
                         ADMIN_ID, ADMIN_ID, 900003, "obis", "ObisCredentialsForm:password"
                     )
-                return JSONResponse({"ok": True})
+                return web.json_response({"ok": True})
 
-            @app.post("/__test__/monitor/restart", include_in_schema=False)
-            async def restart_monitor() -> JSONResponse:
+            @routes.post("/__test__/monitor/restart")
+            async def restart_monitor(_request: web.Request) -> web.Response:
                 from ui_flows.application.locations import LocationService
 
-                async with container() as request:
+                async with catalog_request(container) as request:
                     await (await request.get(LocationService)).forget_legacy()
-                return JSONResponse({"ok": True})
+                return web.json_response({"ok": True})
 
-            @app.post("/__test__/cleanup", include_in_schema=False)
-            async def cleanup() -> JSONResponse:
-                async with engine.begin() as connection:
-                    await connection.execute(DropSchema(schema, cascade=True, if_exists=True))
-                return JSONResponse({"ok": True})
+            @routes.post("/__test__/cleanup")
+            async def cleanup(_request: web.Request) -> web.Response:
+                stopped.set()
+                return web.json_response({"ok": True})
 
+            app.add_routes(routes)
             with tempfile.TemporaryDirectory(prefix="ui-editor-tls-") as directory:
                 cert, key = certificate(Path(directory))
-                server = uvicorn.Server(
-                    uvicorn.Config(
-                        app,
-                        host="127.0.0.1",
-                        port=port,
-                        ssl_certfile=str(cert),
-                        ssl_keyfile=str(key),
-                        ssl_version=ssl.PROTOCOL_TLS_SERVER,
-                        access_log=False,
-                        log_level="warning",
-                    )
-                )
-                await server.serve()
+                context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+                context.load_cert_chain(cert, key)
+                runner = web.AppRunner(app, access_log=None)
+                loop = asyncio.get_running_loop()
+
+                def request_stop(_signal, _frame):
+                    loop.call_soon_threadsafe(stopped.set)
+
+                previous_signals = {sig: signal.signal(sig, request_stop) for sig in (signal.SIGINT, signal.SIGTERM)}
+                try:
+                    await runner.setup()
+                    await web.TCPSite(runner, "127.0.0.1", port, ssl_context=context).start()
+                    await stopped.wait()
+                finally:
+                    await runner.cleanup()
+                    for sig, handler in previous_signals.items():
+                        signal.signal(sig, handler)
     finally:
         async with engine.begin() as connection:
             await connection.execute(DropSchema(schema, cascade=True, if_exists=True))

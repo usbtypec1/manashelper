@@ -23,7 +23,16 @@ watch(
     updateNodeInternals([props.id])
   },
 )
-const symbols = { menu: '▤', input: '⌨', condition: '◇', action: '⚙', end: '◉' }
+const symbols = {
+  menu: '▤',
+  input: '⌨',
+  condition: '◇',
+  action: '⚙',
+  end: '◉',
+  call: '↗',
+  return: '↙',
+  replace: '⇥',
+}
 </script>
 <template>
   <div class="flow-card" :class="[data.kind, { selected, invalid: data.invalid, current: data.current }]">

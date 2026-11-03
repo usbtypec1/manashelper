@@ -1145,3 +1145,6 @@ msgstr "此登录链接无效或已过期。请通过 /editor 获取新链接。
 
 msgid "ui_flows.web.login"
 msgstr "请在管理员私聊中使用 /editor 命令并打开登录链接。"
+
+msgid "ui_flows.open_editor"
+msgstr "打开编辑器"

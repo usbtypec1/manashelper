@@ -10,13 +10,14 @@ from manashelper.modules.obis.presentation.sender import TelegramObisNotificatio
 from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
+from manashelper.platform.i18n.request import catalog_request
 
 logger = logging.getLogger(__name__)
 
 
 async def poll_obis_notifications_job(container: AsyncContainer, bot: Bot) -> None:
     try:
-        async with container() as request_container:
+        async with catalog_request(container) as request_container:
             recipients = await request_container.get(NotificationRecipientsQuery)
             exam_grade_user_ids = set(await recipients.for_exam_grades())
             lesson_skip_user_ids = set(await recipients.for_lesson_skips())
@@ -40,7 +41,7 @@ async def _poll_user_obis_notifications(
     check_lesson_skips: bool,
 ) -> None:
     try:
-        async with container() as request_container:
+        async with catalog_request(container) as request_container:
             polling = await request_container.get(PollObisUser)
             locales = await request_container.get(LocaleService)
             locale = await locales.get_locale(user_id)

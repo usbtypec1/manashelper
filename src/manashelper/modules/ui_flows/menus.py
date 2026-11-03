@@ -10,6 +10,11 @@ FEATURES = frozenset(
         "food_menu",
         "marketplace",
         "settings",
+        "notifications",
+        "course_tracking",
+        "obis_credentials",
+        "phone_numbers",
+        "feedback",
         "schedule",
         "study_week",
         "attendance",
@@ -49,7 +54,7 @@ def main_menu_document() -> FlowDocument:
     }
     return FlowDocument.model_validate(
         {
-            "schema_version": 1,
+            "schema_version": 2,
             "id": MAIN_MENU_ID,
             "entry": "main",
             "navigation_entries": {"study": "study"},
@@ -87,7 +92,14 @@ def main_menu_document() -> FlowDocument:
                     ],
                 },
                 *[
-                    {"kind": "end", "id": node, "status": "handed_off", "feature": feature}
+                    {
+                        "kind": "call",
+                        "id": node,
+                        "flow": "settings",
+                        "outcomes": {"completed": "main", "cancelled": "main"},
+                    }
+                    if feature == "settings"
+                    else {"kind": "end", "id": node, "status": "handed_off", "feature": feature}
                     for node, feature in destinations.items()
                 ],
             ],

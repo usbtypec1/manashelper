@@ -21,8 +21,9 @@ from pydantic import (
 Identifier = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{0,31}$")]
 DelegateId = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$", max_length=120)]
 Scalar = StrictStr | StrictBool | StrictInt | StrictFloat | None
+type DataValue = Scalar | list[DataValue] | dict[str, DataValue]
 LocaleCode = Literal["en", "ru", "ky", "tr", "zh"]
-ValueType = Literal["text", "integer", "number", "boolean"]
+ValueType = Literal["text", "integer", "number", "boolean", "list", "object", "secret"]
 
 
 class ContractModel(BaseModel):
@@ -73,13 +74,16 @@ Text = Annotated[CatalogText | InlineText, Field(discriminator="kind")]
 
 class LiteralValue(ContractModel):
     kind: Literal["literal"]
-    value: Scalar
+    value: DataValue
 
 
 class ReferenceValue(ContractModel):
     kind: Literal["ref"]
-    scope: Literal["data", "user", "capabilities"]
+    scope: Literal["data", "user", "capabilities", "item"]
     field: Identifier
+    path: Annotated[list[Identifier | Annotated[int, Field(ge=0, le=999)]], Field(max_length=8)] = Field(
+        default_factory=list
+    )
 
 
 Value = Annotated[LiteralValue | ReferenceValue, Field(discriminator="kind")]
@@ -135,12 +139,21 @@ Button = Annotated[TransitionButton | UrlButton, Field(discriminator="kind")]
 ButtonRows = Annotated[list[Annotated[list[Button], Field(min_length=1, max_length=8)]], Field(max_length=20)]
 
 
+class RepeatedButtons(ContractModel):
+    source: ReferenceValue
+    buttons: Annotated[list[Button], Field(min_length=1, max_length=8)]
+
+
 class MenuNode(ContractModel):
     kind: Literal["menu"]
     id: Identifier
     text: Annotated[list[Text], Field(min_length=1, max_length=8)]
     keyboard: Literal["reply", "inline"]
     buttons: ButtonRows
+    repeated: Annotated[list[RepeatedButtons], Field(max_length=20)] = Field(default_factory=list)
+    media: ReferenceValue | None = None
+    messages: Annotated[list[Text], Field(max_length=20)] = Field(default_factory=list)
+    message_source: ReferenceValue | None = None
 
 
 class InputNode(ContractModel):
@@ -148,7 +161,7 @@ class InputNode(ContractModel):
     id: Identifier
     text: Annotated[list[Text], Field(min_length=1, max_length=8)]
     field: Identifier
-    input_type: Literal["text", "integer", "choice"]
+    input_type: Literal["text", "integer", "choice", "contact", "media", "secret"]
     next: Identifier
     error: Text
     buttons: ButtonRows = Field(default_factory=list)
@@ -157,6 +170,10 @@ class InputNode(ContractModel):
     minimum: int | None = None
     maximum: int | None = None
     choices: list[Scalar] = Field(default_factory=list)
+    multiple: bool = False
+    media: ReferenceValue | None = None
+    messages: Annotated[list[Text], Field(max_length=20)] = Field(default_factory=list)
+    message_source: ReferenceValue | None = None
 
     @model_validator(mode="after")
     def check_limits(self) -> InputNode:
@@ -168,6 +185,8 @@ class InputNode(ContractModel):
             raise ValueError("Only choice inputs require a nonempty choices list")
         if self.input_type != "integer" and (self.minimum is not None or self.maximum is not None):
             raise ValueError("Numeric bounds require an integer input")
+        if self.multiple and self.input_type != "media":
+            raise ValueError("Only media input can accumulate multiple messages")
         return self
 
 
@@ -191,6 +210,7 @@ class ActionNode(ContractModel):
     arguments: dict[Identifier, Value] = Field(default_factory=dict)
     results: dict[Identifier, Identifier] = Field(default_factory=dict)
     outcomes: Annotated[dict[Identifier, Identifier], Field(min_length=1)]
+    waiting_text: list[Text] = Field(default_factory=list)
 
 
 class EndNode(ContractModel):
@@ -210,12 +230,50 @@ class EndNode(ContractModel):
         return self
 
 
-Node = Annotated[MenuNode | InputNode | ConditionNode | ActionNode | EndNode, Field(discriminator="kind")]
+class CallNode(ContractModel):
+    kind: Literal["call"]
+    id: Identifier
+    flow: Identifier
+    arguments: dict[Identifier, Value] = Field(default_factory=dict)
+    results: dict[Identifier, Identifier] = Field(default_factory=dict)
+    outcomes: Annotated[dict[Identifier, Identifier], Field(min_length=1)]
+
+
+class ReturnNode(ContractModel):
+    kind: Literal["return"]
+    id: Identifier
+    outcome: Identifier
+    values: dict[Identifier, Value] = Field(default_factory=dict)
+    text: list[Text] = Field(default_factory=list)
+
+
+class ReplaceNode(ContractModel):
+    kind: Literal["replace"]
+    id: Identifier
+    flow: Identifier
+    arguments: dict[Identifier, Value] = Field(default_factory=dict)
+
+
+Node = Annotated[
+    MenuNode | InputNode | ConditionNode | ActionNode | EndNode | CallNode | ReturnNode | ReplaceNode,
+    Field(discriminator="kind"),
+]
 
 
 class DataField(ContractModel):
     type: ValueType
     nullable: bool = False
+    items: DataField | None = None
+    properties: Annotated[dict[Identifier, DataField], Field(max_length=64)] = Field(default_factory=dict)
+    max_items: Annotated[int, Field(ge=1, le=1000)] = 100
+
+    @model_validator(mode="after")
+    def check_shape(self) -> DataField:
+        if (self.type == "list") != (self.items is not None):
+            raise ValueError("Only a list declares its item type")
+        if self.type != "object" and self.properties:
+            raise ValueError("Only an object declares properties")
+        return self
 
 
 class Position(ContractModel):
@@ -224,12 +282,17 @@ class Position(ContractModel):
 
 
 class FlowDocument(ContractModel):
-    schema_version: Literal[1]
+    schema_version: Literal[1, 2]
     id: Identifier
     entry: Identifier
     navigation_entries: dict[Literal["study"], Identifier] = Field(default_factory=dict)
     fields: dict[Identifier, DataField] = Field(default_factory=dict)
-    initial_data: dict[Identifier, Scalar] = Field(default_factory=dict)
+    inputs: dict[Identifier, DataField] = Field(default_factory=dict)
+    outputs: dict[Identifier, DataField] = Field(default_factory=dict)
+    outcomes: Annotated[list[Identifier], Field(min_length=1, max_length=32)] = Field(
+        default_factory=lambda: ["completed"]
+    )
+    initial_data: dict[Identifier, DataValue] = Field(default_factory=dict)
     nodes: Annotated[list[Node], Field(min_length=1, max_length=200)]
     layout: dict[Identifier, Position] = Field(default_factory=dict)
 

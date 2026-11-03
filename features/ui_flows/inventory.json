@@ -1,0 +1,5573 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "id": "advertisements",
+      "owner": "modules/advertisements",
+      "target_scenarios": [
+        "marketplace.menu",
+        "advertisements.create",
+        "advertisements.media",
+        "advertisements.expiry",
+        "advertisements.my_ads",
+        "advertisements.detail",
+        "advertisements.delete",
+        "advertisements.contact",
+        "advertisements.moderation",
+        "advertisements.rejection_comment"
+      ],
+      "invariants": [
+        "Создание доступно только в private chat; контакт запрашивается до деталей при отсутствии сохранённого контакта; лимит пять объявлений за час проверяется сервисом.",
+        "Черновик проходит title → description → необязательная price → media → expires_at → confirm; сохранение только после явного подтверждения, отмена не создаёт объявление.",
+        "Максимум десять фото/видео; альбом накапливается в одном черновике и обновляет одно отслеживаемое сообщение prompt.",
+        "Список своих объявлений использует SQL-пагинацию; детали и удаление проверяют владельца по callback_query.from_user.id; удаление требует подтверждения.",
+        "Контакты скрыты в публичном канале за /start ad_<uuid>; каждый успешный просмотр проходит AdvertisementContactService и записывает просмотр.",
+        "Одобрение/отклонение разрешается сообщению из Settings.moderation_chat_id, а не роли пользователя; бизнес-сервис проверяет pending status.",
+        "Публикация сохраняет все channel message IDs для последующего удаления/истечения; TelegramAPIError при публикации и очистке обрабатывается явно.",
+        "Уведомления владельца строятся внутри его locale context, публикация в публичном канале и первичное сообщение модерации используют DEFAULT_LOCALE; динамический HTML экранируется.",
+        "Survey deep link router должен предшествовать advertisement_contact, который принимает любой /start payload; market открывает marketplace, неизвестный/неверный ad UUID даёт welcome."
+      ],
+      "notes": [
+        "AdvertisementForm: phone_number,title,description,price,media,expires_at,confirm; AdvertisementModerationForm: comment.",
+        "FSM keys: title,description,price,media (file_id,media_type),expires_at,media_prompt_message_id; moderation keys: advertisement_id,notification_chat_id,notification_message_id.",
+        "Callback prefixes: ad_form,ad_expiry,ads_page,ad,ad_delete,ad_moderation; reply keys: menu.marketplace,ads.post,ads.my_ads; deep-link payloads: market,ad_<uuid>.",
+        "Текущий contact handler сохраняет contact.phone_number для from_user.id без проверки contact.user_id; план требует проверку владельца контакта, это расхождение нужно решить при переносе, не считать проверенным текущим инвариантом.",
+        "Текущий on_reject_comment_entered не повторяет проверку moderation_chat_id, полагается на ранее установленное FSM-состояние; целевая групповая scope/авторизация обязана быть явной.",
+        "Общий callbacks.py и advertisement.py обслуживают несколько будущих сценариев; число handlers не определяет число сценариев."
+      ],
+      "status": "legacy"
+    },
+    {
+      "id": "broadcast",
+      "owner": "modules/broadcast",
+      "target_scenarios": [
+        "broadcast.compose",
+        "broadcast.buttons",
+        "broadcast.preview",
+        "broadcast.confirm"
+      ],
+      "invariants": [
+        "/broadcast и каждое действие защищены Settings.admin_chat_id; общий admin chat использует DEFAULT_LOCALE.",
+        "Принимается текст/подпись и не более одного фото; альбом отклоняется, длина проверяется для всех локалей и Telegram UTF-16 лимитов.",
+        "Кнопки поддерживают проверенные URL и существующие callback payloads; callback data ограничены 1–64 UTF-8 bytes; до отправки обязательны preview и explicit confirm.",
+        "Перед загрузкой получателей FSM очищается; отправка активным зарегистрированным пользователям последовательна без retry.",
+        "User.bot_stopped исключает получателя; permanent recipient errors помечают остановленного бота через общий UserMessageDelivery.",
+        "TelegramAPIError пропускает отдельного получателя; ошибка locale lookup или unexpected error прерывает рассылку без итогового summary; текст строится для локали получателя и экранируется."
+      ],
+      "notes": [
+        "BroadcastForm.message и BroadcastForm.buttons; FSM keys body,photo_id,buttons (text,url,callback_data).",
+        "Callback prefix broadcast; confirm,cancel,buttons,without_buttons. Длинная подпись фото вынесена в отдельное текстовое сообщение; inline кнопки должны оставаться у соответствующего контента.",
+        "SendBroadcast остаётся бизнес-use-case; сетевую доставку нельзя выполнять под chat lock в транзакционном делегате."
+      ],
+      "status": "legacy"
+    },
+    {
+      "id": "eders",
+      "owner": "modules/eders",
+      "target_scenarios": [
+        "eders.activities",
+        "eders.materials",
+        "eders.results_page",
+        "eders.notification_settings",
+        "eders.notification_delivery"
+      ],
+      "invariants": [
+        "Private-only входы menu.eders/menu.eders_materials, /eders, /materials, /eders_settings остаются доступны только при eders_enabled; guard сохраняется в adapter помимо видимости кнопок.",
+        "UI читает сохранённый Eders snapshot; отсутствие snapshot даёт preparing, а не синхронный login/fetch; direct Moodle login и fallback остаются бизнес-границей.",
+        "Командный query фильтрует course name/section/name/description через strip+casefold; /materials выбирает MATERIALS, обычная кнопка не интерпретируется как query.",
+        "Переходы фильтра/страницы используют сохранённый snapshot и время открытия с TTL 15 минут; expired snapshot отклоняется без Telegram edit.",
+        "Каждый page callback перечитывает актуальный hide_archived; page ограничивается допустимым диапазоном; повторный tap на прежнюю кнопку подтверждается без идентичного edit.",
+        "Notification setting toggles сохраняют настройку пользователя, корректные start_required ошибки и отключённые link previews.",
+        "Фоновая доставка сохраняет refresh→locale→pending→send→ack, немедленное acknowledgement успешных материалов и отсутствие acknowledgement при TelegramAPIError; unexpected errors прерывают только текущего пользователя."
+      ],
+      "notes": [
+        "Callbacks: EdersPageCallback prefix eders (selected,page), EdersSettingCallback prefix eders_setting; SettingsCallback.open_eders_notifications.",
+        "Объявленных StatesGroup нет, но FSM data есть: eders_snapshot и eders_snapshot_opened_at. show_eders сначала сбрасывает snapshot=None, затем сохраняет отфильтрованный snapshot и UTC-время открытия. Текущий cache общий на FSM, не message_id.",
+        "presenters: show_eders, format_activity_page, format_eders_event, format_material_events; TelegramEdersNotificationSender — jobs delivery.",
+        "Контрольные тесты: tests/modules/eders/test_eders_migration.py, test_eders_materials.py и handlers tests. Durable snapshot/TTL после рестарта нужно доказать отдельно при переносе.",
+        "notification_delivery обозначает существующий фоновый presenter: сохранить транспортный адаптер и перевести его тексты на DB-каталог; это не новый пользовательский сценарий."
+      ],
+      "status": "legacy"
+    },
+    {
+      "id": "feedback",
+      "owner": "modules/feedback",
+      "target_scenarios": [
+        "feedback.compose",
+        "feedback.admin_reply"
+      ],
+      "invariants": [
+        "Пользовательский ввод приватный, пустой/слишком длинный текст отклоняется; отмена возвращает Settings и ничего не сохраняет.",
+        "После сохранения обращения пользователю подтверждается отправка; администратору пересылается экранированный текст в DEFAULT_LOCALE, а ID admin message связывается с записью только после успешной отправки.",
+        "Native reply обрабатывается только в group/supergroup Settings.admin_chat_id и только для связанного feedback admin message ID; пустой ответ игнорируется.",
+        "Ответ пользователю форматируется внутри его locale context; TelegramAPIError даёт администратору delivery_failed и не уничтожает бизнес-обращение."
+      ],
+      "notes": [
+        "FeedbackForm.message не имеет payload keys: текст берётся из текущего сообщения; callback prefix feedback:cancel и SettingsAction.OPEN_FEEDBACK.",
+        "Групповой native reply — отдельный вход с корреляцией reply_to_message.message_id, его нельзя потерять при приватной унификации маршрутов.",
+        "Этап 7: FeedbackForm перемещена в states.py без изменения состояния; общий start_feedback(message,state) в entrypoints.py используется legacy router и terminal handoff из runtime Settings. Форма ещё использует FSM; feedback не объявляется перенесённым."
+      ],
+      "status": "legacy"
+    },
+    {
+      "id": "food_menu",
+      "owner": "modules/food_menu",
+      "target_scenarios": [
+        "food_menu.launch",
+        "food_menu.day",
+        "food_menu.rating",
+        "food_menu.notification_settings",
+        "food_menu.cleanup_settings",
+        "food_menu.notification_delivery"
+      ],
+      "invariants": [
+        "Команда /yemek сохраняет today/tomorrow/неотрицательное число дней и подсказку для неверных аргументов; кнопка дня с ISO date остаётся привязана к показанной дате.",
+        "Food menu доступно в private/group/supergroup: обычная групповая команда получает ephemeral ответ только при админ-статусе бота; иначе отправляется общий launcher.",
+        "Групповой callback получает персональный ephemeral ответ с receiver_user_id=callback.from_user.id; не использовать ID автора bot message.",
+        "Rich menu сохраняет фотографии, блюда, один общий rating row и персональную выбранную оценку только в личном/ephemeral экране; общая групповая оценка не раскрывает выбор пользователя.",
+        "Оценка сохраняется через DailyMenuService, валидируется и может изменяться; старое сообщение остаётся привязано к своему daily_menu_id; повторный тап подтверждается даже без изменения.",
+        "Notification settings — private user scope: день×meal, весь weekday, весь meal, bulk enable/disable и noop сохраняются; первый toggle выключает выбранный флаг, отсутствующая настройка означает включено.",
+        "Cleanup settings — chat scope без private-only flag; сохраняются варианты 15/45 минут, 3 часа, день, disabled; удаление планируется для обычных, не ephemeral, сообщений.",
+        "Сбой обновления rating keyboard не отменяет сохранённую оценку; TelegramBadRequest message-is-not-modified и TelegramAPIError обрабатываются best effort."
+      ],
+      "notes": [
+        "Callbacks: food_menu, food_menu_open, food_menu_date, food_menu_rating, food_menu_notification_day/bulk/weekday/meal/noop, food_menu_cleanup_open/set. SettingsCallback.open_food_menu_notifications приходит из общего platform callback namespace.",
+        "FSM отсутствует. Persisted настройки/оценки/очистка остаются у owning services; перенос не должен вводить UI-копии бизнес-данных.",
+        "presenters: show_food_menu, _response_parameters, _send_menu_launcher; build_menu_day_selection, build_menu_launcher, build_daily_menu_rich_message, refresh_daily_menu_rating; TelegramFoodMenuSender — jobs delivery.",
+        "Не навязывать всему Food menu private-chat assumption общего пилотного runtime; group scope/ephemeral capabilities нужны до переноса.",
+        "Контрольные тесты: tests/modules/food_menu/test_food_menu_ratings.py, test_food_menu_cleanup_settings.py, test_food_menu_ephemeral.py, test_food_menu_availability.py, test_food_menu_migration.py.",
+        "notification_delivery обозначает существующий фоновый presenter: сохранить транспортный адаптер и перевести его тексты на DB-каталог; это не новый пользовательский сценарий."
+      ],
+      "status": "legacy"
+    },
+    {
+      "id": "navigation",
+      "owner": "platform/telegram",
+      "status": "legacy_with_runtime_menu",
+      "target_scenarios": [
+        "main_menu",
+        "studies.menu",
+        "settings.menu",
+        "ui.hide_keyboard",
+        "schedule.tracking",
+        "obis.settings",
+        "settings.locale",
+        "food_menu.launch",
+        "settings.theme",
+        "users.contacts",
+        "feedback.compose",
+        "notifications.settings",
+        "eders.notification_settings",
+        "food_menu.notification_settings",
+        "runtime.commands"
+      ],
+      "invariants": [
+        "Текущая runtime reply-кнопка имеет приоритет перед глобальной навигацией; root navigation атомарно завершает старый диалог и запускает опубликованное меню.",
+        "Обычный /start не должен поглощать survey/ad payload; legacy fallback сохраняется до переноса каждого входа.",
+        "Настройки, меню и academic-входы используют фактический ID пользователя и private guard; доступность Eders проверяется также адаптером."
+      ],
+      "notes": [
+        "SettingsCallback — общий namespace: OPEN_* передаются owning-функциям, не копируют их бизнес-логику в platform.",
+        "В command items зафиксированы только зарегистрированные menu-команды. Скрытые /eders, /materials, /eders_settings, /week видны в bindings соответствующих handlers.",
+        "Этап 7: новые seed main_menu/settings используют v2 Call; Settings вызывает select_locale/select_theme и возвращается в меню. Notifications, course tracking, OBIS, phone numbers и feedback пока открываются через публичные owning entrypoints после terminal handoff; старые публикации остаются неизменными."
+      ]
+    },
+    {
+      "id": "notifications",
+      "owner": "modules/notifications",
+      "target_scenarios": [
+        "notifications.settings"
+      ],
+      "invariants": [
+        "Открытие, возврат и toggle доступны только в private chat и требуют существующего User.",
+        "Переключается только выбранный schedule_changes/exam_grades/lesson_skips flag; остальные значения сохраняются; новая строка и первый показ имеют все три True, первый тап выключает выбранное.",
+        "Отсутствующая строка настроек сохраняет opt-in для фоновых получателей; toggle меняет доставку, не синхронизацию snapshots.",
+        "Клавиатура сохраняет переходы к Food menu/Eders notifications и Back; Eders скрывается при отключённом feature flag."
+      ],
+      "notes": [
+        "Callbacks: SettingsCallback.open_notifications/back_to_notifications, NotificationSettingCallback prefix notification_setting.",
+        "FSM отсутствует. presenters: _show_notifications_menu, build_notifications_keyboard. Public settings/recipient services остаются владельцами бизнес-правил.",
+        "Контрольные тесты: tests/modules/notifications/test_notifications.py."
+      ],
+      "status": "legacy"
+    },
+    {
+      "id": "obis",
+      "owner": "modules/obis",
+      "target_scenarios": [
+        "obis.settings",
+        "obis.terms",
+        "obis.credentials",
+        "obis.clear_confirmation",
+        "obis.grades",
+        "obis.attendance",
+        "obis.results_page",
+        "obis.notification_delivery"
+      ],
+      "invariants": [
+        "Все входы private-only; menu.grades/menu.attendance открывают уже сохранённые snapshots без синхронного HTTP fetch upstream.",
+        "Принятие условий предшествует вводу student number и password; пустой номер повторяет ввод; ошибка логина возвращает к номеру; cancel очищает форму.",
+        "Пароль маскируется в audit, удаляется из Telegram best effort и не сохраняется в runtime metadata/monitoring; save_credentials проверяет реальный login и шифрует до замены обоих прежних credential fields.",
+        "Очистка credentials требует отдельного подтверждения, очищает кеши/состояние и сохраняет корректные ошибки неизвестного пользователя.",
+        "Показ страницы привязан к message_id и сохранённому набору готовых страниц; разные сообщения не смешиваются; не более пяти последних наборов; переход не вызывает повторное чтение upstream.",
+        "Отсутствующий/неверный номер страницы даёт result_expired; Telegram message-is-not-modified подтверждается, другие API errors дают retry alert.",
+        "Preparing, missing/invalid credentials, start_required и fetch_failed остаются отдельными пользовательскими результатами; unexpected errors после error message продолжают распространяться.",
+        "Фоновые сравнения, silent first baseline, 15-minute refresh, recipient locale/theme и delivery flag сохраняются у бизнес-модуля/его sender."
+      ],
+      "notes": [
+        "Callbacks: ObisCallback prefix obis actions start_credentials/accept_terms/cancel_credentials/clear_credentials/confirm_clear_credentials; ObisResultsPageCallback prefix obis_results_page.",
+        "FSM: ObisCredentialsForm.student_number/password. Данные: student_number; obis_result_pages: dict[str(message_id), list[str]], MAX_SAVED_RESULTS=5. Пароль локальная переменная handler, не FSM data key.",
+        "presenters: show_attendance/show_grades/_show_obis_results; format_attendance_pages/format_exam_grades_pages; TelegramObisNotificationSender — jobs delivery.",
+        "Контрольные тесты: tests/modules/obis/test_obis_results.py, test_obis_migration.py и credentials tests. Сохранение незавершённого sensitive input при cutover требует явного безопасного контракта; нельзя просто сериализовать FSM.",
+        "notification_delivery обозначает существующий фоновый presenter: сохранить транспортный адаптер и перевести его тексты на DB-каталог; это не новый пользовательский сценарий."
+      ],
+      "status": "legacy"
+    },
+    {
+      "id": "runtime",
+      "owner": "modules/ui_flows + ui_flows",
+      "status": "existing_runtime_to_extend",
+      "target_scenarios": [
+        "main_menu",
+        "studies.menu",
+        "student_questions",
+        "admin.editor",
+        "runtime.pilot",
+        "runtime.dispatch",
+        "runtime.delivery",
+        "runtime.preview",
+        "runtime.monitoring"
+      ],
+      "invariants": [
+        "Порядок routers и middleware сохраняется: rate limit → chat ordering → after-request → Dishka; coordinator работает только после завершения исходного REQUEST.",
+        "State/event/location/intent/delegate writes фиксируются вместе; receipt защищает replay, активные версии immutable и pinned.",
+        "Claim unknown фиксируется до Telegram I/O; unknown автоматически не отправляется повторно; callback привязан к пользователю, чату, message ID и delivery token.",
+        "Preview вызывает только явные stubs; monitoring хранит metadata без ответов/текста экрана; runtime input маскируется в audit.",
+        "/editor и /flow_demo доступны только настроенному приватному администратору; rollout управляет новыми запусками, но не блокирует продолжение активной формы."
+      ],
+      "notes": [
+        "runtime.* — сохраняемые/расширяемые транспортные компоненты, а не новые пользовательские flows. Целевые пользовательские сценарии перечислены отдельно.",
+        "FEATURES/EDERS_FEATURES фиксируют четырнадцать временных legacy handoffs, включая пять owning-входов из runtime Settings; open_feature удаляется только после переноса каждого адресата.",
+        "Admin HTTP, frontend и аутентификация покрываются своим контрактом и относятся к этапу 2; эта матрица охватывает Telegram UI, включая вход /editor.",
+        "Этап 7: ingress runtime_callback принимает опубликованный launch из зарегистрированного codec; call сохраняет legacy FSM, прочие новые launch очищают его после проверки ingress, работа coordinator остаётся after-request."
+      ]
+    },
+    {
+      "id": "schedule",
+      "owner": "modules/schedule",
+      "target_scenarios": [
+        "schedule.menu",
+        "schedule.tracking",
+        "schedule.day",
+        "schedule.lesson_search",
+        "schedule.search_results",
+        "schedule.notification_delivery"
+      ],
+      "invariants": [
+        "Личный каталог и расписание сохраняют private-chat guard; callback использует ID действительного пользователя, а не автора bot message.",
+        "Факультеты → отделения → курсы строятся из business read models; переключение tracking сохраняется через CourseService и не дублирует SQL в UI.",
+        "Нет пользователя, нет выбранных курсов и ещё не загруженное расписание остаются разными результатами; в выходные стартовый день — понедельник по Bishkek.",
+        "Поиск обрезает пробелы, отклоняет запрос короче двух символов; получение запроса очищает старую форму/кеш даже при коротком запросе.",
+        "Страницы результатов используют один сохранённый результат без повторного поиска; отсутствие кеша даёт search_expired вместо редактирования.",
+        "Форматирование сохраняет сортировку, интервалы/перерывы и пятиъязычные weekday labels; целевая реализация должна экранировать динамический HTML-контент.",
+        "Фоновый sync остаётся hourly, с отдельным REQUEST на курс и независимым failure boundary; только пользовательские UI-решения переносятся в engine."
+      ],
+      "notes": [
+        "Вход menu.schedule; timetable_menu actions open_my_schedule/open_lesson_search. Callback prefixes: faculty, department, course, schedule_day, timetable_menu, lesson_search_page.",
+        "FSM: LessonSearchForm.query. Данные: lesson_search_results; текущий кеш общий на FSM, не привязан к message_id; при входе в поиск старый кеш сохраняется до получения запроса.",
+        "presenters: show_timetable_menu; format_day_schedule, format_lesson_search_page, format_lesson_changes; TelegramScheduleChangeSender — фоновая доставка, не UI handler.",
+        "Контрольные тесты: tests/modules/schedule/test_schedule_migration.py. Durable snapshot после рестарта — требование миграции, сейчас MemoryStorage его не обеспечивает.",
+        "notification_delivery обозначает существующий фоновый presenter: сохранить транспортный адаптер и перевести его тексты на DB-каталог; это не новый пользовательский сценарий.",
+        "Текущее расписание/поиск вставляет lesson content и названия факультета/отделения без явного HTML escaping в formatter. Это ограничение текущего UI и требование исправления при переносе, а не уже соблюдаемый инвариант."
+      ],
+      "status": "legacy"
+    },
+    {
+      "id": "student_questions",
+      "owner": "modules/student_questions",
+      "target_scenarios": [
+        "student_questions"
+      ],
+      "invariants": [
+        "Deep link /start student_questions проходит раньше advertisement_contact и обычного /start; активная runtime-сессия восстанавливается даже при запрете новых запусков.",
+        "Замена завершённого ответа требует явного подтверждения; прежний ответ сохраняется до полного завершения, отмена оставляет его неизменным.",
+        "Legacy callback session_id и ожидаемый State отклоняют старые кнопки; отказ stale callback не отменяет постороннюю runtime-сессию.",
+        "Сохраняются все ветви course/had_questions/questions/found_answers/answer_sources/wants_beta и валидация текста; запись только через StudentQuestionsService.",
+        "Runtime делегаты проверяют совпадение user_id с DelegateContext, разделяют REQUEST-транзакцию; финальная запись, завершение и возврат в pinned меню атомарны и дедуплицируются.",
+        "Уже начатые legacy-опросы сохраняют владельца до завершения; legacy router удаляется после завершённого cutover, не одновременно с включением новых запусков."
+      ],
+      "notes": [
+        "StudentQuestionsForm: overwrite,course,search,questions,found,sources,beta; FSM keys student_questions_session,overwrite,course,had_questions,questions,found_answers,answer_sources.",
+        "Legacy prefixes sqa,sqc; runtime документ flow.py уже существует. Два делегата: student_questions.has_submitted и student_questions.submit.",
+        "Target student_questions обозначает уже существующий опубликованный flow; нужно снять legacy-путь, сохранив active-session/version/return semantics."
+      ],
+      "status": "runtime_with_legacy_compatibility"
+    },
+    {
+      "id": "study_week",
+      "owner": "modules/study_week",
+      "target_scenarios": [
+        "study_week.summary"
+      ],
+      "invariants": [
+        "Private-only menu.study_week и /week скрыты/отключены вместе с Eders; передаётся реальный from_user.id.",
+        "GetStudyWeek читает Eders, затем Schedule, и вычисляет начальную дату по текущему Bishkek clock; только NoTrackedCoursesError превращается в пустое расписание.",
+        "Подготовка данных, нет credentials, неверные credentials, fetch failure и отсутствующий пользователь дают прежние различимые сообщения; неожиданные ошибки распространяются.",
+        "Форматирование охватывает семь локальных дней, сохраняет sorting, submitted/undated materials semantics и HTML escaping; chunking режет по полным строкам.",
+        "Части отправляются последовательно с отключёнными previews; Telegram failure останавливает оставшиеся части, не скрывается как успешный полный ответ."
+      ],
+      "notes": [
+        "FSM, callback data и локального UI cache нет. presenter: show_study_week, format_study_week. Use case остаётся в study_week; Eders не импортирует study_week.",
+        "Контрольные тесты: tests/modules/study_week/test_study_week.py."
+      ],
+      "status": "legacy"
+    },
+    {
+      "id": "users",
+      "owner": "modules/users",
+      "target_scenarios": [
+        "settings.locale",
+        "settings.theme",
+        "users.contacts",
+        "users.contact_input",
+        "users.contact_delete"
+      ],
+      "invariants": [
+        "/language и выбор языка/темы разрешены в private chat, сохраняют активную runtime-сессию, после выбора перерисовывают её вместо отмены.",
+        "LocaleService и ThemeService — владельцы сохранённых предпочтений; ответ после выбора строится в только что выбранном locale/theme context; Basic — тема по умолчанию.",
+        "Добавление контакта принимает Telegram contact или ручной номер, валидирует через UserContactService, убирает request-contact keyboard после успеха/неизвестного пользователя.",
+        "Список/удаление номеров используют фактический callback user ID и сервисную проверку владения; чужой или отсутствующий номер не удаляется.",
+        "Номера телефонов не должны попадать в мониторинг UI, exporter или metadata; состояние ввода нужно сохранять независимо от aiogram FSM."
+      ],
+      "notes": [
+        "PhoneNumberForm.phone_number, без FSM payload keys; префиксы locale,theme,phone_number_action,phone_number_delete.",
+        "Shared SettingsCallback используется входами OPEN_LANGUAGE,OPEN_THEME,OPEN_PHONE_NUMBERS; owns platform/telegram, а не users.",
+        "Текущий on_phone_number_shared не сравнивает message.contact.user_id с message.from_user.id; не заявлять проверку принадлежности Telegram contact уже реализованной.",
+        "Этап 7: select_locale/select_theme и users.set_locale/users.set_theme зарегистрированы для runtime; сохранение произвольной активной формы реализуется interrupt frames. Для ещё не перенесённой legacy формы сохраняются прежние preference adapters и её owner; старые locale/theme callbacks совместимы."
+      ],
+      "status": "legacy"
+    }
+  ],
+  "items": [
+    {
+      "path": "docs/commands/admin.json",
+      "symbol": "broadcast",
+      "kind": "command",
+      "command": "broadcast",
+      "description": "commands.broadcast",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.compose"
+      ]
+    },
+    {
+      "path": "docs/commands/admin.json",
+      "symbol": "editor",
+      "kind": "command",
+      "command": "editor",
+      "description": "commands.editor",
+      "group": "runtime",
+      "targets": [
+        "admin.editor"
+      ]
+    },
+    {
+      "path": "docs/commands/admin.json",
+      "symbol": "flow_demo",
+      "kind": "command",
+      "command": "flow_demo",
+      "description": "commands.flow_demo",
+      "group": "runtime",
+      "targets": [
+        "runtime.pilot"
+      ]
+    },
+    {
+      "path": "docs/commands/group.json",
+      "symbol": "yemek",
+      "kind": "command",
+      "command": "yemek",
+      "description": "commands.yemek",
+      "is_ephemeral": true,
+      "group": "food_menu",
+      "targets": [
+        "food_menu.launch"
+      ]
+    },
+    {
+      "path": "docs/commands/private.json",
+      "symbol": "hide_keyboard",
+      "kind": "command",
+      "command": "hide_keyboard",
+      "description": "commands.hide_keyboard",
+      "group": "navigation",
+      "targets": [
+        "ui.hide_keyboard"
+      ]
+    },
+    {
+      "path": "docs/commands/private.json",
+      "symbol": "language",
+      "kind": "command",
+      "command": "language",
+      "description": "commands.language",
+      "group": "users",
+      "targets": [
+        "settings.locale"
+      ]
+    },
+    {
+      "path": "docs/commands/private.json",
+      "symbol": "start",
+      "kind": "command",
+      "command": "start",
+      "description": "commands.start",
+      "group": "navigation",
+      "targets": [
+        "main_menu"
+      ]
+    },
+    {
+      "path": "docs/commands/private.json",
+      "symbol": "yemek",
+      "kind": "command",
+      "command": "yemek",
+      "description": "commands.yemek",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.launch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "AdvertisementForm",
+      "kind": "states",
+      "definition": "class AdvertisementForm(StatesGroup):\n    phone_number = State()\n    title = State()\n    description = State()\n    price = State()\n    media = State()\n    expires_at = State()\n    confirm = State()",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create",
+        "advertisements.my_ads"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "MEDIA_PROMPT_MESSAGE_ID_KEY",
+      "kind": "storage_key",
+      "value": "media_prompt_message_id",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.media"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "_append_media",
+      "kind": "presenter",
+      "fsm_calls": [
+        "state.get_data()",
+        "state.update_data(media=media)"
+      ],
+      "fsm_reads": [
+        "data.get('media', [])"
+      ],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.media"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "_build_my_ads_view",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.my_ads"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "_draft_summary",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "_enter_confirm_state",
+      "kind": "presenter",
+      "fsm_calls": [
+        "state.get_data()",
+        "state.set_state(AdvertisementForm.confirm)"
+      ],
+      "fsm_reads": [],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "_enter_expiry_state",
+      "kind": "presenter",
+      "fsm_calls": [
+        "state.set_state(AdvertisementForm.expires_at)"
+      ],
+      "fsm_reads": [],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.expiry"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "_enter_media_state",
+      "kind": "presenter",
+      "fsm_calls": [
+        "state.set_state(AdvertisementForm.media)"
+      ],
+      "fsm_reads": [],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.media"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "_notify_moderation_chat",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.moderation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "_render_advertisement_detail",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.detail"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "_render_media_prompt",
+      "kind": "presenter",
+      "fsm_calls": [
+        "state.get_data()",
+        "state.update_data({MEDIA_PROMPT_MESSAGE_ID_KEY: sent.message_id})"
+      ],
+      "fsm_reads": [
+        "data.get(MEDIA_PROMPT_MESSAGE_ID_KEY)"
+      ],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.media"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "_start_ad_details",
+      "kind": "presenter",
+      "fsm_calls": [
+        "state.set_state(AdvertisementForm.title)"
+      ],
+      "fsm_reads": [],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create",
+        "advertisements.my_ads"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "aiogram.fsm.state",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.state import State, StatesGroup",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create",
+        "advertisements.my_ads"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_advertisement_selected",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(AdvertisementCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.detail"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_create_requested",
+      "kind": "handler",
+      "bindings": [
+        "router.message(TranslatedText('ads.post'))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.set_state(AdvertisementForm.phone_number)"
+      ],
+      "fsm_reads": [],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_delete_cancelled",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(AdvertisementDeleteCallback.filter(F.action == AdvertisementDeleteAction.CANCEL))",
+        "flags.private_chat_only"
+      ],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.delete"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_delete_confirmed",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(AdvertisementDeleteCallback.filter(F.action == AdvertisementDeleteAction.CONFIRM))",
+        "flags.private_chat_only"
+      ],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.delete"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_delete_requested",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(AdvertisementDeleteCallback.filter(F.action == AdvertisementDeleteAction.REQUEST))",
+        "flags.private_chat_only"
+      ],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.delete"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_description_entered",
+      "kind": "handler",
+      "bindings": [
+        "router.message(StateFilter(AdvertisementForm.description))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.set_state(AdvertisementForm.price)",
+        "state.update_data(description=description)"
+      ],
+      "fsm_reads": [],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_expiry_selected",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(AdvertisementExpiryCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.update_data(expires_at=datetime.now() + delta if delta is not None else None)"
+      ],
+      "fsm_reads": [],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.expiry"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_form_cancelled",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(AdvertisementFormCallback.filter(F.action == AdvertisementFormAction.CANCEL))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.clear()"
+      ],
+      "fsm_reads": [],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_form_submitted",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(AdvertisementFormCallback.filter(F.action == AdvertisementFormAction.CONFIRM_SUBMIT))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.clear()",
+        "state.get_data()"
+      ],
+      "fsm_reads": [
+        "data.get('description', '')",
+        "data.get('expires_at')",
+        "data.get('media', [])",
+        "data.get('price')",
+        "data.get('title', '')"
+      ],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_marketplace_button",
+      "kind": "handler",
+      "bindings": [
+        "router.message(TranslatedText('menu.marketplace'))",
+        "flags.private_chat_only"
+      ],
+      "group": "advertisements",
+      "targets": [
+        "marketplace.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_media_done",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(AdvertisementFormCallback.filter(F.action == AdvertisementFormAction.DONE_MEDIA))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.update_data({MEDIA_PROMPT_MESSAGE_ID_KEY: None})"
+      ],
+      "fsm_reads": [],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.media"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_media_photo",
+      "kind": "handler",
+      "bindings": [
+        "router.message(StateFilter(AdvertisementForm.media), F.photo)",
+        "flags.private_chat_only"
+      ],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.media"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_media_video",
+      "kind": "handler",
+      "bindings": [
+        "router.message(StateFilter(AdvertisementForm.media), F.video)",
+        "flags.private_chat_only"
+      ],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.media"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_my_ads_page",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(AdvertisementsPageCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.my_ads"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_my_ads_requested",
+      "kind": "handler",
+      "bindings": [
+        "router.message(TranslatedText('ads.my_ads'))",
+        "flags.private_chat_only"
+      ],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.my_ads"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_phone_number_entered",
+      "kind": "handler",
+      "bindings": [
+        "router.message(StateFilter(AdvertisementForm.phone_number))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.clear()"
+      ],
+      "fsm_reads": [],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_phone_number_shared",
+      "kind": "handler",
+      "bindings": [
+        "router.message(F.contact, StateFilter(AdvertisementForm.phone_number))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.clear()"
+      ],
+      "fsm_reads": [],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_price_entered",
+      "kind": "handler",
+      "bindings": [
+        "router.message(StateFilter(AdvertisementForm.price))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.update_data(price=int(price_text))"
+      ],
+      "fsm_reads": [],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_price_skipped",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(AdvertisementFormCallback.filter(F.action == AdvertisementFormAction.SKIP_PRICE))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.update_data(price=None)"
+      ],
+      "fsm_reads": [],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "on_title_entered",
+      "kind": "handler",
+      "bindings": [
+        "router.message(StateFilter(AdvertisementForm.title))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.set_state(AdvertisementForm.description)",
+        "state.update_data(title=title)"
+      ],
+      "fsm_reads": [],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='advertisement')",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create",
+        "advertisements.my_ads"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_contact.py",
+      "symbol": "AD_DEEPLINK_PAYLOAD_PREFIX",
+      "kind": "entry_constant",
+      "value": "ad_",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.contact"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_contact.py",
+      "symbol": "MARKET_DEEPLINK_PAYLOAD",
+      "kind": "entry_constant",
+      "value": "market",
+      "group": "advertisements",
+      "targets": [
+        "marketplace.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_contact.py",
+      "symbol": "on_advertisement_deep_link",
+      "kind": "handler",
+      "bindings": [
+        "router.message(CommandStart(deep_link=True))",
+        "flags.private_chat_only"
+      ],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.contact",
+        "marketplace.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_contact.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='advertisement_contact')",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.contact",
+        "marketplace.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_formatter.py",
+      "symbol": "_status_label",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.detail"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_formatter.py",
+      "symbol": "build_media_group",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.media"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_formatter.py",
+      "symbol": "format_advertisement",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.detail"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_formatter.py",
+      "symbol": "format_contact_reveal",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.contact"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_formatter.py",
+      "symbol": "status_emoji",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.detail"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_moderation.py",
+      "symbol": "AD_DEEPLINK_PAYLOAD_PREFIX",
+      "kind": "entry_constant",
+      "value": "ad_",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.moderation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_moderation.py",
+      "symbol": "AdvertisementModerationForm",
+      "kind": "states",
+      "definition": "class AdvertisementModerationForm(StatesGroup):\n    comment = State()",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.rejection_comment"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_moderation.py",
+      "symbol": "_build_owner_rejection_text",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.moderation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_moderation.py",
+      "symbol": "_is_moderation_chat",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.moderation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_moderation.py",
+      "symbol": "_notify_owner",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.moderation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_moderation.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.moderation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_moderation.py",
+      "symbol": "aiogram.fsm.state",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.state import State, StatesGroup",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.moderation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_moderation.py",
+      "symbol": "on_approve",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(AdvertisementModerationCallback.filter(F.action == AdvertisementModerationAction.APPROVE))"
+      ],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.moderation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_moderation.py",
+      "symbol": "on_reject_add_comment_requested",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(AdvertisementModerationCallback.filter(F.action == AdvertisementModerationAction.ADD_COMMENT))"
+      ],
+      "fsm_calls": [
+        "state.set_state(AdvertisementModerationForm.comment)",
+        "state.update_data(advertisement_id=str(callback_data.id), notification_chat_id=callback_query.message.chat.id, notification_message_id=callback_query.message.message_id)"
+      ],
+      "fsm_reads": [],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.rejection_comment"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_moderation.py",
+      "symbol": "on_reject_comment_entered",
+      "kind": "handler",
+      "bindings": [
+        "router.message(StateFilter(AdvertisementModerationForm.comment))"
+      ],
+      "fsm_calls": [
+        "state.clear()",
+        "state.get_data()"
+      ],
+      "fsm_reads": [
+        "data.get('advertisement_id')",
+        "data.get('notification_chat_id')",
+        "data.get('notification_message_id')"
+      ],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.rejection_comment"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_moderation.py",
+      "symbol": "on_reject_requested",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(AdvertisementModerationCallback.filter(F.action == AdvertisementModerationAction.REJECT))"
+      ],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.moderation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_moderation.py",
+      "symbol": "on_reject_without_comment",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(AdvertisementModerationCallback.filter(F.action == AdvertisementModerationAction.SKIP_COMMENT))"
+      ],
+      "group": "advertisements",
+      "targets": [
+        "advertisements.rejection_comment"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/advertisement_moderation.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='advertisement_moderation')",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.moderation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/callbacks.py",
+      "symbol": "AdvertisementCallback",
+      "kind": "callback",
+      "definition": "class AdvertisementCallback(CallbackData, prefix='ad'):\n    id: uuid.UUID\n    page: int",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.detail"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/callbacks.py",
+      "symbol": "AdvertisementDeleteAction",
+      "kind": "callback_values",
+      "definition": "class AdvertisementDeleteAction(StrEnum):\n    REQUEST = 'request'\n    CONFIRM = 'confirm'\n    CANCEL = 'cancel'",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.delete"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/callbacks.py",
+      "symbol": "AdvertisementDeleteCallback",
+      "kind": "callback",
+      "definition": "class AdvertisementDeleteCallback(CallbackData, prefix='ad_delete'):\n    id: uuid.UUID\n    action: AdvertisementDeleteAction\n    page: int",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.delete"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/callbacks.py",
+      "symbol": "AdvertisementExpiryCallback",
+      "kind": "callback",
+      "definition": "class AdvertisementExpiryCallback(CallbackData, prefix='ad_expiry'):\n    option: AdvertisementExpiryOption",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.expiry"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/callbacks.py",
+      "symbol": "AdvertisementExpiryOption",
+      "kind": "callback_values",
+      "definition": "class AdvertisementExpiryOption(StrEnum):\n    MIN_45 = 'min_45'\n    HOURS_6 = 'hours_6'\n    HOURS_24 = 'hours_24'\n    DAYS_7 = 'days_7'\n    NONE = 'none'",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.expiry"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/callbacks.py",
+      "symbol": "AdvertisementFormAction",
+      "kind": "callback_values",
+      "definition": "class AdvertisementFormAction(StrEnum):\n    SKIP_PRICE = 'skip_price'\n    DONE_MEDIA = 'done_media'\n    CONFIRM_SUBMIT = 'confirm_submit'\n    CANCEL = 'cancel'",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/callbacks.py",
+      "symbol": "AdvertisementFormCallback",
+      "kind": "callback",
+      "definition": "class AdvertisementFormCallback(CallbackData, prefix='ad_form'):\n    action: AdvertisementFormAction",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/callbacks.py",
+      "symbol": "AdvertisementModerationAction",
+      "kind": "callback_values",
+      "definition": "class AdvertisementModerationAction(StrEnum):\n    APPROVE = 'approve'\n    REJECT = 'reject'\n    ADD_COMMENT = 'add_comment'\n    SKIP_COMMENT = 'skip_comment'",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.moderation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/callbacks.py",
+      "symbol": "AdvertisementModerationCallback",
+      "kind": "callback",
+      "definition": "class AdvertisementModerationCallback(CallbackData, prefix='ad_moderation'):\n    id: uuid.UUID\n    action: AdvertisementModerationAction",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.moderation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/callbacks.py",
+      "symbol": "AdvertisementsPageCallback",
+      "kind": "callback",
+      "definition": "class AdvertisementsPageCallback(CallbackData, prefix='ads_page'):\n    page: int",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.my_ads"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/entrypoints.py",
+      "symbol": "send_marketplace_menu",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "marketplace.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/keyboards/advertisement.py",
+      "symbol": "build_advertisement_delete_confirm_keyboard",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.delete"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/keyboards/advertisement.py",
+      "symbol": "build_advertisement_detail_keyboard",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.detail"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/keyboards/advertisement.py",
+      "symbol": "build_advertisement_menu_keyboard",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "marketplace.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/keyboards/advertisement.py",
+      "symbol": "build_cancel_form_keyboard",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/keyboards/advertisement.py",
+      "symbol": "build_confirm_keyboard",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/keyboards/advertisement.py",
+      "symbol": "build_expiry_keyboard",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.expiry"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/keyboards/advertisement.py",
+      "symbol": "build_media_keyboard",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.media"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/keyboards/advertisement.py",
+      "symbol": "build_my_ads_keyboard",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.my_ads"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/keyboards/advertisement.py",
+      "symbol": "build_skip_price_keyboard",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.create"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/keyboards/advertisement_moderation.py",
+      "symbol": "build_moderation_keyboard",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.moderation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/keyboards/advertisement_moderation.py",
+      "symbol": "build_reject_comment_choice_keyboard",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.rejection_comment"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/advertisements/presentation/publications.py",
+      "symbol": "TelegramPublicationRemover.delete_publications",
+      "kind": "presenter",
+      "group": "advertisements",
+      "targets": [
+        "advertisements.delete"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/callbacks.py",
+      "symbol": "BroadcastAction",
+      "kind": "callback_values",
+      "definition": "class BroadcastAction(StrEnum):\n    CONFIRM = 'confirm'\n    CANCEL = 'cancel'\n    BUTTONS = 'buttons'\n    WITHOUT_BUTTONS = 'without_buttons'",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.compose",
+        "broadcast.buttons",
+        "broadcast.preview",
+        "broadcast.confirm"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/callbacks.py",
+      "symbol": "BroadcastCallback",
+      "kind": "callback",
+      "definition": "class BroadcastCallback(CallbackData, prefix='broadcast'):\n    action: BroadcastAction",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.compose",
+        "broadcast.buttons",
+        "broadcast.preview",
+        "broadcast.confirm"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/content.py",
+      "symbol": "parse_buttons",
+      "kind": "presenter",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.buttons"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/keyboards.py",
+      "symbol": "build_broadcast_buttons",
+      "kind": "presenter",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.buttons"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/keyboards.py",
+      "symbol": "build_broadcast_buttons_editor",
+      "kind": "presenter",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.buttons"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/keyboards.py",
+      "symbol": "build_broadcast_confirm_keyboard",
+      "kind": "presenter",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.confirm"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "BroadcastForm",
+      "kind": "states",
+      "definition": "class BroadcastForm(StatesGroup):\n    message = State()\n    buttons = State()",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.compose",
+        "broadcast.buttons",
+        "broadcast.preview",
+        "broadcast.confirm"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "_BODY_STATE_KEY",
+      "kind": "storage_key",
+      "value": "body",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "_BUTTONS_STATE_KEY",
+      "kind": "storage_key",
+      "value": "buttons",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.buttons"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "_PHOTO_STATE_KEY",
+      "kind": "storage_key",
+      "value": "photo_id",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "_body_fits",
+      "kind": "presenter",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.preview"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "_is_admin_chat",
+      "kind": "presenter",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "_set_status",
+      "kind": "presenter",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.confirm"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "_show_preview",
+      "kind": "presenter",
+      "fsm_calls": [
+        "state.get_data()"
+      ],
+      "fsm_reads": [
+        "data.get(_BODY_STATE_KEY, '')",
+        "data.get(_BUTTONS_STATE_KEY, [])",
+        "data.get(_PHOTO_STATE_KEY)"
+      ],
+      "group": "broadcast",
+      "targets": [
+        "broadcast.preview"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.compose",
+        "broadcast.buttons",
+        "broadcast.preview",
+        "broadcast.confirm"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "aiogram.fsm.state",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.state import State, StatesGroup",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.compose",
+        "broadcast.buttons",
+        "broadcast.preview",
+        "broadcast.confirm"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "on_broadcast_buttons_entered",
+      "kind": "handler",
+      "bindings": [
+        "router.message(StateFilter(BroadcastForm.buttons))"
+      ],
+      "fsm_calls": [
+        "state.set_state(BroadcastForm.message)",
+        "state.update_data({_BUTTONS_STATE_KEY: [asdict(button) for button in buttons]})"
+      ],
+      "fsm_reads": [],
+      "group": "broadcast",
+      "targets": [
+        "broadcast.buttons"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "on_broadcast_buttons_requested",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(BroadcastCallback.filter(F.action == BroadcastAction.BUTTONS))"
+      ],
+      "fsm_calls": [
+        "state.get_data()",
+        "state.set_state(BroadcastForm.buttons)"
+      ],
+      "fsm_reads": [],
+      "group": "broadcast",
+      "targets": [
+        "broadcast.buttons"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "on_broadcast_cancelled",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(BroadcastCallback.filter(F.action == BroadcastAction.CANCEL))"
+      ],
+      "fsm_calls": [
+        "state.clear()"
+      ],
+      "fsm_reads": [],
+      "group": "broadcast",
+      "targets": [
+        "broadcast.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "on_broadcast_command",
+      "kind": "handler",
+      "bindings": [
+        "router.message(Command('broadcast'))"
+      ],
+      "fsm_calls": [
+        "state.clear()",
+        "state.set_state(BroadcastForm.message)"
+      ],
+      "fsm_reads": [],
+      "group": "broadcast",
+      "targets": [
+        "broadcast.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "on_broadcast_confirmed",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(BroadcastCallback.filter(F.action == BroadcastAction.CONFIRM))"
+      ],
+      "fsm_calls": [
+        "state.clear()",
+        "state.get_data()"
+      ],
+      "fsm_reads": [
+        "data.get(_BODY_STATE_KEY)",
+        "data.get(_BUTTONS_STATE_KEY, [])",
+        "data.get(_PHOTO_STATE_KEY)"
+      ],
+      "group": "broadcast",
+      "targets": [
+        "broadcast.confirm"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "on_broadcast_message_entered",
+      "kind": "handler",
+      "bindings": [
+        "router.message(StateFilter(BroadcastForm.message))"
+      ],
+      "fsm_calls": [
+        "state.update_data({_BODY_STATE_KEY: body, _PHOTO_STATE_KEY: photo_id})"
+      ],
+      "fsm_reads": [],
+      "group": "broadcast",
+      "targets": [
+        "broadcast.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "on_broadcast_without_buttons",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(BroadcastCallback.filter(F.action == BroadcastAction.WITHOUT_BUTTONS))"
+      ],
+      "fsm_calls": [
+        "state.get_data()",
+        "state.set_state(BroadcastForm.message)",
+        "state.update_data({_BUTTONS_STATE_KEY: []})"
+      ],
+      "fsm_reads": [],
+      "group": "broadcast",
+      "targets": [
+        "broadcast.buttons"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/router.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='broadcast')",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.compose",
+        "broadcast.buttons",
+        "broadcast.preview",
+        "broadcast.confirm"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/broadcast/sender.py",
+      "symbol": "TelegramBroadcastSender.send",
+      "kind": "presenter",
+      "group": "broadcast",
+      "targets": [
+        "broadcast.confirm"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/callbacks.py",
+      "symbol": "EdersPageCallback",
+      "kind": "callback",
+      "definition": "class EdersPageCallback(CallbackData, prefix='eders'):\n    selected: DeadlineFilter\n    page: int = 0",
+      "group": "eders",
+      "targets": [
+        "eders.results_page"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/callbacks.py",
+      "symbol": "EdersSettingCallback",
+      "kind": "callback",
+      "definition": "class EdersSettingCallback(CallbackData, prefix='eders_setting'):\n    setting: EdersSetting",
+      "group": "eders",
+      "targets": [
+        "eders.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/entrypoints.py",
+      "symbol": "SNAPSHOT_KEY",
+      "kind": "storage_key",
+      "value": "eders_snapshot",
+      "group": "eders",
+      "targets": [
+        "eders.results_page"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/entrypoints.py",
+      "symbol": "SNAPSHOT_OPENED_AT_KEY",
+      "kind": "storage_key",
+      "value": "eders_snapshot_opened_at",
+      "group": "eders",
+      "targets": [
+        "eders.results_page"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/entrypoints.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "eders",
+      "targets": [
+        "eders.activities",
+        "eders.materials"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/entrypoints.py",
+      "symbol": "show_eders",
+      "kind": "presenter",
+      "fsm_calls": [
+        "state.update_data({SNAPSHOT_KEY: None})",
+        "state.update_data({SNAPSHOT_KEY: snapshot, SNAPSHOT_OPENED_AT_KEY: datetime.now(UTC)})"
+      ],
+      "fsm_reads": [],
+      "group": "eders",
+      "targets": [
+        "eders.activities",
+        "eders.materials"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/formatter.py",
+      "symbol": "_date",
+      "kind": "presenter",
+      "group": "eders",
+      "targets": [
+        "eders.activities",
+        "eders.materials"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/formatter.py",
+      "symbol": "_grading",
+      "kind": "presenter",
+      "group": "eders",
+      "targets": [
+        "eders.activities",
+        "eders.materials"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/formatter.py",
+      "symbol": "_submission",
+      "kind": "presenter",
+      "group": "eders",
+      "targets": [
+        "eders.activities",
+        "eders.materials"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/formatter.py",
+      "symbol": "format_activity_page",
+      "kind": "presenter",
+      "group": "eders",
+      "targets": [
+        "eders.results_page"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/formatter.py",
+      "symbol": "format_eders_event",
+      "kind": "presenter",
+      "group": "eders",
+      "targets": [
+        "eders.notification_delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/formatter.py",
+      "symbol": "format_material_events",
+      "kind": "presenter",
+      "group": "eders",
+      "targets": [
+        "eders.notification_delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/keyboards.py",
+      "symbol": "build_eders_keyboard",
+      "kind": "presenter",
+      "group": "eders",
+      "targets": [
+        "eders.activities",
+        "eders.materials"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/keyboards.py",
+      "symbol": "build_eders_settings_keyboard",
+      "kind": "presenter",
+      "group": "eders",
+      "targets": [
+        "eders.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/router.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "eders",
+      "targets": [
+        "eders.activities",
+        "eders.materials"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/router.py",
+      "symbol": "on_eders_command",
+      "kind": "handler",
+      "bindings": [
+        "router.message(TranslatedText('menu.eders'))",
+        "router.message(TranslatedText('menu.eders_materials'))",
+        "router.message(Command('eders', 'materials'))",
+        "flags.private_chat_only"
+      ],
+      "group": "eders",
+      "targets": [
+        "eders.activities",
+        "eders.materials"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/router.py",
+      "symbol": "on_eders_page",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(EdersPageCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.get_data()"
+      ],
+      "fsm_reads": [
+        "data.get(SNAPSHOT_KEY)",
+        "data.get(SNAPSHOT_OPENED_AT_KEY, snapshot.fetched_at if isinstance(snapshot, EdersSnapshot) else now)"
+      ],
+      "group": "eders",
+      "targets": [
+        "eders.results_page"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/router.py",
+      "symbol": "on_eders_setting",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(EdersSettingCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "group": "eders",
+      "targets": [
+        "eders.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/router.py",
+      "symbol": "on_eders_settings",
+      "kind": "handler",
+      "bindings": [
+        "router.message(Command('eders_settings'))",
+        "flags.private_chat_only"
+      ],
+      "group": "eders",
+      "targets": [
+        "eders.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/router.py",
+      "symbol": "on_open_eders_settings",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_EDERS_NOTIFICATIONS))",
+        "flags.private_chat_only"
+      ],
+      "group": "eders",
+      "targets": [
+        "eders.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/router.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='eders')",
+      "group": "eders",
+      "targets": [
+        "eders.activities",
+        "eders.materials"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/sender.py",
+      "symbol": "TelegramEdersNotificationSender.send",
+      "kind": "presenter",
+      "group": "eders",
+      "targets": [
+        "eders.notification_delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/feedback/callbacks.py",
+      "symbol": "FeedbackAction",
+      "kind": "callback_values",
+      "definition": "class FeedbackAction(StrEnum):\n    CANCEL = 'cancel'",
+      "group": "feedback",
+      "targets": [
+        "feedback.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/feedback/callbacks.py",
+      "symbol": "FeedbackCallback",
+      "kind": "callback",
+      "definition": "class FeedbackCallback(CallbackData, prefix='feedback'):\n    action: FeedbackAction",
+      "group": "feedback",
+      "targets": [
+        "feedback.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/feedback/entrypoints.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "feedback",
+      "targets": [
+        "feedback.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/feedback/entrypoints.py",
+      "symbol": "start_feedback",
+      "kind": "presenter",
+      "fsm_calls": [
+        "state.set_state(FeedbackForm.message)"
+      ],
+      "fsm_reads": [],
+      "group": "feedback",
+      "targets": [
+        "feedback.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/feedback/keyboards.py",
+      "symbol": "build_feedback_cancel_keyboard",
+      "kind": "presenter",
+      "group": "feedback",
+      "targets": [
+        "feedback.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/feedback/router.py",
+      "symbol": "_is_admin_chat",
+      "kind": "presenter",
+      "group": "feedback",
+      "targets": [
+        "feedback.admin_reply"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/feedback/router.py",
+      "symbol": "_is_private_admin",
+      "kind": "presenter",
+      "group": "feedback",
+      "targets": [
+        "feedback.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/feedback/router.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "feedback",
+      "targets": [
+        "feedback.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/feedback/router.py",
+      "symbol": "on_admin_reply",
+      "kind": "handler",
+      "bindings": [
+        "router.message(F.chat.type.in_({ChatType.GROUP, ChatType.SUPERGROUP}), F.reply_to_message)"
+      ],
+      "group": "feedback",
+      "targets": [
+        "feedback.admin_reply"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/feedback/router.py",
+      "symbol": "on_feedback_cancelled",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(FeedbackCallback.filter(F.action == FeedbackAction.CANCEL))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.clear()"
+      ],
+      "fsm_reads": [],
+      "group": "feedback",
+      "targets": [
+        "feedback.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/feedback/router.py",
+      "symbol": "on_feedback_entered",
+      "kind": "handler",
+      "bindings": [
+        "router.message(StateFilter(FeedbackForm.message))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.clear()"
+      ],
+      "fsm_reads": [],
+      "group": "feedback",
+      "targets": [
+        "feedback.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/feedback/router.py",
+      "symbol": "on_open_feedback",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_FEEDBACK))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.set_state(FeedbackForm.message)"
+      ],
+      "fsm_reads": [],
+      "group": "feedback",
+      "targets": [
+        "feedback.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/feedback/router.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='feedback')",
+      "group": "feedback",
+      "targets": [
+        "feedback.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/feedback/states.py",
+      "symbol": "FeedbackForm",
+      "kind": "states",
+      "definition": "class FeedbackForm(StatesGroup):\n    message = State()",
+      "group": "feedback",
+      "targets": [
+        "feedback.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/feedback/states.py",
+      "symbol": "aiogram.fsm.state",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.state import State, StatesGroup",
+      "group": "feedback",
+      "targets": [
+        "feedback.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/callbacks.py",
+      "symbol": "FoodMenuCallback",
+      "kind": "callback",
+      "definition": "class FoodMenuCallback(CallbackData, prefix='food_menu'):\n    day: FoodMenuDay",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/callbacks.py",
+      "symbol": "FoodMenuCleanupOpenCallback",
+      "kind": "callback",
+      "definition": "class FoodMenuCleanupOpenCallback(CallbackData, prefix='food_menu_cleanup_open'):\n    pass",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.cleanup_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/callbacks.py",
+      "symbol": "FoodMenuCleanupSetCallback",
+      "kind": "callback",
+      "definition": "class FoodMenuCleanupSetCallback(CallbackData, prefix='food_menu_cleanup_set'):\n    option: FoodMenuCleanupOption",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.cleanup_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/callbacks.py",
+      "symbol": "FoodMenuDateCallback",
+      "kind": "callback",
+      "definition": "class FoodMenuDateCallback(CallbackData, prefix='food_menu_date'):\n    menu_date: str",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/callbacks.py",
+      "symbol": "FoodMenuDay",
+      "kind": "callback_values",
+      "definition": "class FoodMenuDay(StrEnum):\n    TODAY = 'today'\n    TOMORROW = 'tomorrow'\n    AFTER_TOMORROW = 'after_tomorrow'",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/callbacks.py",
+      "symbol": "FoodMenuNotificationBulkCallback",
+      "kind": "callback",
+      "definition": "class FoodMenuNotificationBulkCallback(CallbackData, prefix='food_menu_notification_bulk'):\n    enable: bool",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/callbacks.py",
+      "symbol": "FoodMenuNotificationDayCallback",
+      "kind": "callback",
+      "definition": "class FoodMenuNotificationDayCallback(CallbackData, prefix='food_menu_notification_day'):\n    weekday: int\n    meal: FoodMenuMeal",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/callbacks.py",
+      "symbol": "FoodMenuNotificationMealCallback",
+      "kind": "callback",
+      "definition": "class FoodMenuNotificationMealCallback(CallbackData, prefix='food_menu_notification_meal'):\n    meal: FoodMenuMeal",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/callbacks.py",
+      "symbol": "FoodMenuNotificationNoopCallback",
+      "kind": "callback",
+      "definition": "class FoodMenuNotificationNoopCallback(CallbackData, prefix='food_menu_notification_noop'):\n    pass",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/callbacks.py",
+      "symbol": "FoodMenuNotificationWeekdayCallback",
+      "kind": "callback",
+      "definition": "class FoodMenuNotificationWeekdayCallback(CallbackData, prefix='food_menu_notification_weekday'):\n    weekday: int",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/callbacks.py",
+      "symbol": "FoodMenuOpenCallback",
+      "kind": "callback",
+      "definition": "class FoodMenuOpenCallback(CallbackData, prefix='food_menu_open'):\n    pass",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.launch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/callbacks.py",
+      "symbol": "FoodMenuRatingCallback",
+      "kind": "callback",
+      "definition": "class FoodMenuRatingCallback(CallbackData, prefix='food_menu_rating'):\n    daily_menu_id: uuid.UUID\n    rating: int",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.rating"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/entrypoints.py",
+      "symbol": "_response_parameters",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.launch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/entrypoints.py",
+      "symbol": "_send_menu_launcher",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.launch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/entrypoints.py",
+      "symbol": "show_food_menu",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.launch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/food_menu_formatter.py",
+      "symbol": "_format_menu_rating",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.rating"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/food_menu_formatter.py",
+      "symbol": "_rich_block_to_input",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/food_menu_formatter.py",
+      "symbol": "build_daily_menu_rich_message",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/food_menu_formatter.py",
+      "symbol": "build_menu_day_selection",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/food_menu_formatter.py",
+      "symbol": "build_menu_launcher",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.launch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/food_menu_formatter.py",
+      "symbol": "build_photos",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/food_menu_formatter.py",
+      "symbol": "format_daily_menu",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/food_menu_formatter.py",
+      "symbol": "format_not_found",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/food_menu_formatter.py",
+      "symbol": "refresh_daily_menu_rating",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.rating"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/keyboards/food_menu.py",
+      "symbol": "_day_label",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/keyboards/food_menu.py",
+      "symbol": "_rating_label",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.rating"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/keyboards/food_menu.py",
+      "symbol": "build_food_menu_settings_buttons",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/keyboards/food_menu.py",
+      "symbol": "build_menu_day_buttons",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/keyboards/food_menu.py",
+      "symbol": "build_menu_open_button",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.launch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/keyboards/food_menu.py",
+      "symbol": "build_menu_rating_buttons",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.rating"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/keyboards/food_menu.py",
+      "symbol": "build_rating_keyboard",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.rating"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/keyboards/food_menu_cleanup.py",
+      "symbol": "_mark",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.cleanup_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/keyboards/food_menu_cleanup.py",
+      "symbol": "_option_label",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.cleanup_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/keyboards/food_menu_cleanup.py",
+      "symbol": "build_food_menu_cleanup_keyboard",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.cleanup_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/keyboards/food_menu_cleanup.py",
+      "symbol": "build_open_food_menu_cleanup_keyboard",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.cleanup_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/keyboards/food_menu_notifications.py",
+      "symbol": "_mark",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/keyboards/food_menu_notifications.py",
+      "symbol": "build_food_menu_notifications_keyboard",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/keyboards/food_menu_notifications.py",
+      "symbol": "build_open_food_menu_notifications_keyboard",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu.py",
+      "symbol": "_parse_skip_days",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.launch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu.py",
+      "symbol": "_send_daily_menu",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu.py",
+      "symbol": "cmd_yemek",
+      "kind": "handler",
+      "bindings": [
+        "router.message(Command('yemek'))"
+      ],
+      "group": "food_menu",
+      "targets": [
+        "food_menu.launch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu.py",
+      "symbol": "on_food_menu_button",
+      "kind": "handler",
+      "bindings": [
+        "router.message(TranslatedText('menu.food'))"
+      ],
+      "group": "food_menu",
+      "targets": [
+        "food_menu.launch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu.py",
+      "symbol": "on_food_menu_date_callback",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(FoodMenuDateCallback.filter())"
+      ],
+      "group": "food_menu",
+      "targets": [
+        "food_menu.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu.py",
+      "symbol": "on_food_menu_day_callback",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(FoodMenuCallback.filter())"
+      ],
+      "group": "food_menu",
+      "targets": [
+        "food_menu.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu.py",
+      "symbol": "on_food_menu_open_callback",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(FoodMenuOpenCallback.filter())"
+      ],
+      "group": "food_menu",
+      "targets": [
+        "food_menu.launch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu.py",
+      "symbol": "on_food_menu_rating_callback",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(FoodMenuRatingCallback.filter())"
+      ],
+      "group": "food_menu",
+      "targets": [
+        "food_menu.rating"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='food_menu')",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu_cleanup.py",
+      "symbol": "_show_food_menu_cleanup_settings",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.cleanup_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu_cleanup.py",
+      "symbol": "on_open_food_menu_cleanup",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(FoodMenuCleanupOpenCallback.filter())"
+      ],
+      "group": "food_menu",
+      "targets": [
+        "food_menu.cleanup_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu_cleanup.py",
+      "symbol": "on_set_food_menu_cleanup",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(FoodMenuCleanupSetCallback.filter())"
+      ],
+      "group": "food_menu",
+      "targets": [
+        "food_menu.cleanup_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu_cleanup.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='food_menu_cleanup')",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.cleanup_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu_notifications.py",
+      "symbol": "_show_food_menu_notifications",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu_notifications.py",
+      "symbol": "on_bulk_toggle_food_menu_notifications",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(FoodMenuNotificationBulkCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "group": "food_menu",
+      "targets": [
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu_notifications.py",
+      "symbol": "on_food_menu_notification_noop",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(FoodMenuNotificationNoopCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "group": "food_menu",
+      "targets": [
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu_notifications.py",
+      "symbol": "on_open_food_menu_notifications",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_FOOD_MENU_NOTIFICATIONS))",
+        "flags.private_chat_only"
+      ],
+      "group": "food_menu",
+      "targets": [
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu_notifications.py",
+      "symbol": "on_toggle_food_menu_notification_day",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(FoodMenuNotificationDayCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "group": "food_menu",
+      "targets": [
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu_notifications.py",
+      "symbol": "on_toggle_food_menu_notification_meal",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(FoodMenuNotificationMealCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "group": "food_menu",
+      "targets": [
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu_notifications.py",
+      "symbol": "on_toggle_food_menu_notification_weekday",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(FoodMenuNotificationWeekdayCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "group": "food_menu",
+      "targets": [
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/routers/food_menu_notifications.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='food_menu_notifications')",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/food_menu/presentation/sender.py",
+      "symbol": "TelegramFoodMenuSender.send",
+      "kind": "presenter",
+      "group": "food_menu",
+      "targets": [
+        "food_menu.notification_delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/notifications/callbacks.py",
+      "symbol": "NotificationSettingCallback",
+      "kind": "callback",
+      "definition": "class NotificationSettingCallback(CallbackData, prefix='notification_setting'):\n    setting: NotificationSetting",
+      "group": "notifications",
+      "targets": [
+        "notifications.settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/notifications/entrypoints.py",
+      "symbol": "show_notifications",
+      "kind": "presenter",
+      "group": "notifications",
+      "targets": [
+        "notifications.settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/notifications/keyboards.py",
+      "symbol": "_mark",
+      "kind": "presenter",
+      "group": "notifications",
+      "targets": [
+        "notifications.settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/notifications/keyboards.py",
+      "symbol": "build_notifications_keyboard",
+      "kind": "presenter",
+      "group": "notifications",
+      "targets": [
+        "notifications.settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/notifications/router.py",
+      "symbol": "_show_notifications_menu",
+      "kind": "presenter",
+      "group": "notifications",
+      "targets": [
+        "notifications.settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/notifications/router.py",
+      "symbol": "on_back_to_notifications",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(SettingsCallback.filter(F.action == SettingsAction.BACK_TO_NOTIFICATIONS))",
+        "flags.private_chat_only"
+      ],
+      "group": "notifications",
+      "targets": [
+        "notifications.settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/notifications/router.py",
+      "symbol": "on_open_notifications",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_NOTIFICATIONS))",
+        "flags.private_chat_only"
+      ],
+      "group": "notifications",
+      "targets": [
+        "notifications.settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/notifications/router.py",
+      "symbol": "on_toggle_notification_setting",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(NotificationSettingCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "group": "notifications",
+      "targets": [
+        "notifications.settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/notifications/router.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='notifications')",
+      "group": "notifications",
+      "targets": [
+        "notifications.settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/callbacks.py",
+      "symbol": "ObisAction",
+      "kind": "callback_values",
+      "definition": "class ObisAction(StrEnum):\n    START_CREDENTIALS = 'start_credentials'\n    ACCEPT_TERMS = 'accept_terms'\n    CANCEL_CREDENTIALS = 'cancel_credentials'\n    CLEAR_CREDENTIALS = 'clear_credentials'\n    CONFIRM_CLEAR_CREDENTIALS = 'confirm_clear_credentials'",
+      "group": "obis",
+      "targets": [
+        "obis.terms",
+        "obis.credentials",
+        "obis.clear_confirmation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/callbacks.py",
+      "symbol": "ObisCallback",
+      "kind": "callback",
+      "definition": "class ObisCallback(CallbackData, prefix='obis'):\n    action: ObisAction",
+      "group": "obis",
+      "targets": [
+        "obis.terms",
+        "obis.credentials",
+        "obis.clear_confirmation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/callbacks.py",
+      "symbol": "ObisResultsPageCallback",
+      "kind": "callback",
+      "definition": "class ObisResultsPageCallback(CallbackData, prefix='obis_results_page'):\n    page: int",
+      "group": "obis",
+      "targets": [
+        "obis.results_page"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/entrypoints.py",
+      "symbol": "RESULTS_KEY",
+      "kind": "storage_key",
+      "value": "obis_result_pages",
+      "group": "obis",
+      "targets": [
+        "obis.results_page"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/entrypoints.py",
+      "symbol": "_show_obis_results",
+      "kind": "presenter",
+      "fsm_calls": [
+        "state.get_data()",
+        "state.update_data({RESULTS_KEY: snapshots})"
+      ],
+      "fsm_reads": [
+        "data.get(RESULTS_KEY, {})"
+      ],
+      "group": "obis",
+      "targets": [
+        "obis.results_page"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/entrypoints.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "obis",
+      "targets": [
+        "obis.credentials",
+        "obis.results_page"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/entrypoints.py",
+      "symbol": "show_attendance",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.attendance"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/entrypoints.py",
+      "symbol": "show_grades",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.grades"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/entrypoints.py",
+      "symbol": "show_obis_settings",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/formatter.py",
+      "symbol": "_build_pages",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.results_page"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/formatter.py",
+      "symbol": "_format_float",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.results_page"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/formatter.py",
+      "symbol": "_format_skips_line",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.attendance"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/formatter.py",
+      "symbol": "_split_block",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.results_page"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/formatter.py",
+      "symbol": "format_attendance_pages",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.attendance"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/formatter.py",
+      "symbol": "format_exam_grade_change",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.notification_delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/formatter.py",
+      "symbol": "format_exam_grades_pages",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.grades"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/formatter.py",
+      "symbol": "format_lesson_skip_change",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.notification_delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/keyboards.py",
+      "symbol": "build_cancel_keyboard",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.credentials"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/keyboards.py",
+      "symbol": "build_confirm_clear_credentials_keyboard",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.clear_confirmation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/keyboards.py",
+      "symbol": "build_no_credentials_keyboard",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/keyboards.py",
+      "symbol": "build_obis_results_keyboard",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.results_page"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/keyboards.py",
+      "symbol": "build_obis_settings_keyboard",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/keyboards.py",
+      "symbol": "build_terms_keyboard",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.terms"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/router.py",
+      "symbol": "ObisCredentialsForm",
+      "kind": "states",
+      "definition": "class ObisCredentialsForm(StatesGroup):\n    student_number = State()\n    password = State()",
+      "group": "obis",
+      "targets": [
+        "obis.credentials"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/router.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "obis",
+      "targets": [
+        "obis.credentials",
+        "obis.results_page"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/router.py",
+      "symbol": "aiogram.fsm.state",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.state import State, StatesGroup",
+      "group": "obis",
+      "targets": [
+        "obis.credentials",
+        "obis.results_page"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/router.py",
+      "symbol": "on_accept_terms",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(ObisCallback.filter(F.action == ObisAction.ACCEPT_TERMS))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.set_state(ObisCredentialsForm.student_number)"
+      ],
+      "fsm_reads": [],
+      "group": "obis",
+      "targets": [
+        "obis.credentials"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/router.py",
+      "symbol": "on_attendance_button",
+      "kind": "handler",
+      "bindings": [
+        "router.message(TranslatedText('menu.attendance'))",
+        "flags.private_chat_only"
+      ],
+      "group": "obis",
+      "targets": [
+        "obis.attendance"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/router.py",
+      "symbol": "on_cancel_credentials",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(ObisCallback.filter(F.action == ObisAction.CANCEL_CREDENTIALS))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.clear()"
+      ],
+      "fsm_reads": [],
+      "group": "obis",
+      "targets": [
+        "obis.credentials"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/router.py",
+      "symbol": "on_clear_credentials_requested",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(ObisCallback.filter(F.action == ObisAction.CLEAR_CREDENTIALS))",
+        "flags.private_chat_only"
+      ],
+      "group": "obis",
+      "targets": [
+        "obis.clear_confirmation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/router.py",
+      "symbol": "on_confirm_clear_credentials",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(ObisCallback.filter(F.action == ObisAction.CONFIRM_CLEAR_CREDENTIALS))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.clear()"
+      ],
+      "fsm_reads": [],
+      "group": "obis",
+      "targets": [
+        "obis.clear_confirmation"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/router.py",
+      "symbol": "on_exams_button",
+      "kind": "handler",
+      "bindings": [
+        "router.message(TranslatedText('menu.grades'))",
+        "flags.private_chat_only"
+      ],
+      "group": "obis",
+      "targets": [
+        "obis.grades"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/router.py",
+      "symbol": "on_obis_results_page",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(ObisResultsPageCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.get_data()"
+      ],
+      "fsm_reads": [
+        "data.get(RESULTS_KEY, {})"
+      ],
+      "group": "obis",
+      "targets": [
+        "obis.results_page"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/router.py",
+      "symbol": "on_password_entered",
+      "kind": "handler",
+      "bindings": [
+        "router.message(StateFilter(ObisCredentialsForm.password))",
+        "flags.private_chat_only",
+        "flags.mask_logged_message"
+      ],
+      "fsm_calls": [
+        "state.clear()",
+        "state.get_data()",
+        "state.set_state(ObisCredentialsForm.student_number)"
+      ],
+      "fsm_reads": [
+        "data.get('student_number')"
+      ],
+      "group": "obis",
+      "targets": [
+        "obis.credentials"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/router.py",
+      "symbol": "on_start_credentials",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(ObisCallback.filter(F.action == ObisAction.START_CREDENTIALS))",
+        "flags.private_chat_only"
+      ],
+      "group": "obis",
+      "targets": [
+        "obis.terms"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/router.py",
+      "symbol": "on_student_number_entered",
+      "kind": "handler",
+      "bindings": [
+        "router.message(StateFilter(ObisCredentialsForm.student_number))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.set_state(ObisCredentialsForm.password)",
+        "state.update_data(student_number=student_number)"
+      ],
+      "fsm_reads": [],
+      "group": "obis",
+      "targets": [
+        "obis.credentials"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/router.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='obis')",
+      "group": "obis",
+      "targets": [
+        "obis.credentials",
+        "obis.results_page"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/sender.py",
+      "symbol": "TelegramObisNotificationSender.exam_grade_changed",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.notification_delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/obis/presentation/sender.py",
+      "symbol": "TelegramObisNotificationSender.lesson_skips_changed",
+      "kind": "presenter",
+      "group": "obis",
+      "targets": [
+        "obis.notification_delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/callbacks.py",
+      "symbol": "CourseCallback",
+      "kind": "callback",
+      "definition": "class CourseCallback(CallbackData, prefix='course'):\n    id: int",
+      "group": "schedule",
+      "targets": [
+        "schedule.tracking"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/callbacks.py",
+      "symbol": "DepartmentCallback",
+      "kind": "callback",
+      "definition": "class DepartmentCallback(CallbackData, prefix='department'):\n    id: uuid.UUID",
+      "group": "schedule",
+      "targets": [
+        "schedule.tracking"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/callbacks.py",
+      "symbol": "FacultyCallback",
+      "kind": "callback",
+      "definition": "class FacultyCallback(CallbackData, prefix='faculty'):\n    id: uuid.UUID",
+      "group": "schedule",
+      "targets": [
+        "schedule.tracking"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/callbacks.py",
+      "symbol": "LessonSearchPageCallback",
+      "kind": "callback",
+      "definition": "class LessonSearchPageCallback(CallbackData, prefix='lesson_search_page'):\n    page: int",
+      "group": "schedule",
+      "targets": [
+        "schedule.search_results"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/callbacks.py",
+      "symbol": "ScheduleDayCallback",
+      "kind": "callback",
+      "definition": "class ScheduleDayCallback(CallbackData, prefix='schedule_day'):\n    weekday: int",
+      "group": "schedule",
+      "targets": [
+        "schedule.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/callbacks.py",
+      "symbol": "TimetableMenuAction",
+      "kind": "callback_values",
+      "definition": "class TimetableMenuAction(StrEnum):\n    OPEN_MY_SCHEDULE = 'open_my_schedule'\n    OPEN_LESSON_SEARCH = 'open_lesson_search'",
+      "group": "schedule",
+      "targets": [
+        "schedule.menu",
+        "schedule.lesson_search",
+        "schedule.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/callbacks.py",
+      "symbol": "TimetableMenuCallback",
+      "kind": "callback",
+      "definition": "class TimetableMenuCallback(CallbackData, prefix='timetable_menu'):\n    action: TimetableMenuAction",
+      "group": "schedule",
+      "targets": [
+        "schedule.menu",
+        "schedule.lesson_search",
+        "schedule.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/entrypoints.py",
+      "symbol": "show_course_tracking",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.tracking"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/entrypoints.py",
+      "symbol": "show_timetable_menu",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/keyboards/lesson_search.py",
+      "symbol": "build_lesson_search_keyboard",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.lesson_search"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/keyboards/timetable.py",
+      "symbol": "build_course_keyboard",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.tracking"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/keyboards/timetable.py",
+      "symbol": "build_department_keyboard",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.tracking"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/keyboards/timetable.py",
+      "symbol": "build_faculty_keyboard",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.tracking"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/keyboards/timetable.py",
+      "symbol": "build_no_tracked_courses_keyboard",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.tracking"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/keyboards/timetable.py",
+      "symbol": "build_schedule_days_keyboard",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/keyboards/timetable.py",
+      "symbol": "build_timetable_menu_keyboard",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/lesson_search_formatter.py",
+      "symbol": "_format_result",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.search_results"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/lesson_search_formatter.py",
+      "symbol": "format_lesson_search_page",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.search_results"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/lesson_search_formatter.py",
+      "symbol": "total_page_count",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.search_results"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/routers/lesson_search.py",
+      "symbol": "LessonSearchForm",
+      "kind": "states",
+      "definition": "class LessonSearchForm(StatesGroup):\n    query = State()",
+      "group": "schedule",
+      "targets": [
+        "schedule.lesson_search"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/routers/lesson_search.py",
+      "symbol": "RESULTS_KEY",
+      "kind": "storage_key",
+      "value": "lesson_search_results",
+      "group": "schedule",
+      "targets": [
+        "schedule.search_results"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/routers/lesson_search.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "schedule",
+      "targets": [
+        "schedule.lesson_search"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/routers/lesson_search.py",
+      "symbol": "aiogram.fsm.state",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.state import State, StatesGroup",
+      "group": "schedule",
+      "targets": [
+        "schedule.lesson_search"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/routers/lesson_search.py",
+      "symbol": "on_search_page_selected",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(LessonSearchPageCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.get_data()"
+      ],
+      "fsm_reads": [
+        "data.get(RESULTS_KEY)"
+      ],
+      "group": "schedule",
+      "targets": [
+        "schedule.search_results"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/routers/lesson_search.py",
+      "symbol": "on_search_query_entered",
+      "kind": "handler",
+      "bindings": [
+        "router.message(StateFilter(LessonSearchForm.query))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.clear()",
+        "state.update_data({RESULTS_KEY: results})"
+      ],
+      "fsm_reads": [],
+      "group": "schedule",
+      "targets": [
+        "schedule.lesson_search"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/routers/lesson_search.py",
+      "symbol": "on_search_selected",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(TimetableMenuCallback.filter(F.action == TimetableMenuAction.OPEN_LESSON_SEARCH))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.set_state(LessonSearchForm.query)"
+      ],
+      "fsm_reads": [],
+      "group": "schedule",
+      "targets": [
+        "schedule.lesson_search"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/routers/lesson_search.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='lesson_search')",
+      "group": "schedule",
+      "targets": [
+        "schedule.lesson_search"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/routers/timetable.py",
+      "symbol": "_current_weekday",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/routers/timetable.py",
+      "symbol": "list_courses",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(DepartmentCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "group": "schedule",
+      "targets": [
+        "schedule.tracking"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/routers/timetable.py",
+      "symbol": "list_departments",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(FacultyCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "group": "schedule",
+      "targets": [
+        "schedule.tracking"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/routers/timetable.py",
+      "symbol": "on_my_schedule_selected",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(TimetableMenuCallback.filter(F.action == TimetableMenuAction.OPEN_MY_SCHEDULE))",
+        "flags.private_chat_only"
+      ],
+      "group": "schedule",
+      "targets": [
+        "schedule.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/routers/timetable.py",
+      "symbol": "on_schedule_day_selected",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(ScheduleDayCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "group": "schedule",
+      "targets": [
+        "schedule.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/routers/timetable.py",
+      "symbol": "on_timetable_menu_button",
+      "kind": "handler",
+      "bindings": [
+        "router.message(TranslatedText('menu.schedule'))",
+        "flags.private_chat_only"
+      ],
+      "group": "schedule",
+      "targets": [
+        "schedule.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/routers/timetable.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='timetable')",
+      "group": "schedule",
+      "targets": [
+        "schedule.menu",
+        "schedule.tracking",
+        "schedule.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/routers/timetable.py",
+      "symbol": "toggle_course_tracking",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(CourseCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "group": "schedule",
+      "targets": [
+        "schedule.tracking"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/sender.py",
+      "symbol": "TelegramScheduleChangeSender.send",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.notification_delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/timetable_formatter.py",
+      "symbol": "_format_change_block",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.notification_delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/timetable_formatter.py",
+      "symbol": "_format_change_lesson_content",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.notification_delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/timetable_formatter.py",
+      "symbol": "_group_into_blocks",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/timetable_formatter.py",
+      "symbol": "_period_marker",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/timetable_formatter.py",
+      "symbol": "_should_show_lunch",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/timetable_formatter.py",
+      "symbol": "_split_lesson_content",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/timetable_formatter.py",
+      "symbol": "format_day_schedule",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.day"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/schedule/presentation/timetable_formatter.py",
+      "symbol": "format_lesson_changes",
+      "kind": "presenter",
+      "group": "schedule",
+      "targets": [
+        "schedule.notification_delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/callbacks.py",
+      "symbol": "StudentQuestionsAnswerCallback",
+      "kind": "callback",
+      "definition": "class StudentQuestionsAnswerCallback(CallbackData, prefix='sqa'):\n    session_id: str\n    step: StudentQuestionsStep\n    answer: str",
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/callbacks.py",
+      "symbol": "StudentQuestionsControlAction",
+      "kind": "callback_values",
+      "definition": "class StudentQuestionsControlAction(StrEnum):\n    RESTART = 'restart'\n    CANCEL = 'cancel'",
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/callbacks.py",
+      "symbol": "StudentQuestionsControlCallback",
+      "kind": "callback",
+      "definition": "class StudentQuestionsControlCallback(CallbackData, prefix='sqc'):\n    session_id: str\n    action: StudentQuestionsControlAction",
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/callbacks.py",
+      "symbol": "StudentQuestionsStep",
+      "kind": "callback_values",
+      "definition": "class StudentQuestionsStep(StrEnum):\n    COURSE = 'course'\n    SEARCH = 'search'\n    FOUND = 'found'\n    BETA = 'beta'",
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/keyboards.py",
+      "symbol": "_cancel_button",
+      "kind": "presenter",
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/keyboards.py",
+      "symbol": "_course_label",
+      "kind": "presenter",
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/keyboards.py",
+      "symbol": "build_student_questions_keyboard",
+      "kind": "presenter",
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/keyboards.py",
+      "symbol": "build_student_questions_overwrite_keyboard",
+      "kind": "presenter",
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/router.py",
+      "symbol": "SESSION_KEY",
+      "kind": "storage_key",
+      "value": "student_questions_session",
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/router.py",
+      "symbol": "StudentQuestionsForm",
+      "kind": "states",
+      "definition": "class StudentQuestionsForm(StatesGroup):\n    overwrite = State()\n    course = State()\n    search = State()\n    questions = State()\n    found = State()\n    sources = State()\n    beta = State()",
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/router.py",
+      "symbol": "_begin",
+      "kind": "presenter",
+      "fsm_calls": [
+        "state.clear()",
+        "state.update_data({SESSION_KEY: uuid.uuid4().hex, 'overwrite': overwrite})"
+      ],
+      "fsm_reads": [],
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/router.py",
+      "symbol": "_show_question",
+      "kind": "presenter",
+      "fsm_calls": [
+        "state.get_data()",
+        "state.set_state(form_state)"
+      ],
+      "fsm_reads": [
+        "(await state.get_data())[SESSION_KEY]"
+      ],
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/router.py",
+      "symbol": "_warn_completed",
+      "kind": "presenter",
+      "fsm_calls": [
+        "state.clear()",
+        "state.set_state(StudentQuestionsForm.overwrite)",
+        "state.update_data({SESSION_KEY: session_id})"
+      ],
+      "fsm_reads": [],
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/router.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/router.py",
+      "symbol": "aiogram.fsm.state",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.state import State, StatesGroup",
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/router.py",
+      "symbol": "on_student_questions_answer",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(StudentQuestionsAnswerCallback.filter())",
+        "flags.private_chat_only",
+        "flags.preserve_ui_flow"
+      ],
+      "fsm_calls": [
+        "state.clear()",
+        "state.get_data()",
+        "state.get_state()",
+        "state.update_data(course=course.value)",
+        "state.update_data(found_answers=yes)",
+        "state.update_data(had_questions=yes)"
+      ],
+      "fsm_reads": [
+        "data.get('answer_sources')",
+        "data.get('found_answers')",
+        "data.get('overwrite', False)",
+        "data.get('questions')",
+        "data.get(SESSION_KEY)",
+        "data['course']",
+        "data['had_questions']"
+      ],
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/router.py",
+      "symbol": "on_student_questions_button_required",
+      "kind": "handler",
+      "bindings": [
+        "router.message(StateFilter(StudentQuestionsForm.overwrite, StudentQuestionsForm.course, StudentQuestionsForm.search, StudentQuestionsForm.found, StudentQuestionsForm.beta), ~F.text.startswith('/'))",
+        "flags.private_chat_only"
+      ],
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/router.py",
+      "symbol": "on_student_questions_control",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(StudentQuestionsControlCallback.filter())",
+        "flags.private_chat_only",
+        "flags.preserve_ui_flow"
+      ],
+      "fsm_calls": [
+        "state.clear()",
+        "state.get_data()",
+        "state.get_state()"
+      ],
+      "fsm_reads": [
+        "data.get(SESSION_KEY)"
+      ],
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/router.py",
+      "symbol": "on_student_questions_start",
+      "kind": "handler",
+      "bindings": [
+        "router.message(CommandStart(deep_link=True, magic=F.args == 'student_questions'))",
+        "flags.private_chat_only"
+      ],
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/router.py",
+      "symbol": "on_student_questions_text",
+      "kind": "handler",
+      "bindings": [
+        "router.message(StateFilter(StudentQuestionsForm.questions, StudentQuestionsForm.sources), ~F.text.startswith('/'))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.get_state()",
+        "state.update_data(answer_sources=answer)",
+        "state.update_data(questions=answer)"
+      ],
+      "fsm_reads": [],
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/student_questions/router.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='student_questions')",
+      "group": "student_questions",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/study_week/entrypoints.py",
+      "symbol": "show_study_week",
+      "kind": "presenter",
+      "group": "study_week",
+      "targets": [
+        "study_week.summary"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/study_week/formatter.py",
+      "symbol": "format_study_week",
+      "kind": "presenter",
+      "group": "study_week",
+      "targets": [
+        "study_week.summary"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/study_week/router.py",
+      "symbol": "on_week_command",
+      "kind": "handler",
+      "bindings": [
+        "router.message(TranslatedText('menu.study_week'))",
+        "router.message(Command('week'))",
+        "flags.private_chat_only"
+      ],
+      "group": "study_week",
+      "targets": [
+        "study_week.summary"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/study_week/router.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='study_week')",
+      "group": "study_week",
+      "targets": [
+        "study_week.summary"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/menus.py",
+      "symbol": "EDERS_FEATURES",
+      "kind": "feature_handoffs",
+      "definition": "frozenset({'study_week', 'eders', 'eders_materials'})",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/menus.py",
+      "symbol": "FEATURES",
+      "kind": "feature_handoffs",
+      "definition": "frozenset({'food_menu', 'marketplace', 'settings', 'notifications', 'course_tracking', 'obis_credentials', 'phone_numbers', 'feedback', 'schedule', 'study_week', 'attendance', 'grades', 'eders', 'eders_materials'})",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/menus.py",
+      "symbol": "attendance",
+      "kind": "feature_handoff",
+      "eders_enabled": false,
+      "group": "obis",
+      "targets": [
+        "obis.attendance"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/menus.py",
+      "symbol": "course_tracking",
+      "kind": "feature_handoff",
+      "eders_enabled": false,
+      "group": "schedule",
+      "targets": [
+        "schedule.tracking"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/menus.py",
+      "symbol": "eders",
+      "kind": "feature_handoff",
+      "eders_enabled": true,
+      "group": "eders",
+      "targets": [
+        "eders.activities"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/menus.py",
+      "symbol": "eders_materials",
+      "kind": "feature_handoff",
+      "eders_enabled": true,
+      "group": "eders",
+      "targets": [
+        "eders.materials"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/menus.py",
+      "symbol": "feedback",
+      "kind": "feature_handoff",
+      "eders_enabled": false,
+      "group": "feedback",
+      "targets": [
+        "feedback.compose"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/menus.py",
+      "symbol": "food_menu",
+      "kind": "feature_handoff",
+      "eders_enabled": false,
+      "group": "food_menu",
+      "targets": [
+        "food_menu.launch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/menus.py",
+      "symbol": "grades",
+      "kind": "feature_handoff",
+      "eders_enabled": false,
+      "group": "obis",
+      "targets": [
+        "obis.grades"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/menus.py",
+      "symbol": "marketplace",
+      "kind": "feature_handoff",
+      "eders_enabled": false,
+      "group": "advertisements",
+      "targets": [
+        "marketplace.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/menus.py",
+      "symbol": "notifications",
+      "kind": "feature_handoff",
+      "eders_enabled": false,
+      "group": "notifications",
+      "targets": [
+        "notifications.settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/menus.py",
+      "symbol": "obis_credentials",
+      "kind": "feature_handoff",
+      "eders_enabled": false,
+      "group": "obis",
+      "targets": [
+        "obis.settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/menus.py",
+      "symbol": "phone_numbers",
+      "kind": "feature_handoff",
+      "eders_enabled": false,
+      "group": "users",
+      "targets": [
+        "users.contacts"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/menus.py",
+      "symbol": "schedule",
+      "kind": "feature_handoff",
+      "eders_enabled": false,
+      "group": "schedule",
+      "targets": [
+        "schedule.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/menus.py",
+      "symbol": "settings",
+      "kind": "feature_handoff",
+      "eders_enabled": false,
+      "group": "navigation",
+      "targets": [
+        "settings.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/menus.py",
+      "symbol": "study_week",
+      "kind": "feature_handoff",
+      "eders_enabled": true,
+      "group": "study_week",
+      "targets": [
+        "study_week.summary"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/callbacks.py",
+      "symbol": "UiFlowCallback",
+      "kind": "callback",
+      "definition": "class UiFlowCallback(CallbackData, prefix='uf'):\n    token: str\n    index: int",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
+      "symbol": "FlowTelegramCoordinator._answer",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
+      "symbol": "FlowTelegramCoordinator._deliver",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
+      "symbol": "FlowTelegramCoordinator._demo",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.pilot"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
+      "symbol": "FlowTelegramCoordinator._notice",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
+      "symbol": "FlowTelegramCoordinator._prepare",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
+      "symbol": "FlowTelegramCoordinator._user",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
+      "symbol": "FlowTelegramCoordinator.callback",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
+      "symbol": "FlowTelegramCoordinator.complete_effect",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
+      "symbol": "FlowTelegramCoordinator.demo",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.pilot"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
+      "symbol": "FlowTelegramCoordinator.install_defaults",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
+      "symbol": "FlowTelegramCoordinator.launch",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
+      "symbol": "FlowTelegramCoordinator.leave",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
+      "symbol": "FlowTelegramCoordinator.menu",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "main_menu",
+        "studies.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
+      "symbol": "FlowTelegramCoordinator.message",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
+      "symbol": "FlowTelegramCoordinator.refresh",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
+      "symbol": "FlowTelegramCoordinator.survey",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/features.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/features.py",
+      "symbol": "open_feature",
+      "kind": "presenter",
+      "fsm_calls": [
+        "context.state.clear()",
+        "context.state.get_state()"
+      ],
+      "fsm_reads": [],
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/ingress.py",
+      "symbol": "IngressMiddleware.__call__",
+      "kind": "presenter",
+      "fsm_calls": [
+        "state.get_state()"
+      ],
+      "fsm_reads": [],
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/ingress.py",
+      "symbol": "LegacyRoute.__call__",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/ingress.py",
+      "symbol": "RuntimeRoute.__call__",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/ingress.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/ingress.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='ui_ingress')",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/ingress.py",
+      "symbol": "runtime_callback",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(RuntimeRoute())",
+        "flags.private_chat_only",
+        "flags.ui_flow"
+      ],
+      "fsm_calls": [
+        "state.clear()"
+      ],
+      "fsm_reads": [],
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/ingress.py",
+      "symbol": "runtime_message",
+      "kind": "handler",
+      "bindings": [
+        "router.message(RuntimeRoute())",
+        "flags.private_chat_only",
+        "flags.ui_flow",
+        "flags.mask_logged_message"
+      ],
+      "fsm_calls": [
+        "state.clear()"
+      ],
+      "fsm_reads": [],
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/ingress_events.py",
+      "symbol": "event_identity",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/ingress_events.py",
+      "symbol": "normalize",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/menu_router.py",
+      "symbol": "NoStartPayload.__call__",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "main_menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/menu_router.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "runtime",
+      "targets": [
+        "main_menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/menu_router.py",
+      "symbol": "main_menu",
+      "kind": "handler",
+      "bindings": [
+        "router.message(FlowLaunchChat(), CommandStart(), NoStartPayload())",
+        "router.message(FlowLaunchChat(), TranslatedText('common.back_to_menu'))",
+        "flags.private_chat_only",
+        "flags.ui_flow"
+      ],
+      "fsm_calls": [
+        "state.clear()"
+      ],
+      "fsm_reads": [],
+      "group": "runtime",
+      "targets": [
+        "main_menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/menu_router.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='ui_flow_menus')",
+      "group": "runtime",
+      "targets": [
+        "main_menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/menu_router.py",
+      "symbol": "study_menu",
+      "kind": "handler",
+      "bindings": [
+        "router.message(FlowLaunchChat(), TranslatedText('menu.study'))",
+        "flags.private_chat_only",
+        "flags.ui_flow"
+      ],
+      "fsm_calls": [
+        "state.clear()"
+      ],
+      "fsm_reads": [],
+      "group": "runtime",
+      "targets": [
+        "studies.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/navigation.py",
+      "symbol": "UiFlowNavigationMiddleware.__call__",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/observation.py",
+      "symbol": "ObservationCoordinator.observe",
+      "kind": "presenter",
+      "fsm_calls": [
+        "state.get_state()"
+      ],
+      "fsm_reads": [],
+      "group": "runtime",
+      "targets": [
+        "runtime.monitoring"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/observation.py",
+      "symbol": "ObservationCoordinator.restart",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.monitoring"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/observation.py",
+      "symbol": "UiFlowObservationMiddleware.__call__",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.monitoring"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/observation.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "runtime",
+      "targets": [
+        "runtime.monitoring"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/preview.py",
+      "symbol": "_PreviewVersions.version",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.preview"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/preview.py",
+      "symbol": "_Stub.__call__",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.preview"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/preview.py",
+      "symbol": "preview",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.preview"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/rendering.py",
+      "symbol": "FlowRenderer.render",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/rendering.py",
+      "symbol": "FlowRenderer.validate_document",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/rendering.py",
+      "symbol": "_render",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/rendering.py",
+      "symbol": "_units",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/rendering.py",
+      "symbol": "validate_message",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/rendering.py",
+      "symbol": "validate_reply_label",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/router.py",
+      "symbol": "ActiveFlow.__call__",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/router.py",
+      "symbol": "ActiveReplyButton.__call__",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/router.py",
+      "symbol": "AdminFlowChat.__call__",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/router.py",
+      "symbol": "FlowLaunchChat.__call__",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/router.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/router.py",
+      "symbol": "on_editor",
+      "kind": "handler",
+      "bindings": [
+        "router.message(AdminFlowChat(), Command('editor'))",
+        "flags.private_chat_only",
+        "flags.preserve_ui_flow"
+      ],
+      "group": "runtime",
+      "targets": [
+        "admin.editor"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/router.py",
+      "symbol": "on_flow_callback",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(UiFlowCallback.filter())",
+        "flags.private_chat_only",
+        "flags.ui_flow"
+      ],
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/router.py",
+      "symbol": "on_flow_demo",
+      "kind": "handler",
+      "bindings": [
+        "router.message(AdminFlowChat(), Command('flow_demo'))",
+        "flags.private_chat_only",
+        "flags.ui_flow"
+      ],
+      "fsm_calls": [
+        "state.clear()"
+      ],
+      "fsm_reads": [],
+      "group": "runtime",
+      "targets": [
+        "runtime.pilot"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/router.py",
+      "symbol": "on_flow_message",
+      "kind": "handler",
+      "bindings": [
+        "router.message(ActiveFlow())",
+        "flags.private_chat_only",
+        "flags.ui_flow",
+        "flags.mask_logged_message"
+      ],
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/router.py",
+      "symbol": "on_invalid_flow_callback",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(F.data.startswith('uf:'))",
+        "flags.private_chat_only",
+        "flags.ui_flow"
+      ],
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/router.py",
+      "symbol": "private_user",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/router.py",
+      "symbol": "reply_router",
+      "kind": "router",
+      "definition": "Router(name='ui_flow_reply')",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/router.py",
+      "symbol": "reply_router.message.register#1",
+      "kind": "registration",
+      "definition": "reply_router.message.register(on_flow_message, ActiveReplyButton(), flags={'private_chat_only': True, 'ui_flow': True, 'mask_logged_message': True})",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/router.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='ui_flows')",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/sender.py",
+      "symbol": "send_screen",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "runtime.delivery"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/survey_router.py",
+      "symbol": "NoLegacySurvey.__call__",
+      "kind": "presenter",
+      "fsm_calls": [
+        "state.get_state()"
+      ],
+      "fsm_reads": [],
+      "group": "runtime",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/survey_router.py",
+      "symbol": "SurveyEntryChat.__call__",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/survey_router.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "runtime",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/survey_router.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='ui_flow_survey')",
+      "group": "runtime",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/presentation/survey_router.py",
+      "symbol": "survey_start",
+      "kind": "handler",
+      "bindings": [
+        "router.message(SurveyEntryChat(), CommandStart(deep_link=True, magic=F.args == 'student_questions'), NoLegacySurvey())",
+        "flags.private_chat_only",
+        "flags.ui_flow"
+      ],
+      "fsm_calls": [
+        "state.clear()"
+      ],
+      "fsm_reads": [],
+      "group": "runtime",
+      "targets": [
+        "student_questions"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/callbacks.py",
+      "symbol": "LocaleCallback",
+      "kind": "callback",
+      "definition": "class LocaleCallback(CallbackData, prefix='locale'):\n    locale: Locale",
+      "group": "users",
+      "targets": [
+        "settings.locale"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/callbacks.py",
+      "symbol": "PhoneNumberAction",
+      "kind": "callback_values",
+      "definition": "class PhoneNumberAction(StrEnum):\n    ADD = 'add'",
+      "group": "users",
+      "targets": [
+        "users.contacts",
+        "users.contact_input",
+        "users.contact_delete"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/callbacks.py",
+      "symbol": "PhoneNumberActionCallback",
+      "kind": "callback",
+      "definition": "class PhoneNumberActionCallback(CallbackData, prefix='phone_number_action'):\n    action: PhoneNumberAction",
+      "group": "users",
+      "targets": [
+        "users.contacts",
+        "users.contact_input",
+        "users.contact_delete"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/callbacks.py",
+      "symbol": "PhoneNumberDeleteCallback",
+      "kind": "callback",
+      "definition": "class PhoneNumberDeleteCallback(CallbackData, prefix='phone_number_delete'):\n    id: uuid.UUID",
+      "group": "users",
+      "targets": [
+        "users.contact_delete"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/callbacks.py",
+      "symbol": "ThemeCallback",
+      "kind": "callback",
+      "definition": "class ThemeCallback(CallbackData, prefix='theme'):\n    theme: Theme",
+      "group": "users",
+      "targets": [
+        "settings.theme"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/entrypoints.py",
+      "symbol": "show_phone_numbers",
+      "kind": "presenter",
+      "group": "users",
+      "targets": [
+        "users.contacts"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/keyboards/locale.py",
+      "symbol": "build_locale_keyboard",
+      "kind": "presenter",
+      "group": "users",
+      "targets": [
+        "settings.locale"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/keyboards/locale.py",
+      "symbol": "native_language_name",
+      "kind": "presenter",
+      "group": "users",
+      "targets": [
+        "settings.locale"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/keyboards/phone_numbers.py",
+      "symbol": "build_contact_request_keyboard",
+      "kind": "presenter",
+      "group": "users",
+      "targets": [
+        "users.contact_input"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/keyboards/phone_numbers.py",
+      "symbol": "build_phone_numbers_keyboard",
+      "kind": "presenter",
+      "group": "users",
+      "targets": [
+        "users.contacts"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/keyboards/theme.py",
+      "symbol": "build_theme_keyboard",
+      "kind": "presenter",
+      "group": "users",
+      "targets": [
+        "settings.theme"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/keyboards/theme.py",
+      "symbol": "theme_name",
+      "kind": "presenter",
+      "group": "users",
+      "targets": [
+        "settings.theme"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/locale.py",
+      "symbol": "on_language_command",
+      "kind": "handler",
+      "bindings": [
+        "router.message(Command('language'))",
+        "flags.private_chat_only",
+        "flags.preserve_ui_flow"
+      ],
+      "group": "users",
+      "targets": [
+        "settings.locale"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/locale.py",
+      "symbol": "on_locale_selected",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(LocaleCallback.filter())",
+        "flags.private_chat_only",
+        "flags.refresh_ui_flow"
+      ],
+      "group": "users",
+      "targets": [
+        "settings.locale"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/locale.py",
+      "symbol": "on_open_language",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_LANGUAGE))",
+        "flags.private_chat_only",
+        "flags.preserve_ui_flow"
+      ],
+      "group": "users",
+      "targets": [
+        "settings.locale"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/locale.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='locale')",
+      "group": "users",
+      "targets": [
+        "settings.locale"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/phone_numbers.py",
+      "symbol": "PhoneNumberForm",
+      "kind": "states",
+      "definition": "class PhoneNumberForm(StatesGroup):\n    phone_number = State()",
+      "group": "users",
+      "targets": [
+        "users.contacts",
+        "users.contact_input",
+        "users.contact_delete"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/phone_numbers.py",
+      "symbol": "_phone_numbers_text",
+      "kind": "presenter",
+      "group": "users",
+      "targets": [
+        "users.contacts"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/phone_numbers.py",
+      "symbol": "_render_phone_numbers",
+      "kind": "presenter",
+      "group": "users",
+      "targets": [
+        "users.contacts"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/phone_numbers.py",
+      "symbol": "_save_phone_number",
+      "kind": "presenter",
+      "fsm_calls": [
+        "state.clear()"
+      ],
+      "fsm_reads": [],
+      "group": "users",
+      "targets": [
+        "users.contact_input"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/phone_numbers.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "users",
+      "targets": [
+        "users.contacts",
+        "users.contact_input",
+        "users.contact_delete"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/phone_numbers.py",
+      "symbol": "aiogram.fsm.state",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.state import State, StatesGroup",
+      "group": "users",
+      "targets": [
+        "users.contacts",
+        "users.contact_input",
+        "users.contact_delete"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/phone_numbers.py",
+      "symbol": "on_add_phone_number_requested",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(PhoneNumberActionCallback.filter(F.action == PhoneNumberAction.ADD))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.set_state(PhoneNumberForm.phone_number)"
+      ],
+      "fsm_reads": [],
+      "group": "users",
+      "targets": [
+        "users.contact_input"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/phone_numbers.py",
+      "symbol": "on_delete_phone_number",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(PhoneNumberDeleteCallback.filter())",
+        "flags.private_chat_only"
+      ],
+      "group": "users",
+      "targets": [
+        "users.contact_delete"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/phone_numbers.py",
+      "symbol": "on_open_phone_numbers",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_PHONE_NUMBERS))",
+        "flags.private_chat_only"
+      ],
+      "group": "users",
+      "targets": [
+        "users.contacts"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/phone_numbers.py",
+      "symbol": "on_phone_number_entered",
+      "kind": "handler",
+      "bindings": [
+        "router.message(StateFilter(PhoneNumberForm.phone_number))",
+        "flags.private_chat_only"
+      ],
+      "group": "users",
+      "targets": [
+        "users.contact_input"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/phone_numbers.py",
+      "symbol": "on_phone_number_shared",
+      "kind": "handler",
+      "bindings": [
+        "router.message(F.contact, StateFilter(PhoneNumberForm.phone_number))",
+        "flags.private_chat_only"
+      ],
+      "group": "users",
+      "targets": [
+        "users.contact_input"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/phone_numbers.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='phone_numbers')",
+      "group": "users",
+      "targets": [
+        "users.contacts",
+        "users.contact_input",
+        "users.contact_delete"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/theme.py",
+      "symbol": "on_open_theme",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_THEME))",
+        "flags.private_chat_only",
+        "flags.preserve_ui_flow"
+      ],
+      "group": "users",
+      "targets": [
+        "settings.theme"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/theme.py",
+      "symbol": "on_theme_selected",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(ThemeCallback.filter())",
+        "flags.private_chat_only",
+        "flags.refresh_ui_flow"
+      ],
+      "group": "users",
+      "targets": [
+        "settings.theme"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/users/presentation/routers/theme.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='theme')",
+      "group": "users",
+      "targets": [
+        "settings.theme"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/callbacks.py",
+      "symbol": "SettingsAction",
+      "kind": "callback_values",
+      "definition": "class SettingsAction(StrEnum):\n    OPEN_NOTIFICATIONS = 'open_notifications'\n    OPEN_EDERS_NOTIFICATIONS = 'open_eders_notifications'\n    OPEN_FOOD_MENU_NOTIFICATIONS = 'open_food_menu_notifications'\n    BACK_TO_NOTIFICATIONS = 'back_to_notifications'\n    OPEN_COURSE_TRACKING = 'open_course_tracking'\n    OPEN_OBIS = 'open_obis'\n    OPEN_LANGUAGE = 'open_language'\n    OPEN_THEME = 'open_theme'\n    OPEN_PHONE_NUMBERS = 'open_phone_numbers'\n    OPEN_FEEDBACK = 'open_feedback'\n    BACK_TO_SETTINGS = 'back_to_settings'",
+      "group": "navigation",
+      "targets": [
+        "settings.menu",
+        "schedule.tracking",
+        "obis.settings",
+        "settings.locale",
+        "settings.theme",
+        "users.contacts",
+        "feedback.compose",
+        "notifications.settings",
+        "eders.notification_settings",
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/callbacks.py",
+      "symbol": "SettingsCallback",
+      "kind": "callback",
+      "definition": "class SettingsCallback(CallbackData, prefix='settings'):\n    action: SettingsAction",
+      "group": "navigation",
+      "targets": [
+        "settings.menu",
+        "schedule.tracking",
+        "obis.settings",
+        "settings.locale",
+        "settings.theme",
+        "users.contacts",
+        "feedback.compose",
+        "notifications.settings",
+        "eders.notification_settings",
+        "food_menu.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/command_catalog.py",
+      "symbol": "_build_commands",
+      "kind": "presenter",
+      "group": "navigation",
+      "targets": [
+        "runtime.commands"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/command_catalog.py",
+      "symbol": "_load_command_configs",
+      "kind": "presenter",
+      "group": "navigation",
+      "targets": [
+        "runtime.commands"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/command_catalog.py",
+      "symbol": "build_admin_commands",
+      "kind": "presenter",
+      "group": "navigation",
+      "targets": [
+        "runtime.commands"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/command_catalog.py",
+      "symbol": "build_group_commands",
+      "kind": "presenter",
+      "group": "navigation",
+      "targets": [
+        "runtime.commands"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/command_catalog.py",
+      "symbol": "build_private_commands",
+      "kind": "presenter",
+      "group": "navigation",
+      "targets": [
+        "runtime.commands"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/dispatcher.py",
+      "symbol": "include_routers",
+      "kind": "dispatch_order",
+      "definition": "dispatcher.include_routers(ingress_router, student_questions_router, advertisement_contact_router, start_router, locale_router, theme_router, navigation_router, ui_flows_router, timetable_router, lesson_search_router, food_menu_router, food_menu_notifications_router, food_menu_cleanup_router, obis_router, *((eders_router, study_week_router) if get_settings().eders_enabled else ()), settings_router, notifications_router, phone_numbers_router, advertisement_router, advertisement_moderation_router, broadcast_router, feedback_router)",
+      "group": "runtime",
+      "targets": [
+        "runtime.dispatch"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/entrypoints.py",
+      "symbol": "show_settings",
+      "kind": "presenter",
+      "group": "navigation",
+      "targets": [
+        "settings.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/keyboards/settings.py",
+      "symbol": "build_settings_keyboard",
+      "kind": "presenter",
+      "group": "navigation",
+      "targets": [
+        "settings.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/navigation.py",
+      "symbol": "build_main_keyboard",
+      "kind": "presenter",
+      "group": "navigation",
+      "targets": [
+        "main_menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/navigation.py",
+      "symbol": "build_study_keyboard",
+      "kind": "presenter",
+      "group": "navigation",
+      "targets": [
+        "studies.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/navigation.py",
+      "symbol": "send_welcome",
+      "kind": "presenter",
+      "group": "navigation",
+      "targets": [
+        "main_menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/routers/navigation.py",
+      "symbol": "aiogram.fsm.context",
+      "kind": "fsm_dependency",
+      "definition": "from aiogram.fsm.context import FSMContext",
+      "group": "navigation",
+      "targets": [
+        "main_menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/routers/navigation.py",
+      "symbol": "on_back_to_main_menu",
+      "kind": "handler",
+      "bindings": [
+        "router.message(TranslatedText('common.back_to_menu'))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.clear()"
+      ],
+      "fsm_reads": [],
+      "group": "navigation",
+      "targets": [
+        "main_menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/routers/navigation.py",
+      "symbol": "on_study_button",
+      "kind": "handler",
+      "bindings": [
+        "router.message(TranslatedText('menu.study'))",
+        "flags.private_chat_only"
+      ],
+      "fsm_calls": [
+        "state.clear()"
+      ],
+      "fsm_reads": [],
+      "group": "navigation",
+      "targets": [
+        "studies.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/routers/navigation.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='navigation')",
+      "group": "navigation",
+      "targets": [
+        "main_menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/routers/settings.py",
+      "symbol": "on_back_to_settings",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(SettingsCallback.filter(F.action == SettingsAction.BACK_TO_SETTINGS))",
+        "flags.private_chat_only"
+      ],
+      "group": "navigation",
+      "targets": [
+        "settings.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/routers/settings.py",
+      "symbol": "on_open_course_tracking",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_COURSE_TRACKING))",
+        "flags.private_chat_only"
+      ],
+      "group": "navigation",
+      "targets": [
+        "schedule.tracking"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/routers/settings.py",
+      "symbol": "on_open_obis",
+      "kind": "handler",
+      "bindings": [
+        "router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_OBIS))",
+        "flags.private_chat_only"
+      ],
+      "group": "navigation",
+      "targets": [
+        "obis.settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/routers/settings.py",
+      "symbol": "on_settings_button",
+      "kind": "handler",
+      "bindings": [
+        "router.message(TranslatedText('menu.settings'))",
+        "flags.private_chat_only"
+      ],
+      "group": "navigation",
+      "targets": [
+        "settings.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/routers/settings.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='settings')",
+      "group": "navigation",
+      "targets": [
+        "settings.menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/routers/start.py",
+      "symbol": "hide_keyboard",
+      "kind": "handler",
+      "bindings": [
+        "router.message(Command('hide_keyboard'))"
+      ],
+      "group": "navigation",
+      "targets": [
+        "ui.hide_keyboard"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/routers/start.py",
+      "symbol": "on_start",
+      "kind": "handler",
+      "bindings": [
+        "router.message(CommandStart())"
+      ],
+      "group": "navigation",
+      "targets": [
+        "main_menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/telegram/routers/start.py",
+      "symbol": "router",
+      "kind": "router",
+      "definition": "Router(name='start')",
+      "group": "navigation",
+      "targets": [
+        "main_menu"
+      ]
+    },
+    {
+      "path": "src/manashelper/platform/web/login.py",
+      "symbol": "AdminLoginCoordinator.open",
+      "kind": "presenter",
+      "group": "runtime",
+      "targets": [
+        "admin.editor"
+      ]
+    }
+  ]
+}

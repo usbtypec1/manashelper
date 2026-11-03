@@ -1154,3 +1154,6 @@ msgstr "Ссылка недействительна или истекла. За�
 
 msgid "ui_flows.web.login"
 msgstr "Откройте ссылку из команды /editor в своём приватном административном чате."
+
+msgid "ui_flows.open_editor"
+msgstr "Открыть редактор"

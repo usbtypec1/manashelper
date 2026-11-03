@@ -33,6 +33,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/telegram": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Validate signed Telegram initData (configured administrator, age <= 5 minutes, no future timestamp). Require same Origin. Return an 8-hour bearer token; store it only in memory. At most 5 valid exchanges per minute per running host; later exchanges return 429. No cookie is issued. */
+        post: operations["exchangeTelegram"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/session": {
         parameters: {
             query?: never;
@@ -127,10 +144,95 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Read allowed gettext templates and capability definitions. */
+        /** @description Read allowed user-text templates from the current immutable catalog release and capability definitions. */
         get: operations["getEditorCatalog"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/texts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read the editable user-text document, its optimistic-concurrency revision and current published release. */
+        get: operations["getTextCatalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/texts/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Replace one draft text entry if expected_revision matches. The entry key must match the path. Editing the draft does not change published releases or active sessions. */
+        put: operations["saveTextEntry"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/texts/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Validate all locales, themes, plural forms, placeholders and display limits, then publish an immutable catalog release at expected_revision. Existing scenario versions retain their pinned text release. */
+        post: operations["publishTextCatalog"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/texts/releases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List immutable user-text release metadata without changing the draft or publication pointer. */
+        get: operations["listTextCatalogReleases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/texts/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Activate an existing text release if expected_current_release matches. Does not alter the draft, immutable scenario versions, active sessions or already rendered delivery intents. */
+        post: operations["activateTextCatalog"];
         delete?: never;
         options?: never;
         head?: never;
@@ -198,7 +300,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Simulate an unsaved scenario with supplied test data and delegate results. Never call live delegates or create user sessions. Missing stub results are reported as issues; no real data is fetched. Rendered text uses the same safe formatting rules as Telegram. */
+        /** @description Simulate an unsaved scenario with supplied test data and delegate results. Never call live delegates or create user sessions. Missing stub results are reported as issues; no real data is fetched. An optional text_catalog_release selects a historical immutable text snapshot; omitted selects the current release. Rendered text uses the same resolver as Telegram. */
         post: operations["previewFlow"];
         delete?: never;
         options?: never;
@@ -215,7 +317,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Validate and atomically publish the stored expected_revision. Repeating publication of that revision returns its original version without creating another. It does not reactivate an older version after rollback; use activate explicitly. Active sessions stay pinned. */
+        /** @description Validate and atomically publish the stored expected_revision. Repeating publication of that revision returns its original version without creating another. It does not reactivate an older version after rollback; use activate explicitly. Active sessions stay pinned. The new scenario version pins the catalog release used to validate it. */
         post: operations["publishFlow"];
         delete?: never;
         options?: never;
@@ -251,6 +353,75 @@ export interface paths {
         put?: never;
         /** @description Move the publication pointer to an existing version if expected_published_version matches. Does not migrate active sessions; incompatible delegate versions cannot be activated. A null expectation means the scenario has never been published. */
         post: operations["activateVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/triggers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read the trigger draft, revision and current immutable release. */
+        get: operations["getTriggers"];
+        /** @description Save a typed trigger draft with optimistic concurrency. Publication validates matchers and targets. */
+        put: operations["saveTriggers"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/triggers/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Reject ambiguous/unsafe bindings and publish a manifest pinning scenario, delegate and text versions. Retries return the original release without reactivation. */
+        post: operations["publishTriggers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/triggers/releases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Read immutable trigger manifests newest first. */
+        get: operations["listTriggerReleases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/triggers/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Activate an immutable manifest with expected_current_release. Active sessions and displayed actions retain their pins. */
+        post: operations["activateTriggers"];
         delete?: never;
         options?: never;
         head?: never;
@@ -340,6 +511,30 @@ export interface components {
             outcomes: {
                 [key: string]: string;
             };
+            /** Waiting Text */
+            waiting_text?: (components["schemas"]["CatalogText"] | components["schemas"]["InlineText"])[];
+        };
+        /** ActionSnapshot */
+        ActionSnapshot: {
+            /** Template Id */
+            template_id: string;
+            /** Target */
+            target: string;
+            /** Assignments */
+            assignments?: {
+                [key: string]: components["schemas"]["DataValue"];
+            };
+            /** Item */
+            item?: {
+                [key: string]: components["schemas"]["DataValue"];
+            };
+        };
+        /** ActivateTextCatalog */
+        ActivateTextCatalog: {
+            /** Release Id */
+            release_id: number;
+            /** Expected Current Release */
+            expected_current_release: number;
         };
         /** ActivateVersion */
         ActivateVersion: {
@@ -415,6 +610,32 @@ export interface components {
             kind: "button";
             /** Button Id */
             button_id: string;
+            /** @default null */
+            snapshot?: components["schemas"]["ActionSnapshot"] | null;
+        };
+        /** CallNode */
+        CallNode: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "call";
+            /** Id */
+            id: string;
+            /** Flow */
+            flow: string;
+            /** Arguments */
+            arguments?: {
+                [key: string]: components["schemas"]["LiteralValue"] | components["schemas"]["ReferenceValue"];
+            };
+            /** Results */
+            results?: {
+                [key: string]: string;
+            };
+            /** Outcomes */
+            outcomes: {
+                [key: string]: string;
+            };
         };
         /** CatalogTemplate */
         CatalogTemplate: {
@@ -485,6 +706,28 @@ export interface components {
             /** Default */
             default: string;
         };
+        /** ContactEvent */
+        ContactEvent: {
+            /** Update Id */
+            update_id: number;
+            /** User Id */
+            user_id: number;
+            /** Chat Id */
+            chat_id: number;
+            /** Session Id */
+            session_id: string;
+            /** Expected Revision */
+            expected_revision: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "contact";
+            /** Owner Id */
+            owner_id: number | null;
+            /** Phone */
+            phone: string;
+        };
         /** ContractIssue */
         ContractIssue: {
             /** Code */
@@ -510,13 +753,27 @@ export interface components {
              * Type
              * @enum {string}
              */
-            type: "text" | "integer" | "number" | "boolean";
+            type: "text" | "integer" | "number" | "boolean" | "list" | "object" | "secret";
             /**
              * Nullable
              * @default false
              */
             nullable?: boolean;
+            /** @default null */
+            items?: components["schemas"]["DataField"] | null;
+            /** Properties */
+            properties?: {
+                [key: string]: components["schemas"]["DataField"];
+            };
+            /**
+             * Max Items
+             * @default 100
+             */
+            max_items?: number;
         };
+        DataValue: string | boolean | number | components["schemas"]["DataValue"][] | {
+            [key: string]: components["schemas"]["DataValue"];
+        } | null;
         /** DelegateCatalog */
         DelegateCatalog: {
             /** Items */
@@ -535,7 +792,7 @@ export interface components {
              * Effect
              * @enum {string}
              */
-            effect: "read" | "database_write";
+            effect: "read" | "database_write" | "external";
             /** Inputs */
             inputs?: {
                 [key: string]: components["schemas"]["DelegateParameter"];
@@ -553,12 +810,23 @@ export interface components {
              * Type
              * @enum {string}
              */
-            type: "text" | "integer" | "number" | "boolean";
+            type: "text" | "integer" | "number" | "boolean" | "list" | "object" | "secret";
             /**
              * Nullable
              * @default false
              */
             nullable?: boolean;
+            /** @default null */
+            items?: components["schemas"]["DataField"] | null;
+            /** Properties */
+            properties?: {
+                [key: string]: components["schemas"]["DataField"];
+            };
+            /**
+             * Max Items
+             * @default 100
+             */
+            max_items?: number;
             /**
              * Required
              * @default true
@@ -583,6 +851,11 @@ export interface components {
             };
             /** Features */
             features?: components["schemas"]["FeatureOption"][];
+            /**
+             * Text Catalog Release
+             * @default null
+             */
+            text_catalog_release?: number | null;
         };
         /** EndNode */
         EndNode: {
@@ -611,6 +884,11 @@ export interface components {
              */
             feature?: string | null;
         };
+        /** ExchangeTelegram */
+        ExchangeTelegram: {
+            /** Init Data */
+            init_data: string;
+        };
         /** ExchangeTicket */
         ExchangeTicket: {
             /** Ticket */
@@ -636,9 +914,9 @@ export interface components {
         FlowDocument: {
             /**
              * Schema Version
-             * @constant
+             * @enum {integer}
              */
-            schema_version: 1;
+            schema_version: 1 | 2;
             /** Id */
             id: string;
             /** Entry */
@@ -651,12 +929,22 @@ export interface components {
             fields?: {
                 [key: string]: components["schemas"]["DataField"];
             };
+            /** Inputs */
+            inputs?: {
+                [key: string]: components["schemas"]["DataField"];
+            };
+            /** Outputs */
+            outputs?: {
+                [key: string]: components["schemas"]["DataField"];
+            };
+            /** Outcomes */
+            outcomes?: string[];
             /** Initial Data */
             initial_data?: {
-                [key: string]: string | boolean | number | null;
+                [key: string]: components["schemas"]["DataValue"];
             };
             /** Nodes */
-            nodes: (components["schemas"]["MenuNode"] | components["schemas"]["InputNode"] | components["schemas"]["ConditionNode"] | components["schemas"]["ActionNode"] | components["schemas"]["EndNode"])[];
+            nodes: (components["schemas"]["MenuNode"] | components["schemas"]["InputNode"] | components["schemas"]["ConditionNode"] | components["schemas"]["ActionNode"] | components["schemas"]["EndNode"] | components["schemas"]["CallNode"] | components["schemas"]["ReturnNode"] | components["schemas"]["ReplaceNode"])[];
             /** Layout */
             layout?: {
                 [key: string]: components["schemas"]["Position"];
@@ -699,6 +987,15 @@ export interface components {
             published_at: string;
             /** Author Id */
             author_id: number;
+            /**
+             * Text Catalog Release
+             * @default null
+             */
+            text_catalog_release?: number | null;
+            /** Dependencies */
+            dependencies?: {
+                [key: string]: number;
+            };
         };
         /** InlineText */
         InlineText: {
@@ -759,7 +1056,7 @@ export interface components {
              * Input Type
              * @enum {string}
              */
-            input_type: "text" | "integer" | "choice";
+            input_type: "text" | "integer" | "choice" | "contact" | "media" | "secret";
             /** Next */
             next: string;
             /** Error */
@@ -788,6 +1085,27 @@ export interface components {
             maximum?: number | null;
             /** Choices */
             choices?: (string | boolean | number | null)[];
+            /**
+             * Multiple
+             * @default false
+             */
+            multiple?: boolean;
+            /** @default null */
+            media?: components["schemas"]["ReferenceValue"] | null;
+            /** Messages */
+            messages?: (components["schemas"]["CatalogText"] | components["schemas"]["InlineText"])[];
+            /** @default null */
+            message_source?: components["schemas"]["ReferenceValue"] | null;
+        };
+        /** LegacyTarget */
+        LegacyTarget: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "legacy";
+            /** Adapter */
+            adapter: string;
         };
         /** LiteralValue */
         LiteralValue: {
@@ -796,8 +1114,7 @@ export interface components {
              * @enum {string}
              */
             kind: "literal";
-            /** Value */
-            value: string | boolean | number | null;
+            value: components["schemas"]["DataValue"];
         };
         /** LocationPage */
         LocationPage: {
@@ -805,6 +1122,43 @@ export interface components {
             items: components["schemas"]["UserLocation"][];
             /** Next Cursor */
             next_cursor: string | null;
+        };
+        /** MediaEvent */
+        MediaEvent: {
+            /** Update Id */
+            update_id: number;
+            /** User Id */
+            user_id: number;
+            /** Chat Id */
+            chat_id: number;
+            /** Session Id */
+            session_id: string;
+            /** Expected Revision */
+            expected_revision: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "media";
+            /** Message Id */
+            message_id: number;
+            /**
+             * Media Type
+             * @enum {string}
+             */
+            media_type: "photo" | "video";
+            /** File Id */
+            file_id: string;
+            /**
+             * Media Group Id
+             * @default null
+             */
+            media_group_id?: string | null;
+            /**
+             * Caption
+             * @default null
+             */
+            caption?: string | null;
         };
         /** MenuNode */
         MenuNode: {
@@ -824,6 +1178,26 @@ export interface components {
             keyboard: "reply" | "inline";
             /** Buttons */
             buttons: (components["schemas"]["TransitionButton"] | components["schemas"]["UrlButton"])[][];
+            /** Repeated */
+            repeated?: components["schemas"]["RepeatedButtons"][];
+            /** @default null */
+            media?: components["schemas"]["ReferenceValue"] | null;
+            /** Messages */
+            messages?: (components["schemas"]["CatalogText"] | components["schemas"]["InlineText"])[];
+            /** @default null */
+            message_source?: components["schemas"]["ReferenceValue"] | null;
+        };
+        /** MiniAppSession */
+        MiniAppSession: {
+            /** User Id */
+            user_id: number;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Access Token */
+            access_token: string;
         };
         /** NavigationEvent */
         NavigationEvent: {
@@ -866,6 +1240,8 @@ export interface components {
              * @default null
              */
             url?: string | null;
+            /** @default null */
+            snapshot?: components["schemas"]["ActionSnapshot"] | null;
         };
         /** PreviewDelegateResult */
         PreviewDelegateResult: {
@@ -873,7 +1249,79 @@ export interface components {
             outcome: string;
             /** Values */
             values?: {
-                [key: string]: string | boolean | number | null;
+                [key: string]: components["schemas"]["DataValue"];
+            };
+        };
+        /** PreviewFrame */
+        PreviewFrame: {
+            /** Flow Id */
+            flow_id: string;
+            /** Flow Version */
+            flow_version: number;
+            /** Node Id */
+            node_id: string;
+            /** Data */
+            data?: {
+                [key: string]: components["schemas"]["DataValue"];
+            };
+            /**
+             * Resume Status
+             * @default null
+             */
+            resume_status?: ("waiting_button" | "waiting_input" | "waiting_effect") | null;
+            /**
+             * Revision
+             * @default null
+             */
+            revision?: number | null;
+            /**
+             * Trigger Release
+             * @default null
+             */
+            trigger_release?: number | null;
+            /**
+             * Effect Revision
+             * @default null
+             */
+            effect_revision?: number | null;
+        };
+        /** PreviewPosition */
+        PreviewPosition: {
+            /** Flow Id */
+            flow_id: string;
+            /** Flow Version */
+            flow_version: number;
+            /** Node Id */
+            node_id: string;
+            /** Data */
+            data?: {
+                [key: string]: components["schemas"]["DataValue"];
+            };
+            /**
+             * Resume Status
+             * @default null
+             */
+            resume_status?: ("waiting_button" | "waiting_input" | "waiting_effect") | null;
+            /**
+             * Revision
+             * @default null
+             */
+            revision?: number | null;
+            /**
+             * Trigger Release
+             * @default null
+             */
+            trigger_release?: number | null;
+            /**
+             * Effect Revision
+             * @default null
+             */
+            effect_revision?: number | null;
+            /** Frames */
+            frames?: components["schemas"]["PreviewFrame"][];
+            /** Dependencies */
+            dependencies?: {
+                [key: string]: number;
             };
         };
         /** PreviewRequest */
@@ -886,7 +1334,7 @@ export interface components {
             node_id?: string | null;
             /** Data */
             data?: {
-                [key: string]: string | boolean | number | null;
+                [key: string]: components["schemas"]["DataValue"];
             };
             user: components["schemas"]["PreviewUser"];
             /** Eders Enabled */
@@ -895,11 +1343,18 @@ export interface components {
              * Event
              * @default null
              */
-            event?: (components["schemas"]["ButtonEvent"] | components["schemas"]["InputEvent"] | components["schemas"]["NavigationEvent"]) | null;
+            event?: (components["schemas"]["ButtonEvent"] | components["schemas"]["InputEvent"] | components["schemas"]["ContactEvent"] | components["schemas"]["MediaEvent"] | components["schemas"]["SecretEvent"] | components["schemas"]["NavigationEvent"]) | null;
             /** Delegate Results */
             delegate_results?: {
                 [key: string]: components["schemas"]["PreviewDelegateResult"];
             };
+            /**
+             * Text Catalog Release
+             * @default null
+             */
+            text_catalog_release?: number | null;
+            /** @default null */
+            position?: components["schemas"]["PreviewPosition"] | null;
         };
         /** PreviewResult */
         PreviewResult: {
@@ -907,11 +1362,18 @@ export interface components {
             node_id: string;
             /** Data */
             data: {
-                [key: string]: string | boolean | number | null;
+                [key: string]: components["schemas"]["DataValue"];
             };
             screen: components["schemas"]["PreviewScreen"] | null;
             /** Issues */
             issues: components["schemas"]["ContractIssue"][];
+            /** @default null */
+            position?: components["schemas"]["PreviewPosition"] | null;
+            /**
+             * Node Kind
+             * @default null
+             */
+            node_kind?: ("menu" | "input" | "end" | "return") | null;
         };
         /** PreviewScreen */
         PreviewScreen: {
@@ -934,6 +1396,20 @@ export interface components {
              * @default null
              */
             return_flow?: string | null;
+            /** Messages */
+            messages?: string[];
+            /** Media */
+            media?: components["schemas"]["ScreenMedia"][];
+            /**
+             * Contact Request
+             * @default null
+             */
+            contact_request?: string | null;
+            /**
+             * Input Type
+             * @default null
+             */
+            input_type?: ("text" | "integer" | "choice" | "contact" | "media" | "secret") | null;
         };
         /** PreviewUser */
         PreviewUser: {
@@ -968,9 +1444,51 @@ export interface components {
              * Scope
              * @enum {string}
              */
-            scope: "data" | "user" | "capabilities";
+            scope: "data" | "user" | "capabilities" | "item";
             /** Field */
             field: string;
+            /** Path */
+            path?: (string | number)[];
+        };
+        /** RepeatedButtons */
+        RepeatedButtons: {
+            source: components["schemas"]["ReferenceValue"];
+            /** Buttons */
+            buttons: (components["schemas"]["TransitionButton"] | components["schemas"]["UrlButton"])[];
+        };
+        /** ReplaceNode */
+        ReplaceNode: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "replace";
+            /** Id */
+            id: string;
+            /** Flow */
+            flow: string;
+            /** Arguments */
+            arguments?: {
+                [key: string]: components["schemas"]["LiteralValue"] | components["schemas"]["ReferenceValue"];
+            };
+        };
+        /** ReturnNode */
+        ReturnNode: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "return";
+            /** Id */
+            id: string;
+            /** Outcome */
+            outcome: string;
+            /** Values */
+            values?: {
+                [key: string]: components["schemas"]["LiteralValue"] | components["schemas"]["ReferenceValue"];
+            };
+            /** Text */
+            text?: (components["schemas"]["CatalogText"] | components["schemas"]["InlineText"])[];
         };
         /** RolloutStatus */
         RolloutStatus: {
@@ -994,6 +1512,86 @@ export interface components {
             /** Expected Revision */
             expected_revision: number;
         };
+        /** SaveTextEntry */
+        SaveTextEntry: {
+            entry: components["schemas"]["TextEntry"];
+            /** Expected Revision */
+            expected_revision: number;
+        };
+        /** SaveTriggers */
+        SaveTriggers: {
+            document: components["schemas"]["TriggerDocument"];
+            /** Expected Revision */
+            expected_revision: number;
+        };
+        /** ScenarioPin */
+        ScenarioPin: {
+            /** Flow Id */
+            flow_id: string;
+            /** Version */
+            version: number;
+            /** Text Catalog Release */
+            text_catalog_release: number;
+        };
+        /** ScenarioTarget */
+        ScenarioTarget: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "scenario";
+            /** Flow Id */
+            flow_id: string;
+            /**
+             * Entry
+             * @default null
+             */
+            entry?: string | null;
+            /**
+             * Navigation
+             * @default null
+             */
+            navigation?: "study" | null;
+            /** Arguments */
+            arguments?: {
+                [key: string]: "argument" | "actor_id" | "chat_id";
+            };
+        };
+        /** ScreenMedia */
+        ScreenMedia: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "photo" | "video";
+            /** File Id */
+            file_id: string;
+            /**
+             * Caption
+             * @default null
+             */
+            caption?: string | null;
+        };
+        /** SecretEvent */
+        SecretEvent: {
+            /** Update Id */
+            update_id: number;
+            /** User Id */
+            user_id: number;
+            /** Chat Id */
+            chat_id: number;
+            /** Session Id */
+            session_id: string;
+            /** Expected Revision */
+            expected_revision: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "secret";
+            /** Handle */
+            handle: string;
+        };
         /** SetRollout */
         SetRollout: {
             /**
@@ -1003,6 +1601,91 @@ export interface components {
             mode: "admin" | "all" | "off";
             /** Expected Revision */
             expected_revision: number;
+        };
+        /** TextCatalogDraft */
+        TextCatalogDraft: {
+            document: components["schemas"]["TextDocument"];
+            /** Revision */
+            revision: number;
+            /** Current Release */
+            current_release: number;
+        };
+        /** TextCatalogRelease */
+        TextCatalogRelease: {
+            /** Id */
+            id: number;
+            /** Draft Revision */
+            draft_revision: number;
+            /**
+             * Author Id
+             * @default null
+             */
+            author_id?: number | null;
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at: string;
+        };
+        /** TextCatalogVersions */
+        TextCatalogVersions: {
+            /** Items */
+            items: components["schemas"]["TextCatalogRelease"][];
+        };
+        /** TextDocument */
+        TextDocument: {
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version?: 1;
+            /** Entries */
+            entries: components["schemas"]["TextEntry"][];
+        };
+        /** TextEntry */
+        TextEntry: {
+            /** Key */
+            key: string;
+            /** Owner */
+            owner: string;
+            /**
+             * Parameters
+             * @default []
+             */
+            parameters?: string[];
+            /**
+             * Content Type
+             * @enum {string}
+             */
+            content_type: "plain" | "html" | "label";
+            /**
+             * Plural Key
+             * @default null
+             */
+            plural_key?: string | null;
+            /** Variants */
+            variants: components["schemas"]["TextVariant"][];
+        };
+        /** TextVariant */
+        TextVariant: {
+            /**
+             * Locale
+             * @enum {string}
+             */
+            locale: "en" | "ru" | "ky" | "tr" | "zh";
+            /**
+             * Theme
+             * @enum {string}
+             */
+            theme: "basic" | "halloween";
+            /**
+             * Form
+             * @enum {string}
+             */
+            form: "one" | "few" | "many" | "other";
+            /** Text */
+            text: string;
         };
         /** TransitionButton */
         TransitionButton: {
@@ -1033,6 +1716,110 @@ export interface components {
             items: components["schemas"]["UserTransition"][];
             /** Next Cursor */
             next_cursor: string | null;
+        };
+        /** TriggerBinding */
+        TriggerBinding: {
+            /** Id */
+            id: string;
+            matcher: components["schemas"]["TriggerMatcher"];
+            /** Target */
+            target: components["schemas"]["ScenarioTarget"] | components["schemas"]["LegacyTarget"];
+            /**
+             * Scope
+             * @default private
+             * @enum {string}
+             */
+            scope?: "private" | "group" | "any";
+            /**
+             * Access
+             * @default public
+             * @enum {string}
+             */
+            access?: "public" | "admin" | "moderation";
+            /** Capabilities */
+            capabilities?: string[];
+            /**
+             * Policy
+             * @default reject_if_busy
+             * @enum {string}
+             */
+            policy?: "reject_if_busy" | "resume" | "replace" | "preserve" | "call";
+            /**
+             * Fallback Adapter
+             * @default null
+             */
+            fallback_adapter?: string | null;
+        };
+        /** TriggerDocument */
+        TriggerDocument: {
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version?: 1;
+            /** Bindings */
+            bindings: components["schemas"]["TriggerBinding"][];
+        };
+        /** TriggerDraftContent */
+        TriggerDraftContent: {
+            document: components["schemas"]["TriggerDocument"];
+            /** Revision */
+            revision: number;
+            /** Current Release */
+            current_release: number | null;
+        };
+        /** TriggerManifest */
+        TriggerManifest: {
+            document: components["schemas"]["TriggerDocument"];
+            /** Scenarios */
+            scenarios: components["schemas"]["ScenarioPin"][];
+            /**
+             * Text Catalog Release
+             * @default 1
+             */
+            text_catalog_release?: number;
+        };
+        /** TriggerMatcher */
+        TriggerMatcher: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "command" | "deep_link" | "prefix" | "callback" | "reply_label" | "native_reply";
+            /** Key */
+            key: string;
+            /**
+             * Arguments
+             * @default none
+             * @enum {string}
+             */
+            arguments?: "none" | "text" | "uuid" | "flow_id";
+            /**
+             * Action
+             * @default null
+             */
+            action?: string | null;
+        };
+        /** TriggerReleaseContent */
+        TriggerReleaseContent: {
+            /** Id */
+            id: number;
+            /** Draft Revision */
+            draft_revision: number;
+            /** Author Id */
+            author_id: number;
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at: string;
+            manifest: components["schemas"]["TriggerManifest"];
+        };
+        /** TriggerVersions */
+        TriggerVersions: {
+            /** Items */
+            items: components["schemas"]["TriggerReleaseContent"][];
         };
         /** UrlButton */
         UrlButton: {
@@ -1076,7 +1863,7 @@ export interface components {
             /** Legacy State */
             legacy_state: string | null;
             /** Status */
-            status: ("running" | "waiting_button" | "waiting_input" | "completed" | "cancelled" | "handed_off" | "failed") | null;
+            status: ("running" | "waiting_button" | "waiting_input" | "waiting_effect" | "completed" | "cancelled" | "handed_off" | "failed") | null;
             /** Delivery Status */
             delivery_status: ("pending" | "sent" | "failed" | "unknown") | null;
             /** Updated At */
@@ -1126,6 +1913,15 @@ export interface components {
             document: components["schemas"]["FlowDocument"];
             /** Version */
             version: number;
+            /**
+             * Text Catalog Release
+             * @default null
+             */
+            text_catalog_release?: number | null;
+            /** Dependencies */
+            dependencies?: {
+                [key: string]: number;
+            };
         };
         /** VersionPage */
         VersionPage: {
@@ -1270,6 +2066,84 @@ export interface operations {
             };
             /** @description Invalid request or scenario */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    exchangeTelegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExchangeTelegram"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MiniAppSession"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden or CSRF check failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Revision conflict or already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Invalid request or scenario */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Exchange limit */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1752,7 +2626,10 @@ export interface operations {
     };
     getEditorCatalog: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Read the pinned text release for historical monitoring; default is the current release. */
+                text_catalog_release?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1766,6 +2643,345 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EditorCatalog"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden or CSRF check failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Revision conflict or already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Invalid request or scenario */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getTextCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextCatalogDraft"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden or CSRF check failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Revision conflict or already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Invalid request or scenario */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    saveTextEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveTextEntry"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextCatalogDraft"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden or CSRF check failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Revision conflict or already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Invalid request or scenario */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    publishTextCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishDraft"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextCatalogRelease"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden or CSRF check failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Revision conflict or already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Invalid request or scenario */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    listTextCatalogReleases: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextCatalogVersions"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden or CSRF check failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Revision conflict or already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Invalid request or scenario */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    activateTextCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivateTextCatalog"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextCatalogDraft"];
                 };
             };
             /** @description Authentication required */
@@ -2325,6 +3541,343 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FlowSummary"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden or CSRF check failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Revision conflict or already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Invalid request or scenario */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getTriggers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TriggerDraftContent"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden or CSRF check failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Revision conflict or already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Invalid request or scenario */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    saveTriggers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveTriggers"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TriggerDraftContent"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden or CSRF check failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Revision conflict or already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Invalid request or scenario */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    publishTriggers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishDraft"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TriggerReleaseContent"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden or CSRF check failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Revision conflict or already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Invalid request or scenario */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    listTriggerReleases: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TriggerVersions"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden or CSRF check failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Revision conflict or already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Invalid request or scenario */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    activateTriggers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivateTextCatalog"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TriggerDraftContent"];
                 };
             };
             /** @description Authentication required */

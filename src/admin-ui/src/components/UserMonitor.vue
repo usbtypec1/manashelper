@@ -10,6 +10,7 @@ import { t, uiLocale, type CopyKey } from '../i18n'
 import FlowGraphNode from './FlowGraphNode.vue'
 
 const props = defineProps<{ api: AdminApi; catalog: Schemas['EditorCatalog'] }>()
+const pinnedCatalog = ref<Schemas['EditorCatalog'] | null>(null)
 const emit = defineEmits<{ failure: [unknown] }>()
 type Location = Schemas['UserLocation']
 type Transition = Schemas['UserTransition']
@@ -65,7 +66,7 @@ const graphNodes = computed(
         kind: node.kind,
         title:
           'text' in node
-            ? textLabel(node.text?.[0], uiLocale.value, props.catalog)
+            ? textLabel(node.text?.[0], uiLocale.value, pinnedCatalog.value ?? props.catalog)
             : node.kind === 'action'
               ? node.delegate
               : '',
@@ -116,7 +117,11 @@ async function graph(flowId: string | null | undefined, number: number | null | 
   }
   if (document.value?.id === flowId && version.value === number) return
   const response = await props.api.request<Schemas['VersionContent']>(`/flows/${flowId}/versions/${number}`)
+  const texts = await props.api.request<Schemas['EditorCatalog']>(
+    '/catalog?text_catalog_release=' + (response.text_catalog_release ?? 1),
+  )
   if (alive) {
+    pinnedCatalog.value = texts
     document.value = response.document
     version.value = response.version
   }

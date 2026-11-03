@@ -1,11 +1,13 @@
 import hashlib
 import hmac
+import re
 import secrets
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 
 from manashelper.core.config import Settings
 from manashelper.platform.web.auth_repository import AdminAuthRepository, AuthenticatedAdmin
+from manashelper.platform.web.miniapp import TelegramMiniAppAuth
 
 COOKIE_NAME = "manashelper_admin"
 
@@ -37,10 +39,17 @@ class LoginSession:
     csrf: str = field(repr=False)
 
 
+@dataclass(frozen=True, slots=True)
+class BearerSession:
+    admin: AuthenticatedAdmin
+    access_token: str = field(repr=False)
+
+
 class AdminAuthService:
-    def __init__(self, repository: AdminAuthRepository, settings: Settings) -> None:
+    def __init__(self, repository: AdminAuthRepository, settings: Settings, miniapp: TelegramMiniAppAuth) -> None:
         self._repository = repository
         self._settings = settings
+        self._miniapp = miniapp
 
     def csrf(self, cookie: str) -> str:
         secret = self._settings.admin_web_signing_key
@@ -66,16 +75,25 @@ class AdminAuthService:
         await self._repository.create_session(token_digest(cookie), user_id, expires_at)
         return LoginSession(AuthenticatedAdmin(user_id, expires_at), cookie, self.csrf(cookie))
 
-    async def authenticate(self, cookie: str | None) -> AuthenticatedAdmin:
-        if cookie is None or not 32 <= len(cookie) <= 256:
+    async def exchange_telegram(self, init_data: str) -> BearerSession:
+        web_origin(self._settings)
+        user_id = self._miniapp.authenticate(init_data)
+        token = secrets.token_urlsafe(32)
+        expires_at = datetime.now(UTC) + timedelta(hours=8)
+        await self._repository.create_session(token_digest("miniapp:" + token), user_id, expires_at)
+        return BearerSession(AuthenticatedAdmin(user_id, expires_at), token)
+
+    async def authenticate(self, cookie: str | None, *, bearer: bool = False) -> AuthenticatedAdmin:
+        if cookie is None or re.fullmatch(r"[A-Za-z0-9_-]{32,256}", cookie) is None:
             raise AuthenticationError("Administrative session required")
-        admin = await self._repository.session(token_digest(cookie), datetime.now(UTC), self._settings.admin_chat_id)
+        digest = token_digest(("miniapp:" if bearer else "") + cookie)
+        admin = await self._repository.session(digest, datetime.now(UTC), self._settings.admin_chat_id)
         if admin is None:
             raise AuthenticationError("Administrative session is invalid or expired")
         return admin
 
-    async def logout(self, cookie: str) -> None:
-        await self._repository.revoke(token_digest(cookie))
+    async def logout(self, cookie: str, *, bearer: bool = False) -> None:
+        await self._repository.revoke(token_digest(("miniapp:" if bearer else "") + cookie))
 
     async def purge_expired(self) -> int:
         return await self._repository.purge_expired(datetime.now(UTC))

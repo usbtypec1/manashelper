@@ -1,11 +1,13 @@
 import asyncio
 import logging
+import signal
 from contextlib import AsyncExitStack
 from typing import Any
 
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiohttp import web
 from alembic.config import Config
 from dishka import make_async_container
 
@@ -25,12 +27,18 @@ from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.student_questions.provider import StudentQuestionsProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
+from manashelper.modules.ui_flows.presentation.admin_provider import AdminUiFlowsProvider
 from manashelper.modules.ui_flows.provider import UiFlowsProvider
 from manashelper.modules.users.provider import UsersProvider
+from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.i18n.provider import TextCatalogProvider
+from manashelper.platform.i18n.service import TextCatalogService
 from manashelper.platform.telegram.commands import setup_commands
 from manashelper.platform.telegram.dispatcher import create_dispatcher
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
+from manashelper.platform.web.application import create_admin_app
 from manashelper.platform.web.provider import WebPlatformProvider
+from manashelper.platform.web.webhook import install_webhook
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +65,7 @@ async def main() -> None:
         )
         container = make_async_container(
             CoreProvider(),
+            TextCatalogProvider(),
             TelegramPlatformProvider(),
             WebPlatformProvider(),
             ObisProvider(),
@@ -68,6 +77,7 @@ async def main() -> None:
             AdvertisementsProvider(),
             StudentQuestionsProvider(),
             UiFlowsProvider(),
+            AdminUiFlowsProvider(),
             UsersProvider(),
             BroadcastProvider(),
             FoodMenuProvider(),
@@ -83,12 +93,44 @@ async def main() -> None:
             await (await container.get(FlowTelegramCoordinator)).install_defaults(settings.admin_chat_id)
 
         dispatcher = create_dispatcher(container)
+        from manashelper.modules.ui_flows.application.effect_worker import EffectWorker
+        from manashelper.modules.ui_flows.presentation.coordinator import FlowTelegramCoordinator
+
+        effect_worker = await container.get(EffectWorker)
+        flow_coordinator = await container.get(FlowTelegramCoordinator)
+        effect_worker.start(lambda operation_id: flow_coordinator.complete_effect(bot, operation_id))
+        stack.push_async_callback(effect_worker.aclose)
+        http = create_admin_app(settings, container)
+        if settings.telegram_transport == "webhook":
+            install_webhook(http, bot, dispatcher, settings)
+            stack.push_async_callback(dispatcher.emit_shutdown, bot=bot)
+            await dispatcher.emit_startup(bot=bot)
+        runner = web.AppRunner(http, access_log=None, handler_cancellation=True, shutdown_timeout=30)
+        # Register cleanup before setup so partial HTTP startup failures close too.
+        stack.push_async_callback(runner.cleanup)
+        await runner.setup()
+        site = web.TCPSite(runner, settings.http_host, settings.http_port)
+        await site.start()
         scheduler = create_scheduler(container, bot)
         scheduler.start()
-        stack.callback(scheduler.shutdown)
+        stack.push_async_callback(scheduler.aclose)
+        stack.push_async_callback(site.stop)
 
-        await setup_commands(bot, settings)
-        await dispatcher.start_polling(bot, close_bot_session=False)
+        async with container() as request:
+            command_texts = await (await request.get(TextCatalogService)).current()
+        with i18n.use_catalog(command_texts):
+            await setup_commands(bot, settings)
+        if settings.telegram_transport == "polling":
+            # Explicit development transport. Registration/deletion of a Telegram
+            # webhook is an operator action; never discard pending updates here.
+            await dispatcher.start_polling(bot, close_bot_session=False)
+        else:
+            stop = asyncio.Event()
+            loop = asyncio.get_running_loop()
+            for sig in (signal.SIGINT, signal.SIGTERM):
+                loop.add_signal_handler(sig, stop.set)
+                stack.callback(loop.remove_signal_handler, sig)
+            await stop.wait()
 
 
 if __name__ == "__main__":

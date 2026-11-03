@@ -50,6 +50,7 @@ from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.dispatcher import create_dispatcher
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
+from tests.text_catalog import text_dependencies
 
 
 def snapshot() -> EdersSnapshot:
@@ -198,12 +199,14 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
     locales.get_locale.side_effect = recipient_locale
     tracking.pending_events.return_value = [event]
     bot.send_message.side_effect = [TelegramBadRequest(SendMessage(chat_id=1, text="test"), "test failure"), object()]
-    dependencies = {
-        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
-        BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
-        EdersTrackingService: tracking,
-        PollEdersUser: PollEdersUser(service, tracking, locales),
-    }
+    dependencies = text_dependencies(
+        {
+            ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+            BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
+            EdersTrackingService: tracking,
+            PollEdersUser: PollEdersUser(service, tracking, locales),
+        }
+    )
 
     class Request:
         async def get(self, dependency):
@@ -279,12 +282,14 @@ async def test_job_groups_new_materials_and_acknowledges_all_events_only_on_succ
     second = EdersEvent("second", snapshot().activities[0], "material_changed", now, now)
     tracking.pending_events.return_value = [first, second]
     locales.get_locale.return_value = Locale.EN
-    dependencies = {
-        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
-        BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
-        EdersTrackingService: tracking,
-        PollEdersUser: PollEdersUser(service, tracking, locales),
-    }
+    dependencies = text_dependencies(
+        {
+            ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+            BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
+            EdersTrackingService: tracking,
+            PollEdersUser: PollEdersUser(service, tracking, locales),
+        }
+    )
 
     @asynccontextmanager
     async def scope():

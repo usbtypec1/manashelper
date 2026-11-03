@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Literal
 
@@ -19,6 +19,8 @@ class VersionInfo:
     draft_revision: int
     published_at: datetime
     author_id: int
+    text_catalog_release: int | None = None
+    dependencies: dict[str, int] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)

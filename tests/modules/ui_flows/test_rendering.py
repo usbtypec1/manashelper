@@ -59,6 +59,14 @@ def test_ambiguous_reply_labels_cannot_be_sent():
         FlowRenderer().render(flow, ExecutionResult(state, flow.nodes[1], "started"), RuntimeUser(1, 1), {})
 
 
+def test_reply_labels_cannot_be_parsed_as_global_commands():
+    flow = demo_document().model_dump(mode="json")
+    flow["nodes"][1]["buttons"][0][0]["label"] = {"kind": "inline", "translations": {"en": "/other"}}
+    document = FlowDocument.model_validate(flow)
+    with pytest.raises(InvalidScreenError, match="commands"):
+        FlowRenderer().validate_document(document, {})
+
+
 def test_inline_text_uses_theme_and_english_fallback_without_foreign_locale_leakage():
     flow = FlowDocument.model_validate(
         {

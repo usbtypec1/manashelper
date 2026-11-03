@@ -1,6 +1,6 @@
 from typing import Literal, cast
 
-from sqlalchemy import select
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.modules.ui_flows.infrastructure.orm import (
@@ -32,6 +32,8 @@ class AdminQueriesRepository:
             UiFlowVersion.draft_revision,
             UiFlowVersion.published_at,
             UiFlowVersion.author_id,
+            UiFlowVersion.text_catalog_release,
+            func.coalesce(UiFlowVersion.dependencies, text("'{}'::jsonb")),
         ).where(UiFlowVersion.flow_id == flow_id)
         if before is not None:
             query = query.where(UiFlowVersion.version < before)

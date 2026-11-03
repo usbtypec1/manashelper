@@ -14,7 +14,7 @@ def test_document_round_trip_preserves_interface_contract(main_menu_document):
     assert [len(row) for row in restored.nodes[0].buttons] == [2, 1, 1]
 
 
-@pytest.mark.parametrize("version", [True, "1", 1.0, 2])
+@pytest.mark.parametrize("version", [True, "1", 1.0, 3])
 def test_schema_version_is_explicit_and_not_coerced(main_menu_document, version):
     main_menu_document["schema_version"] = version
     with pytest.raises(ValidationError):

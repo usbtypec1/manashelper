@@ -253,13 +253,14 @@ def test_command_catalog_keeps_runtime_path_and_reads_changes_without_restart(tm
     assert [command.command for command in module.build_private_commands(catalog.Locale.EN)] == ["start"]
 
 
-def test_gettext_keeps_runtime_locales_path_after_relocation(tmp_path, monkeypatch):
+def test_gettext_keeps_runtime_locales_path_after_relocation(tmp_path, monkeypatch, baseline_texts):
     runtime = tmp_path / "runtime"
     shutil.copytree(Path(manashelper.__file__).parent / "locales", runtime / "src" / "manashelper" / "locales")
     monkeypatch.chdir(tmp_path)
     module = load_runtime_module(catalog, runtime)
     assert Path(module.i18n.path) == runtime / "src" / "manashelper" / "locales"
-    assert module.i18n.gettext("common.welcome", locale="en") == "Welcome to Manashelper!"
+    with module.i18n.use_catalog(baseline_texts):
+        assert module.i18n.gettext("common.welcome", locale="en") == "Welcome to Manashelper!"
 
 
 async def test_deletion_use_case_accepts_plain_async_delivery_and_acknowledges_after_all_chats():

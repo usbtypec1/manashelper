@@ -56,8 +56,10 @@ from manashelper.modules.users.presentation.routers import locale, phone_numbers
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.i18n.service import TextCatalogService
 from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
+from tests.text_catalog import text_dependencies
 
 
 @pytest.fixture
@@ -221,12 +223,14 @@ async def test_obis_user_poll_keeps_locale_fallback_and_failure_isolation(monkey
     service = AsyncMock(spec=ObisNotificationService)
     service.check_exam_grade_changes.return_value = [object()]
     service.check_lesson_skip_changes.return_value = [object()]
-    dependencies = {
-        LocaleService: LocaleService(users),
-        PollObisUser: PollObisUser(service),
-        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
-        BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
-    }
+    dependencies = text_dependencies(
+        {
+            LocaleService: LocaleService(users),
+            PollObisUser: PollObisUser(service),
+            ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+            BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
+        }
+    )
     opened = []
 
     @asynccontextmanager
@@ -292,7 +296,9 @@ async def test_locale_middleware_keeps_request_context_and_profile_refresh(conte
     locales.resolve.return_value = Locale.ZH
     themes = AsyncMock(spec=ThemeService)
     themes.get_theme.return_value = Theme.BASIC
-    request = SimpleNamespace(get=AsyncMock(side_effect={LocaleService: locales, ThemeService: themes}.__getitem__))
+    request = SimpleNamespace(
+        get=AsyncMock(side_effect=text_dependencies({LocaleService: locales, ThemeService: themes}).__getitem__)
+    )
     data = {CONTAINER_NAME: request}
     if has_user:
         data["event_from_user"] = context.message.from_user
@@ -306,7 +312,11 @@ async def test_locale_middleware_keeps_request_context_and_profile_refresh(conte
     assert observed == [(context.message, Locale.ZH if has_user else None, "zh" if has_user else "ru")]
     assert i18n.current_locale == "ru"
     if has_user:
-        assert [call.args[0] for call in request.get.await_args_list] == [LocaleService, ThemeService]
+        assert [call.args[0] for call in request.get.await_args_list] == [
+            TextCatalogService,
+            LocaleService,
+            ThemeService,
+        ]
         user = context.message.from_user
         locales.resolve.assert_awaited_once_with(
             user_id=user.id,
@@ -334,7 +344,7 @@ def test_users_standalone_import_uses_explicit_model_registration(module):
         "from common.database import Base; "
         "assert len(Base.metadata.tables) < 27; "
         "from manashelper.bootstrap import load_models; load_models(); configure_mappers(); "
-        "assert len(Base.metadata.tables) == 38; "
+        "assert len(Base.metadata.tables) == 45; "
         "assert Base.metadata.tables['user_courses'].c.user_id.references(Base.metadata.tables['users'].c.id)"
     )
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)

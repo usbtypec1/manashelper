@@ -56,6 +56,7 @@ from manashelper.modules.users.provider import UsersProvider
 from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
+from tests.text_catalog import text_dependencies
 
 
 async def test_notification_defaults_weekday_meal_and_bulk_toggles(session):
@@ -208,13 +209,15 @@ async def test_broadcast_job_selects_today_and_skips_missing_menu(monkeypatch, m
         daily.get_daily_menu_by_skipping_days.side_effect = DailyMenuNotFoundError(menu.date)
     select_recipients = getattr(settings, f"get_user_ids_with_{meal}_enabled_for_weekday")
     select_recipients.return_value = [960011]
-    dependencies = {
-        BroadcastFoodMenu: BroadcastFoodMenu(daily, settings),
-        LocaleService: users,
-        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
-        BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
-        FoodMenuCleanupSettingsService: cleanup,
-    }
+    dependencies = text_dependencies(
+        {
+            BroadcastFoodMenu: BroadcastFoodMenu(daily, settings),
+            LocaleService: users,
+            ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+            BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
+            FoodMenuCleanupSettingsService: cleanup,
+        }
+    )
 
     @asynccontextmanager
     async def container():

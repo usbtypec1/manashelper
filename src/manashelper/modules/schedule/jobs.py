@@ -9,13 +9,14 @@ from manashelper.modules.schedule.presentation.sender import TelegramScheduleCha
 from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
+from manashelper.platform.i18n.request import catalog_request
 
 logger = logging.getLogger(__name__)
 
 
 async def sync_timetable_job(container: AsyncContainer, bot: Bot) -> None:
     try:
-        async with container() as request_container:
+        async with catalog_request(container) as request_container:
             courses = await request_container.get(CourseService)
             course_ids = await courses.get_all_ids()
     except Exception:
@@ -28,7 +29,7 @@ async def sync_timetable_job(container: AsyncContainer, bot: Bot) -> None:
 
 async def _sync_course_timetable(container: AsyncContainer, bot: Bot, course_id: int) -> None:
     try:
-        async with container() as request_container:
+        async with catalog_request(container) as request_container:
             service = await request_container.get(SyncCourseTimetable)
             locales = await request_container.get(LocaleService)
             themes = await request_container.get(ThemeService)

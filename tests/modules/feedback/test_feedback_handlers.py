@@ -60,6 +60,7 @@ def context(monkeypatch):
             summary=summary,
             locale_service=locale_service,
             settings=SimpleNamespace(admin_chat_id=ADMIN_CHAT_ID),
+            private_settings=SimpleNamespace(admin_chat_id=USER_ID),
         )
 
 
@@ -88,14 +89,14 @@ async def test_open_cancel_preserves_fsm_and_callback_contract(context):
     assert FeedbackForm.message.state == "FeedbackForm:message"
     assert FeedbackCallback(action=FeedbackAction.CANCEL).pack() == "feedback:cancel"
 
-    await on_open_feedback(callback(context), context.state)
+    await on_open_feedback(callback(context), context.state, context.private_settings)
     assert await context.state.get_state() == "FeedbackForm:message"
     prompt = sent_methods(context, EditMessageText)[0]
     assert prompt.text == i18n.gettext("feedback.message_prompt")
     assert prompt.reply_markup.inline_keyboard[0][0].callback_data == "feedback:cancel"
     await context.state.update_data(temporary="discard")
 
-    await on_feedback_cancelled(callback(context), context.state)
+    await on_feedback_cancelled(callback(context), context.state, context.private_settings)
     assert await context.state.get_state() is None
     assert await context.state.get_data() == {}
     assert sent_methods(context, EditMessageText)[-1].text == i18n.gettext("settings.title")
@@ -110,7 +111,7 @@ async def test_invalid_body_keeps_form_without_submission(context, body):
         context.message.model_copy(update={"text": body}),
         context.state,
         context.bot,
-        context.settings,
+        context.private_settings,
         context.service,
     )
     context.service.submit.assert_not_awaited()
@@ -129,14 +130,14 @@ async def test_submit_strips_body_and_forwards_escaped_text_in_admin_locale(cont
         context.message.model_copy(update={"from_user": user}),
         context.state,
         context.bot,
-        context.settings,
+        context.private_settings,
         context.service,
     )
     context.service.submit.assert_awaited_once_with(USER_ID, "A <question> & idea")
     context.service.record_admin_chat_message.assert_awaited_once_with(context.summary.id, 42)
     assert await context.state.get_state() is None
     messages = sent_methods(context, SendMessage)
-    assert [message.chat_id for message in messages] == [USER_ID, ADMIN_CHAT_ID]
+    assert [message.chat_id for message in messages] == [USER_ID, USER_ID]
     assert messages[0].text == i18n.gettext("feedback.sent", locale="en")
     assert messages[1].text == i18n.gettext("feedback.admin_message", locale="ru").format(
         sender="@tester" if username else str(USER_ID), body="A &lt;question&gt; &amp; idea"
@@ -148,7 +149,7 @@ async def test_boundary_body_length_is_accepted(context):
         context.message.model_copy(update={"text": "x" * BODY_MAX_LENGTH}),
         context.state,
         context.bot,
-        context.settings,
+        context.private_settings,
         context.service,
     )
     context.service.submit.assert_awaited_once_with(USER_ID, "x" * 2000)
@@ -158,17 +159,66 @@ async def test_forward_failure_preserves_existing_acknowledgement_and_cleared_st
     respond = context.request.side_effect
 
     async def fail_admin(_bot, method, **kwargs):
-        if isinstance(method, SendMessage) and method.chat_id == ADMIN_CHAT_ID:
+        if isinstance(method, SendMessage) and method.text != i18n.gettext("feedback.sent"):
             raise TelegramBadRequest(method=method, message="test: admin unavailable")
         return await respond(_bot, method, **kwargs)
 
     context.request.side_effect = fail_admin
     await context.state.set_state(FeedbackForm.message)
-    await on_feedback_entered(context.message, context.state, context.bot, context.settings, context.service)
+    await on_feedback_entered(context.message, context.state, context.bot, context.private_settings, context.service)
     context.service.submit.assert_awaited_once()
     context.service.record_admin_chat_message.assert_not_awaited()
     assert await context.state.get_state() is None
     assert sent_methods(context, SendMessage)[0].text == i18n.gettext("feedback.sent")
+
+
+@pytest.mark.parametrize("handler", [on_open_feedback, on_feedback_cancelled])
+@pytest.mark.parametrize("position", [None, "FeedbackForm:message", "PhoneNumberForm:phone_number"])
+@pytest.mark.parametrize("source", ["non_admin", "foreign_chat", "group", "inaccessible"])
+async def test_unauthorized_callback_cannot_change_forms_or_messages(context, handler, position, source):
+    await context.state.set_state(position)
+    await context.state.set_data({"temporary": "preserve"})
+    query = callback(context)
+    if source == "non_admin":
+        query = query.model_copy(update={"from_user": query.from_user.model_copy(update={"id": USER_ID + 1})})
+    elif source == "foreign_chat":
+        query = query.model_copy(
+            update={"message": context.message.model_copy(update={"chat": Chat(id=USER_ID + 1, type="private")})}
+        )
+    elif source == "group":
+        query = query.model_copy(
+            update={"message": context.message.model_copy(update={"chat": Chat(id=USER_ID, type="group")})}
+        )
+    else:
+        query = query.model_copy(update={"message": None})
+    await handler(query, context.state, context.private_settings)
+    assert await context.state.get_state() == position
+    assert await context.state.get_data() == {"temporary": "preserve"}
+    assert len(sent_methods(context, AnswerCallbackQuery)) == 1
+    assert len(context.request.await_args_list) == 1
+    context.service.submit.assert_not_awaited()
+
+
+@pytest.mark.parametrize("source", ["non_admin", "foreign_chat", "group", "no_user"])
+@pytest.mark.parametrize("body", ["Feedback body", ""])
+async def test_unauthorized_stale_feedback_state_cannot_submit_or_clear(context, source, body):
+    await context.state.set_state(FeedbackForm.message)
+    await context.state.set_data({"temporary": "preserve"})
+    message = context.message.model_copy(update={"text": body})
+    if source == "non_admin":
+        message = message.model_copy(update={"from_user": message.from_user.model_copy(update={"id": USER_ID + 1})})
+    elif source == "foreign_chat":
+        message = message.model_copy(update={"chat": Chat(id=USER_ID + 1, type="private")})
+    elif source == "group":
+        message = message.model_copy(update={"chat": Chat(id=USER_ID, type="group")})
+    else:
+        message = message.model_copy(update={"from_user": None})
+    await on_feedback_entered(message, context.state, context.bot, context.private_settings, context.service)
+    assert await context.state.get_state() == FeedbackForm.message.state
+    assert await context.state.get_data() == {"temporary": "preserve"}
+    context.service.submit.assert_not_awaited()
+    context.service.record_admin_chat_message.assert_not_awaited()
+    context.request.assert_not_awaited()
 
 
 @pytest.mark.parametrize("chat_id", [ADMIN_CHAT_ID, -100999999])

@@ -27,6 +27,7 @@ from manashelper.modules.users.infrastructure.user_repository import UserReposit
 from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.telegram.delivery import UserMessageDelivery
 from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
+from tests.text_catalog import text_dependencies
 
 
 async def test_stopped_users_are_excluded_from_every_recipient_selection(session):
@@ -78,7 +79,9 @@ async def test_only_private_updates_request_bot_resumption(chat_type):
     locales.resolve.return_value = Locale.RU
     themes = AsyncMock(spec=ThemeService)
     themes.get_theme.return_value = Theme.BASIC
-    request = SimpleNamespace(get=AsyncMock(side_effect={LocaleService: locales, ThemeService: themes}.__getitem__))
+    request = SimpleNamespace(
+        get=AsyncMock(side_effect=text_dependencies({LocaleService: locales, ThemeService: themes}).__getitem__)
+    )
     user = TelegramUser(id=42, is_bot=False, first_name="Student")
     chat = Chat(id=42 if chat_type == "private" else -42, type=chat_type)
     message = Message(message_id=1, date=0, chat=chat, from_user=user, text="any input")

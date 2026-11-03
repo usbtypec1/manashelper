@@ -36,12 +36,12 @@ def test_openapi_references_resolve_and_mutations_require_session_and_csrf():
     for path, operations in spec["paths"].items():
         for method, operation in operations.items():
             ids.append(operation["operationId"])
-            if path == "/auth/exchange":
+            if path in {"/auth/exchange", "/auth/telegram"}:
                 assert operation["security"] == []
             elif method == "get":
-                assert operation["security"] == [{"AdminSession": []}]
+                assert operation["security"] == [{"AdminSession": []}, {"MiniAppBearer": []}]
             else:
-                assert operation["security"] == [{"AdminSession": [], "CsrfToken": []}]
+                assert operation["security"] == [{"AdminSession": [], "CsrfToken": []}, {"MiniAppBearer": []}]
     assert len(ids) == len(set(ids))
 
 

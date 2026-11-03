@@ -11,13 +11,14 @@ from manashelper.modules.food_menu.presentation.sender import TelegramFoodMenuSe
 from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
+from manashelper.platform.i18n.request import catalog_request
 
 logger = logging.getLogger(__name__)
 
 
 async def sync_daily_menus_job(container: AsyncContainer) -> None:
     try:
-        async with container() as request_container:
+        async with catalog_request(container) as request_container:
             service = await request_container.get(FoodMenuSyncService)
             await service.synchronize_daily_menus()
     except Exception:
@@ -26,7 +27,7 @@ async def sync_daily_menus_job(container: AsyncContainer) -> None:
 
 async def _broadcast_menu_job(container: AsyncContainer, bot: Bot, meal: FoodMenuMeal) -> None:
     try:
-        async with container() as request_container:
+        async with catalog_request(container) as request_container:
             service = await request_container.get(BroadcastFoodMenu)
             locales = await request_container.get(LocaleService)
             cleanup = await request_container.get(FoodMenuCleanupSettingsService)

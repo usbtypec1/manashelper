@@ -13,6 +13,7 @@ from manashelper.modules.schedule.application.schedule import (
     parse_time_range_start_minutes,
 )
 from manashelper.modules.schedule.application.timetable_sync import LessonChange
+from manashelper.platform.telegram.html import escape_html
 
 LATE_MORNING_THRESHOLD_MINUTES = 11 * 60 + 30
 
@@ -43,7 +44,7 @@ def _group_into_blocks(day_lessons: list[ScheduleLessonModel], now_minutes: int,
         start = parse_time_range_start_minutes(lesson.time_range)
         end = parse_time_range_end_minutes(lesson.time_range)
         marker = _period_marker(start, end, now_minutes) if is_today else ""
-        period = f"- {marker}{lesson.time_range}"
+        period = f"- {marker}{escape_html(lesson.time_range)}"
 
         previous = blocks[-1] if blocks else None
         if (
@@ -118,9 +119,9 @@ def format_day_schedule(weekday: int, lessons: list[ScheduleLessonModel], now: d
             lunch_inserted = True
 
         lesson_name, teacher_and_room = _split_lesson_content(block.content)
-        lines.append(f"<b>{lesson_name}</b>")
+        lines.append(f"<b>{escape_html(lesson_name)}</b>")
         if teacher_and_room:
-            lines.append(teacher_and_room)
+            lines.append(escape_html(teacher_and_room))
         lines.extend(block.periods)
         lines.append("")
 
@@ -136,9 +137,9 @@ def _format_change_lesson_content(content: str) -> str:
     lines = []
     for part in content.split(" | "):
         lesson_name, teacher_and_room = _split_lesson_content(part)
-        lines.append(f"<b>{lesson_name}</b>")
+        lines.append(f"<b>{escape_html(lesson_name)}</b>")
         if teacher_and_room:
-            lines.append(teacher_and_room)
+            lines.append(escape_html(teacher_and_room))
     return "\n".join(lines)
 
 
@@ -146,16 +147,16 @@ def _format_change_block(change: LessonChange) -> str:
     previous_content, new_content = change.previous_content, change.new_content
     if previous_content is None and new_content is not None:
         return _("schedule.change_added").format(
-            time_range=change.time_range, content=_format_change_lesson_content(new_content)
+            time_range=escape_html(change.time_range), content=_format_change_lesson_content(new_content)
         )
     if new_content is None and previous_content is not None:
         return _("schedule.change_cancelled").format(
-            time_range=change.time_range, content=_format_change_lesson_content(previous_content)
+            time_range=escape_html(change.time_range), content=_format_change_lesson_content(previous_content)
         )
     assert previous_content is not None
     assert new_content is not None
     return _("schedule.change_updated").format(
-        time_range=change.time_range,
+        time_range=escape_html(change.time_range),
         previous=_format_change_lesson_content(previous_content),
         new=_format_change_lesson_content(new_content),
     )

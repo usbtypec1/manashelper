@@ -4,6 +4,8 @@ from collections.abc import Callable
 
 from aiogram.utils.i18n import gettext as _
 
+from manashelper.platform.i18n.catalog import i18n
+
 _CATALOG: dict[str, Callable[[], str]] = {
     "ui_flows.demo.intro": lambda: _("ui_flows.demo.intro"),
     "ui_flows.demo.form": lambda: _("ui_flows.demo.form"),
@@ -55,4 +57,4 @@ CATALOG_KEYS = frozenset(_CATALOG)
 
 def get_catalog_texts() -> dict[str, str]:
     """Resolve inside the current recipient locale/theme; literal calls remain extractable."""
-    return {key: resolve() for key, resolve in _CATALOG.items()}
+    return {key: i18n.gettext(key) for key in i18n.current_catalog.keys}

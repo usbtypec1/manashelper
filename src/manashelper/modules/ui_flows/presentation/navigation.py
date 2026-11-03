@@ -38,6 +38,9 @@ class UiFlowNavigationMiddleware(BaseMiddleware):
                 bot: Bot = data["bot"]
                 if get_flag(data, "refresh_ui_flow"):
                     actions.add(lambda: coordinator.refresh(bot, user.id, update.update_id))
-                elif not get_flag(data, "preserve_ui_flow"):
+                elif (
+                    not get_flag(data, "preserve_ui_flow")
+                    and getattr(data.get("ingress_route"), "policy", None) != "preserve"
+                ):
                     actions.add(lambda: coordinator.leave(user.id, update.update_id))
         return await handler(event, data)

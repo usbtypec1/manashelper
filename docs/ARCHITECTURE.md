@@ -1,13 +1,15 @@
 # Архитектура Manashelper и визуальных сценариев
 
-Документ описывает текущую реализацию на 1 ноября 2026 года. Основное внимание —
+Документ описывает текущую реализацию на 2 ноября 2026 года. Основное внимание —
 редактору меню и форм, его связи с Telegram-ботом и Python-делегатами.
 Незавершённые изменения перечислены в конце и не выдаются за работающие функции.
 
-Следующий цикл описан в [ORCHESTRATION.md](../features/ui_flows/ORCHESTRATION.md):
-перенос всего UI в движок, полное удаление aiogram FSM, один aiohttp-процесс
-для webhook/admin API и запуск админки как fullscreen Telegram Mini App.
-Ниже по-прежнему описывается текущая реализация с polling и отдельным FastAPI.
+Переход описан в [ORCHESTRATION.md](../features/ui_flows/ORCHESTRATION.md):
+матрица UI-входов составлена, HTTP/Telegram host перенесён на aiohttp, добавлен
+вход в редактор через Telegram Mini App, версионируемый DB-каталог локализации
+и единый ingress с опубликованным реестром входов.
+Проверки этапов 2–4 фиксируются отдельно от прежней приёмки. Полный перенос UI
+в движок и удаление FSM остаются следующими этапами.
 
 ## 1. Основная идея
 
@@ -30,35 +32,45 @@
 
 ## 2. Процессы и связи
 
-Есть два независимых Python-процесса и браузерный frontend:
+`manashelper.main` запускает один Python-процесс: aiohttp host, Bot, Dispatcher,
+Dishka APP-container и планировщик. Общий lifecycle закрывает HTTP-приём, фоновые
+задачи, scheduler, Telegram session и контейнер с DB/HTTP-ресурсами. PostgreSQL
+и HTTPS-прокси остаются отдельной инфраструктурой. Единственный production transport
+по умолчанию — webhook; polling выбирается явно для development.
 
-- **Telegram-бот** — `manashelper.main`: long polling, маршрутизация сообщений,
-  исполнение сценариев и планировщик фоновых заданий.
-- **Административный HTTP-сервер** — `manashelper.admin_main`: FastAPI, вход
-  администратора, управление сценариями, preview и мониторинг. Он не запускает
-  Telegram polling, планировщик или миграции.
-- **Редактор** — Vue 3, TypeScript и Vue Flow. Собирается через Bun; готовые assets
-  отдаёт HTTP-сервер. Bun используется для инструментов frontend, а backend остаётся Python.
-
-Оба Python-процесса используют одну PostgreSQL и общие application-сервисы.
-Пользователи взаимодействуют с Telegram; веб-редактор предназначен администратору.
+На одном host находятся `POST /telegram/webhook`, административный API
+`/admin/api/v1/...`, собранный редактор `/admin/` и минимальный `GET /health`.
+Редактор использует Vue 3, TypeScript и Vue Flow; Bun собирает готовый `dist`,
+Python раздаёт только index/assets. Отдельных FastAPI/Uvicorn и admin-службы нет.
+Административные маршруты включаются при настройке web origin и signing key.
+Пользователи взаимодействуют с Telegram; Mini App и браузерный редактор доступны
+только настроенному приватному администратору.
 
 ```mermaid
 flowchart LR
-    Admin["Администратор"] --> Editor["Vue-редактор"]
-    Editor -->|"HTTPS / admin API"| API["FastAPI"]
-    API --> DB[("PostgreSQL")]
+    Admin["Администратор"] --> Editor["Vue Mini App / браузер"]
+    Editor -->|"HTTPS / admin API"| Host["Один aiohttp host"]
     User["Пользователь"] --> Telegram["Telegram"]
-    Telegram <-->|"Updates и сообщения"| Bot["Python-бот / aiogram"]
-    Bot --> DB
+    Telegram -->|"POST webhook"| Host
+    Host --> Bot["aiogram / сценарии / scheduler"]
+    Bot -->|"Bot API"| Telegram
+    Host --> DB[("PostgreSQL")]
     Bot --> Features["Бизнес-модули"]
     Features --> DB
 ```
 
-В штатном запуске бот применяет Alembic-миграции перед стартом. Перед отдельным
-запуском HTTP-процесса миграции нужно применить явно. Для Docker frontend собирается
-отдельной Bun-стадией и включается в итоговый Python-образ; сервис `admin` запускает
-Uvicorn отдельным entrypoint. HTTPS завершается на прокси перед административным сервером.
+Штатная точка запуска применяет Alembic-миграции перед стартом. HTTP-фабрика для
+тестов сама не запускает миграции, Bot или jobs. Docker включает собранный frontend
+в Python-образ и запускает только сервис `app`; HTTP-порт опубликован на loopback.
+HTTPS завершается на прокси перед общим host.
+
+`MANASHELPER_HTTP_HOST` по умолчанию `127.0.0.1`, `MANASHELPER_HTTP_PORT` — `8080`;
+в контейнере host задаётся `0.0.0.0`. Для webhook необходим
+`MANASHELPER_TELEGRAM_WEBHOOK_SECRET`: 16–256 ASCII-букв, цифр, `_` или `-`.
+Development polling включается `MANASHELPER_TELEGRAM_TRANSPORT=polling`.
+Приложение не вызывает регистрацию или удаление webhook при старте. Оператор
+отдельно проверяет HTTPS/secret и настраивает transport в Telegram, сохраняя pending
+updates. Один bot token нельзя одновременно обслуживать через webhook и polling.
 
 ## 3. Границы кода
 
@@ -76,7 +88,7 @@ src/
 ```
 
 `common` не импортирует приложение или движок. `ui_flows` не импортирует
-`manashelper`, aiogram, FastAPI, SQLAlchemy или Dishka. `manashelper` связывает
+`manashelper`, aiogram, aiohttp, SQLAlchemy или Dishka. `manashelper` связывает
 контракты движка с конкретными адаптерами. Все три Python-пакета входят в одну
 дистрибуцию; отдельные сервисы или сетевые вызовы между ними не добавлены.
 
@@ -88,8 +100,8 @@ src/
 | `ui_flows/ports/` | Интерфейсы хранилища, использующего транзакцию вызывающего приложения |
 | `manashelper/core/` | Конфигурация, engine/session pool, HTTP-клиент, логирование и транзакции |
 | `manashelper/platform/telegram/` | Dispatcher, middleware, навигация, аудит и общие правила доставки |
-| `manashelper/platform/web/` | Билеты входа, cookie-сессии, Origin/CSRF, cursor и транзакции HTTP-запросов |
-| `manashelper/platform/i18n/`, `manashelper/localization/` | Текущий gettext-адаптер, локали и темы |
+| `manashelper/platform/web/` | aiohttp host, webhook, Mini App initData, bearer/cookie-сессии, Origin/CSRF, assets и REQUEST-транзакции |
+| `manashelper/platform/i18n/`, `manashelper/localization/` | DB-каталог и REQUEST-снимки, публикации, импорт, локали и темы; отдельный English admin bundle |
 | `manashelper/modules/<feature>/` | Бизнес-сервисы, репозитории, модели, делегаты и представление функции |
 | `manashelper/modules/ui_flows/` | PostgreSQL-адаптеры, Telegram/admin API, rollout, seed-документы и DI |
 | `manashelper/jobs/` | Регистрация расписания; задания принадлежат своим модулям |
@@ -172,6 +184,12 @@ sequenceDiagram
 ошибка до фиксации откатывает их вместе. Вложенные savepoint защищают операции
 DialogService и при ошибке, перехваченной внешним вызывающим кодом.
 
+Webhook проверяет отдельный `X-Telegram-Bot-Api-Secret-Token`, размер запроса и тип
+Update, затем ожидает `Dispatcher.feed_update`. Раннего фонового HTTP 200 нет;
+сбой до критического commit не подтверждает Update. Ошибки не поглощаются общим
+aiogram error handler. Cookie/CSRF-механизм админки к webhook не применяется.
+Сырой Update не записывается в очередь или журнал: он может содержать sensitive input.
+
 ## 6. Делегаты и существующие функции
 
 [`DelegateRegistry`](../src/ui_flows/application/delegates.py)
@@ -234,7 +252,7 @@ Grades, Study week, Eders и Eders materials. Это не транзакцион
 | `ui_user_transitions` | Общая история переходов без ответов формы |
 | `ui_flow_rollout` | Режим запуска admin/all/off и его ревизия |
 | `admin_login_tickets` | Хеши одноразовых билетов входа |
-| `admin_web_sessions` | Хеши cookie-сессий и срок действия |
+| `admin_web_sessions` | Хеши cookie/bearer-сессий и срок действия |
 
 Модели принадлежат своим модулям и регистрируются через `bootstrap.load_models()`;
 изменения схемы проходят Alembic. Тексты экрана могут содержать подставленные ответы,
@@ -303,32 +321,64 @@ Release меняет допуск **новых** запусков без рес�
 
 ## 10. Админка, preview и локализация
 
-`/editor` доступен приватному администратору и выдаёт одноразовый билет на пять минут.
-Билет передаётся во fragment URL и удаляется из адреса до обмена. HTTP-сессия живёт
-восемь часов; cookie имеет Secure/HttpOnly/SameSite=Strict. Изменяющие запросы требуют
-точного HTTPS Origin, а после входа — CSRF-токена. Cookie выдаётся после commit.
+`/editor` доступен приватному администратору и отправляет кнопку `web_app` с HTTPS
+адресом `/admin/`. Mini App запрашивает fullscreen через Telegram SDK, учитывает
+viewport/safe areas; неподдерживаемый fullscreen использует fallback `expand()`.
+Результат на настоящих Telegram-клиентах требует отдельной ручной приёмки.
+
+Сервер проверяет подпись исходного `initData`, возраст до пяти минут и `user.id`
+на совпадение с настроенным администратором. `initDataUnsafe` не авторизует запрос.
+Обмен ограничен пятью корректными входами за минуту на host. В ответ выдаётся
+восьмичасовой bearer token: клиент хранит его только в памяти и передаёт в
+`Authorization`, без URL/localStorage/sessionStorage. БД содержит только digest
+от `miniapp:` + token в прежней таблице `admin_web_sessions`; миграция схемы не нужна.
+Cookie и bearer credentials не взаимозаменяемы, logout отзывает текущую сессию.
+
+Ссылка обычного браузерного входа сохранена рядом с кнопкой Mini App: одноразовый
+билет действует пять минут, передаётся во fragment URL и удаляется до обмена.
+Cookie-сессия живёт восемь часов и имеет Secure/HttpOnly/SameSite=Strict. Все
+изменяющие browser-запросы требуют точного HTTPS Origin; cookie-запросы дополнительно
+требуют CSRF-токен, bearer-запросы обходятся без него. REQUEST завершается до выдачи
+HTTP-ответа и credentials, включая cookie: ошибка commit не выдаёт новую сессию.
 
 Preview использует общий интерпретатор, но отдельный registry с явными заглушками.
 Реальные делегаты не вызываются, Telegram-сообщения и ответы пользователей не
 сохраняются. Preview не изменяет активный диалог реального пользователя.
 
 Интерфейс админки — только EN. Пользовательские тексты и preview поддерживают
-EN/RU/KY/TR/ZH. `CatalogText` использует разрешённые gettext-ключи; `InlineText`
+EN/RU/KY/TR/ZH. `CatalogText` использует стабильные ключи DB-снимка; `InlineText`
 хранит варианты текста внутри версии сценария. Динамические значения экранируются
 для Telegram HTML; браузерный preview не исполняет произвольный HTML/JavaScript.
 
-**Следующий этап:** все пользовательские тексты, включая ошибки и уведомления,
-будут храниться в версионируемом каталоге БД. Движок получит контракт локализации,
-а опубликованные сценарии закрепят версию каталога. Перенос gettext пока не выполнен.
-Целевая модель и порядок перехода описаны в [LOCALIZATION.md](../features/ui_flows/LOCALIZATION.md).
+Пользовательские тексты, ошибки, команды и уведомления читают неизменяемый выпуск
+из `text_catalog_releases`. `text_catalog_state` хранит черновик, optimistic revision
+и текущий выпуск. REQUEST выбирает его один раз; фоновая обработка сохраняет
+локаль/тему получателя. Версия сценария закрепляет выпуск, поэтому смена переводов
+не изменяет активные формы и исторический preview. Intent сохраняет screen и pin;
+доставка после commit использует тот же выпуск. UI публикации/отката находится
+во вкладке Texts. Пользовательские runtime-чтения `.mo` отключены; English admin
+bundle остаётся файловым. [Модель и совместимость](../features/ui_flows/LOCALIZATION.md).
 
 ## 11. Состояние реализации и точки расширения
 
+Telegram adapter преобразует вход в транспортно-независимый `IncomingEvent`.
+Единый resolver выбирает один runtime/legacy маршрут по опубликованным bindings,
+правам, scope, capabilities и состоянию диалога. Три owned-таблицы сохраняют draft,
+immutable manifests и квитанции `(bot_id, update_id)` без текстов, контактов и FSM data.
+Manifest закрепляет версии сценариев, тексты и return targets; сессия хранит nullable pin.
+Runtime admission коммитится до coordinator; replay сверяется с исходной session/revision.
+Legacy handlers и их MemoryStorage продолжают работать за выбранным owning-адаптером.
+Оператор публикует тексты, новую ревизию сценария, затем новую ревизию Triggers.
+Откат указателя не меняет активные сессии. [Контракт и совместимость](../features/ui_flows/TRIGGERS.md).
+
 Готовы контракты, runtime, PostgreSQL-хранилище, два делегата опроса, Telegram-адаптер,
 admin API, Vue-редактор, мониторинг, публикация/откат, rollout и очистка данных.
-Код упрощения веб-интерфейса и единого редактируемого Telegram-сообщения **не внесён**.
+Добавлены общий aiohttp lifecycle, webhook и Mini App shell/auth; итоговые проверки
+этого переноса фиксируются отдельно. Единое редактируемое Telegram-сообщение
+**не реализовано**; остальной UI и кеши продолжают использовать legacy FSM.
 Полная ручная проверка пользовательского пути остаётся отдельной приёмкой перед
-production-включением; локальные тесты и успешная отправка API её не заменяют.
+production-включением, включая настоящий webhook и fullscreen на Telegram-клиентах;
+локальные тесты и успешная отправка API её не заменяют.
 
 Для новой бизнес-операции нужно реализовать сервис у владельца функции, добавить
 Definition/Binding/handler делегата, подключить registry и сослаться на ID/версию

@@ -10,6 +10,7 @@ from dishka.integrations.aiogram import CONTAINER_NAME
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
 from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.i18n.service import TextCatalogService
 
 
 class LocaleMiddleware(BaseMiddleware):
@@ -38,6 +39,9 @@ class LocaleMiddleware(BaseMiddleware):
             return await handler(event, data)
 
         container: AsyncContainer = data[CONTAINER_NAME]
+        texts = await container.get(TextCatalogService)
+        snapshot = await texts.current()
+        labels = await texts.historical_labels()
         locale_service = await container.get(LocaleService)
         locale = await locale_service.resolve(
             user_id=telegram_user.id,
@@ -50,5 +54,11 @@ class LocaleMiddleware(BaseMiddleware):
         theme_service = await container.get(ThemeService)
         theme = await theme_service.get_theme(telegram_user.id)
         data["locale"] = locale
-        with i18n.context(), i18n.use_locale(locale.value), i18n.use_theme(theme):
+        with (
+            i18n.context(),
+            i18n.use_catalog(snapshot),
+            i18n.use_labels(labels),
+            i18n.use_locale(locale.value),
+            i18n.use_theme(theme),
+        ):
             return await handler(event, data)

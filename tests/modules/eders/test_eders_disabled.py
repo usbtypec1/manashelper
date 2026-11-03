@@ -16,6 +16,8 @@ def test_disabled_feature_has_no_entry_points_or_jobs(monkeypatch):
         from manashelper.modules.notifications.keyboards import build_notifications_keyboard
         from manashelper.modules.notifications.settings import NotificationSettingsSummary
         from manashelper.platform.i18n.catalog import i18n
+        from manashelper.platform.i18n.seed import import_document
+        from ui_flows.domain.texts import TextSnapshot
         from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
         from manashelper.platform.telegram.command_catalog import build_private_commands
         from manashelper.platform.telegram.dispatcher import create_dispatcher
@@ -28,7 +30,7 @@ def test_disabled_feature_has_no_entry_points_or_jobs(monkeypatch):
         dispatcher = create_dispatcher(container)
         assert not {'eders', 'study_week'} & {r.name for r in dispatcher.sub_routers}
         assert all(j.func is not poll_eders_job for j in create_scheduler(container, None).get_jobs())
-        with i18n.context(), i18n.use_locale('ru'):
+        with i18n.context(), i18n.use_catalog(TextSnapshot(1, import_document())), i18n.use_locale('ru'):
             labels = [b.text for row in build_main_keyboard().keyboard for b in row]
             assert i18n.gettext('menu.study') in labels
             labels += [b.text for row in build_study_keyboard().keyboard for b in row]
@@ -38,7 +40,7 @@ def test_disabled_feature_has_no_entry_points_or_jobs(monkeypatch):
             buttons = [b for row in keyboard.inline_keyboard for b in row]
             eders_callback = SettingsCallback(action=SettingsAction.OPEN_EDERS_NOTIFICATIONS).pack()
             assert all(b.callback_data != eders_callback for b in buttons)
-        commands = {c.command for c in build_private_commands(Locale.RU)}
+            commands = {c.command for c in build_private_commands(Locale.RU)}
         assert not {'eders', 'materials', 'week', 'eders_settings'} & commands
     """)
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)

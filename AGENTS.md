@@ -8,8 +8,9 @@ and [docs/BACKLOG.md](docs/BACKLOG.md) for deferred work. Check the code when do
 
 Manashelper is a Python 3.13 Telegram bot for Manas University students. It uses aiogram 3, async SQLAlchemy 2,
 Postgres, Dishka dependency injection, Alembic, APScheduler and gettext. The bot entry point is
-`src/manashelper/main.py`; users interact through Telegram long polling. An optional, separate FastAPI
-process (`manashelper.admin_main`) serves the private UI-flow administration API; it never starts polling or jobs.
+`src/manashelper/main.py`; one aiohttp process owns the Telegram webhook, optional private administration API,
+built Mini App assets and scheduler. Production defaults to webhook; development polling must be selected explicitly.
+Never register/delete a Telegram webhook or discard pending updates on startup.
 
 Current features include the faculty/department/course catalog and course tracking, timetable and lesson search,
 cafeteria menus, OBIS grades and attendance, notification settings, scheduled change notifications, advertisements
@@ -19,7 +20,7 @@ router, service, repository, and tests before changing a feature. `features/` ho
 ## Architecture
 
 The reusable UI-flow engine lives in `src/ui_flows/` (domain/application/ports),
-without dependencies on manashelper, Telegram, FastAPI, ORM or DI. Shared SQLAlchemy Base
+without dependencies on manashelper, Telegram, aiohttp, ORM or DI. Shared SQLAlchemy Base
 lives in `src/common/database.py`. Application adapters, rollout, seed documents and DI
 remain in `src/manashelper/modules/ui_flows/`; survey delegates belong to student_questions.
 Persistence ports are aliases to the same REQUEST repositories; preserve their transaction
@@ -29,10 +30,26 @@ and `features/ui_flows/ADMIN_API.md`.
 The agreed next-stage plan is `features/ui_flows/ORCHESTRATION.md`: move all UI
 decisions and event routing into the engine, compose small typed scenarios with Python
 delegates, migrate every FSM form/cache, and finally use Dispatcher(disable_fsm=True).
-It also plans one aiohttp process for Telegram webhook/admin API/static assets, replacing
-FastAPI/Uvicorn, and an admin-only fullscreen Telegram Mini App with verified initData.
-These are future changes, not current behavior. Preserve the existing implementation
-until each planned migration stage has its compatibility checks.
+Stages 1–4 provide the checked UI inventory, shared aiohttp host, admin-only Mini App,
+versioned DB localization and unified ingress/trigger registry. Stages 5–6 add v2
+Call/Return/Replace with pinned dependencies and durable isolated frames, typed collections,
+saved action snapshots, contact/media/secret input, external operations and rich delivery.
+Feature cutover and complete FSM removal remain stages 7–12. See PROGRESS.md for checks.
+External operations commit unknown before I/O and never automatically retry an unknown
+attempt. Completion must use the APP ChatOrdering shared with both message and callback
+middleware, covering apply through screen delivery without keeping a REQUEST open while
+waiting for the gate. Keep external execution outside both the DB lock and ordering gate.
+Preserve existing feature behavior until each migration stage has its compatibility checks.
+See `features/ui_flows/TRIGGERS.md`: the Telegram adapter normalizes events and the pure resolver chooses
+one runtime or registered legacy owner. Trigger publications pin scenario/text versions and return targets;
+publish texts, then a fresh scenario revision, then a fresh Triggers revision to adopt changes.
+Keep compatibility bindings immutable, admin/moderation/capability guards and busy-dialog policies.
+Only the legacy OBIS password field treats unknown/inaccessible slash commands as opaque masked input.
+Ingress receipts persist route metadata and source session/revision, never input/FSM payloads.
+Skip completed runtime replays before handler side effects; pending replays require their original position
+and current launch access. Keep legacy I/O outside DB chat locks and runtime execution after REQUEST commit.
+The nullable trigger pin preserves old writers. Roll back by activating a compatible immutable manifest,
+not by removing receipt history. Call/Return frames and durable legacy forms belong to later stages.
 The interpreter, persistence and REQUEST provider are composed in main. Telegram's
 `/flow_demo` is a private admin-only pilot. Main/Studies menus now use a published `main_menu` flow for the
 private administrator by default. Release mode admin/all/off is persisted in ui_flow_rollout and managed in the
@@ -58,19 +75,28 @@ never attach inline buttons to it using editMessageReplyMarkup. The mock enforce
 Mask runtime input in action_logs. Locale/theme selection preserves the runtime session;
 other matched legacy navigation cancels it after the original request commits.
 Web authentication lives in `platform/web/`, with two separately owned tables registered in bootstrap.
-Private admin-only `/editor` issues a five-minute, single-use ticket after the update REQUEST commits.
+Private admin-only `/editor` opens a Web App button and retains a five-minute, single-use browser ticket
+after the update REQUEST commits. Mini App auth verifies signed initData, administrator ID and a five-minute age;
+its eight-hour bearer lives only in browser memory. The single host limits valid exchanges to five per minute.
+Bearer session digests use the miniapp: namespace; token grammar prevents cookie/bearer namespace conversion.
 The login page removes its fragment before exchanging it for an eight-hour Secure/HttpOnly/SameSite=Strict cookie.
-Persist only token digests. Check configured HTTPS Origin on mutations and CSRF on authenticated mutations.
-AdminRoute completes its REQUEST scope before returning any response, including login cookies; errors must escape
+Persist only token digests. Check configured HTTPS Origin on all browser mutations, including bearer requests;
+require CSRF for cookie mutations.
+The aiohttp admin_scope middleware completes its REQUEST scope before returning any response, including login cookies;
+errors must escape
 the scope before being mapped to HTTP status codes. Preview builds a new registry from definitions and explicit stubs;
 never execute live delegate handlers there. Monitoring returns runtime metadata without session answers or screen text;
 legacy observation records only handler/state names after a successful committed private-chat handler.
-Both bot and web processes require the same
-optional admin web origin and signing key when web access is enabled. API startup does not apply migrations.
+The shared process requires the optional admin web origin and signing key when web access is enabled.
+The HTTP-only test factory does not apply migrations or start a bot/scheduler; main applies migrations as before.
+Webhook uses Dispatcher.feed_update synchronously with webhook=True; on_error must rethrow so commit failures
+cannot become HTTP 200. Accept only message/callback_query updates with the configured secret and a 1 MiB limit.
+Cap webhook concurrency at 32 and preview concurrency at four; unknown delivery attempts remain unresent.
+Legacy handlers still lack universal durable update receipts; do not claim global exactly-once legacy delivery.
 The editor uses Vue 3, TypeScript and Vue Flow; use Bun for dependency management AND JavaScript execution,
 never npm or Node.js. Commit `src/admin-ui/bun.lock`, not package-lock.json. Run `bun run build`, `bun run test`,
 `bun run format:check` and `bun run test:e2e` in src/admin-ui. E2E builds first, runs Playwright through Bun and
-a real loopback FastAPI fixture with its own development PostgreSQL schema; no live Telegram is used.
+a real loopback HTTPS aiohttp fixture with its own development PostgreSQL schema; no live Telegram is used.
 UI-flow session fixtures use isolated schemas too, preserving authored documents and observations in the development DB.
 The HTTP process serves only built index/assets from src/admin-ui/dist. Preserve script CSP, cookie/CSRF checks,
 fragment removal and memory-only credentials. Preview renders supported Telegram tags through Vue VNodes,
@@ -98,8 +124,10 @@ reply and callback handlers independent of rollout mode; /editor and /flow_demo 
 Off/admin rollback suppresses a public form's automatic return session and sends its legacy menu instead.
 Cleanup runs at 04:15 Bishkek: clear closed payloads and remove their screens after seven days, retaining active state,
 business answers, metadata and event receipts. Auth cleanup runs at 04:20 and deletes only expired tickets/sessions.
-Docker builds frontend through Bun and includes dist in the Python runtime; the optional compose admin profile runs
-only Uvicorn on a loopback-published port. See features/ui_flows/RELEASE.md for rollout, retention and rollback.
+Docker builds frontend through Bun and includes dist in the Python runtime; the app service publishes one
+loopback HTTP port. FastAPI/Uvicorn and the separate admin service/entry point are removed. Scheduler shutdown
+awaits coroutine finalizers before closing DI, HTTP clients and DB resources.
+See features/ui_flows/RELEASE.md for rollout, retention and rollback.
 Current reply buttons precede global navigation; the admin menu router accepts only bare /start, preserving
 survey/ad payloads. Explicit root navigation cancels the old dialog and starts the current menu version atomically.
 `navigation_entries.study` references a Menu node and follows node renames. Existing features are entered through
@@ -115,12 +143,20 @@ it must not mutate the draft, session or user position. Unobserved users and los
 See `features/ui_flows/MONITORING.md` for menu adapters, projection semantics and migration/backfill.
 Generate `features/ui_flows/{flow.schema.json,openapi.json}` with
 `python scripts/export_ui_flow_contracts.py`; use `--check` to detect stale artifacts.
-Scenario-authored `InlineText` is versioned content with explicit locale/theme variants;
-it is the scoped exception to `.po` storage needed for future runtime text editing.
-System copy and `CatalogText` currently stay in gettext; preserve literal calls in the flow catalog.
-The next agreed stage moves all user-facing localization, including errors and notifications,
-to a versioned DB catalog; see features/ui_flows/LOCALIZATION.md. This refactor does not
-perform that migration. The administration interface remains English-only.
+Scenario-authored `InlineText` stays inside immutable flow documents with locale/theme variants.
+`CatalogText`, user-facing errors, commands and notifications read versioned DB text releases.
+`platform/i18n/` owns two tables, the import, repository, REQUEST service and adapter;
+`ui_flows` owns the transport-independent TextCatalog port, snapshot and validation.
+Migration d91e6b1a7f23 imports baseline 1 and pins existing flow versions without changing
+their documents/answers. Nullable pins from old writers resolve to baseline 1. Never update/delete
+published releases; activate a previous release to roll back. Flow publications pin the current
+REQUEST snapshot; save a new draft revision (even with the same graph), then publish to adopt new texts.
+Keep retries of an already published revision idempotent, including after rollback. Existing sessions and historical
+preview/monitoring keep their pin. Delivery intents carry their pin through post-commit I/O.
+Bind a DB snapshot explicitly in LocaleMiddleware, catalog_request jobs/coordinators and admin scopes;
+never add a user-facing .mo fallback. REQUEST caches must not leak uncommitted publications.
+Historical legacy reply labels remain valid; reject publication of ambiguous current/history labels.
+See features/ui_flows/LOCALIZATION.md. The administration interface remains English-only.
 
 Business features live in `modules/`; shared infrastructure lives in `core/` and `platform/`.
 The planned feature migration is complete. `bootstrap.py` explicitly loads ORM models; `jobs` keeps scheduler wiring,
@@ -188,8 +224,8 @@ matched/allowed updates from private chats only, masks password text with `[mask
 Cleanup jobs use MessageDeletionService.delete_due with async delivery; delete_messages batches by 100,
 continues after TelegramAPIError and propagates unexpected errors. Rows are acknowledged after all chats;
 an unexpected sweep failure logs and leaves them queued. Preserve the five-minute schedule and no retry.
-The gettext adapter lives in `platform/i18n/catalog.py`; pure Locale/weekday labels stay in `localization/`.
-Command JSON and .mo runtime directories are unchanged, with checkout/Docker-like path tests.
+The gettext-compatible DB adapter lives in `platform/i18n/catalog.py`; locale/weekday helpers stay in `localization/`.
+Command JSON and English administration .mo paths are unchanged, with checkout/Docker-like path tests.
 OBIS lives in `modules/obis/`: application facade/credentials/snapshot comparison/polling, HTTP/parser/crypto,
 credential and snapshot repositories/ORM, Telegram presentation, provider and jobs. ObisProvider keeps
 ObisClient/CryptoService in APP and all other dependencies in REQUEST. Public errors live in errors.py.
@@ -285,10 +321,14 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
 
 ## Localization and Telegram text
 
-Use stable message keys with literal `_("menu.settings")` or `ngettext(...)` arguments; dynamic strings and
-f-strings are not extractable by Babel. Store all user-facing text in the English, Russian, Kyrgyz, Turkish and
-Chinese (`zh`, simplified Chinese) `.po` catalogs under `src/manashelper/locales/`. English is the fallback
-for missing translations; it must have a compiled catalog too. Preserve formatting placeholders in every translation. Use
+Use stable message keys with literal `_("menu.settings")` or `ngettext(...)` arguments.
+User templates live in versioned DB releases for English, Russian, Kyrgyz, Turkish and Chinese (`zh`).
+Edit existing translations through Texts, save with expected_revision, then publish explicitly.
+Key/owner/parameter/content/plural contracts are immutable. New keys require an explicit reviewed catalog
+migration preserving operator edits; startup/import must never overwrite an existing draft or release.
+The five `.po` catalogs remain baseline/recovery material; ui_flows.editor.* and ui_flows.web.* are
+English-only administration copy. Dynamic strings and f-strings are not extractable by Babel.
+English remains the locale fallback. Preserve formatting placeholders in every translation. Use
 `platform/telegram/filters/translated_text.py::TranslatedText` for reply-keyboard text filters rather than matching one
 language's label directly.
 
@@ -298,8 +338,9 @@ establish `i18n.context()` because they run outside update middleware. Shared mo
 advertisement channel render in `DEFAULT_LOCALE`.
 Evaluate translation calls and message builders inside the recipient's locale context; wrapping an already-built
 string cannot change its language. Personal notifications also bind the recipient's saved Theme through i18n.use_theme;
-never inherit another recipient's theme. Basic is the default. Theme copy lives in all five catalogs; decorate templates
-before interpolating user content, and preserve dishes, photos, numbers, callback payloads and status meanings.
+never inherit another recipient's theme. Basic is the default. Imported theme variants are already
+materialized in DB; never decorate them again. Interpolate escaped user content after selecting the variant;
+preserve dishes, photos, numbers, callback payloads and status meanings.
 
 After editing a catalog, compile it with `.venv/bin/pybabel compile -d src/manashelper/locales`. The `.po` files
 are committed; generated `.mo` files are ignored by Git. When adding msgids, use the extract/update workflow if

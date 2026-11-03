@@ -2,8 +2,7 @@ from sqlalchemy import select
 
 from manashelper.modules.ui_flows.infrastructure.locations import LocationRepository
 from manashelper.modules.ui_flows.infrastructure.orm import UiUserLocation, UiUserTransition
-from manashelper.modules.ui_flows.menus import main_menu_document
-from tests.modules.ui_flows.factories import button
+from tests.modules.ui_flows.factories import button, document
 from ui_flows.application.dialogs import DialogService
 from ui_flows.application.flows import FlowService
 from ui_flows.application.locations import LocationService
@@ -50,7 +49,7 @@ async def test_runtime_owns_active_steps_and_handoff_finishes_one_trace(admin_ap
     user = RuntimeUser(api.user_id, api.user_id)
     async with api.container() as request:
         flows = await request.get(FlowService)
-        await flows.create(main_menu_document())
+        await flows.create(document("main_menu"))
         await flows.publish("main_menu", 0, api.user_id)
         dialogs = await request.get(DialogService)
         started = await dialogs.start("main_menu", user, 100)
@@ -76,7 +75,7 @@ async def test_runtime_location_advances_when_a_fresh_update_id_is_smaller(admin
     user = RuntimeUser(api.user_id, api.user_id)
     async with api.container() as request:
         flows = await request.get(FlowService)
-        await flows.create(main_menu_document())
+        await flows.create(document("main_menu"))
         await flows.publish("main_menu", 0, api.user_id)
         dialogs = await request.get(DialogService)
         started = await dialogs.start("main_menu", user, 1000)

@@ -8,19 +8,18 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "aiogram[i18n]>=3.31.0",
+    "aiohttp>=3.14,<4",
     "alembic>=1.19.2",
     "apscheduler>=3.11.3",
     "asyncpg>=0.31.0",
     "beautifulsoup4>=4.15.0",
     "cryptography>=50.0.1",
     "dishka>=1.10.1",
-    "fastapi>=0.115,<1",
     "httpx>=0.28.1",
     "lxml>=6.1.3",
     "pydantic>=2.13.5,<3",
     "pydantic-settings>=2.15.0",
     "sqlalchemy[asyncio]>=2.0.52",
-    "uvicorn>=0.30,<1",
 ]
 
 [build-system]

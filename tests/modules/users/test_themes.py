@@ -26,6 +26,7 @@ from manashelper.platform.telegram.keyboards.settings import build_settings_keyb
 from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
 from manashelper.platform.telegram.navigation import build_main_keyboard
 from tests.paths import PROJECT_ROOT
+from tests.text_catalog import text_dependencies
 
 
 @pytest.fixture
@@ -135,7 +136,7 @@ async def test_middleware_reads_saved_theme_and_restores_context(session, contex
     await repository.upsert(976001, "Student", None)
     service = ThemeService(repository)
     await service.set_theme(976001, Theme.HALLOWEEN)
-    dependencies = {LocaleService: LocaleService(repository), ThemeService: service}
+    dependencies = text_dependencies({LocaleService: LocaleService(repository), ThemeService: service})
     data = {
         CONTAINER_NAME: SimpleNamespace(get=AsyncMock(side_effect=dependencies.__getitem__)),
         "event_from_user": context.callback.from_user,

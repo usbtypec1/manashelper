@@ -36,6 +36,7 @@ from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
+from tests.text_catalog import text_dependencies
 
 
 def service(session):
@@ -215,7 +216,11 @@ async def test_obis_poll_refreshes_all_eligible_users_with_recipient_flags_and_l
     async def container():
         opened.append(object())
         yield SimpleNamespace(
-            get=AsyncMock(side_effect={NotificationRecipientsQuery: recipients, ObisService: service}.__getitem__)
+            get=AsyncMock(
+                side_effect=text_dependencies(
+                    {NotificationRecipientsQuery: recipients, ObisService: service}
+                ).__getitem__
+            )
         )
 
     poll = AsyncMock()

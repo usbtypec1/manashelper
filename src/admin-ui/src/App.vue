@@ -4,6 +4,7 @@ import { VueFlow, type Connection, type NodeDragEvent } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { AdminApi, ApiError } from './api'
+import { createTelegramShell } from './telegram'
 import type { Document, Issue, Schemas, FlowNode } from './types'
 import {
   clone,
@@ -25,10 +26,16 @@ import FieldsEditor from './components/FieldsEditor.vue'
 import ConfirmDialog from './components/ConfirmDialog.vue'
 import UserMonitor from './components/UserMonitor.vue'
 import ReleaseControl from './components/ReleaseControl.vue'
+import TextCatalogEditor from './components/TextCatalogEditor.vue'
+import TriggerEditor from './components/TriggerEditor.vue'
 
 const props = defineProps<{ ticket: string | null }>()
 const api = new AdminApi()
-const mode = ref<'editor' | 'users'>('editor')
+const mode = ref<'editor' | 'users' | 'texts' | 'triggers'>('editor')
+const triggerDirty = ref(false),
+  triggersOpened = ref(false)
+const textDirty = ref(false)
+const textsOpened = ref(false)
 const session = ref<Schemas['AdminSession'] | null>(null),
   ready = ref(false),
   busy = ref(false)
@@ -47,6 +54,7 @@ const issues = ref<Issue[]>([]),
 const panel = ref<'settings' | 'preview' | 'fields'>('settings'),
   newModal = ref(false),
   newId = ref('')
+const mobilePanel = ref<'palette' | 'properties' | null>(null)
 const showVersions = ref(false),
   versions = ref<Schemas['FlowVersion'][]>([])
 const confirmation = ref<{ message: string; detail?: string; resolve: (answer: boolean) => void } | null>(
@@ -54,6 +62,15 @@ const confirmation = ref<{ message: string; detail?: string; resolve: (answer: b
 )
 const dirty = computed(
   () => !!document.value && (JSON.stringify(document.value) !== snapshot.value || rawDirty.value),
+)
+const telegram = createTelegramShell(() => void telegramBack())
+const fullscreen = telegram.fullscreen
+const hasUnsaved = computed(() => dirty.value || textDirty.value || triggerDirty.value)
+watch(hasUnsaved, (value) => telegram.setDirty(value), { immediate: true })
+watch(
+  () => !!session.value || !!confirmation.value || newModal.value,
+  (value) => telegram.setBackVisible(value),
+  { immediate: true },
 )
 const node = computed(() => document.value?.nodes.find((node) => node.id === selected.value))
 const graphNodes = computed(
@@ -122,6 +139,7 @@ function report(error: unknown) {
 function focusIssue(issue: Issue) {
   if (document.value) selected.value = issueNode(document.value, issue) ?? selected.value
   panel.value = 'settings'
+  mobilePanel.value = 'properties'
 }
 async function task(action: () => Promise<void>) {
   if (busy.value) return
@@ -145,11 +163,43 @@ function answer(value: boolean) {
 async function discard(): Promise<boolean> {
   return !dirty.value || (await ask('discardChanges'))
 }
+function selectNode(id: string) {
+  selected.value = id
+  mobilePanel.value = 'properties'
+}
+async function refreshCatalog() {
+  catalog.value = await api.request<Schemas['EditorCatalog']>('/catalog')
+}
+function openTexts() {
+  textsOpened.value = true
+  mode.value = 'texts'
+}
+function openTriggers() {
+  triggersOpened.value = true
+  mode.value = 'triggers'
+}
+function clearSelection() {
+  selected.value = null
+  mobilePanel.value = null
+}
+async function telegramBack() {
+  if (confirmation.value) {
+    answer(false)
+    return
+  }
+  if (busy.value) return
+  if (newModal.value) newModal.value = false
+  else if (showVersions.value) showVersions.value = false
+  else if (mode.value !== 'editor') mode.value = 'editor'
+  else if (mobilePanel.value) mobilePanel.value = null
+  else if (panel.value !== 'settings') panel.value = 'settings'
+  else if (!hasUnsaved.value || (await ask('discardChanges'))) telegram.close()
+}
 function validInputs(): boolean {
   if (panel.value === 'preview') return true
-  const invalid = window.document.querySelector<HTMLInputElement>(
-    'input:invalid,textarea:invalid,select:invalid',
-  )
+  const invalid = window.document
+    .querySelector('.workspace')
+    ?.querySelector<HTMLInputElement>('input:invalid,textarea:invalid,select:invalid')
   if (invalid) {
     invalid.reportValidity()
     return false
@@ -158,7 +208,9 @@ function validInputs(): boolean {
 }
 function touch() {
   if (panel.value !== 'preview')
-    rawDirty.value = !!window.document.querySelector('input:invalid,textarea:invalid,select:invalid')
+    rawDirty.value = !!window.document
+      .querySelector('.workspace')
+      ?.querySelector('input:invalid,textarea:invalid,select:invalid')
 }
 async function refreshList() {
   flows.value = await api.all<Schemas['FlowSummary']>('/flows')
@@ -172,6 +224,7 @@ function setDraft(draft: Schemas['FlowDraft'], pointer: number | null) {
   selected.value = document.value.nodes.some((node) => node.id === selected.value)
     ? selected.value
     : document.value.entry
+  mobilePanel.value = null
   issues.value = []
   notice.value = null
 }
@@ -262,6 +315,7 @@ function create() {
 function add(kind: FlowNode['kind']) {
   if (!document.value || document.value.nodes.length >= 200) return
   const node = newNode(document.value, kind)
+  if (kind === 'call' || kind === 'return' || kind === 'replace') document.value.schema_version = 2
   const index = document.value.nodes.length
   ;(document.value.layout ??= {})[node.id] = {
     x: 80 + (index % 3) * 330,
@@ -270,6 +324,7 @@ function add(kind: FlowNode['kind']) {
   document.value.nodes.push(node)
   selected.value = node.id
   panel.value = 'settings'
+  mobilePanel.value = 'properties'
 }
 function connected(connection: Connection) {
   const node = document.value?.nodes.find((node) => node.id === connection.source)
@@ -304,11 +359,17 @@ function reload() {
 }
 function signOut() {
   void task(async () => {
-    if (await discard()) {
-      await api.request('/auth/logout', 'POST')
-      session.value = null
-      document.value = null
-      api.csrf = ''
+    if (!hasUnsaved.value || (await ask('discardChanges'))) {
+      try {
+        await api.logout()
+      } finally {
+        session.value = null
+        document.value = null
+        textsOpened.value = false
+        textDirty.value = false
+        triggersOpened.value = false
+        triggerDirty.value = false
+      }
     }
   })
 }
@@ -341,18 +402,20 @@ function importJson(event: Event) {
     selected.value = value.entry
     issues.value = report.issues
     panel.value = 'settings'
+    mobilePanel.value = 'properties'
   })
 }
 function unload(event: BeforeUnloadEvent) {
-  if (dirty.value) {
+  if (hasUnsaved.value) {
     event.preventDefault()
     event.returnValue = ''
   }
 }
 onMounted(async () => {
   window.addEventListener('beforeunload', unload)
+  telegram.start()
   await task(async () => {
-    session.value = await api.login(props.ticket)
+    session.value = await api.login(props.ticket, telegram.initData)
     const [texts, actions] = await Promise.all([
       api.request<Schemas['EditorCatalog']>('/catalog'),
       api.request<Schemas['DelegateCatalog']>('/delegates'),
@@ -364,7 +427,10 @@ onMounted(async () => {
   })
   ready.value = true
 })
-onBeforeUnmount(() => window.removeEventListener('beforeunload', unload))
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', unload)
+  telegram.dispose()
+})
 </script>
 
 <template>
@@ -376,7 +442,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', unload))
       <p>{{ ready ? t('signInHint') : '' }}</p>
     </div>
   </div>
-  <div v-else class="app-shell">
+  <div v-else class="app-shell" :data-mini-app="telegram.isMiniApp" :data-fullscreen="fullscreen">
     <header class="app-header">
       <div class="brand">
         <span class="brand-mark">M</span><strong>Manashelper</strong><span class="header-divider" /><span>{{
@@ -400,6 +466,17 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', unload))
           >
             {{ t('users') }}
           </button>
+          <button type="button" :class="{ active: mode === 'texts' }" :disabled="busy" @click="openTexts">
+            {{ t('texts') }}
+          </button>
+          <button
+            type="button"
+            :class="{ active: mode === 'triggers' }"
+            :disabled="busy"
+            @click="openTriggers"
+          >
+            {{ t('triggers') }}
+          </button>
         </nav>
         <ReleaseControl :api="api" @failure="report" />
         <span v-if="dirty && mode === 'users'" class="pill">{{ t('unsaved') }}</span
@@ -409,8 +486,26 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', unload))
         </button>
       </div>
     </header>
+    <TextCatalogEditor
+      v-if="textsOpened"
+      v-show="mode === 'texts'"
+      :api="api"
+      :ask="ask"
+      @dirty="textDirty = $event"
+      @failure="report"
+      @published="refreshCatalog"
+    />
+    <TriggerEditor
+      v-if="triggersOpened"
+      v-show="mode === 'triggers'"
+      :api="api"
+      :flows="flows"
+      :ask="ask"
+      @dirty="triggerDirty = $event"
+      @failure="report"
+    />
     <UserMonitor v-if="mode === 'users'" :api="api" :catalog="catalog" @failure="report" />
-    <div v-else class="workspace">
+    <div v-else-if="mode === 'editor'" class="workspace">
       <aside class="sidebar">
         <div class="row between sidebar-heading">
           <span class="eyebrow">{{ t('flows') }}</span
@@ -467,7 +562,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', unload))
             <div class="toolbar-actions">
               <button type="button" :disabled="busy" @click="history">{{ t('versions') }}</button
               ><button type="button" :disabled="busy" @click="validate">✓ {{ t('validate') }}</button
-              ><button type="button" class="secondary" :disabled="busy || !dirty" @click="save">
+              ><button type="button" class="secondary" :disabled="busy" @click="save">
                 {{ t('save') }}</button
               ><button type="button" class="primary" :disabled="busy || dirty" @click="publish">
                 ↥ {{ t('publish') }}
@@ -505,7 +600,29 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', unload))
               </button>
             </div>
           </div>
-          <div class="editor-body">
+          <div
+            class="editor-body"
+            :class="{
+              'mobile-palette': mobilePanel === 'palette',
+              'mobile-properties': mobilePanel === 'properties',
+            }"
+          >
+            <div class="mobile-editor-tools">
+              <button
+                type="button"
+                :aria-expanded="mobilePanel === 'palette'"
+                @click="mobilePanel = mobilePanel === 'palette' ? null : 'palette'"
+              >
+                {{ t('addNodes') }}
+              </button>
+              <button
+                type="button"
+                :aria-expanded="mobilePanel === 'properties'"
+                @click="mobilePanel = mobilePanel === 'properties' ? null : 'properties'"
+              >
+                {{ t('settings') }}
+              </button>
+            </div>
             <section class="graph-area" :aria-label="t('flows')">
               <div class="palette">
                 <button
@@ -529,8 +646,8 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', unload))
                 :min-zoom="0.15"
                 :max-zoom="2"
                 fit-view-on-init
-                @node-click="selected = $event.node.id"
-                @pane-click="selected = null"
+                @node-click="selectNode($event.node.id)"
+                @pane-click="clearSelection"
                 @connect="connected"
                 @node-drag-stop="dragged"
               >
@@ -578,7 +695,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', unload))
                   :catalog="catalog"
                   :delegates="delegates"
                   @failure="report"
-                  @select="selected = $event"
+                  @select="selectNode($event)"
                 />
               </fieldset>
             </aside>

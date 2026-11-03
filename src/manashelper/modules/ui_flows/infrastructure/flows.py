@@ -6,6 +6,8 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.modules.ui_flows.infrastructure.orm import UiFlow, UiFlowVersion
+from manashelper.modules.ui_flows.infrastructure.triggers import TriggerRepository
+from manashelper.platform.i18n.catalog import i18n
 from ui_flows.domain.schema import FlowDocument
 from ui_flows.domain.state import Draft, PublishedFlow
 from ui_flows.errors import FlowConflictError, FlowNotFoundError
@@ -17,7 +19,13 @@ def _draft(row: UiFlow) -> Draft:
 
 def _version(row: UiFlowVersion) -> PublishedFlow:
     return PublishedFlow(
-        FlowDocument.model_validate(row.document), row.version, row.draft_revision, row.author_id, row.published_at
+        FlowDocument.model_validate(row.document),
+        row.version,
+        row.draft_revision,
+        row.author_id,
+        row.published_at,
+        row.text_catalog_release or 1,
+        dict(row.dependencies or {}),
     )
 
 
@@ -93,7 +101,9 @@ class FlowRepository:
             raise FlowNotFoundError("Scenario has no published version")
         return _version(row)
 
-    async def add_version(self, draft: Draft, author_id: int) -> PublishedFlow:
+    async def add_version(
+        self, draft: Draft, author_id: int, *, dependencies: dict[str, int] | None = None
+    ) -> PublishedFlow:
         # The caller holds the parent flow row lock, including while allocating a version.
         latest = await self._session.scalar(
             select(func.max(UiFlowVersion.version)).where(UiFlowVersion.flow_id == draft.document.id)
@@ -104,11 +114,20 @@ class FlowRepository:
             draft_revision=draft.revision,
             document=draft.document.model_dump(mode="json"),
             author_id=author_id,
+            text_catalog_release=i18n.current_catalog.release_id,
+            dependencies=dependencies or {},
         )
         self._session.add(row)
         await self._session.flush()
         await self.activate(row.flow_id, row.version)
         return _version(row)
+
+    async def from_release(self, flow_id: str, release_id: int) -> PublishedFlow:
+        release = await TriggerRepository(self._session).version(release_id)
+        pin = next((item for item in release.manifest.scenarios if item.flow_id == flow_id), None)
+        if pin is None:
+            raise FlowNotFoundError("Scenario does not belong to this trigger release")
+        return await self.version(flow_id, pin.version)
 
     async def activate(self, flow_id: str, version: int) -> None:
         await self._session.execute(update(UiFlow).where(UiFlow.id == flow_id).values(published_version=version))

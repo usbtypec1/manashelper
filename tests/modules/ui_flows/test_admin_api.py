@@ -1,16 +1,19 @@
 import asyncio
+import json
 from datetime import UTC, datetime, timedelta
 
 import httpx
+import pytest
 from sqlalchemy import func, select, update
 
 from manashelper.modules.student_questions.orm import StudentQuestionsResponse
 from manashelper.modules.ui_flows.demo import demo_document
 from manashelper.modules.ui_flows.infrastructure.orm import UiDialogSession
-from manashelper.modules.ui_flows.presentation.admin_router import router
 from manashelper.modules.ui_flows.presentation.openapi import build_openapi
 from manashelper.platform.web.auth import COOKIE_NAME, token_digest
+from manashelper.platform.web.keys import SETTINGS_KEY
 from manashelper.platform.web.orm import AdminLoginTicket, AdminWebSession
+from tests.modules.ui_flows.admin_factory import aiohttp_client
 from ui_flows.application.dialogs import DialogService
 from ui_flows.domain.state import RuntimeUser
 
@@ -43,7 +46,9 @@ async def test_one_use_ticket_cookie_session_and_logout(admin_api):
     assert current.status_code == 200 and current.json()["user_id"] == api.user_id
     assert (await api.client.post(BASE + "/auth/logout")).status_code == 403
     api.client.headers["X-CSRF-Token"] = current.json()["csrf_token"]
-    assert (await api.client.post(BASE + "/auth/logout")).status_code == 204
+    logout = await api.client.post(BASE + "/auth/logout")
+    assert logout.status_code == 204 and logout.content == b""
+    assert "Content-Type" not in logout.headers
     assert (await api.client.get(BASE + "/auth/session")).status_code == 401
 
 
@@ -53,8 +58,8 @@ async def test_ticket_exchange_is_atomic_under_concurrency(admin_api):
 
     async def exchange():
         async with httpx.AsyncClient(
-            transport=httpx.ASGITransport(app=api.app),
-            base_url="https://admin.test",
+            base_url=api.client.base_url,
+            verify=False,
             headers={"Origin": "https://admin.test"},
         ) as client:
             return await client.post(BASE + "/auth/exchange", json={"ticket": ticket})
@@ -86,8 +91,8 @@ async def test_expiry_and_secret_redaction(admin_api):
 async def test_commit_failure_returns_no_cookie_and_preserves_ticket(admin_api):
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-    from manashelper.admin_main import create_app
-    from tests.modules.ui_flows.admin_factory import admin_container
+    from manashelper.platform.web.application import create_admin_app as create_app
+    from tests.modules.ui_flows.admin_factory import admin_container, aiohttp_client
 
     api = admin_api
     ticket = await api.ticket()
@@ -100,12 +105,8 @@ async def test_commit_failure_returns_no_cookie_and_preserves_ticket(admin_api):
 
     pool = async_sessionmaker(api.pool.kw["bind"], class_=FailSessionCommit, expire_on_commit=False)
     async with admin_container(pool) as container:
-        app = create_app(api.app.state.admin_settings, container)
-        async with httpx.AsyncClient(
-            transport=httpx.ASGITransport(app=app, raise_app_exceptions=False),
-            base_url="https://admin.test",
-            headers={"Origin": "https://admin.test"},
-        ) as client:
+        app = create_app(api.app[SETTINGS_KEY], container)
+        async with aiohttp_client(app) as client:
             response = await client.post(BASE + "/auth/exchange", json={"ticket": ticket})
             assert response.status_code == 500 and "set-cookie" not in response.headers
     async with api.pool() as session:
@@ -144,13 +145,16 @@ async def test_drafts_publication_conflicts_rollback_and_contract(admin_api):
         (BASE + path, method.upper()) for path, methods in build_openapi()["paths"].items() for method in methods
     }
     actual_paths = {
-        (route.path, method)
-        for route in router.routes
-        if getattr(route, "include_in_schema", False)
-        for method in route.methods
+        (route.resource.canonical, route.method)
+        for route in api.app.router.routes()
+        if (route.name or "").startswith("admin.") and route.method != "HEAD"
     }
     assert actual_paths == contract_paths
-    assert api.app.openapi() == build_openapi()
+    assert {
+        route.name.removeprefix("admin.")
+        for route in api.app.router.routes()
+        if (route.name or "").startswith("admin.")
+    } == {operation["operationId"] for methods in build_openapi()["paths"].values() for operation in methods.values()}
 
 
 async def test_invalid_screens_and_ids_cannot_be_published(admin_api):
@@ -293,7 +297,7 @@ async def test_owned_web_lifespan_never_starts_bot_scheduler_or_migrations(admin
     from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
     from alembic import command
-    from manashelper.admin_main import create_app
+    from manashelper.platform.web.application import create_admin_app as create_app
 
     def forbidden(*args, **kwargs):
         raise AssertionError("HTTP startup invoked a bot or migration entry point")
@@ -302,11 +306,8 @@ async def test_owned_web_lifespan_never_starts_bot_scheduler_or_migrations(admin
     monkeypatch.setattr(Dispatcher, "start_polling", forbidden)
     monkeypatch.setattr(AsyncIOScheduler, "start", forbidden)
     monkeypatch.setattr(command, "upgrade", forbidden)
-    app = create_app(admin_api.app.state.admin_settings)
-    async with (
-        app.router.lifespan_context(app),
-        httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="https://admin.test") as client,
-    ):
+    app = create_app(admin_api.app[SETTINGS_KEY])
+    async with aiohttp_client(app) as client:
         assert (await client.get("/admin/")).status_code == 200
         assert (await client.get(BASE + "/flows")).status_code == 401
 
@@ -326,21 +327,79 @@ async def test_editor_catalog_and_schema_errors_are_safe_and_specific(admin_api)
     assert any("/nodes/1/" in issue["path"] for issue in response.json()["issues"])
 
 
+@pytest.mark.parametrize("content_type", [None, "application/json", "application/vnd.manashelper+json"])
+async def test_json_body_media_types_preserve_existing_contract(admin_api, content_type):
+    api = admin_api
+    await api.login()
+    document = demo_document().model_dump(mode="json")
+    headers = {} if content_type is None else {"Content-Type": content_type}
+    response = await api.client.post(BASE + "/flows", content=json.dumps({"document": document}), headers=headers)
+    assert response.status_code == 201, response.text
+    assert (await api.client.get(BASE + "/flows/ui_flow_demo")).status_code == 200
+
+
+async def test_non_json_media_type_is_rejected_without_creating_a_scenario(admin_api):
+    api = admin_api
+    await api.login()
+    document = demo_document().model_dump(mode="json")
+    document["nodes"][1]["text"] = [{"kind": "inline", "translations": {"en": "private media-type payload"}}]
+    response = await api.client.post(
+        BASE + "/flows", content=json.dumps({"document": document}), headers={"Content-Type": "text/plain"}
+    )
+    assert response.status_code == 422
+    assert "private media-type payload" not in response.text
+    assert (await api.client.get(BASE + "/flows/ui_flow_demo")).status_code == 404
+
+
+async def test_malformed_json_error_does_not_echo_body_or_create_a_scenario(admin_api):
+    api = admin_api
+    await api.login()
+    raw = '{"document":{"id":"private-json-body","nodes":['
+    response = await api.client.post(BASE + "/flows", content=raw, headers={"Content-Type": "application/json"})
+    assert response.status_code == 422
+    assert "private-json-body" not in response.text
+    assert response.json()["issues"][0]["code"] == "schema_json_invalid"
+    assert (await api.client.get(BASE + "/flows")).json()["items"] == []
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/flows/demo/versions/private-invalid-integer",
+        "/users/private-invalid-integer/location",
+        "/users/private-invalid-integer/transitions",
+    ],
+)
+async def test_integer_path_errors_are_validated_and_redacted(admin_api, path):
+    await admin_api.login()
+    response = await admin_api.client.get(BASE + path)
+    assert response.status_code == 422
+    assert "private-invalid-integer" not in response.text
+    assert all(issue["path"].startswith("/path/") for issue in response.json()["issues"])
+
+
 async def test_built_editor_serves_only_assets_and_keeps_api_protected(admin_api, tmp_path):
-    from manashelper.admin_main import create_app
+    from manashelper.platform.web.application import create_admin_app as create_app
 
     assets = tmp_path / "assets"
     assets.mkdir()
     (tmp_path / "index.html").write_text('<div id="app"></div><script src="/admin/assets/editor.js"></script>')
     (assets / "editor.js").write_text("console.log('test bundle')")
-    app = create_app(admin_api.app.state.admin_settings, admin_api.container, ui_directory=tmp_path)
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="https://admin.test") as client:
+    outside = tmp_path.parent / "private-assets"
+    outside.mkdir()
+    (outside / "private.js").write_text("private asset outside the build")
+    (assets / "file-link.js").symlink_to(outside / "private.js")
+    (assets / "directory-link").symlink_to(outside, target_is_directory=True)
+    app = create_app(admin_api.app[SETTINGS_KEY], admin_api.container, ui_directory=tmp_path)
+    async with aiohttp_client(app) as client:
         page = await client.get("/admin/")
         assert page.status_code == 200 and "editor.js" in page.text
         assert "script-src 'self'" in page.headers["content-security-policy"]
         assert (await client.get("/admin/assets/editor.js")).status_code == 200
         assert (await client.get("/admin/src/main.ts")).status_code == 404
         assert (await client.get("/admin/assets/%2e%2e/index.html")).status_code == 404
+        assert (await client.get("/admin/assets/file-link.js")).status_code == 404
+        assert (await client.get("/admin/assets/directory-link/private.js")).status_code == 404
         assert (await client.get(BASE + "/catalog")).status_code == 401
 
 
@@ -360,14 +419,16 @@ async def test_return_flow_with_automatic_entry_cannot_be_published_via_http(adm
 async def test_survey_return_is_publishable_and_preview_remains_a_stub(admin_api):
     from manashelper.modules.student_questions.flow import survey_document
     from manashelper.modules.ui_flows.menus import main_menu_document
+    from manashelper.modules.users.ui_scenarios import user_scenarios
+    from manashelper.platform.telegram.ui_scenarios import settings_document
 
     api = admin_api
     await api.login()
-    for document in (main_menu_document(), survey_document()):
+    for document in (*user_scenarios(), settings_document(), main_menu_document(), survey_document()):
         response = await api.client.post(BASE + "/flows", json={"document": document.model_dump(mode="json")})
         assert response.status_code == 201
         response = await api.client.post(BASE + f"/flows/{document.id}/publish", json={"expected_revision": 0})
-        assert response.status_code == 200
+        assert response.status_code == 200, response.text
     response = await api.client.post(
         BASE + "/flows/student_questions/preview",
         json={

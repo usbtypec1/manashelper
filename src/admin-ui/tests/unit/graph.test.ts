@@ -11,7 +11,7 @@ describe('graph contract', () => {
   })
   test('all connector types round-trip to executable fields', () => {
     const document = newDocument('test_flow')
-    for (const kind of ['input', 'condition', 'action'] as const) {
+    for (const kind of ['input', 'condition', 'action', 'call'] as const) {
       const node = newNode(document, kind)
       const before = ports(node)
       for (const port of before) connect(node, port.id, 'menu')
@@ -38,6 +38,50 @@ describe('graph contract', () => {
     expect(renameNode(document, 'menu', 'end')).toBe(false)
     expect(renameNode(document, 'menu', 'Bad name')).toBe(false)
     expect(document).toEqual(before)
+  })
+  test('Call continuation edits preserve scenario identity and explicit argument/result bindings', () => {
+    const document = newDocument('parent')
+    document.schema_version = 2
+    document.fields = { end: { type: 'text' } }
+    const call = newNode(document, 'call')
+    if (call.kind !== 'call') throw new Error('Expected a Call node')
+    call.flow = 'end'
+    call.arguments = { selection: { kind: 'ref', scope: 'data', field: 'end' } }
+    call.results = { selected: 'end' }
+    call.outcomes = { completed: 'end', cancelled: 'menu' }
+    document.nodes.push(call)
+    const before = clone(call)
+    connect(call, 'outcome:cancelled', 'end')
+    expect(ports(call)).toEqual([
+      { id: 'outcome:completed', label: 'completed', target: 'end' },
+      { id: 'outcome:cancelled', label: 'cancelled', target: 'end' },
+    ])
+    expect(renameNode(document, 'end', 'finished')).toBe(true)
+    expect(call.outcomes).toEqual({ completed: 'finished', cancelled: 'finished' })
+    expect(call.flow).toBe(before.flow)
+    expect(call.arguments).toEqual(before.arguments!)
+    expect(call.results).toEqual(before.results!)
+    expect(document.fields).toEqual({ end: { type: 'text' } })
+  })
+  test('Return and Replace have no fabricated local graph edges', () => {
+    const document = newDocument('parent')
+    document.schema_version = 2
+    document.outcomes = ['selected', 'cancelled']
+    const returned = newNode(document, 'return')
+    const replaced = newNode(document, 'replace')
+    if (returned.kind !== 'return' || replaced.kind !== 'replace')
+      throw new Error('Expected composition terminal nodes')
+    returned.values = { selected: { kind: 'literal', value: 'menu' } }
+    replaced.flow = 'menu'
+    replaced.arguments = { choice: { kind: 'literal', value: 'menu' } }
+    document.nodes.push(returned, replaced)
+    const before = clone([returned, replaced])
+    expect(returned.outcome).toBe('selected')
+    expect(ports(returned)).toEqual([])
+    expect(ports(replaced)).toEqual([])
+    connect(replaced, 'outcome:completed', 'end')
+    expect(renameNode(document, 'menu', 'root')).toBe(true)
+    expect([returned, replaced]).toEqual(before)
   })
   test('layout edits leave executable nodes intact', () => {
     const document = newDocument('test_flow'),

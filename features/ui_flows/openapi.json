@@ -3,7 +3,7 @@
   "info": {
     "title": "Manashelper interface editor",
     "version": "1.0.0",
-    "description": "Administrative interface for scenario management. All operations except ticket exchange require an authorized administrator session. Mutations additionally require X-CSRF-Token and same-origin validation. Cursor pages use stable ordering; cursors are opaque and bound to the operation. No endpoint promises exactly-once Telegram delivery."
+    "description": "Administrative interface for scenario management. All operations except ticket/Telegram exchange require an authorized administrator session. Cookie mutations require X-CSRF-Token; bearer tokens have a separate digest namespace. All mutations require same-origin validation, including bearer mutations. Cursor pages use stable ordering; cursors are opaque and bound to the operation. No endpoint promises exactly-once Telegram delivery."
   },
   "servers": [
     {
@@ -169,8 +169,100 @@
           {
             "AdminSession": [],
             "CsrfToken": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ]
+      }
+    },
+    "/auth/telegram": {
+      "post": {
+        "operationId": "exchangeTelegram",
+        "description": "Validate signed Telegram initData (configured administrator, age <= 5 minutes, no future timestamp). Require same Origin. Return an 8-hour bearer token; store it only in memory. At most 5 valid exchanges per minute per running host; later exchanges return 429. No cookie is issued.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MiniAppSession"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or CSRF check failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request or scenario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Exchange limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExchangeTelegram"
+              }
+            }
+          }
+        }
       }
     },
     "/auth/session": {
@@ -242,6 +334,9 @@
         "security": [
           {
             "AdminSession": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ]
       }
@@ -315,6 +410,9 @@
         "security": [
           {
             "AdminSession": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ]
       },
@@ -387,6 +485,9 @@
           {
             "AdminSession": [],
             "CsrfToken": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ],
         "requestBody": {
@@ -470,6 +571,9 @@
         "security": [
           {
             "AdminSession": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ],
         "parameters": [
@@ -562,6 +666,9 @@
           {
             "AdminSession": [],
             "CsrfToken": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ],
         "requestBody": {
@@ -645,6 +752,9 @@
         "security": [
           {
             "AdminSession": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ],
         "parameters": [
@@ -736,6 +846,9 @@
         "security": [
           {
             "AdminSession": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ],
         "parameters": [
@@ -753,7 +866,7 @@
     "/catalog": {
       "get": {
         "operationId": "getEditorCatalog",
-        "description": "Read allowed gettext templates and capability definitions.",
+        "description": "Read allowed user-text templates from the current immutable catalog release and capability definitions.",
         "responses": {
           "200": {
             "description": "Success",
@@ -819,8 +932,447 @@
         "security": [
           {
             "AdminSession": []
+          },
+          {
+            "MiniAppBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "text_catalog_release",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Read the pinned text release for historical monitoring; default is the current release."
           }
         ]
+      }
+    },
+    "/texts": {
+      "get": {
+        "operationId": "getTextCatalog",
+        "description": "Read the editable user-text document, its optimistic-concurrency revision and current published release.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextCatalogDraft"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or CSRF check failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request or scenario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminSession": []
+          },
+          {
+            "MiniAppBearer": []
+          }
+        ]
+      }
+    },
+    "/texts/{key}": {
+      "put": {
+        "operationId": "saveTextEntry",
+        "description": "Replace one draft text entry if expected_revision matches. The entry key must match the path. Editing the draft does not change published releases or active sessions.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextCatalogDraft"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or CSRF check failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request or scenario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminSession": [],
+            "CsrfToken": []
+          },
+          {
+            "MiniAppBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveTextEntry"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/texts/publish": {
+      "post": {
+        "operationId": "publishTextCatalog",
+        "description": "Validate all locales, themes, plural forms, placeholders and display limits, then publish an immutable catalog release at expected_revision. Existing scenario versions retain their pinned text release.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextCatalogRelease"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or CSRF check failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request or scenario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminSession": [],
+            "CsrfToken": []
+          },
+          {
+            "MiniAppBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishDraft"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/texts/releases": {
+      "get": {
+        "operationId": "listTextCatalogReleases",
+        "description": "List immutable user-text release metadata without changing the draft or publication pointer.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextCatalogVersions"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or CSRF check failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request or scenario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminSession": []
+          },
+          {
+            "MiniAppBearer": []
+          }
+        ]
+      }
+    },
+    "/texts/activate": {
+      "post": {
+        "operationId": "activateTextCatalog",
+        "description": "Activate an existing text release if expected_current_release matches. Does not alter the draft, immutable scenario versions, active sessions or already rendered delivery intents.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextCatalogDraft"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or CSRF check failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request or scenario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminSession": [],
+            "CsrfToken": []
+          },
+          {
+            "MiniAppBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivateTextCatalog"
+              }
+            }
+          }
+        }
       }
     },
     "/flows/{id}": {
@@ -892,6 +1444,9 @@
         "security": [
           {
             "AdminSession": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ],
         "parameters": [
@@ -975,6 +1530,9 @@
         "security": [
           {
             "AdminSession": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ],
         "parameters": [
@@ -1057,6 +1615,9 @@
           {
             "AdminSession": [],
             "CsrfToken": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ],
         "parameters": [
@@ -1151,6 +1712,9 @@
           {
             "AdminSession": [],
             "CsrfToken": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ],
         "parameters": [
@@ -1178,7 +1742,7 @@
     "/flows/{id}/preview": {
       "post": {
         "operationId": "previewFlow",
-        "description": "Simulate an unsaved scenario with supplied test data and delegate results. Never call live delegates or create user sessions. Missing stub results are reported as issues; no real data is fetched. Rendered text uses the same safe formatting rules as Telegram.",
+        "description": "Simulate an unsaved scenario with supplied test data and delegate results. Never call live delegates or create user sessions. Missing stub results are reported as issues; no real data is fetched. An optional text_catalog_release selects a historical immutable text snapshot; omitted selects the current release. Rendered text uses the same resolver as Telegram.",
         "responses": {
           "200": {
             "description": "Success",
@@ -1245,6 +1809,9 @@
           {
             "AdminSession": [],
             "CsrfToken": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ],
         "parameters": [
@@ -1272,7 +1839,7 @@
     "/flows/{id}/publish": {
       "post": {
         "operationId": "publishFlow",
-        "description": "Validate and atomically publish the stored expected_revision. Repeating publication of that revision returns its original version without creating another. It does not reactivate an older version after rollback; use activate explicitly. Active sessions stay pinned.",
+        "description": "Validate and atomically publish the stored expected_revision. Repeating publication of that revision returns its original version without creating another. It does not reactivate an older version after rollback; use activate explicitly. Active sessions stay pinned. The new scenario version pins the catalog release used to validate it.",
         "responses": {
           "200": {
             "description": "Success",
@@ -1339,6 +1906,9 @@
           {
             "AdminSession": [],
             "CsrfToken": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ],
         "parameters": [
@@ -1432,6 +2002,9 @@
         "security": [
           {
             "AdminSession": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ],
         "parameters": [
@@ -1534,6 +2107,9 @@
           {
             "AdminSession": [],
             "CsrfToken": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ],
         "parameters": [
@@ -1552,6 +2128,417 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ActivateVersion"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/triggers": {
+      "get": {
+        "operationId": "getTriggers",
+        "description": "Read the trigger draft, revision and current immutable release.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TriggerDraftContent"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or CSRF check failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request or scenario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminSession": []
+          },
+          {
+            "MiniAppBearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "saveTriggers",
+        "description": "Save a typed trigger draft with optimistic concurrency. Publication validates matchers and targets.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TriggerDraftContent"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or CSRF check failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request or scenario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminSession": [],
+            "CsrfToken": []
+          },
+          {
+            "MiniAppBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveTriggers"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/triggers/publish": {
+      "post": {
+        "operationId": "publishTriggers",
+        "description": "Reject ambiguous/unsafe bindings and publish a manifest pinning scenario, delegate and text versions. Retries return the original release without reactivation.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TriggerReleaseContent"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or CSRF check failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request or scenario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminSession": [],
+            "CsrfToken": []
+          },
+          {
+            "MiniAppBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishDraft"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/triggers/releases": {
+      "get": {
+        "operationId": "listTriggerReleases",
+        "description": "Read immutable trigger manifests newest first.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TriggerVersions"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or CSRF check failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request or scenario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminSession": []
+          },
+          {
+            "MiniAppBearer": []
+          }
+        ]
+      }
+    },
+    "/triggers/activate": {
+      "post": {
+        "operationId": "activateTriggers",
+        "description": "Activate an immutable manifest with expected_current_release. Active sessions and displayed actions retain their pins.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TriggerDraftContent"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or CSRF check failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision conflict or already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request or scenario",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "AdminSession": [],
+            "CsrfToken": []
+          },
+          {
+            "MiniAppBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivateTextCatalog"
               }
             }
           }
@@ -1627,6 +2614,9 @@
         "security": [
           {
             "AdminSession": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ]
       }
@@ -1700,6 +2690,9 @@
         "security": [
           {
             "AdminSession": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ],
         "parameters": [
@@ -1793,6 +2786,9 @@
         "security": [
           {
             "AdminSession": []
+          },
+          {
+            "MiniAppBearer": []
           }
         ],
         "parameters": [
@@ -1896,6 +2892,27 @@
             },
             "title": "Outcomes",
             "type": "object"
+          },
+          "waiting_text": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "catalog": "#/components/schemas/CatalogText",
+                  "inline": "#/components/schemas/InlineText"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/CatalogText"
+                },
+                {
+                  "$ref": "#/components/schemas/InlineText"
+                }
+              ]
+            },
+            "title": "Waiting Text",
+            "type": "array"
           }
         },
         "required": [
@@ -1905,6 +2922,66 @@
           "outcomes"
         ],
         "title": "ActionNode",
+        "type": "object"
+      },
+      "ActionSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "template_id": {
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Template Id",
+            "type": "string"
+          },
+          "target": {
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Target",
+            "type": "string"
+          },
+          "assignments": {
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,31}$": {
+                "$ref": "#/components/schemas/DataValue"
+              }
+            },
+            "title": "Assignments",
+            "type": "object"
+          },
+          "item": {
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,31}$": {
+                "$ref": "#/components/schemas/DataValue"
+              }
+            },
+            "title": "Item",
+            "type": "object"
+          }
+        },
+        "required": [
+          "template_id",
+          "target"
+        ],
+        "title": "ActionSnapshot",
+        "type": "object"
+      },
+      "ActivateTextCatalog": {
+        "additionalProperties": false,
+        "properties": {
+          "release_id": {
+            "minimum": 1,
+            "title": "Release Id",
+            "type": "integer"
+          },
+          "expected_current_release": {
+            "minimum": 1,
+            "title": "Expected Current Release",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "release_id",
+          "expected_current_release"
+        ],
+        "title": "ActivateTextCatalog",
         "type": "object"
       },
       "ActivateVersion": {
@@ -2081,6 +3158,17 @@
             "pattern": "^[a-z][a-z0-9_]{0,31}$",
             "title": "Button Id",
             "type": "string"
+          },
+          "snapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActionSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           }
         },
         "required": [
@@ -2093,6 +3181,78 @@
           "button_id"
         ],
         "title": "ButtonEvent",
+        "type": "object"
+      },
+      "CallNode": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "call",
+            "title": "Kind",
+            "type": "string"
+          },
+          "id": {
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "flow": {
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Flow",
+            "type": "string"
+          },
+          "arguments": {
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,31}$": {
+                "discriminator": {
+                  "mapping": {
+                    "literal": "#/components/schemas/LiteralValue",
+                    "ref": "#/components/schemas/ReferenceValue"
+                  },
+                  "propertyName": "kind"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/LiteralValue"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ReferenceValue"
+                  }
+                ]
+              }
+            },
+            "title": "Arguments",
+            "type": "object"
+          },
+          "results": {
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,31}$": {
+                "pattern": "^[a-z][a-z0-9_]{0,31}$",
+                "type": "string"
+              }
+            },
+            "title": "Results",
+            "type": "object"
+          },
+          "outcomes": {
+            "minProperties": 1,
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,31}$": {
+                "pattern": "^[a-z][a-z0-9_]{0,31}$",
+                "type": "string"
+              }
+            },
+            "title": "Outcomes",
+            "type": "object"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "flow",
+          "outcomes"
+        ],
+        "title": "CallNode",
         "type": "object"
       },
       "CatalogTemplate": {
@@ -2351,6 +3511,69 @@
         "title": "ConditionNode",
         "type": "object"
       },
+      "ContactEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "update_id": {
+            "minimum": 0,
+            "title": "Update Id",
+            "type": "integer"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          },
+          "chat_id": {
+            "title": "Chat Id",
+            "type": "integer"
+          },
+          "session_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Session Id",
+            "type": "string"
+          },
+          "expected_revision": {
+            "minimum": 0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "kind": {
+            "const": "contact",
+            "title": "Kind",
+            "type": "string"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
+          "phone": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Phone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "update_id",
+          "user_id",
+          "chat_id",
+          "session_id",
+          "expected_revision",
+          "kind",
+          "owner_id",
+          "phone"
+        ],
+        "title": "ContactEvent",
+        "type": "object"
+      },
       "ContractIssue": {
         "additionalProperties": false,
         "properties": {
@@ -2407,7 +3630,10 @@
               "text",
               "integer",
               "number",
-              "boolean"
+              "boolean",
+              "list",
+              "object",
+              "secret"
             ],
             "title": "Type",
             "type": "string"
@@ -2416,6 +3642,34 @@
             "default": false,
             "title": "Nullable",
             "type": "boolean"
+          },
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DataField"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "properties": {
+            "type": "object",
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,31}$": {
+                "$ref": "#/components/schemas/DataField"
+              }
+            },
+            "maxProperties": 64,
+            "title": "Properties"
+          },
+          "max_items": {
+            "default": 100,
+            "maximum": 1000,
+            "minimum": 1,
+            "title": "Max Items",
+            "type": "integer"
           }
         },
         "required": [
@@ -2423,6 +3677,37 @@
         ],
         "title": "DataField",
         "type": "object"
+      },
+      "DataValue": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "items": {
+              "$ref": "#/components/schemas/DataValue"
+            },
+            "type": "array"
+          },
+          {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/DataValue"
+            },
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ]
       },
       "DelegateCatalog": {
         "additionalProperties": false,
@@ -2459,7 +3744,8 @@
           "effect": {
             "enum": [
               "read",
-              "database_write"
+              "database_write",
+              "external"
             ],
             "title": "Effect",
             "type": "string"
@@ -2508,7 +3794,10 @@
               "text",
               "integer",
               "number",
-              "boolean"
+              "boolean",
+              "list",
+              "object",
+              "secret"
             ],
             "title": "Type",
             "type": "string"
@@ -2517,6 +3806,34 @@
             "default": false,
             "title": "Nullable",
             "type": "boolean"
+          },
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DataField"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "properties": {
+            "type": "object",
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,31}$": {
+                "$ref": "#/components/schemas/DataField"
+              }
+            },
+            "maxProperties": 64,
+            "title": "Properties"
+          },
+          "max_items": {
+            "default": 100,
+            "maximum": 1000,
+            "minimum": 1,
+            "title": "Max Items",
+            "type": "integer"
           },
           "required": {
             "default": true,
@@ -2589,6 +3906,19 @@
             },
             "title": "Features",
             "type": "array"
+          },
+          "text_catalog_release": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Text Catalog Release"
           }
         },
         "required": [
@@ -2677,6 +4007,22 @@
         "title": "EndNode",
         "type": "object"
       },
+      "ExchangeTelegram": {
+        "additionalProperties": false,
+        "properties": {
+          "init_data": {
+            "maxLength": 16384,
+            "minLength": 1,
+            "title": "Init Data",
+            "type": "string"
+          }
+        },
+        "required": [
+          "init_data"
+        ],
+        "title": "ExchangeTelegram",
+        "type": "object"
+      },
       "ExchangeTicket": {
         "additionalProperties": false,
         "properties": {
@@ -2736,7 +4082,10 @@
         "additionalProperties": false,
         "properties": {
           "schema_version": {
-            "const": 1,
+            "enum": [
+              1,
+              2
+            ],
             "title": "Schema Version",
             "type": "integer"
           },
@@ -2770,26 +4119,38 @@
             "title": "Fields",
             "type": "object"
           },
+          "inputs": {
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,31}$": {
+                "$ref": "#/components/schemas/DataField"
+              }
+            },
+            "title": "Inputs",
+            "type": "object"
+          },
+          "outputs": {
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,31}$": {
+                "$ref": "#/components/schemas/DataField"
+              }
+            },
+            "title": "Outputs",
+            "type": "object"
+          },
+          "outcomes": {
+            "items": {
+              "pattern": "^[a-z][a-z0-9_]{0,31}$",
+              "type": "string"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Outcomes",
+            "type": "array"
+          },
           "initial_data": {
             "patternProperties": {
               "^[a-z][a-z0-9_]{0,31}$": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "integer"
-                  },
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
+                "$ref": "#/components/schemas/DataValue"
               }
             },
             "title": "Initial Data",
@@ -2800,10 +4161,13 @@
               "discriminator": {
                 "mapping": {
                   "action": "#/components/schemas/ActionNode",
+                  "call": "#/components/schemas/CallNode",
                   "condition": "#/components/schemas/ConditionNode",
                   "end": "#/components/schemas/EndNode",
                   "input": "#/components/schemas/InputNode",
-                  "menu": "#/components/schemas/MenuNode"
+                  "menu": "#/components/schemas/MenuNode",
+                  "replace": "#/components/schemas/ReplaceNode",
+                  "return": "#/components/schemas/ReturnNode"
                 },
                 "propertyName": "kind"
               },
@@ -2822,6 +4186,15 @@
                 },
                 {
                   "$ref": "#/components/schemas/EndNode"
+                },
+                {
+                  "$ref": "#/components/schemas/CallNode"
+                },
+                {
+                  "$ref": "#/components/schemas/ReturnNode"
+                },
+                {
+                  "$ref": "#/components/schemas/ReplaceNode"
                 }
               ]
             },
@@ -2957,6 +4330,29 @@
           "author_id": {
             "title": "Author Id",
             "type": "integer"
+          },
+          "text_catalog_release": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Text Catalog Release"
+          },
+          "dependencies": {
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,31}$": {
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "title": "Dependencies",
+            "type": "object"
           }
         },
         "required": [
@@ -3145,7 +4541,10 @@
             "enum": [
               "text",
               "integer",
-              "choice"
+              "choice",
+              "contact",
+              "media",
+              "secret"
             ],
             "title": "Input Type",
             "type": "string"
@@ -3259,6 +4658,55 @@
             },
             "title": "Choices",
             "type": "array"
+          },
+          "multiple": {
+            "default": false,
+            "title": "Multiple",
+            "type": "boolean"
+          },
+          "media": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReferenceValue"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "messages": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "catalog": "#/components/schemas/CatalogText",
+                  "inline": "#/components/schemas/InlineText"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/CatalogText"
+                },
+                {
+                  "$ref": "#/components/schemas/InlineText"
+                }
+              ]
+            },
+            "maxItems": 20,
+            "title": "Messages",
+            "type": "array"
+          },
+          "message_source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReferenceValue"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           }
         },
         "required": [
@@ -3273,6 +4721,27 @@
         "title": "InputNode",
         "type": "object"
       },
+      "LegacyTarget": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "legacy",
+            "default": "legacy",
+            "title": "Kind",
+            "type": "string"
+          },
+          "adapter": {
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Adapter",
+            "type": "string"
+          }
+        },
+        "required": [
+          "adapter"
+        ],
+        "title": "LegacyTarget",
+        "type": "object"
+      },
       "LiteralValue": {
         "additionalProperties": false,
         "properties": {
@@ -3282,24 +4751,7 @@
             "type": "string"
           },
           "value": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "integer"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Value"
+            "$ref": "#/components/schemas/DataValue"
           }
         },
         "required": [
@@ -3336,6 +4788,96 @@
           "next_cursor"
         ],
         "title": "LocationPage",
+        "type": "object"
+      },
+      "MediaEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "update_id": {
+            "minimum": 0,
+            "title": "Update Id",
+            "type": "integer"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          },
+          "chat_id": {
+            "title": "Chat Id",
+            "type": "integer"
+          },
+          "session_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Session Id",
+            "type": "string"
+          },
+          "expected_revision": {
+            "minimum": 0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "kind": {
+            "const": "media",
+            "title": "Kind",
+            "type": "string"
+          },
+          "message_id": {
+            "title": "Message Id",
+            "type": "integer"
+          },
+          "media_type": {
+            "enum": [
+              "photo",
+              "video"
+            ],
+            "title": "Media Type",
+            "type": "string"
+          },
+          "file_id": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "File Id",
+            "type": "string"
+          },
+          "media_group_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Media Group Id"
+          },
+          "caption": {
+            "anyOf": [
+              {
+                "maxLength": 1024,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Caption"
+          }
+        },
+        "required": [
+          "update_id",
+          "user_id",
+          "chat_id",
+          "session_id",
+          "expected_revision",
+          "kind",
+          "message_id",
+          "media_type",
+          "file_id"
+        ],
+        "title": "MediaEvent",
         "type": "object"
       },
       "MenuNode": {
@@ -3408,6 +4950,58 @@
             "maxItems": 20,
             "title": "Buttons",
             "type": "array"
+          },
+          "repeated": {
+            "items": {
+              "$ref": "#/components/schemas/RepeatedButtons"
+            },
+            "maxItems": 20,
+            "title": "Repeated",
+            "type": "array"
+          },
+          "media": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReferenceValue"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "messages": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "catalog": "#/components/schemas/CatalogText",
+                  "inline": "#/components/schemas/InlineText"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/CatalogText"
+                },
+                {
+                  "$ref": "#/components/schemas/InlineText"
+                }
+              ]
+            },
+            "maxItems": 20,
+            "title": "Messages",
+            "type": "array"
+          },
+          "message_source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReferenceValue"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           }
         },
         "required": [
@@ -3418,6 +5012,31 @@
           "buttons"
         ],
         "title": "MenuNode",
+        "type": "object"
+      },
+      "MiniAppSession": {
+        "additionalProperties": false,
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "expires_at",
+          "access_token"
+        ],
+        "title": "MiniAppSession",
         "type": "object"
       },
       "NavigationEvent": {
@@ -3516,6 +5135,17 @@
             ],
             "default": null,
             "title": "Url"
+          },
+          "snapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActionSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           }
         },
         "required": [
@@ -3536,23 +5166,7 @@
           "values": {
             "patternProperties": {
               "^[a-z][a-z0-9_]{0,31}$": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "integer"
-                  },
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
+                "$ref": "#/components/schemas/DataValue"
               }
             },
             "title": "Values",
@@ -3563,6 +5177,208 @@
           "outcome"
         ],
         "title": "PreviewDelegateResult",
+        "type": "object"
+      },
+      "PreviewFrame": {
+        "additionalProperties": false,
+        "properties": {
+          "flow_id": {
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Flow Id",
+            "type": "string"
+          },
+          "flow_version": {
+            "minimum": 0,
+            "title": "Flow Version",
+            "type": "integer"
+          },
+          "node_id": {
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Node Id",
+            "type": "string"
+          },
+          "data": {
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,31}$": {
+                "$ref": "#/components/schemas/DataValue"
+              }
+            },
+            "title": "Data",
+            "type": "object"
+          },
+          "resume_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "waiting_button",
+                  "waiting_input",
+                  "waiting_effect"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Resume Status"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Revision"
+          },
+          "trigger_release": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Trigger Release"
+          },
+          "effect_revision": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Effect Revision"
+          }
+        },
+        "required": [
+          "flow_id",
+          "flow_version",
+          "node_id"
+        ],
+        "title": "PreviewFrame",
+        "type": "object"
+      },
+      "PreviewPosition": {
+        "additionalProperties": false,
+        "properties": {
+          "flow_id": {
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Flow Id",
+            "type": "string"
+          },
+          "flow_version": {
+            "minimum": 0,
+            "title": "Flow Version",
+            "type": "integer"
+          },
+          "node_id": {
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Node Id",
+            "type": "string"
+          },
+          "data": {
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,31}$": {
+                "$ref": "#/components/schemas/DataValue"
+              }
+            },
+            "title": "Data",
+            "type": "object"
+          },
+          "resume_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "waiting_button",
+                  "waiting_input",
+                  "waiting_effect"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Resume Status"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Revision"
+          },
+          "trigger_release": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Trigger Release"
+          },
+          "effect_revision": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Effect Revision"
+          },
+          "frames": {
+            "items": {
+              "$ref": "#/components/schemas/PreviewFrame"
+            },
+            "maxItems": 15,
+            "title": "Frames",
+            "type": "array"
+          },
+          "dependencies": {
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,31}$": {
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "title": "Dependencies",
+            "type": "object"
+          }
+        },
+        "required": [
+          "flow_id",
+          "flow_version",
+          "node_id"
+        ],
+        "title": "PreviewPosition",
         "type": "object"
       },
       "PreviewRequest": {
@@ -3587,23 +5403,7 @@
           "data": {
             "patternProperties": {
               "^[a-z][a-z0-9_]{0,31}$": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "integer"
-                  },
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
+                "$ref": "#/components/schemas/DataValue"
               }
             },
             "title": "Data",
@@ -3622,8 +5422,11 @@
                 "discriminator": {
                   "mapping": {
                     "button": "#/components/schemas/ButtonEvent",
+                    "contact": "#/components/schemas/ContactEvent",
                     "input": "#/components/schemas/InputEvent",
-                    "navigation": "#/components/schemas/NavigationEvent"
+                    "media": "#/components/schemas/MediaEvent",
+                    "navigation": "#/components/schemas/NavigationEvent",
+                    "secret": "#/components/schemas/SecretEvent"
                   },
                   "propertyName": "kind"
                 },
@@ -3633,6 +5436,15 @@
                   },
                   {
                     "$ref": "#/components/schemas/InputEvent"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ContactEvent"
+                  },
+                  {
+                    "$ref": "#/components/schemas/MediaEvent"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SecretEvent"
                   },
                   {
                     "$ref": "#/components/schemas/NavigationEvent"
@@ -3652,6 +5464,30 @@
             },
             "title": "Delegate Results",
             "type": "object"
+          },
+          "text_catalog_release": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Text Catalog Release"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PreviewPosition"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           }
         },
         "required": [
@@ -3673,23 +5509,7 @@
           "data": {
             "patternProperties": {
               "^[a-z][a-z0-9_]{0,31}$": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "integer"
-                  },
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
+                "$ref": "#/components/schemas/DataValue"
               }
             },
             "title": "Data",
@@ -3711,6 +5531,35 @@
             },
             "title": "Issues",
             "type": "array"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PreviewPosition"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "node_kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "menu",
+                  "input",
+                  "end",
+                  "return"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Node Kind"
           }
         },
         "required": [
@@ -3772,6 +5621,52 @@
             ],
             "default": null,
             "title": "Return Flow"
+          },
+          "messages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "media": {
+            "items": {
+              "$ref": "#/components/schemas/ScreenMedia"
+            },
+            "title": "Media",
+            "type": "array"
+          },
+          "contact_request": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Contact Request"
+          },
+          "input_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "choice",
+                  "contact",
+                  "media",
+                  "secret"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Input Type"
           }
         },
         "required": [
@@ -3849,7 +5744,8 @@
             "enum": [
               "data",
               "user",
-              "capabilities"
+              "capabilities",
+              "item"
             ],
             "title": "Scope",
             "type": "string"
@@ -3858,6 +5754,24 @@
             "pattern": "^[a-z][a-z0-9_]{0,31}$",
             "title": "Field",
             "type": "string"
+          },
+          "path": {
+            "items": {
+              "anyOf": [
+                {
+                  "pattern": "^[a-z][a-z0-9_]{0,31}$",
+                  "type": "string"
+                },
+                {
+                  "maximum": 999,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ]
+            },
+            "maxItems": 8,
+            "title": "Path",
+            "type": "array"
           }
         },
         "required": [
@@ -3866,6 +5780,164 @@
           "field"
         ],
         "title": "ReferenceValue",
+        "type": "object"
+      },
+      "RepeatedButtons": {
+        "additionalProperties": false,
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/ReferenceValue"
+          },
+          "buttons": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "transition": "#/components/schemas/TransitionButton",
+                  "url": "#/components/schemas/UrlButton"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/TransitionButton"
+                },
+                {
+                  "$ref": "#/components/schemas/UrlButton"
+                }
+              ]
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Buttons",
+            "type": "array"
+          }
+        },
+        "required": [
+          "source",
+          "buttons"
+        ],
+        "title": "RepeatedButtons",
+        "type": "object"
+      },
+      "ReplaceNode": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "replace",
+            "title": "Kind",
+            "type": "string"
+          },
+          "id": {
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "flow": {
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Flow",
+            "type": "string"
+          },
+          "arguments": {
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,31}$": {
+                "discriminator": {
+                  "mapping": {
+                    "literal": "#/components/schemas/LiteralValue",
+                    "ref": "#/components/schemas/ReferenceValue"
+                  },
+                  "propertyName": "kind"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/LiteralValue"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ReferenceValue"
+                  }
+                ]
+              }
+            },
+            "title": "Arguments",
+            "type": "object"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "flow"
+        ],
+        "title": "ReplaceNode",
+        "type": "object"
+      },
+      "ReturnNode": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "return",
+            "title": "Kind",
+            "type": "string"
+          },
+          "id": {
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "outcome": {
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Outcome",
+            "type": "string"
+          },
+          "values": {
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,31}$": {
+                "discriminator": {
+                  "mapping": {
+                    "literal": "#/components/schemas/LiteralValue",
+                    "ref": "#/components/schemas/ReferenceValue"
+                  },
+                  "propertyName": "kind"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/LiteralValue"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ReferenceValue"
+                  }
+                ]
+              }
+            },
+            "title": "Values",
+            "type": "object"
+          },
+          "text": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "catalog": "#/components/schemas/CatalogText",
+                  "inline": "#/components/schemas/InlineText"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/CatalogText"
+                },
+                {
+                  "$ref": "#/components/schemas/InlineText"
+                }
+              ]
+            },
+            "title": "Text",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "outcome"
+        ],
+        "title": "ReturnNode",
         "type": "object"
       },
       "RolloutStatus": {
@@ -3943,6 +6015,221 @@
         "title": "SaveDraft",
         "type": "object"
       },
+      "SaveTextEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "entry": {
+            "$ref": "#/components/schemas/TextEntry"
+          },
+          "expected_revision": {
+            "minimum": 0,
+            "title": "Expected Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "entry",
+          "expected_revision"
+        ],
+        "title": "SaveTextEntry",
+        "type": "object"
+      },
+      "SaveTriggers": {
+        "additionalProperties": false,
+        "properties": {
+          "document": {
+            "$ref": "#/components/schemas/TriggerDocument"
+          },
+          "expected_revision": {
+            "minimum": 0,
+            "title": "Expected Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "document",
+          "expected_revision"
+        ],
+        "title": "SaveTriggers",
+        "type": "object"
+      },
+      "ScenarioPin": {
+        "additionalProperties": false,
+        "properties": {
+          "flow_id": {
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Flow Id",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1,
+            "title": "Version",
+            "type": "integer"
+          },
+          "text_catalog_release": {
+            "minimum": 1,
+            "title": "Text Catalog Release",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "flow_id",
+          "version",
+          "text_catalog_release"
+        ],
+        "title": "ScenarioPin",
+        "type": "object"
+      },
+      "ScenarioTarget": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "scenario",
+            "default": "scenario",
+            "title": "Kind",
+            "type": "string"
+          },
+          "flow_id": {
+            "pattern": "^[a-z][a-z0-9_]{0,31}$",
+            "title": "Flow Id",
+            "type": "string"
+          },
+          "entry": {
+            "anyOf": [
+              {
+                "pattern": "^[a-z][a-z0-9_]{0,31}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Entry"
+          },
+          "navigation": {
+            "anyOf": [
+              {
+                "const": "study",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Navigation"
+          },
+          "arguments": {
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,31}$": {
+                "enum": [
+                  "argument",
+                  "actor_id",
+                  "chat_id"
+                ],
+                "type": "string"
+              }
+            },
+            "title": "Arguments",
+            "type": "object"
+          }
+        },
+        "required": [
+          "flow_id"
+        ],
+        "title": "ScenarioTarget",
+        "type": "object"
+      },
+      "ScreenMedia": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "photo",
+              "video"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "file_id": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "File Id",
+            "type": "string"
+          },
+          "caption": {
+            "anyOf": [
+              {
+                "maxLength": 6144,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Caption"
+          }
+        },
+        "required": [
+          "kind",
+          "file_id"
+        ],
+        "title": "ScreenMedia",
+        "type": "object"
+      },
+      "SecretEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "update_id": {
+            "minimum": 0,
+            "title": "Update Id",
+            "type": "integer"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          },
+          "chat_id": {
+            "title": "Chat Id",
+            "type": "integer"
+          },
+          "session_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Session Id",
+            "type": "string"
+          },
+          "expected_revision": {
+            "minimum": 0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "kind": {
+            "const": "secret",
+            "title": "Kind",
+            "type": "string"
+          },
+          "handle": {
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Handle",
+            "type": "string"
+          }
+        },
+        "required": [
+          "update_id",
+          "user_id",
+          "chat_id",
+          "session_id",
+          "expected_revision",
+          "kind",
+          "handle"
+        ],
+        "title": "SecretEvent",
+        "type": "object"
+      },
       "SetRollout": {
         "additionalProperties": false,
         "properties": {
@@ -3966,6 +6253,221 @@
           "expected_revision"
         ],
         "title": "SetRollout",
+        "type": "object"
+      },
+      "TextCatalogDraft": {
+        "additionalProperties": false,
+        "properties": {
+          "document": {
+            "$ref": "#/components/schemas/TextDocument"
+          },
+          "revision": {
+            "minimum": 0,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "current_release": {
+            "minimum": 1,
+            "title": "Current Release",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "document",
+          "revision",
+          "current_release"
+        ],
+        "title": "TextCatalogDraft",
+        "type": "object"
+      },
+      "TextCatalogRelease": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "minimum": 1,
+            "title": "Id",
+            "type": "integer"
+          },
+          "draft_revision": {
+            "minimum": 0,
+            "title": "Draft Revision",
+            "type": "integer"
+          },
+          "author_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Author Id"
+          },
+          "published_at": {
+            "format": "date-time",
+            "title": "Published At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "draft_revision",
+          "published_at"
+        ],
+        "title": "TextCatalogRelease",
+        "type": "object"
+      },
+      "TextCatalogVersions": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TextCatalogRelease"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "TextCatalogVersions",
+        "type": "object"
+      },
+      "TextDocument": {
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/TextEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          }
+        },
+        "required": [
+          "entries"
+        ],
+        "title": "TextDocument",
+        "type": "object"
+      },
+      "TextEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          },
+          "owner": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Owner",
+            "type": "string"
+          },
+          "parameters": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Parameters",
+            "type": "array"
+          },
+          "content_type": {
+            "enum": [
+              "plain",
+              "html",
+              "label"
+            ],
+            "title": "Content Type",
+            "type": "string"
+          },
+          "plural_key": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Plural Key"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/TextVariant"
+            },
+            "title": "Variants",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "owner",
+          "content_type",
+          "variants"
+        ],
+        "title": "TextEntry",
+        "type": "object"
+      },
+      "TextVariant": {
+        "additionalProperties": false,
+        "properties": {
+          "locale": {
+            "enum": [
+              "en",
+              "ru",
+              "ky",
+              "tr",
+              "zh"
+            ],
+            "title": "Locale",
+            "type": "string"
+          },
+          "theme": {
+            "enum": [
+              "basic",
+              "halloween"
+            ],
+            "title": "Theme",
+            "type": "string"
+          },
+          "form": {
+            "enum": [
+              "one",
+              "few",
+              "many",
+              "other"
+            ],
+            "title": "Form",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "locale",
+          "theme",
+          "form",
+          "text"
+        ],
+        "title": "TextVariant",
         "type": "object"
       },
       "TransitionButton": {
@@ -4095,6 +6597,285 @@
           "next_cursor"
         ],
         "title": "TransitionPage",
+        "type": "object"
+      },
+      "TriggerBinding": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[a-z][a-z0-9_]{0,63}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "matcher": {
+            "$ref": "#/components/schemas/TriggerMatcher"
+          },
+          "target": {
+            "discriminator": {
+              "mapping": {
+                "legacy": "#/components/schemas/LegacyTarget",
+                "scenario": "#/components/schemas/ScenarioTarget"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ScenarioTarget"
+              },
+              {
+                "$ref": "#/components/schemas/LegacyTarget"
+              }
+            ],
+            "title": "Target"
+          },
+          "scope": {
+            "default": "private",
+            "enum": [
+              "private",
+              "group",
+              "any"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "access": {
+            "default": "public",
+            "enum": [
+              "public",
+              "admin",
+              "moderation"
+            ],
+            "title": "Access",
+            "type": "string"
+          },
+          "capabilities": {
+            "items": {
+              "pattern": "^[a-z][a-z0-9_]{0,31}$",
+              "type": "string"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          },
+          "policy": {
+            "default": "reject_if_busy",
+            "enum": [
+              "reject_if_busy",
+              "resume",
+              "replace",
+              "preserve",
+              "call"
+            ],
+            "title": "Policy",
+            "type": "string"
+          },
+          "fallback_adapter": {
+            "anyOf": [
+              {
+                "pattern": "^[a-z][a-z0-9_]{0,31}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Fallback Adapter"
+          }
+        },
+        "required": [
+          "id",
+          "matcher",
+          "target"
+        ],
+        "title": "TriggerBinding",
+        "type": "object"
+      },
+      "TriggerDocument": {
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "bindings": {
+            "items": {
+              "$ref": "#/components/schemas/TriggerBinding"
+            },
+            "maxItems": 256,
+            "title": "Bindings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "bindings"
+        ],
+        "title": "TriggerDocument",
+        "type": "object"
+      },
+      "TriggerDraftContent": {
+        "additionalProperties": false,
+        "properties": {
+          "document": {
+            "$ref": "#/components/schemas/TriggerDocument"
+          },
+          "revision": {
+            "minimum": 0,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "current_release": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Release"
+          }
+        },
+        "required": [
+          "document",
+          "revision",
+          "current_release"
+        ],
+        "title": "TriggerDraftContent",
+        "type": "object"
+      },
+      "TriggerManifest": {
+        "additionalProperties": false,
+        "properties": {
+          "document": {
+            "$ref": "#/components/schemas/TriggerDocument"
+          },
+          "scenarios": {
+            "items": {
+              "$ref": "#/components/schemas/ScenarioPin"
+            },
+            "title": "Scenarios",
+            "type": "array"
+          },
+          "text_catalog_release": {
+            "default": 1,
+            "minimum": 1,
+            "title": "Text Catalog Release",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "document",
+          "scenarios"
+        ],
+        "title": "TriggerManifest",
+        "type": "object"
+      },
+      "TriggerMatcher": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "command",
+              "deep_link",
+              "prefix",
+              "callback",
+              "reply_label",
+              "native_reply"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "key": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          },
+          "arguments": {
+            "default": "none",
+            "enum": [
+              "none",
+              "text",
+              "uuid",
+              "flow_id"
+            ],
+            "title": "Arguments",
+            "type": "string"
+          },
+          "action": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Action"
+          }
+        },
+        "required": [
+          "kind",
+          "key"
+        ],
+        "title": "TriggerMatcher",
+        "type": "object"
+      },
+      "TriggerReleaseContent": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "minimum": 1,
+            "title": "Id",
+            "type": "integer"
+          },
+          "draft_revision": {
+            "minimum": 0,
+            "title": "Draft Revision",
+            "type": "integer"
+          },
+          "author_id": {
+            "title": "Author Id",
+            "type": "integer"
+          },
+          "published_at": {
+            "format": "date-time",
+            "title": "Published At",
+            "type": "string"
+          },
+          "manifest": {
+            "$ref": "#/components/schemas/TriggerManifest"
+          }
+        },
+        "required": [
+          "id",
+          "draft_revision",
+          "author_id",
+          "published_at",
+          "manifest"
+        ],
+        "title": "TriggerReleaseContent",
+        "type": "object"
+      },
+      "TriggerVersions": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TriggerReleaseContent"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "TriggerVersions",
         "type": "object"
       },
       "UrlButton": {
@@ -4249,6 +7030,7 @@
                   "running",
                   "waiting_button",
                   "waiting_input",
+                  "waiting_effect",
                   "completed",
                   "cancelled",
                   "handed_off",
@@ -4429,6 +7211,29 @@
           "version": {
             "title": "Version",
             "type": "integer"
+          },
+          "text_catalog_release": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Text Catalog Release"
+          },
+          "dependencies": {
+            "patternProperties": {
+              "^[a-z][a-z0-9_]{0,31}$": {
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "title": "Dependencies",
+            "type": "object"
           }
         },
         "required": [
@@ -4478,6 +7283,10 @@
         "type": "apiKey",
         "in": "header",
         "name": "X-CSRF-Token"
+      },
+      "MiniAppBearer": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   }

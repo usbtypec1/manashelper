@@ -11,7 +11,7 @@ async function create(page: Page, id = 'browser_form') {
 }
 async function save(page: Page) {
   await page.getByRole('button', { name: 'Save', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeDisabled()
+  await expect(page.locator('.save-state')).not.toHaveClass(/dirty/)
 }
 async function publish(page: Page) {
   await page.getByRole('button', { name: 'Publish', exact: false }).click()
@@ -62,7 +62,7 @@ test('create a form visually, wire it, save, publish and walk through server pre
   await page.getByRole('textbox', { name: 'Input', exact: true }).fill('Browser test answer')
   await page.getByRole('button', { name: 'Send input', exact: true }).click()
   await expect(page.locator('.phone-preview')).toContainText('Scenario ended')
-  await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeDisabled()
+  await expect(page.locator('.save-state')).not.toHaveClass(/dirty/)
   const locations = await (await page.request.get(base + '/users/locations')).json()
   expect(
     locations.items.every(

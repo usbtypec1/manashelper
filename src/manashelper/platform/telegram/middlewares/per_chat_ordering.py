@@ -4,6 +4,17 @@ from typing import Any
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
+from dishka import AsyncContainer
+
+
+class ChatOrdering:
+    """One APP-owned gate shared by updates and post-commit screen delivery."""
+
+    def __init__(self) -> None:
+        self._locks: dict[int, asyncio.Lock] = {}
+
+    def lock(self, chat_id: int) -> asyncio.Lock:
+        return self._locks.setdefault(chat_id, asyncio.Lock())
 
 
 class PerChatOrderingMiddleware(BaseMiddleware):
@@ -13,8 +24,9 @@ class PerChatOrderingMiddleware(BaseMiddleware):
     two updates from the same chat arriving close together could race on that mutation.
     """
 
-    def __init__(self) -> None:
-        self._locks: dict[int, asyncio.Lock] = {}
+    def __init__(self, container: AsyncContainer | None = None) -> None:
+        self._container = container
+        self._ordering = ChatOrdering()
 
     async def __call__(
         self,
@@ -26,6 +38,6 @@ class PerChatOrderingMiddleware(BaseMiddleware):
         if chat is None:
             return await handler(event, data)
 
-        lock = self._locks.setdefault(chat.id, asyncio.Lock())
-        async with lock:
+        ordering = await self._container.get(ChatOrdering) if self._container is not None else self._ordering
+        async with ordering.lock(chat.id):
             return await handler(event, data)

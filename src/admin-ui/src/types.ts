@@ -14,7 +14,16 @@ export type Theme = Schemas['PreviewUser']['theme']
 export type Issue = Schemas['ContractIssue']
 export type Port = { id: string; label: string; target: string }
 export const locales: Locale[] = ['en', 'ru', 'ky', 'tr', 'zh']
-export const kinds: FlowNode['kind'][] = ['menu', 'input', 'condition', 'action', 'end']
+export const kinds: FlowNode['kind'][] = [
+  'menu',
+  'input',
+  'condition',
+  'action',
+  'call',
+  'return',
+  'replace',
+  'end',
+]
 export const identifier = /^[a-z][a-z0-9_]{0,31}$/
 
 export function clone<T>(value: T): T {
@@ -34,13 +43,21 @@ export function ports(node: FlowNode): Port[] {
           result.push({ id: `button:${r}:${b}`, label: button.id, target: button.target })
       }
     }
+    if (node.kind === 'menu') {
+      for (const [group, repeated] of (node.repeated ?? []).entries()) {
+        for (const [index, button] of repeated.buttons.entries()) {
+          if (button.kind === 'transition')
+            result.push({ id: `repeat:${group}:${index}`, label: button.id, target: button.target })
+        }
+      }
+    }
     if (node.kind === 'input') result.push({ id: 'next', label: 'next', target: node.next })
   } else if (node.kind === 'condition') {
     node.branches.forEach((branch, index) =>
       result.push({ id: `branch:${index}`, label: `#${index + 1}`, target: branch.target }),
     )
     result.push({ id: 'default', label: 'else', target: node.default })
-  } else if (node.kind === 'action') {
+  } else if (node.kind === 'action' || node.kind === 'call') {
     Object.entries(node.outcomes).forEach(([label, target]) =>
       result.push({ id: `outcome:${label}`, label, target }),
     )
@@ -53,11 +70,16 @@ export function connect(node: FlowNode, port: string, target: string): void {
     const [, r, b] = port.split(':')
     const button = node.buttons?.[Number(r)]?.[Number(b)]
     if (button?.kind === 'transition') button.target = target
+  } else if (port.startsWith('repeat:') && node.kind === 'menu') {
+    const [, group, index] = port.split(':')
+    const button = node.repeated?.[Number(group)]?.buttons[Number(index)]
+    if (button?.kind === 'transition') button.target = target
   } else if (node.kind === 'input' && port === 'next') node.next = target
   else if (node.kind === 'condition' && port === 'default') node.default = target
   else if (node.kind === 'condition' && port.startsWith('branch:'))
     node.branches[Number(port.split(':')[1])].target = target
-  else if (node.kind === 'action' && port.startsWith('outcome:')) node.outcomes[port.slice(8)] = target
+  else if ((node.kind === 'action' || node.kind === 'call') && port.startsWith('outcome:'))
+    node.outcomes[port.slice(8)] = target
 }
 
 export function renameNode(document: Document, previous: string, next: string): boolean {
@@ -117,7 +139,8 @@ export function newNode(document: Document, kind: FlowNode['kind']): FlowNode {
     kind,
     document.nodes.map((node) => node.id),
   )
-  const target = document.nodes.find((node) => node.kind === 'end')?.id ?? document.entry
+  const target =
+    document.nodes.find((node) => node.kind === 'end' || node.kind === 'return')?.id ?? document.entry
   switch (kind) {
     case 'menu':
       return { kind, id, text: [inline(messages.en.menu)], keyboard: 'inline', buttons: [] }
@@ -156,6 +179,12 @@ export function newNode(document: Document, kind: FlowNode['kind']): FlowNode {
         results: {},
         outcomes: { success: target },
       }
+    case 'call':
+      return { kind, id, flow: 'scenario', arguments: {}, results: {}, outcomes: { completed: target } }
+    case 'return':
+      return { kind, id, outcome: document.outcomes?.[0] ?? 'completed', values: {}, text: [] }
+    case 'replace':
+      return { kind, id, flow: 'scenario', arguments: {} }
     case 'end':
       return { kind, id, status: 'completed', text: [inline(messages.en.completed)] }
   }
