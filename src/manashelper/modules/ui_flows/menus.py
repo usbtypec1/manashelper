@@ -21,9 +21,10 @@ FEATURES = frozenset(
         "grades",
         "eders",
         "eders_materials",
+        "eders_notifications",
     }
 )
-EDERS_FEATURES = frozenset({"study_week", "eders", "eders_materials"})
+EDERS_FEATURES = frozenset({"study_week", "eders", "eders_materials", "eders_notifications"})
 
 
 def main_menu_document() -> FlowDocument:
@@ -95,10 +96,13 @@ def main_menu_document() -> FlowDocument:
                     {
                         "kind": "call",
                         "id": node,
-                        "flow": "settings",
-                        "outcomes": {"completed": "main", "cancelled": "main"},
+                        "flow": "settings" if feature == "settings" else "schedule_menu",
+                        "outcomes": {
+                            "completed": "main" if feature == "settings" else "study",
+                            "cancelled": "main" if feature == "settings" else "study",
+                        },
                     }
-                    if feature == "settings"
+                    if feature in {"settings", "schedule"}
                     else {"kind": "end", "id": node, "status": "handed_off", "feature": feature}
                     for node, feature in destinations.items()
                 ],

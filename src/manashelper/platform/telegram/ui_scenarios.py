@@ -65,10 +65,19 @@ def settings_document() -> FlowDocument:
                 flow=flow_id,
                 outcomes={"completed": "menu", "cancelled": "menu"},
             )
-            for node_id, flow_id in (("language", "select_locale"), ("theme", "select_theme"))
+            for node_id, flow_id in (
+                ("language", "select_locale"),
+                ("theme", "select_theme"),
+                ("notifications", "notifications_menu"),
+                ("course_tracking", "course_tracking"),
+            )
         ],
         ReturnNode(kind="return", id="completed", outcome="completed"),
-        *[EndNode(kind="end", id=feature, status="handed_off", feature=feature) for feature in leaves],
+        *[
+            EndNode(kind="end", id=feature, status="handed_off", feature=feature)
+            for feature in leaves
+            if feature not in {"notifications", "course_tracking"}
+        ],
     ]
     return FlowDocument(
         schema_version=2,

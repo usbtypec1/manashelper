@@ -16,11 +16,15 @@ from dishka import AsyncContainer, Provider, Scope, make_async_container, provid
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from manashelper.core.provider import CoreProvider
+from manashelper.modules.food_menu.provider import FoodMenuProvider
+from manashelper.modules.notifications.provider import NotificationsProvider
+from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.student_questions.provider import StudentQuestionsProvider
 from manashelper.modules.ui_flows.presentation.admin_provider import AdminUiFlowsProvider
 from manashelper.modules.ui_flows.provider import UiFlowsProvider
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.provider import TextCatalogProvider
+from manashelper.platform.telegram.provider import TelegramPlatformProvider
 from manashelper.platform.web.auth import AdminAuthService
 from manashelper.platform.web.provider import WebPlatformProvider
 
@@ -78,8 +82,12 @@ def admin_container(pool):
     return make_async_container(
         CoreProvider(),
         TextCatalogProvider(),
+        TelegramPlatformProvider(),
         StudentQuestionsProvider(),
         UsersProvider(),
+        ScheduleProvider(),
+        NotificationsProvider(),
+        FoodMenuProvider(),
         UiFlowsProvider(),
         WebPlatformProvider(),
         AdminUiFlowsProvider(),

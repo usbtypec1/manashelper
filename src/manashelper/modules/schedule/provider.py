@@ -14,6 +14,7 @@ from manashelper.modules.schedule.infrastructure.repositories.faculty_repository
 from manashelper.modules.schedule.infrastructure.repositories.lesson_history_repository import LessonHistoryRepository
 from manashelper.modules.schedule.infrastructure.repositories.lesson_repository import LessonRepository
 from manashelper.modules.schedule.infrastructure.timetable_client import TimetableClient
+from manashelper.modules.schedule.ui_delegates import ScheduleUiDelegates
 
 
 class ScheduleProvider(Provider):
@@ -33,3 +34,4 @@ class ScheduleProvider(Provider):
     sync = provide(TimetableSyncService)
     tracking = provide(CourseTrackingRepository)
     sync_course = provide(SyncCourseTimetable)
+    ui_delegates = provide(ScheduleUiDelegates)

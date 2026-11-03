@@ -1,6 +1,9 @@
 from dishka import AsyncContainer, Provider, Scope, alias, provide
 
 from manashelper.core.config import Settings
+from manashelper.modules.food_menu.ui_delegates import FoodMenuUiDelegates
+from manashelper.modules.notifications.ui_delegates import NotificationUiDelegates
+from manashelper.modules.schedule.ui_delegates import ScheduleUiDelegates
 from manashelper.modules.student_questions.service import StudentQuestionsService
 from manashelper.modules.student_questions.survey_delegates import SurveyDelegates
 from manashelper.modules.ui_flows.application.effect_worker import EffectWorker
@@ -69,9 +72,22 @@ class UiFlowsProvider(Provider):
 
     @provide
     def registry(
-        self, survey: StudentQuestionsService, external: ExternalDelegateRegistry, users: UserUiDelegates
+        self,
+        survey: StudentQuestionsService,
+        external: ExternalDelegateRegistry,
+        users: UserUiDelegates,
+        schedule: ScheduleUiDelegates,
+        food: FoodMenuUiDelegates,
+        notifications: NotificationUiDelegates,
     ) -> DelegateRegistry:
-        bindings = [*SurveyDelegates(survey).registry().bindings(), *users.bindings(), *external.bindings()]
+        bindings = [
+            *SurveyDelegates(survey).registry().bindings(),
+            *users.bindings(),
+            *schedule.bindings(),
+            *food.bindings(),
+            *notifications.bindings(),
+            *external.bindings(),
+        ]
         return DelegateRegistry(
             [DelegateBinding(binding.definition, LocalizedDelegate(binding.handler)) for binding in bindings]
         )

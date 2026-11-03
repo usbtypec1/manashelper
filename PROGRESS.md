@@ -10,11 +10,25 @@
 | 5 | Выполнен | v2 Call/Return/Replace, pinned dependencies, durable frames; v1 совместим |
 | 6 | Выполнен | Typed collections, action snapshots, effects, rich delivery, secret handles |
 | 7 | Выполнен с сохранением legacy-совместимости | Navigation/locale/theme/settings/survey через сценарии, legacy-совместимость |
-| 8 | Ожидает | Schedule/Food/Notifications через сценарии |
+| 8 | В работе, приостановлен | Schedule/Food/Notifications через сценарии |
 | 9 | Ожидает | Users/OBIS/Eders/Study week; кеши и формы переживают рестарт |
 | 10 | Ожидает | Advertisements, albums, contact gate, scoped moderation |
 | 11 | Ожидает | Feedback/native reply/Broadcast с прежними delivery guarantees |
 | 12 | Ожидает | Полный cutover, удаление FSM/legacy UI handlers и handoff |
+
+Этап 8, состояние на паузе: добавлены сценарии Schedule, общих уведомлений и
+настроек уведомлений столовой, их делегаты и интеграция в начальные документы.
+Существующие опубликованные документы автоматически не заменяются. Проверены 11
+тестов Schedule и 5 тестов уведомлений на PostgreSQL, интеграционный набор — 26;
+Ruff, mypy, сборка и 21 unit-тест редактора прошли до последних исправлений DI.
+Полная Python-проверка остановилась на test_admin_api.py::test_survey_return_is_publishable_and_preview_remains_a_stub
+(617 passed, 24 skipped); причину нужно разобрать. Browser E2E прерваны на паузе
+после 17 успешных тестов; полный прогон нужно повторить.
+
+Осталось перенести просмотр меню столовой, даты и оценки с сохранением rich delivery,
+автоудаления, группового поведения и старых кнопок; проверить форматирование
+расписания (текущий сценарий убирает HTML), входы/rollout существующих публикаций,
+полную регрессию и обновить документацию. Этап 8 не завершён.
 
 Последняя доказанная граница: этапы 5–6, 1125 Python passed/41 skipped, 21 frontend unit,
 19 browser E2E, 17 Telegram HTTP simulation, Docker smoke (45 таблиц), Ruff/mypy/artifact checks.

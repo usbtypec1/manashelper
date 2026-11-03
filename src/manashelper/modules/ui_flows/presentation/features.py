@@ -9,7 +9,7 @@ from manashelper.modules.advertisements.presentation.entrypoints import send_mar
 from manashelper.modules.eders.application.eders import EdersService
 from manashelper.modules.eders.application.models import DeadlineFilter
 from manashelper.modules.eders.application.tracking import EdersTrackingService
-from manashelper.modules.eders.presentation.entrypoints import show_eders
+from manashelper.modules.eders.presentation.entrypoints import show_eders, show_eders_settings
 from manashelper.modules.feedback.entrypoints import start_feedback
 from manashelper.modules.food_menu.application.daily_menu import DailyMenuService
 from manashelper.modules.food_menu.presentation.entrypoints import show_food_menu
@@ -64,6 +64,8 @@ async def open_feature(
             await show_phone_numbers(context.message, user.id, await request.get(UserContactService))
         case "feedback":
             await start_feedback(context.message, context.state)
+        case "eders_notifications":
+            await show_eders_settings(context.message, user.id, await request.get(EdersTrackingService))
         case "schedule":
             await show_timetable_menu(context.message)
         case "attendance":

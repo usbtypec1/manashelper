@@ -247,7 +247,7 @@
       ],
       "notes": [
         "runtime.* — сохраняемые/расширяемые транспортные компоненты, а не новые пользовательские flows. Целевые пользовательские сценарии перечислены отдельно.",
-        "FEATURES/EDERS_FEATURES фиксируют четырнадцать временных legacy handoffs, включая пять owning-входов из runtime Settings; open_feature удаляется только после переноса каждого адресата.",
+        "FEATURES/EDERS_FEATURES фиксируют пятнадцать временных legacy handoffs, включая пять owning-входов из runtime Settings; open_feature удаляется только после переноса каждого адресата.",
         "Admin HTTP, frontend и аутентификация покрываются своим контрактом и относятся к этапу 2; эта матрица охватывает Telegram UI, включая вход /editor.",
         "Этап 7: ingress runtime_callback принимает опубликованный launch из зарегистрированного codec; call сохраняет legacy FSM, прочие новые launch очищают его после проверки ingress, работа coordinator остаётся after-request."
       ]
@@ -4050,7 +4050,7 @@
       "path": "src/manashelper/modules/ui_flows/menus.py",
       "symbol": "EDERS_FEATURES",
       "kind": "feature_handoffs",
-      "definition": "frozenset({'study_week', 'eders', 'eders_materials'})",
+      "definition": "frozenset({'study_week', 'eders', 'eders_materials', 'eders_notifications'})",
       "group": "runtime",
       "targets": [
         "runtime.dispatch"
@@ -4060,7 +4060,7 @@
       "path": "src/manashelper/modules/ui_flows/menus.py",
       "symbol": "FEATURES",
       "kind": "feature_handoffs",
-      "definition": "frozenset({'food_menu', 'marketplace', 'settings', 'notifications', 'course_tracking', 'obis_credentials', 'phone_numbers', 'feedback', 'schedule', 'study_week', 'attendance', 'grades', 'eders', 'eders_materials'})",
+      "definition": "frozenset({'food_menu', 'marketplace', 'settings', 'notifications', 'course_tracking', 'obis_credentials', 'phone_numbers', 'feedback', 'schedule', 'study_week', 'attendance', 'grades', 'eders', 'eders_materials', 'eders_notifications'})",
       "group": "runtime",
       "targets": [
         "runtime.dispatch"
@@ -5567,6 +5567,25 @@
       "group": "runtime",
       "targets": [
         "admin.editor"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/entrypoints.py",
+      "symbol": "show_eders_settings",
+      "kind": "presenter",
+      "group": "eders",
+      "targets": [
+        "eders.notification_settings"
+      ]
+    },
+    {
+      "path": "src/manashelper/modules/ui_flows/menus.py",
+      "symbol": "eders_notifications",
+      "kind": "feature_handoff",
+      "eders_enabled": true,
+      "group": "eders",
+      "targets": [
+        "eders.notification_settings"
       ]
     }
   ]

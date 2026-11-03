@@ -20,6 +20,7 @@ from manashelper.modules.food_menu.infrastructure.repositories.food_menu_cleanup
 from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notification_settings_repository import (
     FoodMenuNotificationSettingsRepository,
 )
+from manashelper.modules.food_menu.ui_delegates import FoodMenuUiDelegates
 
 
 class FoodMenuProvider(Provider):
@@ -36,4 +37,5 @@ class FoodMenuProvider(Provider):
     sync = provide(FoodMenuSyncService)
     cleanup = provide(FoodMenuCleanupSettingsService)
     notifications = provide(FoodMenuNotificationSettingsService)
+    ui_delegates = provide(FoodMenuUiDelegates)
     broadcast = provide(BroadcastFoodMenu)

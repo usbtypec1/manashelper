@@ -192,9 +192,9 @@ class ScheduleUiDelegates:
         try:
             courses = await self._courses.toggle_tracked_course(int(candidate), context.user_id)
         except CourseNotFoundError:
-            return DelegateResult("missing", {})
+            return DelegateResult("missing", {"options": []})
         except UserNotFoundError:
-            return DelegateResult("unknown_user", {})
+            return DelegateResult("unknown_user", {"options": []})
         return DelegateResult("success", {"options": _options(courses)})
 
     async def catalog_page(self, context: DelegateContext, arguments: Mapping[str, DataValue]) -> DelegateResult:
@@ -222,14 +222,15 @@ class ScheduleUiDelegates:
             selected = now.isoweekday() if now.isoweekday() <= 5 else 1
         if not 1 <= selected <= 5:
             raise FlowExecutionError("A workday is required")
+        empty: dict[str, DataValue] = {"chunks": [], "days": [], "weekday": selected}
         try:
             lessons = await self._schedule.get_user_schedule(context.user_id)
         except UserNotFoundError:
-            return DelegateResult("unknown_user", {})
+            return DelegateResult("unknown_user", empty)
         except NoTrackedCoursesError:
-            return DelegateResult("no_courses", {})
+            return DelegateResult("no_courses", empty)
         if not lessons:
-            return DelegateResult("not_loaded", {})
+            return DelegateResult("not_loaded", empty)
         days: list[DataValue] = [{"id": day, "label": weekday_abbr(day)} for day in range(1, 6) if day != selected]
         return DelegateResult(
             "success",
@@ -240,7 +241,7 @@ class ScheduleUiDelegates:
         _check_context(context)
         query = cast(str, arguments["query"]).strip()
         if len(query) < 2:
-            return DelegateResult("too_short", {})
+            return DelegateResult("too_short", {"snapshot": []})
         results = await self._search.search(query)
         if not results:
             return DelegateResult("empty", {"snapshot": []})
@@ -251,7 +252,10 @@ class ScheduleUiDelegates:
         _check_context(context)
         snapshot = cast(list[dict[str, DataValue]], arguments["snapshot"])
         if not snapshot:
-            return DelegateResult("expired", {})
+            return DelegateResult(
+                "expired",
+                {"chunks": [], "page": 0, "previous": 0, "following": 0, "has_previous": False, "has_following": False},
+            )
         results = [
             LessonSearchResult(
                 course_id=cast(int, row["course_id"]),

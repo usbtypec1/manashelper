@@ -15,12 +15,21 @@ from manashelper.modules.eders.errors import (
     EdersUnsafeUrlError,
 )
 from manashelper.modules.eders.presentation.formatter import format_activity_page
-from manashelper.modules.eders.presentation.keyboards import build_eders_keyboard
+from manashelper.modules.eders.presentation.keyboards import build_eders_keyboard, build_eders_settings_keyboard
 from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
 from manashelper.modules.obis.presentation.keyboards import build_no_credentials_keyboard
 
 SNAPSHOT_KEY = "eders_snapshot"
 SNAPSHOT_OPENED_AT_KEY = "eders_snapshot_opened_at"
+
+
+async def show_eders_settings(message: Message, user_id: int, tracking: EdersTrackingService) -> None:
+    try:
+        settings = await tracking.get_settings(user_id)
+    except UserNotFoundError:
+        await message.answer(_("common.start_required"))
+        return
+    await message.answer(_("eders.settings_header"), reply_markup=build_eders_settings_keyboard(settings))
 
 
 async def show_eders(

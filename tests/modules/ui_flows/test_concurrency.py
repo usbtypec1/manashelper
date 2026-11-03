@@ -6,6 +6,9 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from manashelper.core.provider import CoreProvider
+from manashelper.modules.food_menu.provider import FoodMenuProvider
+from manashelper.modules.notifications.provider import NotificationsProvider
+from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.student_questions.orm import StudentQuestionsResponse
 from manashelper.modules.student_questions.provider import StudentQuestionsProvider
 from manashelper.modules.ui_flows.infrastructure.orm import UiDialogSession, UiFlowEvent
@@ -13,6 +16,7 @@ from manashelper.modules.ui_flows.provider import UiFlowsProvider
 from manashelper.modules.users.infrastructure.user import User
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.provider import TextCatalogProvider
+from manashelper.platform.telegram.provider import TelegramPlatformProvider
 from tests.modules.ui_flows.factories import button, policy, publish_examples, runtime
 from ui_flows.application.dialogs import DialogService
 from ui_flows.application.policy import FlowPolicy
@@ -91,7 +95,11 @@ async def test_new_container_restores_the_persisted_step_and_core_rolls_back_fai
         return make_async_container(
             CoreProvider(),
             TextCatalogProvider(),
+            TelegramPlatformProvider(),
             UsersProvider(),
+            ScheduleProvider(),
+            NotificationsProvider(),
+            FoodMenuProvider(),
             StudentQuestionsProvider(),
             UiFlowsProvider(),
             PoolProvider(),

@@ -2693,9 +2693,9 @@
       "plural_key": null
     }
   ],
-  "call_count": 750,
+  "call_count": 752,
   "methods": {
-    "gettext": 748,
+    "gettext": 750,
     "ngettext": 2
   },
   "calls": [
@@ -4238,7 +4238,7 @@
     },
     {
       "path": "src/manashelper/modules/eders/presentation/entrypoints.py",
-      "line": 39,
+      "line": 30,
       "owner": "eders",
       "scope": "user",
       "method": "gettext",
@@ -4250,7 +4250,31 @@
     },
     {
       "path": "src/manashelper/modules/eders/presentation/entrypoints.py",
-      "line": 42,
+      "line": 32,
+      "owner": "eders",
+      "scope": "user",
+      "method": "gettext",
+      "key": "eders.settings_header",
+      "arguments": [
+        "'eders.settings_header'"
+      ],
+      "format_parameters": []
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/entrypoints.py",
+      "line": 48,
+      "owner": "eders",
+      "scope": "user",
+      "method": "gettext",
+      "key": "common.start_required",
+      "arguments": [
+        "'common.start_required'"
+      ],
+      "format_parameters": []
+    },
+    {
+      "path": "src/manashelper/modules/eders/presentation/entrypoints.py",
+      "line": 51,
       "owner": "eders",
       "scope": "user",
       "method": "gettext",
@@ -4262,7 +4286,7 @@
     },
     {
       "path": "src/manashelper/modules/eders/presentation/entrypoints.py",
-      "line": 45,
+      "line": 54,
       "owner": "eders",
       "scope": "user",
       "method": "gettext",
@@ -4274,7 +4298,7 @@
     },
     {
       "path": "src/manashelper/modules/eders/presentation/entrypoints.py",
-      "line": 48,
+      "line": 57,
       "owner": "eders",
       "scope": "user",
       "method": "gettext",
@@ -4286,7 +4310,7 @@
     },
     {
       "path": "src/manashelper/modules/eders/presentation/entrypoints.py",
-      "line": 51,
+      "line": 60,
       "owner": "eders",
       "scope": "user",
       "method": "gettext",
@@ -8079,7 +8103,7 @@
     },
     {
       "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
-      "line": 209,
+      "line": 212,
       "owner": "ui_flows",
       "scope": "user",
       "method": "gettext",
@@ -8091,7 +8115,7 @@
     },
     {
       "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
-      "line": 209,
+      "line": 212,
       "owner": "ui_flows",
       "scope": "user",
       "method": "gettext",
@@ -8103,7 +8127,7 @@
     },
     {
       "path": "src/manashelper/modules/ui_flows/presentation/coordinator.py",
-      "line": 538,
+      "line": 549,
       "owner": "ui_flows",
       "scope": "user",
       "method": "gettext",
