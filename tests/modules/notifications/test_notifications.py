@@ -29,12 +29,13 @@ from manashelper.modules.obis.application.obis import ObisService
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
-from manashelper.modules.users.infrastructure.user import User
-from manashelper.modules.users.infrastructure.user_repository import UserRepository
+from manashelper.modules.users.infrastructure.models.user import User
+from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
+from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
 
 
@@ -272,6 +273,7 @@ async def test_notification_provider_preserves_request_scope_and_model_registry(
         TelegramPlatformProvider(),
         ObisProvider(),
         EdersProvider(),
+        OutboxProvider(),
         StudyWeekProvider(),
         ScheduleProvider(),
         NotificationsProvider(),

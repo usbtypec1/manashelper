@@ -9,11 +9,11 @@ from manashelper.core.database import Base
 
 
 class DailyMenuRating(Base):
-    __tablename__ = "daily_menu_ratings"
+    __tablename__ = "food_daily_menu_ratings"
     __table_args__ = (UniqueConstraint("daily_menu_id", "user_id"),)
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
-    daily_menu_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("daily_menus.id"))
+    daily_menu_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("food_daily_menus.id"))
     user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"))
     score: Mapped[int]
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())

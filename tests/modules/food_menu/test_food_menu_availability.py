@@ -7,10 +7,10 @@ from manashelper.core.time import BISHKEK_TZ
 from manashelper.modules.food_menu.application import daily_menu as daily_menu_module
 from manashelper.modules.food_menu.application.daily_menu import DailyMenuService
 from manashelper.modules.food_menu.infrastructure.models.daily_menu import DailyMenu
-from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_rating_repository import (
+from manashelper.modules.food_menu.infrastructure.repositories.daily_menu import DailyMenuRepository
+from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_rating import (
     DailyMenuRatingRepository,
 )
-from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_repository import DailyMenuRepository
 from manashelper.platform.i18n.catalog import i18n
 
 

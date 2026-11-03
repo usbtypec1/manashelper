@@ -4,7 +4,7 @@ from enum import StrEnum
 from manashelper.modules.food_menu.infrastructure.models.food_menu_notification_settings import (
     FoodMenuNotificationSettings,
 )
-from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notification_settings_repository import (
+from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notification_settings import (
     WEEKDAYS,
     FoodMenuNotificationSettingsRepository,
 )

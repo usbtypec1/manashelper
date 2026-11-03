@@ -18,6 +18,7 @@ from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
 from manashelper.modules.users.provider import UsersProvider
+from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
 
 
@@ -37,6 +38,7 @@ async def test_feedback_request_scope_commits_success_and_rolls_back_failure():
         TelegramPlatformProvider(),
         ObisProvider(),
         EdersProvider(),
+        OutboxProvider(),
         StudyWeekProvider(),
         ScheduleProvider(),
         NotificationsProvider(),
@@ -89,24 +91,23 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry(monkeypa
         from manashelper.modules.obis.provider import ObisProvider
         from manashelper.modules.study_week.provider import StudyWeekProvider
         from manashelper.modules.eders.provider import EdersProvider
+        from manashelper.platform.telegram.outbox.provider import OutboxProvider
         from manashelper.modules.schedule.provider import ScheduleProvider
         from manashelper.modules.notifications.provider import NotificationsProvider
         from manashelper.modules.advertisements.provider import AdvertisementsProvider
         from manashelper.modules.broadcast.provider import BroadcastProvider
         from manashelper.modules.feedback.provider import FeedbackProvider
         from manashelper.modules.food_menu.provider import FoodMenuProvider
-        from manashelper.modules.student_questions.provider import StudentQuestionsProvider
         from manashelper.modules.users.provider import UsersProvider
 
         async def check():
             async with make_async_container(
-                CoreProvider(), TelegramPlatformProvider(), ObisProvider(), EdersProvider(),
+                CoreProvider(), TelegramPlatformProvider(), ObisProvider(), EdersProvider(), OutboxProvider(),
                 StudyWeekProvider(),
                 ScheduleProvider(),
                 NotificationsProvider(),
                 FeedbackProvider(),
                 AdvertisementsProvider(),
-                StudentQuestionsProvider(),
                 UsersProvider(),
                 BroadcastProvider(),
                 FoodMenuProvider(),
@@ -133,17 +134,18 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry(monkeypa
                 assert names.count("food_menu") == 1
                 assert names.count("notifications") == 1
                 assert names.count("locale") == 1
-                assert names.count("phone_numbers") == 1
+                assert "phone_numbers" not in names
                 assert names.count("obis") == 1
                 assert names.count("study_week") == 1
-                assert names.index("food_menu_cleanup") < names.index("obis") < names.index("eders")
+                assert "food_menu_cleanup" not in names
+                assert names.index("food_menu") < names.index("obis") < names.index("eders")
                 assert names.index("study_week") == names.index("eders") + 1
                 assert names.index("study_week") < names.index("settings")
                 assert names.index("start") < names.index("locale") < names.index("timetable")
-                assert names.index("notifications") < names.index("phone_numbers") < names.index("advertisement")
+                assert names.index("notifications") < names.index("advertisement")
                 assert names.index("settings") < names.index("notifications")
                 assert "donations" not in names
-                assert names.index("student_questions") < names.index("advertisement_contact")
+                assert "student_questions" not in names
                 assert names.index("advertisement_contact") < names.index("start")
 
         asyncio.run(check())

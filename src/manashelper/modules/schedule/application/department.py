@@ -1,7 +1,7 @@
 import uuid
 from dataclasses import dataclass
 
-from manashelper.modules.schedule.infrastructure.repositories.department_repository import DepartmentRepository
+from manashelper.modules.schedule.infrastructure.repositories.department import DepartmentRepository
 
 
 @dataclass(frozen=True, slots=True)

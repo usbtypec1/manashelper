@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class Faculty(Base):
-    __tablename__ = "faculties"
+    __tablename__ = "timetable_faculties"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(128))

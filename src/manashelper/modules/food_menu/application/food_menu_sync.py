@@ -5,8 +5,8 @@ from manashelper.modules.food_menu.infrastructure.food_menu_client import FoodMe
 from manashelper.modules.food_menu.infrastructure.food_menu_parser import FoodMenuParser, ScrapedDailyMenu
 from manashelper.modules.food_menu.infrastructure.models.daily_menu import DailyMenu
 from manashelper.modules.food_menu.infrastructure.models.dish import Dish
-from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_repository import DailyMenuRepository
-from manashelper.modules.food_menu.infrastructure.repositories.dish_repository import DishRepository
+from manashelper.modules.food_menu.infrastructure.repositories.daily_menu import DailyMenuRepository
+from manashelper.modules.food_menu.infrastructure.repositories.dish import DishRepository
 
 _WHITESPACE_PATTERN = re.compile(r"\s+")
 

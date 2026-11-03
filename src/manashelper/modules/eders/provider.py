@@ -4,7 +4,7 @@ from manashelper.modules.eders.application.eders import EdersService
 from manashelper.modules.eders.application.polling import PollEdersUser
 from manashelper.modules.eders.application.tracking import EdersTrackingService
 from manashelper.modules.eders.infrastructure.client import EdersClient
-from manashelper.modules.eders.infrastructure.repository import EdersRepository
+from manashelper.modules.eders.infrastructure.repositories.eders import EdersRepository
 
 
 class EdersProvider(Provider):

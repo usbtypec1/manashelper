@@ -4,32 +4,30 @@ from textwrap import dedent
 
 EXPECTED_TABLES = {
     "action_logs",
+    "advertisement_ads",
     "advertisement_channel_messages",
     "advertisement_contact_views",
     "advertisement_media",
-    "advertisements",
-    "courses",
-    "daily_menu_dishes",
-    "daily_menu_ratings",
-    "daily_menus",
-    "departments",
-    "dishes",
     "eders_notifications",
     "eders_states",
-    "faculties",
     "feedback_messages",
-    "food_menu_cleanup_settings",
+    "food_daily_menu_dishes",
+    "food_daily_menu_ratings",
+    "food_daily_menus",
+    "food_dishes",
     "food_menu_notification_settings",
-    "lesson_history",
-    "lessons",
     "notification_settings",
     "obis_snapshots",
-    "scheduled_message_deletions",
-    "student_questions_responses",
-    "user_courses",
-    "user_exam_grades",
-    "user_lesson_attendance",
-    "user_phone_numbers",
+    "obis_user_exam_grades",
+    "obis_user_lesson_attendance",
+    "timetable_courses",
+    "timetable_departments",
+    "timetable_faculties",
+    "timetable_lesson_history",
+    "timetable_lessons",
+    "timetable_user_courses",
+    "telegram_outbox",
+    "telegram_outbox_rate_buckets",
     "users",
 }
 
@@ -44,7 +42,7 @@ def test_cold_registry_loads_complete_metadata_and_relationships_without_reexpor
         assert set(Base.metadata.tables) == EXPECTED_TABLES
         assert len(Base.metadata.sorted_tables) == len(EXPECTED_TABLES)
 
-        from manashelper.modules.users.infrastructure.user import User
+        from manashelper.modules.users.infrastructure.models.user import User
         from manashelper.modules.schedule.infrastructure.models.course import Course
         from manashelper.modules.food_menu.infrastructure.models.daily_menu import DailyMenu
         from manashelper.modules.food_menu.infrastructure.models.dish import Dish
@@ -52,8 +50,8 @@ def test_cold_registry_loads_complete_metadata_and_relationships_without_reexpor
         assert User.tracked_courses.property.mapper.class_ is Course
         assert Course.users.property.mapper.class_ is User
         assert DailyMenu.dishes.property.mapper.class_ is Dish
-        assert Base.metadata.tables['user_courses'].c.user_id.references(User.__table__.c.id)
-        assert Base.metadata.tables['daily_menu_dishes'].c.dish_id.references(Dish.__table__.c.id)
+        assert Base.metadata.tables['timetable_user_courses'].c.user_id.references(User.__table__.c.id)
+        assert Base.metadata.tables['food_daily_menu_dishes'].c.dish_id.references(Dish.__table__.c.id)
         model_names = {mapper.class_.__name__ for mapper in Base.registry.mappers}
         assert not model_names.intersection(vars(bootstrap))
     """)

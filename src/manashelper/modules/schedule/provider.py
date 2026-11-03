@@ -7,12 +7,12 @@ from manashelper.modules.schedule.application.lesson_search import LessonSearchS
 from manashelper.modules.schedule.application.schedule import ScheduleService
 from manashelper.modules.schedule.application.sync_course import SyncCourseTimetable
 from manashelper.modules.schedule.application.timetable_sync import TimetableSyncService
-from manashelper.modules.schedule.infrastructure.repositories.course_repository import CourseRepository
-from manashelper.modules.schedule.infrastructure.repositories.course_tracking_repository import CourseTrackingRepository
-from manashelper.modules.schedule.infrastructure.repositories.department_repository import DepartmentRepository
-from manashelper.modules.schedule.infrastructure.repositories.faculty_repository import FacultyRepository
-from manashelper.modules.schedule.infrastructure.repositories.lesson_history_repository import LessonHistoryRepository
-from manashelper.modules.schedule.infrastructure.repositories.lesson_repository import LessonRepository
+from manashelper.modules.schedule.infrastructure.repositories.course import CourseRepository
+from manashelper.modules.schedule.infrastructure.repositories.course_tracking import CourseTrackingRepository
+from manashelper.modules.schedule.infrastructure.repositories.department import DepartmentRepository
+from manashelper.modules.schedule.infrastructure.repositories.faculty import FacultyRepository
+from manashelper.modules.schedule.infrastructure.repositories.lesson import LessonRepository
+from manashelper.modules.schedule.infrastructure.repositories.lesson_history import LessonHistoryRepository
 from manashelper.modules.schedule.infrastructure.timetable_client import TimetableClient
 
 

@@ -12,17 +12,17 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from manashelper.modules.eders.application.eders import EdersService
 from manashelper.modules.eders.application.models import EdersSnapshot
 from manashelper.modules.eders.application.tracking import EdersTrackingService
-from manashelper.modules.eders.infrastructure.orm import EdersState
-from manashelper.modules.eders.infrastructure.repository import EdersRepository
+from manashelper.modules.eders.infrastructure.models.eders import EdersState
+from manashelper.modules.eders.infrastructure.repositories.eders import EdersRepository
 from manashelper.modules.eders.infrastructure.serialization import serialize_snapshot
 from manashelper.modules.obis.application.credentials import ObisCredentialsService
 from manashelper.modules.obis.application.obis import ObisService
-from manashelper.modules.obis.infrastructure.credentials_repository import ObisCredentialsRepository
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
-from manashelper.modules.obis.infrastructure.snapshot import ObisSnapshot
-from manashelper.modules.obis.infrastructure.snapshot_repository import ObisSnapshotRepository
-from manashelper.modules.users.infrastructure.user import User
-from manashelper.modules.users.infrastructure.user_repository import UserRepository
+from manashelper.modules.obis.infrastructure.models.snapshot import ObisSnapshot
+from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
+from manashelper.modules.obis.infrastructure.repositories.snapshot import ObisSnapshotRepository
+from manashelper.modules.users.infrastructure.models.user import User
+from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.modules.users.queries import UsersQuery
 
 
@@ -67,7 +67,7 @@ async def test_cached_reads_do_not_wait_for_background_http_fetch(engine, featur
         if feature == "obis":
             service = ObisService(credentials, client, ObisSnapshotRepository(session))
             return service.refresh_exam_grades, service.get_exam_grades
-        tracking = EdersTrackingService(EdersRepository(session), UsersQuery(UserRepository(session)))
+        tracking = EdersTrackingService(EdersRepository(session), UsersQuery(UserRepository(session)), AsyncMock())
         service = EdersService(credentials, client, tracking)
         return service.refresh_snapshot, service.get_snapshot
 

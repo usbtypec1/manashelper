@@ -1,9 +1,11 @@
+from datetime import UTC, datetime
+
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from manashelper.core.config import get_settings
-from manashelper.modules.notifications.callbacks import NotificationSettingCallback
+from manashelper.modules.notifications.callbacks import BroadcastMuteCallback, NotificationSettingCallback
 from manashelper.modules.notifications.settings import NotificationSetting, NotificationSettingsSummary
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 
@@ -35,6 +37,8 @@ def build_notifications_keyboard(settings: NotificationSettingsSummary) -> Inlin
             text=_("notifications.eders"),
             callback_data=SettingsCallback(action=SettingsAction.OPEN_EDERS_NOTIFICATIONS),
         )
+    if settings.broadcast_muted_until is not None and settings.broadcast_muted_until > datetime.now(UTC):
+        builder.button(text=_("notifications.resume_broadcasts"), callback_data=BroadcastMuteCallback(muted=False))
     builder.button(text=_("common.back"), callback_data=SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS))
     builder.adjust(1)
     return builder.as_markup()

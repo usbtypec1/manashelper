@@ -8,7 +8,7 @@ from manashelper.modules.schedule.infrastructure.models.course import Course
 from manashelper.modules.schedule.infrastructure.models.department import Department
 from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
 from manashelper.modules.schedule.infrastructure.models.lesson import Lesson
-from manashelper.modules.schedule.infrastructure.repositories.lesson_repository import LessonRepository
+from manashelper.modules.schedule.infrastructure.repositories.lesson import LessonRepository
 
 
 async def _make_course(session: AsyncSession, course_id: int) -> Course:

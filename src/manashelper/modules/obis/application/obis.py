@@ -5,14 +5,14 @@ from datetime import UTC, datetime
 from manashelper.modules.obis.application.credentials import ObisCredentials, ObisCredentialsService
 from manashelper.modules.obis.errors import DecryptionError, ObisSnapshotNotReadyError, UserHasNoCredentialsError
 from manashelper.modules.obis.infrastructure.client import ObisClient
+from manashelper.modules.obis.infrastructure.models.snapshot import ObisSnapshot
 from manashelper.modules.obis.infrastructure.parser import (
     ScrapedLessonAttendance,
     ScrapedLessonExams,
     parse_attendance_page,
     parse_exam_grades_page,
 )
-from manashelper.modules.obis.infrastructure.snapshot import ObisSnapshot
-from manashelper.modules.obis.infrastructure.snapshot_repository import ObisSnapshotRepository
+from manashelper.modules.obis.infrastructure.repositories.snapshot import ObisSnapshotRepository
 
 THEORY_SKIPS_THRESHOLD = 30.0
 PRACTICE_SKIPS_THRESHOLD = 20.0

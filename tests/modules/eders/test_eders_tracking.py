@@ -1,8 +1,10 @@
 from dataclasses import replace
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock
 
 import pytest
+from aiogram.methods import SendMessage
+from sqlalchemy import select
 
 from manashelper.modules.eders.application.eders import EdersService
 from manashelper.modules.eders.application.models import (
@@ -12,9 +14,10 @@ from manashelper.modules.eders.application.models import (
     SubmissionStatus,
 )
 from manashelper.modules.eders.application.tracking import EdersSetting
-from manashelper.modules.eders.infrastructure.repository import EdersRepository
+from manashelper.modules.eders.infrastructure.repositories.eders import EdersRepository
 from manashelper.modules.obis.errors import UserHasNoCredentialsError
-from manashelper.modules.users.infrastructure.user import User
+from manashelper.modules.users.infrastructure.models.user import User
+from manashelper.platform.telegram.outbox.models import OutboxMessage
 from tests.modules.eders.factories import NOW, item
 
 
@@ -57,6 +60,34 @@ async def test_changed_deadline_cancels_old_schedule_and_records_old_and_new(tra
     assert all(
         event.event_type != "before_24" for event in await tracking.pending_events(980_001, NOW + timedelta(days=2))
     )
+
+
+@pytest.mark.parametrize("change", ["deadline", "setting", "account"])
+async def test_changes_cancel_a_reminder_already_accepted_into_outbox(tracking, session, outbox, change):
+    now = datetime.now(UTC)
+    activity = item(opens=ActivityDate(), closes=ActivityDate(now + timedelta(hours=2, minutes=5)))
+    await tracking.observe(980_001, "account-a", EdersSnapshot((activity,), now))
+    crossing = now + timedelta(minutes=10)
+    await tracking.observe(980_001, "account-a", EdersSnapshot((activity,), crossing))
+    event = (await tracking.pending_events(980_001, crossing))[0]
+    assert event.event_type == "before_2"
+    assert await outbox.enqueue(
+        980_001,
+        [SendMessage(chat_id=980_001, text="Reminder")],
+        source_keys=[event.key],
+    )
+    await tracking.mark_sent(980_001, event.key, crossing)
+    if change == "setting":
+        await tracking.toggle(980_001, EdersSetting.TWO_HOURS_BEFORE)
+    else:
+        updated = replace(activity, closes=ActivityDate(now + timedelta(days=2)))
+        await tracking.observe(
+            980_001,
+            "account-b" if change == "account" else "account-a",
+            EdersSnapshot((updated,), crossing + timedelta(minutes=1)),
+        )
+    message = await session.scalar(select(OutboxMessage).where(OutboxMessage.user_id == 980_001))
+    assert message.status == "cancelled"
 
 
 async def test_settings_persist_and_disabled_events_are_cancelled(tracking):
@@ -107,7 +138,7 @@ async def test_after_outage_only_nearest_deadline_reminder_is_sent(tracking):
 async def test_missing_credentials_do_not_make_network_requests(session, tracking):
     client, crypto = AsyncMock(), AsyncMock()
     from manashelper.modules.obis.application.credentials import ObisCredentialsService
-    from manashelper.modules.obis.infrastructure.credentials_repository import ObisCredentialsRepository
+    from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
 
     account = ObisCredentialsService(ObisCredentialsRepository(session), AsyncMock(), crypto)
     service = EdersService(account, client, tracking)
@@ -119,7 +150,7 @@ async def test_missing_credentials_do_not_make_network_requests(session, trackin
 @pytest.mark.parametrize("encrypted_password", [None, "bad-ciphertext"])
 async def test_eders_needs_only_student_number_and_polling_includes_it(session, tracking, encrypted_password):
     from manashelper.modules.obis.application.credentials import ObisCredentialsService
-    from manashelper.modules.obis.infrastructure.credentials_repository import ObisCredentialsRepository
+    from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
 
     user = await session.get(User, 980_001)
     user.student_number = "fake-student"

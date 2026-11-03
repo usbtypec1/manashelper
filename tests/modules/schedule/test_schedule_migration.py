@@ -6,11 +6,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 from aiogram import Bot
-from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.base import StorageKey
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.methods import SendMessage
 from aiogram.types import CallbackQuery, Chat, Message, User
 from dishka import make_async_container
 
@@ -40,12 +38,13 @@ from manashelper.modules.schedule.presentation.callbacks import (
 from manashelper.modules.schedule.presentation.routers import lesson_search, timetable
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
-from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
-from manashelper.modules.users.infrastructure.user import User as DbUser
+from manashelper.modules.users.infrastructure.models.user import User as DbUser
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.outbox.provider import OutboxProvider
+from manashelper.platform.telegram.outbox.service import OutboxService
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
 
 
@@ -160,19 +159,20 @@ async def test_sync_job_keeps_course_scopes_and_failure_isolation(failure):
 
     users.get_by_id.side_effect = locale
 
-    async def send(user_id, text):
+    async def send(user_id, methods, **kwargs):
         if user_id == 10 and failure == "telegram":
-            raise TelegramBadRequest(method=SendMessage(chat_id=user_id, text=text), message="unavailable")
+            return False
         if user_id == 10 and failure == "transport":
             raise RuntimeError("unexpected transport")
 
-    bot.send_message.side_effect = send
+    outbox = AsyncMock(spec=OutboxService)
+    outbox.enqueue.side_effect = send
     dependencies = {
         CourseService: courses,
         SyncCourseTimetable: SyncCourseTimetable(sync, NotificationRecipientsQuery(notifications)),
         LocaleService: LocaleService(users),
         ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
-        BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
+        OutboxService: outbox,
     }
     scopes = []
 
@@ -185,7 +185,7 @@ async def test_sync_job_keeps_course_scopes_and_failure_isolation(failure):
     assert len(scopes) == 3
     assert [call.args[0] for call in sync.synchronize_course_timetable.await_args_list] == [1, 2]
     expected = [10, 11, 20] if failure == "telegram" else ([10, 20] if failure == "transport" else [20])
-    assert [call.args[0] for call in bot.send_message.await_args_list] == expected
+    assert [call.args[0] for call in outbox.enqueue.await_args_list] == expected
 
 
 async def test_schedule_recipient_query_preserves_tracking_and_default_opt_in(session):
@@ -215,6 +215,7 @@ async def test_schedule_provider_scopes_and_hourly_job_contract():
         TelegramPlatformProvider(),
         ObisProvider(),
         EdersProvider(),
+        OutboxProvider(),
         StudyWeekProvider(),
         ScheduleProvider(),
         NotificationsProvider(),

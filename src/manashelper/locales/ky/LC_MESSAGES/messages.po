@@ -216,21 +216,6 @@ msgstr "📆 Эртең"
 msgid "food.day_after_tomorrow"
 msgstr "🗓 Эртеңден кийинки күн"
 
-msgid "food.auto_delete_settings"
-msgstr "🧹 Автоматтык өчүрүү жөндөөлөрү"
-
-msgid "common.duration.minutes_15"
-msgstr "15 мүнөт"
-
-msgid "common.duration.hours_3"
-msgstr "3 саат"
-
-msgid "common.duration.days_1"
-msgstr "1 суткада"
-
-msgid "common.off"
-msgstr "Өчүрүлгөн"
-
 msgid "food.lunch"
 msgstr "Түшкү"
 
@@ -264,12 +249,6 @@ msgstr "✅ Шарттарды кабыл алуу"
 msgid "obis.clear_credentials"
 msgstr "🗑 Маалыматтарды тазалоо"
 
-msgid "phone.add"
-msgstr "➕ Телефон номерин кошуу"
-
-msgid "phone.share"
-msgstr "📱 Телефон номерин бөлүшүү"
-
 msgid "settings.notifications"
 msgstr "🔔 Билдирүүлөр"
 
@@ -278,9 +257,6 @@ msgstr "📚 Менин сабактарым"
 
 msgid "settings.obis_credentials"
 msgstr "🔑 OBIS маалыматтары"
-
-msgid "settings.phone_numbers"
-msgstr "📱 Менин телефон номерлерим"
 
 msgid "settings.language"
 msgstr "🌐 Тил"
@@ -350,9 +326,6 @@ msgstr ""
 msgid "menu.main"
 msgstr "🏠 Башкы меню"
 
-msgid "phone.saved"
-msgstr "✅ Телефон номери сакталды."
-
 msgid "ads.price_prompt"
 msgstr ""
 "💵 Баасын сомдо жөнөтүңүз (сандар гана) же баасы келишим боюнча болсо же тиешелүү болбосо «Өткөрүп жиберүү» баскычын "
@@ -365,11 +338,7 @@ msgid "ads.list_page"
 msgstr "📋 <b>Менин жарнамаларым</b> ({page}/{total}-бет)"
 
 msgid "ads.contact_prompt"
-msgstr ""
-"📞 Жарнама жайгаштырардан мурун, сатып алуучуларга сиз менен байланышуунун жолу керек.\n"
-"\n"
-"Сизде азырынча публикалык Telegram колдонуучу аты жок, ошондуктан төмөнкү баскыч аркылуу телефон номериңизди "
-"бөлүшүңүз же аны кол менен киргизиңиз (мисалы, +996700123456):"
+msgstr "Бул жарыя үчүн телефон номериңизди киргизиңиз же байланыш жөнөтүңүз. Telegram колдонуучу атыңыз болсо, бул кадамды өткөрүп жиберсеңиз болот."
 
 msgid "ads.invalid_price"
 msgstr "Бүтүн сан жөнөтүңүз (сандар гана) же «Өткөрүп жиберүү» баскычын басыңыз:"
@@ -397,12 +366,6 @@ msgstr "Сиз бул сааттын ичинде максималдуу 5 жа�
 
 msgid "common.start_required"
 msgstr "Сураныч, /start командасынан баштаңыз"
-
-msgid "phone.save_failed"
-msgstr "Бул номерди сактоодо ката кетти. Телефон номериңизди кол менен киргизиңиз:"
-
-msgid "phone.invalid"
-msgstr "Бул туура телефон номерине окшобойт (мисалы, +996700123456). Кайра аракет кылыңыз:"
 
 msgid "ads.description_prompt"
 msgstr ""
@@ -478,10 +441,10 @@ msgid "broadcast.cancelled"
 msgstr "❌ Рассылка жокко чыгарылды."
 
 msgid "broadcast.sending"
-msgstr "📤 Рассылка жөнөтүлүүдө…"
+msgstr "📤 Рассылка даярдалууда…"
 
 msgid "broadcast.sent"
-msgstr "✅ Рассылка {sent}/{total} колдонуучуга жөнөтүлдү."
+msgstr "✅ Рассылка {sent}/{total} колдонуучу үчүн кезекке коюлду. Жөнөтүү фондо уланат."
 
 msgid "broadcast.text_required"
 msgstr "Текст же бир сүрөт жөнөтүңүз."
@@ -529,12 +492,6 @@ msgstr "Күндүн менюсуна 1ден 5ке чейин баа бериң
 
 msgid "food.rating_thanks"
 msgstr "Баалаганыңыз үчүн рахмат!"
-
-msgid "food.auto_delete_prompt"
-msgstr "🧹 Бул чатта меню жөнүндө билдирүүлөрдү автоматтык түрдө өчүрүү:"
-
-msgid "common.saved"
-msgstr "Сакталды"
 
 msgid "common.not_a_button"
 msgstr "бул жерди баспаңыз"
@@ -600,18 +557,6 @@ msgstr "OBIS'тен маалымат алынган жок. Кийинчерээ
 
 msgid "obis.login_failed"
 msgstr "OBIS маалыматтары туура эмес. Студенттик номериңизди кайра киргизиңиз:"
-
-msgid "phone.list"
-msgstr ""
-"📱 <b>Менин телефон номерлерим</b>\n"
-"\n"
-"Алар жайгаштырган жарнамаларыңызда сатып алуучуларга көрсөтүлөт."
-
-msgid "phone.number_prompt"
-msgstr "Төмөнкү баскыч аркылуу телефон номериңизди бөлүшүңүз же аны кол менен киргизиңиз (мисалы, +996700123456):"
-
-msgid "phone.not_found"
-msgstr "Бул телефон номери мындан ары сакталган эмес"
 
 msgid "menu.settings"
 msgstr "⚙️ Тууралоолор"
@@ -903,78 +848,6 @@ msgstr "Бет {page}/{total}"
 msgid "obis.result_expired"
 msgstr "Бул жыйынтык мындан ары жеткиликтүү эмес. Меню аркылуу бааларды же калтырылган сабактарды кайра сураңыз."
 
-msgid "student_questions.preparatory"
-msgstr "Даярдоо курсу"
-
-msgid "student_questions.year_1"
-msgstr "1-курс"
-
-msgid "student_questions.year_2"
-msgstr "2-курс"
-
-msgid "student_questions.year_3"
-msgstr "3-курс"
-
-msgid "student_questions.year_4"
-msgstr "4-курс"
-
-msgid "student_questions.year_5"
-msgstr "5-курс"
-
-msgid "student_questions.not_student"
-msgstr "Мен студент эмесмин"
-
-msgid "student_questions.yes"
-msgstr "Ооба"
-
-msgid "student_questions.no"
-msgstr "Жок"
-
-msgid "student_questions.intro"
-msgstr "Университет тууралуу суроолорго жооп издөө боюнча кыска сурамжылоо. Бир нече суроого жооп бериңиз."
-
-msgid "student_questions.course_prompt"
-msgstr "1. Кайсы курста окуйсуз?"
-
-msgid "student_questions.search_prompt"
-msgstr "2. Университетке тапшыруу же окуу учурунда жообун көпкө издеген суроолоруңуз болгонбу?"
-
-msgid "student_questions.questions_prompt"
-msgstr "3. Ошол суроолорду тизмектеп жазыңыз."
-
-msgid "student_questions.found_prompt"
-msgstr "4. Акыры ошол суроолорго жооп таптыңызбы?"
-
-msgid "student_questions.sources_prompt"
-msgstr "5. Суроолоруңузга жоопторду кайдан таптыңыз?"
-
-msgid "student_questions.beta_prompt"
-msgstr "6. Университет тууралуу дээрлик баарын билген эксперименталдык боттун бета-тестине катышкыңыз келеби?"
-
-msgid "student_questions.thanks"
-msgstr "7. Жоопторуңуз үчүн рахмат!"
-
-msgid "student_questions.beta_follow_up"
-msgstr "Бета-тестке катышуу үчүн бир айдын ичинде сиз менен байланышабыз."
-
-msgid "student_questions.already_completed"
-msgstr "Бул сурамжылоону мурда толтургансыз. Кайра толтургуңуз келеби? Аяктагандан кийин жаңы анкета мурункусун алмаштырат."
-
-msgid "student_questions.fill_again"
-msgstr "Кайра толтуруу"
-
-msgid "student_questions.expired"
-msgstr "Бул баскычтар эскирди. Сурамжылоону шилтеме аркылуу кайра ачыңыз."
-
-msgid "student_questions.cancelled"
-msgstr "Сурамжылоо токтотулду. Сакталган анкета өзгөргөн жок."
-
-msgid "student_questions.invalid_text"
-msgstr "Узундугу 1ден {max} белгиге чейин болгон текст жөнөтүңүз."
-
-msgid "student_questions.use_buttons"
-msgstr "Жоопту баскычтар аркылуу тандаңыз."
-
 msgid "eders.filter_today"
 msgstr "Бүгүн"
 
@@ -1094,3 +967,25 @@ msgstr "Бул билдирүүнү таратуубу?"
 
 msgid "menu.study"
 msgstr "📚 Окуу"
+
+
+msgid "ads.invalid_phone"
+msgstr "Туура телефон номерин киргизиңиз, мисалы +996700123456."
+
+msgid "ads.phone_required"
+msgstr "Телефон номерин киргизиңиз же бул кадамды өткөрүү үчүн Telegram колдонуучу атын коюңуз."
+
+msgid "notifications.mute_broadcasts"
+msgstr "Таратмаларды жөнөтпөө"
+
+msgid "notifications.broadcast_muted"
+msgstr "Сиз таратмалардан 14 күнгө баш тарттыңыз"
+
+msgid "notifications.resume_broadcasts"
+msgstr "Таратмаларды кайра кошуу"
+
+msgid "notifications.broadcast_muted_until"
+msgstr "Таратмалар {until} чейин өчүрүлгөн (Бишкек убактысы)."
+
+msgid "notifications.broadcast_resumed"
+msgstr "Таратмалар кайра кошулду"

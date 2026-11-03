@@ -4,8 +4,8 @@ from aiogram.utils.i18n import gettext as _
 
 from manashelper.modules.advertisements.application.advertisement import AdvertisementMediaItem, AdvertisementSummary
 from manashelper.modules.advertisements.application.advertisement_contact import ContactReveal
+from manashelper.modules.advertisements.domain.contact import ContactStatus
 from manashelper.modules.advertisements.domain.enums import AdvertisementMediaType
-from manashelper.modules.users.application.user_contact import ContactStatus
 from manashelper.platform.telegram.html import escape_html
 
 MediaGroupItem = InputMediaAudio | InputMediaDocument | InputMediaLivePhoto | InputMediaPhoto | InputMediaVideo

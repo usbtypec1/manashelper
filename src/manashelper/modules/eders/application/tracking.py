@@ -5,11 +5,12 @@ from enum import StrEnum
 
 from manashelper.modules.eders.application.models import ActivityKind, EdersActivity, EdersSnapshot, SubmissionStatus
 from manashelper.modules.eders.errors import EdersSnapshotNotReadyError
-from manashelper.modules.eders.infrastructure.orm import EdersNotification
-from manashelper.modules.eders.infrastructure.repository import EdersRepository
+from manashelper.modules.eders.infrastructure.models.eders import EdersNotification
+from manashelper.modules.eders.infrastructure.repositories.eders import EdersRepository
 from manashelper.modules.eders.infrastructure.serialization import deserialize_snapshot, serialize_snapshot
 from manashelper.modules.obis.errors import UserNotFoundError
 from manashelper.modules.users.queries import UsersQuery
+from manashelper.platform.telegram.outbox.service import OutboxService
 
 
 class EdersSetting(StrEnum):
@@ -102,9 +103,10 @@ def plan_events(snapshot: EdersSnapshot, previous: EdersSnapshot | None, setting
 
 
 class EdersTrackingService:
-    def __init__(self, eders_repository: EdersRepository, users: UsersQuery) -> None:
+    def __init__(self, eders_repository: EdersRepository, users: UsersQuery, outbox: OutboxService) -> None:
         self._repository = eders_repository
         self._users = users
+        self._outbox = outbox
 
     async def get_settings(self, user_id: int) -> EdersSettings:
         if not await self._users.exists(user_id):
@@ -127,6 +129,16 @@ class EdersTrackingService:
         await self.get_settings(user_id)
         state = await self._repository.get_state(user_id)
         setattr(state, setting.value, not getattr(state, setting.value))
+        if not getattr(state, setting.value):
+            event_types = {
+                EdersSetting.DAY_BEFORE: {"before_24"},
+                EdersSetting.TWO_HOURS_BEFORE: {"before_2"},
+                EdersSetting.OPENINGS: {"opened"},
+                EdersSetting.DEADLINE_CHANGES: {"changed"},
+                EdersSetting.NEW_MATERIALS: {"material_new", "material_changed"},
+            }.get(setting, set())
+            rows = await self._repository.get_notifications(user_id)
+            await self._outbox.cancel_sources([row.event_key for row in rows if row.event_type in event_types])
         return EdersSettings(*(getattr(state, item.value) for item in EdersSetting))
 
     async def observe(self, user_id: int, marker: str, snapshot: EdersSnapshot) -> EdersSnapshot:
@@ -166,6 +178,7 @@ class EdersTrackingService:
         existing = await self._repository.get_notifications(user_id)
         stored = {event.event_key: event for event in existing}
         current = {activity_key(item): item for item in snapshot.activities}
+        cancelled_keys = []
         for stored_event in existing:
             item = current.get(stored_event.activity_key)
             valid_change = (
@@ -199,6 +212,8 @@ class EdersTrackingService:
                 stored_event.event_key not in planned and not valid_change and not valid_reminder and not valid_material
             ):
                 stored_event.cancelled = True
+                if previous is None or not valid_material:
+                    cancelled_keys.append(stored_event.event_key)
             elif item:
                 stored_event.payload = serialize_snapshot(EdersSnapshot((item,), snapshot.fetched_at))
         for key, event in planned.items():
@@ -219,6 +234,7 @@ class EdersTrackingService:
                     previous_deadline=event.previous_deadline,
                 )
             )
+        await self._outbox.cancel_sources(cancelled_keys)
         state.snapshot = serialize_snapshot(snapshot)
         state.credential_marker = marker
         return snapshot

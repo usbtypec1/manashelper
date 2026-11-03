@@ -25,6 +25,7 @@ from manashelper.modules.advertisements.application.advertisement import (
     TooManyAdvertisementsError,
 )
 from manashelper.modules.advertisements.application.advertisement_contact import ContactReveal
+from manashelper.modules.advertisements.domain.contact import ContactStatus
 from manashelper.modules.advertisements.domain.enums import AdvertisementMediaType, AdvertisementStatus
 from manashelper.modules.advertisements.presentation.advertisement import (
     AdvertisementForm,
@@ -34,6 +35,8 @@ from manashelper.modules.advertisements.presentation.advertisement import (
     on_expiry_selected,
     on_form_submitted,
     on_media_done,
+    on_phone_number_entered,
+    on_phone_number_skipped,
     on_price_skipped,
     on_title_entered,
 )
@@ -54,7 +57,6 @@ from manashelper.modules.advertisements.presentation.callbacks import (
     AdvertisementModerationAction,
     AdvertisementModerationCallback,
 )
-from manashelper.modules.users.application.user_contact import ContactStatus
 from manashelper.platform.i18n.catalog import i18n
 
 USER_ID = 942_001
@@ -103,7 +105,7 @@ def context(monkeypatch):
     moderation = AsyncMock()
     moderation.approve.return_value = replace(summary, status=AdvertisementStatus.PUBLISHED)
     moderation.reject.return_value = replace(summary, status=AdvertisementStatus.REJECTED)
-    contacts = AsyncMock()
+    contacts = service
     contacts.get_contact_status.return_value = ContactStatus(username="seller", phone_numbers=["+996700000000"])
     reveal = AsyncMock()
     reveal.reveal_contact.return_value = ContactReveal(summary.title, contacts.get_contact_status.return_value)
@@ -148,7 +150,9 @@ async def test_create_form_preserves_states_payloads_and_submission(context):
     assert AdvertisementModerationCallback(id=AD_ID, action=AdvertisementModerationAction.APPROVE).pack() == (
         f"ad_moderation:{AD_ID.hex}:approve"
     )
-    await on_create_requested(context.message, context.state, context.service, context.contacts)
+    await on_create_requested(context.message, context.state, context.service)
+    assert await context.state.get_state() == "AdvertisementForm:phone_number"
+    await on_phone_number_entered(context.message.model_copy(update={"text": "+996700000000"}), context.state)
     assert await context.state.get_state() == "AdvertisementForm:title"
     await on_title_entered(context.message.model_copy(update={"text": "  <Book>  "}), context.state)
     assert await context.state.get_state() == "AdvertisementForm:description"
@@ -162,9 +166,7 @@ async def test_create_form_preserves_states_payloads_and_submission(context):
         callback(context), AdvertisementExpiryCallback(option=AdvertisementExpiryOption.NONE), context.state
     )
     assert await context.state.get_state() == "AdvertisementForm:confirm"
-    await on_form_submitted(
-        callback(context), context.state, context.bot, context.settings, context.service, context.contacts
-    )
+    await on_form_submitted(callback(context), context.state, context.bot, context.settings, context.service)
     context.service.create_advertisement.assert_awaited_once_with(
         user_id=USER_ID,
         title="<Book>",
@@ -172,6 +174,7 @@ async def test_create_form_preserves_states_payloads_and_submission(context):
         price=None,
         expires_at=None,
         media_items=[],
+        phone_number="+996700000000",
     )
     assert await context.state.get_state() is None
     review = [message for message in methods(context, SendMessage) if message.chat_id == MODERATION_CHAT_ID][0]
@@ -185,19 +188,42 @@ async def test_contact_requirement_selects_initial_state(context, has_contact):
     context.contacts.get_contact_status.return_value = ContactStatus(
         username="seller" if has_contact else None, phone_numbers=[]
     )
-    await on_create_requested(context.message, context.state, context.service, context.contacts)
-    assert await context.state.get_state() == (
-        "AdvertisementForm:title" if has_contact else "AdvertisementForm:phone_number"
-    )
+    await on_create_requested(context.message, context.state, context.service)
+    assert await context.state.get_state() == "AdvertisementForm:phone_number"
+    buttons = methods(context, SendMessage)[0].reply_markup.inline_keyboard
+    assert any(button.callback_data == "ad_form:skip_phone" for row in buttons for button in row) is has_contact
 
 
 async def test_hourly_limit_does_not_start_or_clear_form(context):
     await context.state.set_state(AdvertisementForm.confirm)
     context.service.assert_can_post.side_effect = TooManyAdvertisementsError(USER_ID)
-    await on_create_requested(context.message, context.state, context.service, context.contacts)
+    await on_create_requested(context.message, context.state, context.service)
     assert await context.state.get_state() == "AdvertisementForm:confirm"
     context.contacts.get_contact_status.assert_not_awaited()
     assert methods(context, SendMessage)[0].text == i18n.gettext("ads.hourly_limit")
+
+
+@pytest.mark.parametrize("username", [None, "seller"])
+async def test_phone_skip_rechecks_current_username(context, username):
+    await context.state.set_state(AdvertisementForm.phone_number)
+    context.service.get_contact_status.return_value = ContactStatus(username, [])
+    await on_phone_number_skipped(callback(context), context.state, context.service)
+    assert await context.state.get_state() == (
+        AdvertisementForm.title.state if username else AdvertisementForm.phone_number.state
+    )
+    if not username:
+        assert methods(context, AnswerCallbackQuery)[0].show_alert is True
+
+
+async def test_new_draft_requires_phone_again_and_invalid_input_does_not_advance(context):
+    await context.state.update_data(phone_number="+996700111111", title="Old draft")
+    await on_create_requested(context.message, context.state, context.service)
+    assert await context.state.get_data() == {"phone_number": None, "contact_username": "seller"}
+    await on_phone_number_entered(context.message.model_copy(update={"text": "invalid"}), context.state)
+    assert await context.state.get_state() == AdvertisementForm.phone_number.state
+    await on_phone_number_entered(context.message.model_copy(update={"text": "  +996700222222  "}), context.state)
+    assert (await context.state.get_data())["phone_number"] == "+996700222222"
+    assert await context.state.get_state() == AdvertisementForm.title.state
 
 
 @pytest.mark.parametrize("media", [False, True])

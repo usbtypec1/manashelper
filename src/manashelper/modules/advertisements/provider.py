@@ -4,10 +4,10 @@ from manashelper.modules.advertisements.application.advertisement import Adverti
 from manashelper.modules.advertisements.application.advertisement_contact import AdvertisementContactService
 from manashelper.modules.advertisements.application.advertisement_moderation import AdvertisementModerationService
 from manashelper.modules.advertisements.application.expiry import ExpireAdvertisements, PublicationRemover
-from manashelper.modules.advertisements.infrastructure.advertisement_contact_view_repository import (
+from manashelper.modules.advertisements.infrastructure.repositories.advertisement import AdvertisementRepository
+from manashelper.modules.advertisements.infrastructure.repositories.advertisement_contact_view import (
     AdvertisementContactViewRepository,
 )
-from manashelper.modules.advertisements.infrastructure.advertisement_repository import AdvertisementRepository
 
 
 class AdvertisementsProvider(Provider):

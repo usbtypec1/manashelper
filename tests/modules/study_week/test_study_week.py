@@ -31,6 +31,7 @@ from manashelper.modules.study_week.provider import StudyWeekProvider
 from manashelper.modules.study_week.router import on_week_command, router
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.outbox.provider import OutboxProvider
 
 START = date(2026, 10, 1)
 NOW = datetime(2026, 10, 1, tzinfo=UTC)
@@ -250,6 +251,7 @@ async def test_study_week_provider_owns_request_scoped_use_case():
         NotificationsProvider(),
         ScheduleProvider(),
         EdersProvider(),
+        OutboxProvider(),
         StudyWeekProvider(),
     ) as container:
         async with container() as request:

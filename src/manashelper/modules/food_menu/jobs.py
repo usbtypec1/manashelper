@@ -4,13 +4,12 @@ from aiogram import Bot
 from dishka import AsyncContainer
 
 from manashelper.modules.food_menu.application.broadcast import BroadcastFoodMenu, FoodMenuSender
-from manashelper.modules.food_menu.application.food_menu_cleanup_settings import FoodMenuCleanupSettingsService
 from manashelper.modules.food_menu.application.food_menu_notification_settings import FoodMenuMeal
 from manashelper.modules.food_menu.application.food_menu_sync import FoodMenuSyncService
 from manashelper.modules.food_menu.presentation.sender import TelegramFoodMenuSender
-from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
+from manashelper.platform.telegram.outbox.service import OutboxService
 
 logger = logging.getLogger(__name__)
 
@@ -29,10 +28,9 @@ async def _broadcast_menu_job(container: AsyncContainer, bot: Bot, meal: FoodMen
         async with container() as request_container:
             service = await request_container.get(BroadcastFoodMenu)
             locales = await request_container.get(LocaleService)
-            cleanup = await request_container.get(FoodMenuCleanupSettingsService)
             themes = await request_container.get(ThemeService)
-            status = await request_container.get(BotStatusService)
-            sender: FoodMenuSender = TelegramFoodMenuSender(bot, locales, cleanup, themes, status)
+            outbox = await request_container.get(OutboxService)
+            sender: FoodMenuSender = TelegramFoodMenuSender(outbox, locales, themes)
             await service.execute(meal, sender)
     except Exception:
         logger.exception("Failed to broadcast %s menu", meal.value)

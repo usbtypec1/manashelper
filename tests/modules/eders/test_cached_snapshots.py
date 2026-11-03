@@ -8,10 +8,10 @@ import pytest
 from manashelper.modules.eders.application.eders import EdersService
 from manashelper.modules.eders.application.models import EdersSnapshot
 from manashelper.modules.eders.errors import EdersFetchError, EdersLoginError, EdersSnapshotNotReadyError
-from manashelper.modules.eders.infrastructure.orm import EdersState
+from manashelper.modules.eders.infrastructure.models.eders import EdersState
 from manashelper.modules.obis.application.credentials import ObisCredentials
 from manashelper.modules.obis.errors import UserHasNoCredentialsError
-from manashelper.modules.users.infrastructure.user import User
+from manashelper.modules.users.infrastructure.models.user import User
 from tests.modules.eders.factories import NOW, item
 
 
@@ -58,7 +58,7 @@ async def test_eders_account_change_hides_previous_snapshot_and_rebaselines(trac
 
 
 async def test_missing_eders_settings_are_read_without_creating_locked_state(session, tracking):
-    from manashelper.modules.eders.infrastructure.orm import EdersState
+    from manashelper.modules.eders.infrastructure.models.eders import EdersState
 
     assert (await tracking.get_settings(980_001)).day_before
     assert await session.get(EdersState, 980_001) is None

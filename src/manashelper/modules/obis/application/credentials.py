@@ -3,9 +3,9 @@ from dataclasses import dataclass, field
 
 from manashelper.modules.obis.errors import UserHasNoCredentialsError, UserNotFoundError
 from manashelper.modules.obis.infrastructure.client import ObisClient
-from manashelper.modules.obis.infrastructure.credentials_repository import ObisCredentialsRepository
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
-from manashelper.modules.users.infrastructure.user import User
+from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
+from manashelper.modules.users.infrastructure.models.user import User
 
 
 @dataclass(frozen=True, slots=True)

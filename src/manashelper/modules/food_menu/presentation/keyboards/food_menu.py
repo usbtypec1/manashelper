@@ -8,7 +8,6 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from manashelper.localization.theme import Theme
 from manashelper.localization.weekdays import weekday_full
 from manashelper.modules.food_menu.presentation.callbacks import (
-    FoodMenuCleanupOpenCallback,
     FoodMenuDateCallback,
     FoodMenuOpenCallback,
     FoodMenuRatingCallback,
@@ -56,18 +55,13 @@ def build_menu_open_button() -> InputRichBlockButtons:
     )
 
 
-def build_food_menu_settings_buttons(*, include_notifications: bool = False) -> list[RichMessageButton]:
-    buttons = [
-        RichMessageButton(text=_("food.auto_delete_settings"), callback_data=FoodMenuCleanupOpenCallback().pack()),
-    ]
-    if include_notifications:
-        buttons.append(
-            RichMessageButton(
-                text=_("notifications.configure"),
-                callback_data=SettingsCallback(action=SettingsAction.OPEN_FOOD_MENU_NOTIFICATIONS).pack(),
-            )
+def build_food_menu_settings_buttons() -> list[RichMessageButton]:
+    return [
+        RichMessageButton(
+            text=_("notifications.configure"),
+            callback_data=SettingsCallback(action=SettingsAction.OPEN_FOOD_MENU_NOTIFICATIONS).pack(),
         )
-    return buttons
+    ]
 
 
 def build_menu_rating_buttons(daily_menu_id: uuid.UUID, user_rating: int | None = None) -> InputRichBlockButtons:
@@ -90,6 +84,5 @@ def build_rating_keyboard(daily_menu_id: uuid.UUID) -> InlineKeyboardMarkup:
             text=_rating_label(score),
             callback_data=FoodMenuRatingCallback(daily_menu_id=daily_menu_id, rating=score),
         )
-    builder.button(text=_("food.auto_delete_settings"), callback_data=FoodMenuCleanupOpenCallback())
-    builder.adjust(5, 1)
+    builder.adjust(5)
     return builder.as_markup()

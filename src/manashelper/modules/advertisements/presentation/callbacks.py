@@ -5,6 +5,7 @@ from aiogram.filters.callback_data import CallbackData
 
 
 class AdvertisementFormAction(StrEnum):
+    SKIP_PHONE = "skip_phone"
     SKIP_PRICE = "skip_price"
     DONE_MEDIA = "done_media"
     CONFIRM_SUBMIT = "confirm_submit"

@@ -1,5 +1,5 @@
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale, resolve_from_language_code
-from manashelper.modules.users.infrastructure.user_repository import UserRepository
+from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 
 
 class LocaleService:

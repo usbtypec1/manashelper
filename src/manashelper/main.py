@@ -23,12 +23,13 @@ from manashelper.modules.food_menu.provider import FoodMenuProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
-from manashelper.modules.student_questions.provider import StudentQuestionsProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.telegram.commands import setup_commands
 from manashelper.platform.telegram.dispatcher import create_dispatcher
+from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
+from manashelper.platform.telegram.session import TelegramSession
 
 logger = logging.getLogger(__name__)
 
@@ -51,11 +52,16 @@ async def main() -> None:
 
     async with AsyncExitStack() as stack:
         bot = await stack.enter_async_context(
-            Bot(token=settings.telegram_bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+            Bot(
+                token=settings.telegram_bot_token,
+                session=TelegramSession(),
+                default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+            )
         )
         container = make_async_container(
             CoreProvider(),
             TelegramPlatformProvider(),
+            OutboxProvider(),
             ObisProvider(),
             EdersProvider(),
             StudyWeekProvider(),
@@ -63,7 +69,6 @@ async def main() -> None:
             NotificationsProvider(),
             FeedbackProvider(),
             AdvertisementsProvider(),
-            StudentQuestionsProvider(),
             UsersProvider(),
             BroadcastProvider(),
             FoodMenuProvider(),

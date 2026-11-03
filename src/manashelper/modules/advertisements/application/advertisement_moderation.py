@@ -6,8 +6,8 @@ from manashelper.modules.advertisements.application.advertisement import (
     _to_summary,
 )
 from manashelper.modules.advertisements.domain.enums import AdvertisementStatus
-from manashelper.modules.advertisements.infrastructure.advertisement import Advertisement
-from manashelper.modules.advertisements.infrastructure.advertisement_repository import AdvertisementRepository
+from manashelper.modules.advertisements.infrastructure.models.advertisement import Advertisement
+from manashelper.modules.advertisements.infrastructure.repositories.advertisement import AdvertisementRepository
 
 
 class AdvertisementNotPendingError(Exception):

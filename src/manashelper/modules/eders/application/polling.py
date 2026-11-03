@@ -10,7 +10,7 @@ from manashelper.modules.users.application.locale import LocaleService
 
 class EdersNotificationSender(Protocol):
     def send(self, user_id: int, locale: Locale, events: list[EdersEvent]) -> AsyncIterator[EdersEvent]:
-        """Yield each event only after its message has been delivered."""
+        """Yield each event after its message has been accepted into the outbox."""
         ...
 
 

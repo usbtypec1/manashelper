@@ -25,11 +25,11 @@ from manashelper.modules.food_menu.application.daily_menu import DailyMenuModel,
 from manashelper.modules.food_menu.infrastructure.models.daily_menu import DailyMenu
 from manashelper.modules.food_menu.infrastructure.models.daily_menu_rating import DailyMenuRating
 from manashelper.modules.food_menu.infrastructure.models.dish import Dish
-from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_rating_repository import (
+from manashelper.modules.food_menu.infrastructure.repositories.daily_menu import DailyMenuRepository
+from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_rating import (
     DailyMenuRatingRepository,
 )
-from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_repository import DailyMenuRepository
-from manashelper.modules.food_menu.presentation.callbacks import FoodMenuCleanupOpenCallback, FoodMenuRatingCallback
+from manashelper.modules.food_menu.presentation.callbacks import FoodMenuRatingCallback
 from manashelper.modules.food_menu.presentation.food_menu_formatter import (
     build_daily_menu_rich_message,
     refresh_daily_menu_rating,
@@ -41,7 +41,7 @@ from manashelper.modules.food_menu.presentation.keyboards.food_menu import (
 from manashelper.modules.food_menu.presentation.routers.food_menu import _send_daily_menu, on_food_menu_rating_callback
 from manashelper.modules.food_menu.presentation.sender import TelegramFoodMenuSender
 from manashelper.modules.users.application.locale import LocaleService
-from manashelper.modules.users.infrastructure.user import User
+from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 
@@ -123,7 +123,7 @@ def _received(menu: DailyMenuModel, *, broadcast: bool = False) -> RichMessage:
         outgoing = build_daily_menu_rich_message(
             menu,
             build_menu_rating_buttons(menu.id, menu.user_rating),
-            build_food_menu_settings_buttons(include_notifications=broadcast),
+            build_food_menu_settings_buttons() if broadcast else [],
         )
 
     def convert(block, path):
@@ -205,7 +205,7 @@ async def test_callback_updates_menu_rating_and_repeated_score_still_answers(
         rating_row = next(block for block in rich.blocks if block.type == "buttons" and len(block.buttons) == 5)
         assert rating_row.buttons[3].style == selected
         settings_rows = [block for block in rich.blocks if block.type == "buttons" and len(block.buttons) != 5]
-        assert len(settings_rows) == (2 if broadcast else 1)
+        assert len(settings_rows) == (1 if broadcast else 0)
         assert all(len(row.buttons) == 1 for row in settings_rows)
         edit.side_effect = TelegramBadRequest(
             method=EditMessageText(chat_id=900_001, message_id=42), message="message is not modified"
@@ -243,7 +243,7 @@ async def test_callback_answers_when_menu_cannot_be_rated(monkeypatch) -> None:
     answer.assert_awaited_once_with("This menu is no longer available for rating.", show_alert=True)
 
 
-async def test_menu_delivery_and_broadcast_schedule_one_rich_message_for_cleanup() -> None:
+async def test_menu_delivery_and_broadcast_keep_ratings_without_auto_delete_controls() -> None:
     menu = _menu()
     message = AsyncMock()
     message.chat = Chat(id=900_001, type="private")
@@ -251,40 +251,32 @@ async def test_menu_delivery_and_broadcast_schedule_one_rich_message_for_cleanup
     message.answer_rich.return_value.ephemeral_message_id = None
     service = AsyncMock()
     service.get_daily_menu_by_skipping_days.return_value = menu
-    cleanup = AsyncMock()
     with i18n.context(), i18n.use_locale("en"):
-        await _send_daily_menu(message, 0, service, cleanup)
+        await _send_daily_menu(message, 0, service)
     message.answer_rich.assert_awaited_once()
-    cleanup.schedule_cleanup.assert_awaited_once_with(900_001, [42])
     requested_rich = message.answer_rich.call_args.kwargs["rich_message"]
     requested_settings = [
         block for block in requested_rich.blocks if block.type == "buttons" and len(block.buttons) != 5
     ]
-    assert len(requested_settings) == 1
-    assert requested_settings[0].buttons[0].callback_data == FoodMenuCleanupOpenCallback().pack()
+    assert requested_settings == []
 
     bot = AsyncMock()
-    bot.send_rich_message.return_value.message_id = 43
+    bot.enqueue.return_value = True
     users = AsyncMock()
     users.get_by_id.return_value.locale = "ru"
-    cleanup.reset_mock()
     await TelegramFoodMenuSender(
         bot,
         LocaleService(users),
-        cleanup,
         AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
-        status=AsyncMock(is_stopped=AsyncMock(return_value=False)),
     ).send(menu, 900_001)
-    cleanup.schedule_cleanup.assert_awaited_once_with(900_001, [43])
-    rich = bot.send_rich_message.call_args.kwargs["rich_message"]
+    rich = bot.enqueue.call_args.args[1][0].rich_message
     assert "Меню" in rich.blocks[0].text
     rating_rows = [block for block in rich.blocks if block.type == "buttons" and len(block.buttons) == 5]
     assert len(rating_rows) == 1
     assert all(button.style is None for button in rating_rows[0].buttons)
     broadcast_settings = [block for block in rich.blocks if block.type == "buttons" and len(block.buttons) != 5]
-    assert [len(row.buttons) for row in broadcast_settings] == [1, 1]
-    assert broadcast_settings[0].buttons[0].callback_data == FoodMenuCleanupOpenCallback().pack()
+    assert [len(row.buttons) for row in broadcast_settings] == [1]
     assert (
-        broadcast_settings[1].buttons[0].callback_data
+        broadcast_settings[0].buttons[0].callback_data
         == SettingsCallback(action=SettingsAction.OPEN_FOOD_MENU_NOTIFICATIONS).pack()
     )

@@ -7,9 +7,9 @@ from manashelper.modules.notifications.queries import NotificationRecipientsQuer
 from manashelper.modules.obis.application.obis import ObisService
 from manashelper.modules.obis.application.polling import PollObisUser
 from manashelper.modules.obis.presentation.sender import TelegramObisNotificationSender
-from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
+from manashelper.platform.telegram.outbox.service import OutboxService
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +46,8 @@ async def _poll_user_obis_notifications(
             locale = await locales.get_locale(user_id)
             themes = await request_container.get(ThemeService)
             theme = await themes.get_theme(user_id)
-            status = await request_container.get(BotStatusService)
-            sender = TelegramObisNotificationSender(bot, user_id, locale, theme, status)
+            outbox = await request_container.get(OutboxService)
+            sender = TelegramObisNotificationSender(outbox, user_id, locale, theme)
             await polling.execute(user_id, check_exam_grades, check_lesson_skips, sender)
     except Exception:
         logger.exception("Failed to poll OBIS notifications for user %s", user_id)

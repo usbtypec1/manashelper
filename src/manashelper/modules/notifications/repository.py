@@ -1,10 +1,12 @@
-from sqlalchemy import select
+from datetime import datetime
+
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
 from manashelper.modules.notifications.orm import NotificationSettings
 from manashelper.modules.schedule.infrastructure.models.associations import user_courses
-from manashelper.modules.users.infrastructure.user import User
+from manashelper.modules.users.infrastructure.models.user import User
 
 
 class NotificationSettingsRepository:
@@ -23,8 +25,45 @@ class NotificationSettingsRepository:
             self._session.add(settings)
         return settings
 
+    async def get_broadcast_recipient_ids(self, now: datetime) -> list[int]:
+        result = await self._session.scalars(
+            select(User.id)
+            .outerjoin(NotificationSettings, NotificationSettings.user_id == User.id)
+            .where(User.bot_stopped.is_(False))
+            .where(
+                or_(
+                    NotificationSettings.broadcast_muted_until.is_(None),
+                    NotificationSettings.broadcast_muted_until <= now,
+                )
+            )
+        )
+        return list(result.all())
+
     async def get_user_ids_with_exam_grades_enabled(self) -> list[int]:
         return await self._get_user_ids_with_enabled(NotificationSettings.exam_grades_enabled)
+
+    async def allows_queued_delivery(self, user_id: int, category: str, now: datetime) -> bool:
+        statement = (
+            select(User.id)
+            .outerjoin(NotificationSettings, NotificationSettings.user_id == User.id)
+            .where(User.id == user_id, User.bot_stopped.is_(False))
+        )
+        if category == "broadcast":
+            statement = statement.where(
+                or_(
+                    NotificationSettings.broadcast_muted_until.is_(None),
+                    NotificationSettings.broadcast_muted_until <= now,
+                )
+            )
+        else:
+            flag = {
+                "exam_grades": NotificationSettings.exam_grades_enabled,
+                "lesson_skips": NotificationSettings.lesson_skips_enabled,
+                "schedule": NotificationSettings.schedule_changes_enabled,
+            }.get(category)
+            if flag is not None:
+                statement = statement.where(flag.is_distinct_from(False))
+        return (await self._session.scalar(statement)) is not None
 
     async def get_user_ids_with_lesson_skips_enabled(self) -> list[int]:
         return await self._get_user_ids_with_enabled(NotificationSettings.lesson_skips_enabled)

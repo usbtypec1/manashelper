@@ -18,20 +18,30 @@ router, service, repository, and tests before changing a feature. `features/` ho
 ## Architecture
 
 Business features live in `modules/`; shared infrastructure lives in `core/` and `platform/`.
+Within a feature's `infrastructure/`, keep ORM models in `models/` and repositories in `repositories/`.
+Repository filenames use the entity name without `_repository` (for example, `repositories/user.py`);
+class names retain the `Repository` suffix. Flat features without `infrastructure/` keep their existing layout.
 The planned feature migration is complete. `bootstrap.py` explicitly loads ORM models; `jobs` keeps scheduler wiring,
 and `core/time.py` owns the shared timezone. Schedule owns its application text normalization helper.
-Empty legacy `bot/`, `services/`, `repositories/` and `scraping/` packages were removed. Feedback, advertisements and the survey live in
-`modules/feedback/`, `modules/advertisements/` and `modules/student_questions/`, with REQUEST providers in `main.py`.
-Advertisements separates presentation, application and infrastructure, with domain enums; feedback and the survey stay flat.
-Broadcast lives in flat `modules/broadcast/`: SendBroadcast uses active IDs from UsersQuery and a delivery protocol;
-Telegram localization, HTML, one-photo delivery and API errors stay in its sender adapter. Its provider retains REQUEST scope.
+Empty legacy `bot/`, `services/`, `repositories/` and `scraping/` packages were removed.
+Feedback and advertisements live in `modules/feedback/` and `modules/advertisements/`, with REQUEST providers in `main.py`.
+Advertisements separates presentation, application and infrastructure, with domain enums; feedback stays flat.
+The student survey and its response table are removed; only historical Alembic migrations remain.
+Broadcast lives in flat `modules/broadcast/`: SendBroadcast uses active, unmuted IDs from NotificationRecipientsQuery and a delivery protocol;
+Telegram localization, HTML and photo/text preparation stay in its sender adapter. Its provider retains REQUEST scope.
 Broadcast accepts a text/photo draft and URL or existing callback buttons, with preview and explicit confirmation.
-User.bot_stopped is the shared persistent delivery flag. Recipient SQL and UserMessageDelivery suppress stopped users
-across broadcasts, Food menu, Schedule, OBIS and Eders; permanent recipient errors set it in the same request scope.
+Each delivery adds a localized 14-day unsubscribe button. Notifications owns the timezone-aware
+broadcast_muted_until setting, recipient filtering and early reset under Settings → Notifications.
+User.bot_stopped is the shared persistent delivery flag. Recipient SQL, enqueueing and the outbox worker suppress
+stopped users across broadcasts, Food menu, Schedule, OBIS and Eders; permanent errors set it in the worker scope.
 A private-chat profile refresh clears it; group activity preserves it. Notification preferences and snapshot syncs stay intact.
+Background messages use `platform/telegram/outbox/`, provided by REQUEST-scoped OutboxProvider. Producers enqueue
+in their existing transaction; an independent worker uses durable leases, SKIP LOCKED and shared PostgreSQL token
+buckets. It retries 429 using retry_after, 5xx/network errors with exponential jittered backoff, and respects
+expires_at. Cleanup runs daily and retains valid pending work. See `docs/outbox.md` for guarantees and TTLs.
 Food menu lives in `modules/food_menu/` with application, presentation, infrastructure, jobs and provider.
 Its client/parser retain APP scope; repositories and services retain REQUEST. BroadcastFoodMenu selects
-the menu/recipients, TelegramFoodMenuSender handles delivery/cleanup, and jobs are thin request-scope entry points.
+the menu/recipients, TelegramFoodMenuSender handles delivery, and jobs are thin request-scope entry points.
 Schedule lives in `modules/schedule/`: catalog/tracking, timetable/search, sync, presentation, infrastructure and jobs.
 TimetableClient remains APP; services/repositories remain REQUEST. CourseTrackingRepository owns the tracked-course
 query formerly in UserRepository, preserving ORM collections. SyncCourseTimetable uses public NotificationRecipientsQuery;
@@ -44,10 +54,10 @@ NotificationSettingsRepository initializes all three flags to True when creating
 the first toggle disables the selected flag and summaries never expose transient None values.
 Missing rows still opt recipients into all notifications. Do not rely on INSERT-time defaults when toggling new rows.
 Shared weekday labels live in `localization/weekdays.py`; reuse `core/time.py::BISHKEK_TZ` instead of a feature's timezone.
-Users lives in `modules/users/`: application locale/contact services, infrastructure profile/phone ORM and
-repositories, presentation language/phone routers, keyboards and callbacks. UsersProvider retains REQUEST
+Users lives in `modules/users/`: application locale/theme/profile services, infrastructure profile ORM and
+repositories, presentation language/theme routers, keyboards and callbacks. UsersProvider retains REQUEST
 scope for all its dependencies, including public UsersQuery (counts, IDs, existence). LocaleService is the
-shared user-locale boundary for middleware and delivery; UserContactService supplies plain contact models.
+shared user-locale boundary for middleware and delivery. UsersQuery also exposes the current Telegram username.
 User keeps OBIS credential columns and the Schedule tracked_courses relationship without schema changes.
 OBIS owns credential access through ObisCredentialsRepository on the unchanged User row.
 EdersService reads the student number without decrypting a password for direct login and cached snapshots.
@@ -77,12 +87,11 @@ Call `bootstrap.load_models()` at application/test/Alembic bootstrap before usin
 configures string relationships without re-exporting classes. Standalone compositions must call it explicitly;
 importing one repository no longer loads the whole schema as a side effect.
 Telegram Platform lives in `platform/telegram/`: dispatcher, commands/catalog/extractor, navigation,
-Settings callbacks/routers, filters, middleware, HTML/delivery, audit and scheduled message deletions.
-TelegramPlatformProvider owns both audit and deletion repositories/services in REQUEST. Audit records only
+Settings callbacks/routers, filters, middleware, HTML/delivery and audit.
+TelegramPlatformProvider owns audit repositories/services in REQUEST. Audit records only
 matched/allowed updates from private chats only, masks password text with `[masked]`, and stays after the private-chat guard.
-Cleanup jobs use MessageDeletionService.delete_due with async delivery; delete_messages batches by 100,
-continues after TelegramAPIError and propagates unexpected errors. Rows are acknowledged after all chats;
-an unexpected sweep failure logs and leaves them queued. Preserve the five-minute schedule and no retry.
+Scheduled message deletion and food menu auto-delete settings have been removed, including their tables.
+Immediate message deletion remains available for advertisement publication removal.
 The gettext adapter lives in `platform/i18n/catalog.py`; pure Locale/weekday labels stay in `localization/`.
 Command JSON and .mo runtime directories are unchanged, with checkout/Docker-like path tests.
 OBIS lives in `modules/obis/`: application facade/credentials/snapshot comparison/polling, HTTP/parser/crypto,
@@ -91,7 +100,7 @@ ObisClient/CryptoService in APP and all other dependencies in REQUEST. Public er
 ObisService retains save/has/clear/get methods; ObisCredentialsService owns verification/storage/decryption.
 Its frozen read model hides secrets in repr; OBIS credentials retain the SHA-256 ciphertext marker.
 Eders owns its HTTP client: try direct Moodle form login first, then the legacy OBIS login and /site/eders SSO flow.
-PollObisUser handles expected auth/parse errors; Telegram sender owns locale/HTML and skips TelegramAPIError.
+PollObisUser handles expected auth/parse errors; its sender owns locale/HTML and enqueues messages transactionally.
 Unexpected errors abort that user and are logged by the job, without stopping the next user.
 The first grade snapshot and attendance's first row are silent. Later new or changed nonempty grades notify.
 Saving verifies login and encrypts the password before assigning either credential field, so login/encryption failures
@@ -106,9 +115,9 @@ and comparison baselines; Eders validates its student-number marker.
 
 Eders lives in `modules/eders/`: application snapshot/filter/tracking/polling, infrastructure client/parser/URL validation,
 serialization/repository/ORM, Telegram presentation, jobs and provider. EdersProvider keeps the client APP and other
-dependencies REQUEST. PollEdersUser preserves refresh→locale→pending→send→ack ordering; its Telegram sender groups
-materials and yields delivered events for immediate acknowledgement. TelegramAPIError skips one message without ack;
-unexpected errors abort only that user. Preserve snapshot JSON, event keys, baseline/account/schema suppression,
+dependencies REQUEST. PollEdersUser preserves refresh→locale→pending→enqueue→ack ordering; its Telegram sender groups
+materials and yields events after transactional handoff to the outbox. Queue failures abort only that user;
+the outbox worker owns HTTP retries, expiration and permanent recipient failures. Preserve snapshot JSON, event keys, baseline/account/schema suppression,
 monotonic observations, user-row FOR UPDATE before first state, and the one-retry whole-snapshot login flow.
 The optional MANASHELPER_EDERS_PASSWORD env value is the shared Moodle password; obtain logintoken from the form for every login
 and detect successful login by an authenticated page with sesskey, without a redirect URL allowlist.
@@ -137,15 +146,20 @@ New handlers use `FromDishka[...]`; jobs open request scopes with
 state. `RateLimitMiddleware` runs before it. `LocaleMiddleware` runs after Dishka setup so it can use the request
 container. Keep middleware registration order and router filters in mind when adding handlers.
 
+Feature tables use `obis_`, `advertisement_`, `food_`, `eders_` and `timetable_` prefixes. Shared user and
+notification tables retain their names. Existing index and constraint names survive table renames.
 Schema changes go through the owning feature's ORM and an Alembic migration in `alembic/versions`.
 `bootstrap.load_models()` imports owned models for Alembic; add new ORM modules there. File relocation alone needs no schema migration.
 Generate migrations with
-`uv run alembic revision --autogenerate -m "description"` when a database is available, then review the generated
+`uv run python scripts/new_migration.py --autogenerate -m "description"` when a database is available, then review the generated
 operations. `main.py` applies migrations on startup; `uv run alembic upgrade head` applies them manually.
+New revision IDs and filenames use sequential V1, V2, ... numbers. The helper forwards standard Alembic
+revision flags; omit `--autogenerate` for a handwritten migration. Never rewrite historical `revision` or
+`down_revision` values: production databases already reference them. Renaming migration files is safe.
 
 ## Feature-specific conventions
 
-- Food menu keeps rich/ephemeral message behavior, fixed-date callbacks, per-chat cleanup and weekday meal
+- Food menu keeps rich/ephemeral message behavior, fixed-date callbacks and weekday meal
   notification settings. Its repository initializes new lunch/dinner flags to True before flush, so the first
   meal/day toggle disables the selection immediately. Missing rows mean enabled; saved preferences must be preserved.
 
@@ -170,13 +184,15 @@ operations. `main.py` applies migrations on startup; `uv run alembic upgrade hea
   repository and `PublicationRemover`, while the Telegram adapter handles batching and best-effort failures.
   Preserve the contact gate, five-ads/hour limit, ten-media limit and pending-status checks for moderation.
   My ads uses SQL pagination; uploaded albums update one tracked prompt instead of replying to each item.
-- The student survey requires explicit confirmation before replacing a completed response. Persist the replacement
-  only after the new survey finishes; cancellation leaves the old response intact. Callback session IDs reject stale
-  buttons. Its deep-link router must precede the advertisement deep-link router, which claims other start payloads.
+  Phone numbers belong to each advertisement, not to the user profile. Creation always asks for a number;
+  skipping is allowed only with a current Telegram username and is rechecked by the application service.
+  Advertisement.phone_numbers retains all historical saved numbers after migration; new ads store at most
+  one entered number. The old phone-number settings and user_phone_numbers table have been removed.
 - Feedback and `/broadcast` are restricted to `Settings.admin_chat_id`. Admins reply to forwarded feedback using
   Telegram's native reply action. `/broadcast` is registered only for that chat and sends to active registered users.
-  Broadcast clears FSM before loading recipients and sends sequentially without retry. TelegramAPIError during
-  delivery skips that recipient; locale lookup failures and unexpected errors abort without a summary.
+  Broadcast clears FSM before loading recipients and queues localized deliveries in the request transaction.
+  The admin summary counts queued recipients. The outbox worker handles retries; locale lookup and queue failures
+  abort without a summary and roll back queued work.
 
 ## Localization and Telegram text
 

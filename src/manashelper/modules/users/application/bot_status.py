@@ -1,4 +1,4 @@
-from manashelper.modules.users.infrastructure.user_repository import UserRepository
+from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 
 
 class BotStatusService:

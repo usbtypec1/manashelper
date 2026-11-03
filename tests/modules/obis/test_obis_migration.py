@@ -6,11 +6,9 @@ from unittest.mock import AsyncMock
 import httpx
 import pytest
 from aiogram import Bot
-from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.base import StorageKey
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.methods import SendMessage
 from aiogram.types import CallbackQuery, Chat, Message, User
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from dishka import make_async_container
@@ -40,17 +38,17 @@ from manashelper.modules.obis.errors import (
 )
 from manashelper.modules.obis.infrastructure import crypto as crypto_module
 from manashelper.modules.obis.infrastructure.client import ObisClient
-from manashelper.modules.obis.infrastructure.credentials_repository import ObisCredentialsRepository
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
-from manashelper.modules.obis.infrastructure.snapshot_repository import ObisSnapshotRepository
-from manashelper.modules.obis.infrastructure.user_exam_grade_repository import UserExamGradeRepository
-from manashelper.modules.obis.infrastructure.user_lesson_attendance_repository import UserLessonAttendanceRepository
+from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
+from manashelper.modules.obis.infrastructure.repositories.snapshot import ObisSnapshotRepository
+from manashelper.modules.obis.infrastructure.repositories.user_exam_grade import UserExamGradeRepository
+from manashelper.modules.obis.infrastructure.repositories.user_lesson_attendance import UserLessonAttendanceRepository
 from manashelper.modules.obis.presentation import router as router
 from manashelper.modules.obis.presentation.callbacks import ObisAction, ObisCallback, ObisResultsPageCallback
 from manashelper.modules.obis.presentation.formatter import format_exam_grade_change
 from manashelper.modules.obis.presentation.sender import TelegramObisNotificationSender
 from manashelper.modules.obis.provider import ObisProvider
-from manashelper.modules.users.infrastructure.user import User as DbUser
+from manashelper.modules.users.infrastructure.models.user import User as DbUser
 from manashelper.platform.i18n.catalog import i18n
 
 KEY = bytes(range(32))
@@ -326,8 +324,8 @@ async def test_polling_use_case_keeps_expected_error_suppression_and_unexpected_
     assert sender.exam_grade_changed.await_count == int(error is None)
 
 
-@pytest.mark.parametrize("failure", ["telegram", "transport"])
-async def test_telegram_sender_keeps_recipient_locale_and_delivery_failure_boundary(failure):
+@pytest.mark.parametrize("failure", [False, True])
+async def test_telegram_sender_keeps_recipient_locale_and_queue_failure_boundary(failure):
     notifications = AsyncMock(spec=ObisNotificationService)
     notifications.check_exam_grade_changes.return_value = [
         ExamGradeChange("Math", "Midterm", "80"),
@@ -335,37 +333,31 @@ async def test_telegram_sender_keeps_recipient_locale_and_delivery_failure_bound
     ]
     notifications.check_lesson_skip_changes.return_value = [LessonSkipChange("Math", SkipType.THEORY, 25, 0)]
     bot = AsyncMock()
-    error = (
-        TelegramBadRequest(method=SendMessage(chat_id=975001, text="fixture"), message="gone")
-        if failure == "telegram"
-        else RuntimeError("Transport failed")
-    )
-    bot.send_message.side_effect = [error, None, None]
-    sender = TelegramObisNotificationSender(
-        bot, 975001, Locale.ZH, Theme.BASIC, status=AsyncMock(is_stopped=AsyncMock(return_value=False))
-    )
+    if failure:
+        bot.enqueue.side_effect = RuntimeError("Queue failed")
+    sender = TelegramObisNotificationSender(bot, 975001, Locale.ZH, Theme.BASIC)
     with i18n.context(), i18n.use_locale("ru"):
-        if failure == "telegram":
+        if not failure:
             await PollObisUser(notifications).execute(975001, True, True, sender)
-            assert bot.send_message.await_count == 3
-            assert all("Math" in call.args[1] for call in bot.send_message.await_args_list)
+            assert bot.enqueue.await_count == 3
+            assert all("Math" in call.args[1][0].text for call in bot.enqueue.await_args_list)
             with i18n.use_locale("zh"):
                 expected = format_exam_grade_change(notifications.check_exam_grade_changes.return_value[0])
-            assert bot.send_message.await_args_list[0].args[1] == expected
+            assert bot.enqueue.await_args_list[0].args[1][0].text == expected
         else:
-            with pytest.raises(RuntimeError, match="Transport failed"):
+            with pytest.raises(RuntimeError, match="Queue failed"):
                 await PollObisUser(notifications).execute(975001, True, True, sender)
-            assert bot.send_message.await_count == 1
+            assert bot.enqueue.await_count == 1
             notifications.check_lesson_skip_changes.assert_not_awaited()
         assert i18n.current_locale == "ru"
 
 
 async def test_obis_provider_preserves_app_request_scopes_and_model_registry():
-    from manashelper.modules.obis.infrastructure.user_exam_grade import UserExamGrade
-    from manashelper.modules.obis.infrastructure.user_lesson_attendance import UserLessonAttendance
+    from manashelper.modules.obis.infrastructure.models.user_exam_grade import UserExamGrade
+    from manashelper.modules.obis.infrastructure.models.user_lesson_attendance import UserLessonAttendance
 
-    assert Base.metadata.tables["user_exam_grades"] is UserExamGrade.__table__
-    assert Base.metadata.tables["user_lesson_attendance"] is UserLessonAttendance.__table__
+    assert Base.metadata.tables["obis_user_exam_grades"] is UserExamGrade.__table__
+    assert Base.metadata.tables["obis_user_lesson_attendance"] is UserLessonAttendance.__table__
     dependencies = (
         ObisCredentialsRepository,
         ObisCredentialsService,

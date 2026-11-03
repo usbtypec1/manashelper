@@ -4,8 +4,6 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from aiogram.exceptions import TelegramBadRequest
-from aiogram.methods import SendMessage
 from dishka import make_async_container
 from sqlalchemy.dialects import postgresql
 
@@ -18,20 +16,22 @@ from manashelper.modules.eders.application.models import DeadlineFilter, EdersSn
 from manashelper.modules.eders.application.polling import PollEdersUser
 from manashelper.modules.eders.application.tracking import EdersEvent, EdersSetting, EdersTrackingService
 from manashelper.modules.eders.infrastructure.client import EdersClient
-from manashelper.modules.eders.infrastructure.orm import EdersState
-from manashelper.modules.eders.infrastructure.repository import EdersRepository
+from manashelper.modules.eders.infrastructure.models.eders import EdersState
+from manashelper.modules.eders.infrastructure.repositories.eders import EdersRepository
 from manashelper.modules.eders.infrastructure.serialization import deserialize_snapshot, serialize_snapshot
 from manashelper.modules.eders.jobs import poll_eders_job
 from manashelper.modules.eders.presentation.callbacks import EdersPageCallback, EdersSettingCallback
 from manashelper.modules.eders.presentation.sender import TelegramEdersNotificationSender
 from manashelper.modules.eders.provider import EdersProvider
+from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.errors import UserNotFoundError
 from manashelper.modules.obis.provider import ObisProvider
-from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.application.theme import ThemeService
-from manashelper.modules.users.infrastructure.user import User
+from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.outbox.provider import OutboxProvider
+from manashelper.platform.telegram.outbox.service import OutboxService
 from tests.modules.eders.factories import NOW, item
 
 
@@ -111,7 +111,7 @@ async def test_poll_failure_aborts_only_current_user_and_preserves_call_order(fa
         EdersTrackingService: tracking,
         PollEdersUser: PollEdersUser(service, tracking, locales),
         ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
-        BotStatusService: AsyncMock(is_stopped=AsyncMock(return_value=False)),
+        OutboxService: AsyncMock(spec=OutboxService),
     }
     scopes = []
 
@@ -138,7 +138,7 @@ async def test_missing_user_is_rejected_before_state_creation():
     repository, users = AsyncMock(), AsyncMock()
     users.exists.return_value = False
     with pytest.raises(UserNotFoundError):
-        await EdersTrackingService(repository, users).get_settings(42)
+        await EdersTrackingService(repository, users, AsyncMock()).get_settings(42)
     users.exists.assert_awaited_once_with(42)
     repository.get_state.assert_not_awaited()
 
@@ -156,7 +156,7 @@ async def test_poll_eligibility_requires_only_student_number(session):
     assert set(selected) & {user.id for user in users} == {976702, 976704}
 
 
-@pytest.mark.parametrize("failure", ["telegram", "unexpected", "ack"])
+@pytest.mark.parametrize("failure", ["rejected", "unexpected", "ack"])
 async def test_delivery_acknowledges_success_immediately_and_preserves_failure_boundary(failure):
     service, tracking, locales, bot = AsyncMock(), AsyncMock(), AsyncMock(), AsyncMock()
     events = [
@@ -171,10 +171,10 @@ async def test_delivery_acknowledges_success_immediately_and_preserves_failure_b
 
     async def send(*args, **kwargs):
         calls.append("send")
-        assert kwargs["link_preview_options"].is_disabled is True
+        assert args[1][0].link_preview_options.is_disabled is True
         if calls.count("send") == 2:
-            if failure == "telegram":
-                raise TelegramBadRequest(SendMessage(chat_id=42, text="fixture"), "gone")
+            if failure == "rejected":
+                return False
             raise RuntimeError("transport failed")
         return object()
 
@@ -184,17 +184,16 @@ async def test_delivery_acknowledges_success_immediately_and_preserves_failure_b
         if failure == "ack":
             raise RuntimeError("ack failed")
 
-    bot.send_message.side_effect = send
+    bot.enqueue.side_effect = send
     tracking.mark_sent.side_effect = ack
     poll = PollEdersUser(service, tracking, locales)
     with i18n.context(), i18n.use_locale("ru"):
-        if failure == "telegram":
+        if failure == "rejected":
             await poll.execute(
                 42,
                 TelegramEdersNotificationSender(
                     bot,
                     AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
-                    status=AsyncMock(is_stopped=AsyncMock(return_value=False)),
                 ),
             )
             assert calls == ["send", "material-1", "material-2", "send", "send", "reminder-2"]
@@ -205,14 +204,13 @@ async def test_delivery_acknowledges_success_immediately_and_preserves_failure_b
                     TelegramEdersNotificationSender(
                         bot,
                         AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
-                        status=AsyncMock(is_stopped=AsyncMock(return_value=False)),
                     ),
                 )
             assert calls == (
                 ["send", "material-1"] if failure == "ack" else ["send", "material-1", "material-2", "send"]
             )
         assert i18n.current_locale == "ru"
-    assert "新增资料" in bot.send_message.await_args_list[0].args[1]
+    assert "新增资料" in bot.enqueue.await_args_list[0].args[1][0].text
 
 
 async def test_all_messages_are_formatted_before_any_delivery():
@@ -225,19 +223,20 @@ async def test_all_messages_are_formatted_before_any_delivery():
         async for _event in TelegramEdersNotificationSender(
             bot,
             AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
-            status=AsyncMock(is_stopped=AsyncMock(return_value=False)),
         ).send(42, Locale.EN, events):
             pytest.fail("No event can be acknowledged before formatting completes")
-    bot.send_message.assert_not_awaited()
+    bot.enqueue.assert_not_awaited()
 
 
 async def test_eders_provider_keeps_app_request_scopes_and_model_registry():
-    from manashelper.modules.eders.infrastructure.orm import EdersNotification
+    from manashelper.modules.eders.infrastructure.models.eders import EdersNotification
 
     assert Base.metadata.tables["eders_states"] is EdersState.__table__
     assert Base.metadata.tables["eders_notifications"] is EdersNotification.__table__
     dependencies = (EdersRepository, EdersService, EdersTrackingService, PollEdersUser)
-    async with make_async_container(CoreProvider(), ObisProvider(), UsersProvider(), EdersProvider()) as container:
+    async with make_async_container(
+        CoreProvider(), ObisProvider(), UsersProvider(), EdersProvider(), OutboxProvider(), NotificationsProvider()
+    ) as container:
         client = await container.get(EdersClient)
         async with container() as request:
             first = [await request.get(dependency) for dependency in dependencies]

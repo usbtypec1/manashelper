@@ -8,7 +8,7 @@ from manashelper.modules.schedule.application.schedule import (
 )
 from manashelper.modules.schedule.application.text_normalization import fold_turkish
 from manashelper.modules.schedule.infrastructure.models.lesson import Lesson
-from manashelper.modules.schedule.infrastructure.repositories.lesson_repository import LessonRepository
+from manashelper.modules.schedule.infrastructure.repositories.lesson import LessonRepository
 
 
 @dataclass(frozen=True, slots=True)

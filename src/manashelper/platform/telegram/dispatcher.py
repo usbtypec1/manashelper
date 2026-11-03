@@ -15,7 +15,6 @@ from manashelper.modules.broadcast.router import router as broadcast_router
 from manashelper.modules.eders.presentation.router import router as eders_router
 from manashelper.modules.feedback.router import router as feedback_router
 from manashelper.modules.food_menu.presentation.routers.food_menu import router as food_menu_router
-from manashelper.modules.food_menu.presentation.routers.food_menu_cleanup import router as food_menu_cleanup_router
 from manashelper.modules.food_menu.presentation.routers.food_menu_notifications import (
     router as food_menu_notifications_router,
 )
@@ -23,10 +22,8 @@ from manashelper.modules.notifications.router import router as notifications_rou
 from manashelper.modules.obis.presentation.router import router as obis_router
 from manashelper.modules.schedule.presentation.routers.lesson_search import router as lesson_search_router
 from manashelper.modules.schedule.presentation.routers.timetable import router as timetable_router
-from manashelper.modules.student_questions.router import router as student_questions_router
 from manashelper.modules.study_week.router import router as study_week_router
 from manashelper.modules.users.presentation.routers.locale import router as locale_router
-from manashelper.modules.users.presentation.routers.phone_numbers import router as phone_numbers_router
 from manashelper.modules.users.presentation.routers.theme import router as theme_router
 from manashelper.platform.telegram.middlewares.action_log import ActionLogMiddleware
 from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
@@ -59,8 +56,7 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
 
     dispatcher.errors.register(on_error)
     dispatcher.include_routers(
-        # Survey and advertisement deep links must precede handlers claiming all /start payloads.
-        student_questions_router,
+        # Advertisement deep links must precede handlers claiming all /start payloads.
         advertisement_contact_router,
         start_router,
         locale_router,
@@ -70,12 +66,10 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
         lesson_search_router,
         food_menu_router,
         food_menu_notifications_router,
-        food_menu_cleanup_router,
         obis_router,
         *((eders_router, study_week_router) if get_settings().eders_enabled else ()),
         settings_router,
         notifications_router,
-        phone_numbers_router,
         advertisement_router,
         advertisement_moderation_router,
         broadcast_router,

@@ -16,7 +16,7 @@ from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme
 from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.application.theme import ThemeService
-from manashelper.modules.users.infrastructure.user_repository import UserRepository
+from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.modules.users.presentation.callbacks import ThemeCallback
 from manashelper.modules.users.presentation.routers import theme
 from manashelper.platform.i18n.catalog import i18n
@@ -177,7 +177,7 @@ async def test_theme_context_is_isolated_between_concurrent_users():
 
 
 async def test_theme_migration_preserves_existing_profile_on_upgrade_and_downgrade(session):
-    migration = run_path(str(PROJECT_ROOT / "alembic/versions/8b8ec5f9757a_add_user_theme.py"))
+    migration = run_path(str(PROJECT_ROOT / "alembic/versions/V20_add_user_theme.py"))
     # A transaction-local temporary table shadows users without touching application data.
     await session.execute(text("CREATE TEMPORARY TABLE users (id bigint PRIMARY KEY, full_name text, locale text)"))
     await session.execute(text("INSERT INTO users VALUES (976001, 'Existing student', 'tr')"))

@@ -23,8 +23,26 @@ assumptions:
     verification: On 2026-10-30, the HTTP simulation test asserted bot_stopped remained false for those synthetic responses. The mock does not establish real error frequency or recovery time.
     source: tests/modules/broadcast/test_telegram_http_delivery.py; https://core.telegram.org/bots/api#responseparameters
     updated_at: "2026-10-30"
+  - id: transactional-outbox-http-retries
+    status: supported
+    claim: In the modeled Telegram failures, committed outbox deliveries recover from 429, JSON 503 and HTML 502, without repeating an acknowledged photo when its following text fails.
+    reason: The real aiogram client, TelegramSession, Dishka request scopes and PostgreSQL worker ran against the existing repository-owned synthetic mock, extended with first-attempt transient failures.
+    verification: On 2026-11-03, both tests in tests/platform/telegram/test_outbox_http.py passed. Recorded HTTP calls showed a delay of at least one second before transient retries, one photo request and two following-text requests, and no request for the expired recipient. A persistent modeled 429 exposed starvation of other chats; adding a post-cooldown retry delay fixed it. This establishes caller behavior in these scenarios, not live Telegram availability or exactly-once delivery.
+    source: tests/platform/telegram/test_outbox_http.py; postman/mocks/telegram/default.js; src/manashelper/platform/telegram/outbox/worker.py; https://core.telegram.org/bots/api#responseparameters
+    updated_at: "2026-11-03"
+  - id: provider-rate-limits-and-error-contract
+    status: supported
+    claim: Telegram documents approximate free broadcast limits and a retry_after field specifying how many seconds to wait before retrying flood-controlled requests.
+    reason: The official FAQ and Bot API ResponseParameters were read for this implementation. Outbox limits remain deliberately below the published bulk allowance, and provider values govern cooldowns.
+    verification: On 2026-11-03, checked the official FAQ and ResponseParameters. Orbit's sendPhoto integration brief confirmed the cached-file-ID request shape and identified retries and queueing as caller responsibilities. No live rate-limit errors were induced. The existing repository mock was reused; no authenticated owner-mock lookup was performed, and this CLI version does not implement postman status.
+    source: https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this; https://core.telegram.org/bots/api#responseparameters; docs/outbox.md
+    updated_at: "2026-11-03"
 fingerprints:
   - id: broadcast-delivery-2026-10-30
     date: "2026-10-30"
     commit: e407141d68ba4f2c06fef19a32218b9a29a534a7 (working tree with broadcast/delivery changes)
+    cli: Postman 1.75.0
+  - id: transactional-outbox-2026-11-03
+    date: "2026-11-03"
+    commit: bfa7222fcc55f25e1a1144daf26ae5a18b3d4e1f (working tree with transactional outbox changes)
     cli: Postman 1.75.0
