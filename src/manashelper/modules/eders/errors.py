@@ -6,6 +6,10 @@ class EdersLoginError(EdersFetchError):
     """Direct Eders authentication failed; the caller may try OBIS SSO."""
 
 
+class EdersCompletionUnavailableError(Exception):
+    """The current account snapshot has no manually completable task with this ID."""
+
+
 class EdersSnapshotNotReadyError(Exception):
     pass
 

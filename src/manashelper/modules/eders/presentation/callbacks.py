@@ -24,3 +24,8 @@ class EdersPageCallback(CallbackData, prefix="eders"):
 
 class EdersSettingCallback(CallbackData, prefix="eders_setting"):
     setting: EdersSetting
+
+
+class EdersCompletionCallback(CallbackData, prefix="eders_done"):
+    activity_id: int
+    completed: bool

@@ -6,6 +6,7 @@ from manashelper.modules.eders.application.models import DeadlineFilter
 from manashelper.modules.eders.application.tracking import EdersSetting, EdersSettings
 from manashelper.modules.eders.presentation.callbacks import (
     EdersAction,
+    EdersCompletionCallback,
     EdersMenuCallback,
     EdersPageCallback,
     EdersSettingCallback,
@@ -18,6 +19,15 @@ def build_eders_menu_keyboard() -> InlineKeyboardMarkup:
     builder.button(text=_("eders.deadlines"), callback_data=EdersMenuCallback(action=EdersAction.DEADLINES))
     builder.button(text=_("settings.notifications"), callback_data=EdersMenuCallback(action=EdersAction.NOTIFICATIONS))
     builder.adjust(1)
+    return builder.as_markup()
+
+
+def build_eders_completion_keyboard(activity_id: int, completed: bool) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=_("eders.mark_undone") if completed else _("eders.mark_done"),
+        callback_data=EdersCompletionCallback(activity_id=activity_id, completed=not completed),
+    )
     return builder.as_markup()
 
 

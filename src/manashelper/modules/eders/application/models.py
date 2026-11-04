@@ -71,6 +71,7 @@ class EdersActivity:
     section: str = ""
     description: str = ""
     completed: bool = False
+    manual_completion: bool = False
 
 
 @dataclass(frozen=True, slots=True)

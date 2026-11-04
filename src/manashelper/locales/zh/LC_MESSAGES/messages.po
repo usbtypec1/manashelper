@@ -984,3 +984,24 @@ msgstr "截止日期"
 
 msgid "obis.notifications_header"
 msgstr "OBIS 通知"
+
+msgid "eders.mark_done"
+msgstr "标记为已完成"
+
+msgid "eders.mark_undone"
+msgstr "标记为未完成"
+
+msgid "eders.marked_done"
+msgstr "[已标记为完成]"
+
+msgid "eders.completion_done"
+msgstr "已在 Eders 中标记为完成。"
+
+msgid "eders.completion_undone"
+msgstr "已在 Eders 中标记为未完成。"
+
+msgid "eders.completion_failed"
+msgstr "无法更新 Eders 中的任务，请重试。"
+
+msgid "eders.completion_unavailable"
+msgstr "此任务已无法手动标记，请在 Eders 中查看。"

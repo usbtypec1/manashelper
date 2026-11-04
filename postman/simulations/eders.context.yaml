@@ -106,7 +106,34 @@ assumptions:
       tests/modules/obis/test_credentials_boundaries.py; tests/test_application_architecture.py;
       postman/mocks/eders/default.js.
     updated_at: "2026-11-04"
+  - id: manual-completion-toggle-local-contract
+    status: supported
+    claim: In the local scenarios, authenticated completion and undo use the task cmid and an explicit completed boolean, and only confirmed success updates the bot state.
+    reason: The real Eders HTTP client passed both target states through the repository-owned stand-in; application and Telegram tests checked local persistence and presentation.
+    verification: >-
+      On 2026-11-04, Eders, Study week, outbox and application-composition checks passed 288 tests; one optional
+      HTML-corpus test was skipped. Simulation request logs confirmed POST login, MoodleSession cookie reuse,
+      sesskey, cmid and completed=true/false, with error=false and data.status=true. Direct and OBIS SSO paths,
+      permission denial, status=false, invalid JSON, HTTP 500, redirects and bounded expired-session retries ran.
+      After removing a cached-state shortcut so website changes cannot suppress an explicit button action,
+      all 45 focused completion/composition tests passed again. UI tests covered all five locales, preserved
+      HTML links, success alerts before button edits, inverse callbacks, failure preservation and Telegram edit
+      failure isolation. PostgreSQL tests checked reminder/outbox cancellation, snapshot timestamp preservation
+      and reminder replanning after undo and a later poll. Ruff and strict mypy passed.
+      The Moodle 4.5 source confirms status=true denotes success for either target state and requires manual
+      tracking. No real student account or supplied session was used; live Eders compatibility remains unverified.
+      CLI 1.84.0 blocked the existing fixture's require('fs'); the existing simulation ran with CLI 1.74.0.
+      Owner/mock discovery was skipped because the CLI was signed out. Fingerprint eders-completion-toggle-2026-11-04.
+    source: >-
+      User-provided completion curl and success response; tests/modules/eders/test_eders_http_flow.py;
+      tests/modules/eders/test_manual_completion.py; postman/mocks/eders/default.js;
+      https://github.com/moodle/moodle/blob/MOODLE_405_STABLE/completion/classes/external.php
+    updated_at: "2026-11-04"
 fingerprints:
+  - id: eders-completion-toggle-2026-11-04
+    date: "2026-11-04"
+    commit: "a1c7cca438196580cb471ef28a5e921eacfe2507 (working tree changes)"
+    cli: "1.74.0"
   - id: modules-use-cases-2026-11-04
     date: "2026-11-04"
     commit: "606dcaab221420519ee2e5e460bcf087632f5238 (working tree changes)"

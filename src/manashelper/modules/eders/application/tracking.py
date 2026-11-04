@@ -262,6 +262,28 @@ class EdersTrackingService:
             if event.event_type != "before_24" or activity_key(event.activity) not in nearer
         ]
 
+    async def set_activity_completion(self, user_id: int, marker: str, activity_id: int, completed: bool) -> None:
+        state = await self.eders_repository.get_state(user_id)
+        snapshot = await self.get_snapshot(user_id, marker)
+        snapshot = replace(
+            snapshot,
+            activities=tuple(
+                replace(item, completed=completed) if item.id == activity_id else item for item in snapshot.activities
+            ),
+        )
+        # Preserve the upstream observation time; a button tap is not a full refresh.
+        state.snapshot = serialize_snapshot(snapshot)
+        if completed:
+            keys = []
+            for event in await self.eders_repository.get_notifications(user_id):
+                if event.activity_key in {
+                    f"assign:{activity_id}",
+                    f"quiz:{activity_id}",
+                } and not event.event_type.startswith("material_"):
+                    event.cancelled = True
+                    keys.append(event.event_key)
+            await self.outbox.cancel_sources(keys)
+
     async def mark_sent(self, user_id: int, key: str, now: datetime) -> None:
         for event in await self.eders_repository.get_notifications(user_id):
             if event.event_key == key:

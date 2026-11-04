@@ -26,6 +26,7 @@ from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL
 from manashelper.modules.obis.infrastructure.client import login as obis_login
 
 COURSES_METHOD = "core_course_get_enrolled_courses_by_timeline_classification"
+COMPLETION_METHOD = "core_completion_update_activity_completion_status_manually"
 LOGIN_URL = f"{EDERS_BASE_URL}/login/index.php"
 COURSES_URL = f"{EDERS_BASE_URL}/my/courses.php"
 
@@ -189,6 +190,49 @@ class EdersClient:
             if next_offset <= offset:
                 raise EdersFetchError("Invalid Eders course pagination")
             offset = next_offset
+
+    async def set_activity_completion(
+        self, student_number: str, activity_id: int, completed: bool, obis_password: str | None = None
+    ) -> None:
+        for attempt in range(2):
+            try:
+                async with new_http_client() as client:
+                    if obis_password is None:
+                        sesskey = await self.login(client, student_number)
+                    else:
+                        sesskey = await self.login_via_obis(client, student_number, obis_password)
+                    try:
+                        response = await client.post(
+                            f"{EDERS_BASE_URL}/lib/ajax/service.php",
+                            params={"sesskey": sesskey, "info": COMPLETION_METHOD},
+                            json=[
+                                {
+                                    "index": 0,
+                                    "methodname": COMPLETION_METHOD,
+                                    "args": {"cmid": str(activity_id), "completed": completed},
+                                }
+                            ],
+                            follow_redirects=False,
+                        )
+                        if response.is_redirect:
+                            raise EdersSessionExpiredError("Eders AJAX session expired")
+                        response.raise_for_status()
+                        payload = response.json()
+                    except (httpx.HTTPError, ValueError):
+                        raise EdersFetchError("Could not update Eders activity completion") from None
+                    if not isinstance(payload, list) or len(payload) != 1 or not isinstance(payload[0], dict):
+                        raise EdersFetchError("Invalid Eders completion response")
+                    result = payload[0]
+                    error = result.get("exception", {})
+                    if isinstance(error, dict) and error.get("errorcode") in {"invalidsesskey", "requireloginerror"}:
+                        raise EdersSessionExpiredError("Eders AJAX session expired")
+                    data = result.get("data")
+                    if result.get("error") is not False or not isinstance(data, dict) or data.get("status") is not True:
+                        raise EdersFetchError("Eders activity completion was not confirmed")
+                    return
+            except EdersSessionExpiredError:
+                if attempt:
+                    raise
 
     async def fetch_snapshot(self, student_number: str, obis_password: str | None = None) -> EdersSnapshot:
         # One short-lived session per snapshot, one retry of the whole snapshot.

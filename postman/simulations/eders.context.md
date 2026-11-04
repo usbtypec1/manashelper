@@ -17,6 +17,15 @@ MANASHELPER_EDERS_SIMULATION_PORT=4900 .venv/bin/pytest -q tests/modules/eders/t
 Wait for the `listening` event, inspect `request` events for the `eders` member,
 and stop the simulation with Ctrl-C after the tests finish.
 
+The completion toggle also runs in `test_eders_http_flow.py`. It checks both
+`completed=true` and `completed=false` using fake credentials and the supplied
+Moodle JSON contract. Success and failure evidence is recorded in `eders.context.yaml`.
+
+On Windows, CLI 1.84.0 blocks the existing fixture's `require('fs')`. Run the
+compatible version with `npm.cmd exec --yes --package=postman-cli@1.74.0 -- postman
+simulation run postman/simulations/eders.sim.yaml`. Use the port printed at startup
+for `MANASHELPER_EDERS_SIMULATION_PORT`; the verified run used port 3000.
+
 ## Assumptions
 
 - The simulation forwards sockets locally while retaining the clients' production
