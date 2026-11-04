@@ -21,21 +21,21 @@ class _Clock(datetime):
         return datetime(2097, 12, 28, 22, 30, tzinfo=UTC).astimezone(tz or BISHKEK_TZ)
 
 
-async def test_availability_includes_only_published_dates_in_seven_day_window_and_keeps_views(
+async def test_availability_includes_only_published_dates_in_five_day_window_and_keeps_views(
     session: AsyncSession, monkeypatch
 ) -> None:
     monkeypatch.setattr(daily_menu_module, "datetime", _Clock)
     today = _Clock.now().date()
     menus = [
         DailyMenu(id=uuid.uuid4(), date=today + timedelta(days=offset), dishes=[], views_count=23)
-        for offset in (7, 2, -1, 6, 0, 9, 4)
+        for offset in (7, 2, -1, 5, 6, 0, 9, 4)
     ]
     session.add_all(menus)
     await session.flush()
     service = DailyMenuService(DailyMenuRepository(session), DailyMenuRatingRepository(session))
     available = await service.get_available_dates()
     assert available.today == today
-    assert available.dates == [today + timedelta(days=offset) for offset in (0, 2, 4, 6)]
+    assert available.dates == [today + timedelta(days=offset) for offset in (0, 2, 4)]
     for menu in menus:
         await session.refresh(menu)
         assert menu.views_count == 23
