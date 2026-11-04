@@ -10,6 +10,7 @@ from dishka import FromDishka
 
 from manashelper.core.config import Settings
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale
+from manashelper.modules.broadcast.application.use_cases.send_broadcast import SendBroadcastUseCase
 from manashelper.modules.broadcast.callbacks import BroadcastAction, BroadcastCallback
 from manashelper.modules.broadcast.content import BroadcastButton, InvalidBroadcastButtonsError, parse_buttons
 from manashelper.modules.broadcast.keyboards import (
@@ -18,8 +19,8 @@ from manashelper.modules.broadcast.keyboards import (
     build_broadcast_confirm_keyboard,
 )
 from manashelper.modules.broadcast.sender import TelegramBroadcastSender
-from manashelper.modules.broadcast.service import BroadcastSender, SendBroadcast
-from manashelper.modules.users.application.locale import LocaleService
+from manashelper.modules.broadcast.service import BroadcastSender
+from manashelper.modules.users.application.locale import LocaleQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.html import escape_html
 from manashelper.platform.telegram.outbox.service import OutboxService
@@ -182,8 +183,8 @@ async def on_broadcast_confirmed(
     state: FSMContext,
     bot: Bot,
     settings: FromDishka[Settings],
-    send_broadcast: FromDishka[SendBroadcast],
-    locale_service: FromDishka[LocaleService],
+    send_broadcast: FromDishka[SendBroadcastUseCase],
+    locale_query: FromDishka[LocaleQuery],
     outbox: FromDishka[OutboxService],
 ) -> None:
     if not isinstance(callback_query.message, Message) or not _is_admin_chat(callback_query.message.chat.id, settings):
@@ -202,7 +203,7 @@ async def on_broadcast_confirmed(
     with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):
         await _set_status(callback_query.message, _("broadcast.sending"))
 
-    sender: BroadcastSender = TelegramBroadcastSender(outbox, locale_service, photo_id=photo_id, keyboard=keyboard)
+    sender: BroadcastSender = TelegramBroadcastSender(outbox, locale_query, photo_id=photo_id, keyboard=keyboard)
     result = await send_broadcast.execute(body or "", sender)
 
     with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):

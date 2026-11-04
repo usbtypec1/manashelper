@@ -10,10 +10,10 @@ class DepartmentSummary:
     name: str
 
 
-class DepartmentService:
-    def __init__(self, department_repository: DepartmentRepository) -> None:
-        self._department_repository = department_repository
+@dataclass(frozen=True, slots=True)
+class DepartmentQuery:
+    department_repository: DepartmentRepository
 
     async def get_departments_by_faculty(self, faculty_id: uuid.UUID) -> list[DepartmentSummary]:
-        departments = await self._department_repository.get_all_by_faculty_id(faculty_id)
+        departments = await self.department_repository.get_all_by_faculty_id(faculty_id)
         return [DepartmentSummary(id=department.id, name=department.name) for department in departments]

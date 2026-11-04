@@ -2,7 +2,7 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.modules.schedule.application.faculty import FacultyService
+from manashelper.modules.schedule.application.faculty import FacultyQuery
 from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
 from manashelper.modules.schedule.infrastructure.repositories.faculty import FacultyRepository
 
@@ -16,7 +16,7 @@ async def test_get_all_faculties_returns_faculties_sorted_by_name(session: Async
     )
     await session.flush()
 
-    service = FacultyService(FacultyRepository(session))
+    service = FacultyQuery(FacultyRepository(session))
     faculties = await service.get_all_faculties()
 
     names = [faculty.name for faculty in faculties]

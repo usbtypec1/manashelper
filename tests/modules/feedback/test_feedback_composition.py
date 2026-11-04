@@ -10,9 +10,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from manashelper.core.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.modules.eders.provider import EdersProvider
+from manashelper.modules.feedback.application.use_cases.submit_feedback import SubmitFeedbackUseCase
 from manashelper.modules.feedback.orm import FeedbackMessage
 from manashelper.modules.feedback.provider import FeedbackProvider
-from manashelper.modules.feedback.service import FeedbackService
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
@@ -47,9 +47,9 @@ async def test_feedback_request_scope_commits_success_and_rolls_back_failure():
         TestSessionProvider(),
     ) as container:
         async with container() as request:
-            service = await request.get(FeedbackService)
-            assert service is await request.get(FeedbackService)
-            summary = await service.submit(941_002, "Persist through the request session")
+            service = await request.get(SubmitFeedbackUseCase)
+            assert service is await request.get(SubmitFeedbackUseCase)
+            summary = await service.execute(941_002, "Persist through the request session")
             row = sessions[0].add.call_args.args[0]
             assert isinstance(row, FeedbackMessage)
             assert (row.id, row.user_id, row.body) == (summary.id, summary.user_id, summary.body)
@@ -60,9 +60,9 @@ async def test_feedback_request_scope_commits_success_and_rolls_back_failure():
 
         with pytest.raises(RuntimeError, match="rollback requested"):
             async with container() as request:
-                other_service = await request.get(FeedbackService)
+                other_service = await request.get(SubmitFeedbackUseCase)
                 assert other_service is not service
-                await other_service.submit(941_003, "Roll back this request")
+                await other_service.execute(941_003, "Roll back this request")
                 raise RuntimeError("rollback requested")
 
         sessions[1].commit.assert_not_awaited()
@@ -72,7 +72,7 @@ async def test_feedback_request_scope_commits_success_and_rolls_back_failure():
         sessions[2].commit.side_effect = RuntimeError("commit failed")
         with pytest.raises(ExceptionGroup) as errors:
             async with container() as request:
-                await request.get(FeedbackService)
+                await request.get(SubmitFeedbackUseCase)
         assert "commit failed" in str(errors.value.exceptions[0])
         sessions[2].commit.assert_awaited_once()
         sessions[2].rollback.assert_awaited_once()

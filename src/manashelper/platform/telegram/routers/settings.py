@@ -3,10 +3,10 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.modules.obis.application.obis import ObisService
+from manashelper.modules.obis.application.credentials import ObisCredentialsQuery
 from manashelper.modules.obis.errors import UserNotFoundError as ObisUserNotFoundError
 from manashelper.modules.obis.presentation.keyboards import build_obis_settings_keyboard
-from manashelper.modules.schedule.application.faculty import FacultyService
+from manashelper.modules.schedule.application.faculty import FacultyQuery
 from manashelper.modules.schedule.presentation.keyboards.timetable import build_faculty_keyboard
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
@@ -33,9 +33,9 @@ async def on_back_to_settings(callback_query: CallbackQuery) -> None:
 @flags.private_chat_only
 async def on_open_course_tracking(
     callback_query: CallbackQuery,
-    faculty_service: FromDishka[FacultyService],
+    faculty_query: FromDishka[FacultyQuery],
 ) -> None:
-    faculties = await faculty_service.get_all_faculties()
+    faculties = await faculty_query.get_all_faculties()
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(_("schedule.faculties"), reply_markup=build_faculty_keyboard(faculties))
     await callback_query.answer()
@@ -45,10 +45,10 @@ async def on_open_course_tracking(
 @flags.private_chat_only
 async def on_open_obis(
     callback_query: CallbackQuery,
-    obis_service: FromDishka[ObisService],
+    credentials: FromDishka[ObisCredentialsQuery],
 ) -> None:
     try:
-        has_credentials = await obis_service.has_credentials(callback_query.from_user.id)
+        has_credentials = await credentials.has_credentials(callback_query.from_user.id)
     except ObisUserNotFoundError:
         await callback_query.answer(_("common.start_required"), show_alert=True)
         return

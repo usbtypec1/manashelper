@@ -18,8 +18,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from manashelper.core.provider import CoreProvider
 from manashelper.modules.broadcast.sender import TelegramBroadcastSender
 from manashelper.modules.notifications.provider import NotificationsProvider
-from manashelper.modules.users.application.bot_status import BotStatusService
-from manashelper.modules.users.application.locale import LocaleService
+from manashelper.modules.users.application.bot_status import BotStatusQuery
+from manashelper.modules.users.application.locale import LocaleQuery
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.telegram.outbox.jobs import deliver_outbox_job
@@ -81,7 +81,7 @@ async def test_real_client_serialization_and_delivery_failure_flags(engine):
         async with container() as request:
             sender = TelegramBroadcastSender(
                 await request.get(OutboxService),
-                await request.get(LocaleService),
+                await request.get(LocaleQuery),
                 photo_id="cached-photo-id",
                 keyboard=keyboard,
             )
@@ -95,8 +95,8 @@ async def test_real_client_serialization_and_delivery_failure_flags(engine):
         assert all(by_id[user_id].status == "failed" for user_id in [*ids[1:4], ids[6]])
         assert all(by_id[user_id].status == "pending" for user_id in ids[4:6])
         async with container() as request:
-            status = await request.get(BotStatusService)
-            sender = TelegramBroadcastSender(await request.get(OutboxService), await request.get(LocaleService))
+            status = await request.get(BotStatusQuery)
+            sender = TelegramBroadcastSender(await request.get(OutboxService), await request.get(LocaleQuery))
             for user_id in ids[1:4]:
                 assert await status.is_stopped(user_id)
                 assert not await sender.send(user_id, "Do not send again")
@@ -118,7 +118,7 @@ async def test_real_worker_recovers_429_json_503_html_502_and_checkpoints_photo(
             outbox = await request.get(OutboxService)
             for user_id in ids[:3]:
                 assert await outbox.enqueue(user_id, [SendMessage(chat_id=user_id, text="Retry me")])
-            sender = TelegramBroadcastSender(outbox, await request.get(LocaleService), photo_id="cached-photo-id")
+            sender = TelegramBroadcastSender(outbox, await request.get(LocaleQuery), photo_id="cached-photo-id")
             assert await sender.send(920008, "x" * 1024)
             assert await outbox.enqueue(
                 920009,

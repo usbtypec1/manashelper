@@ -7,13 +7,13 @@ from aiogram.types import LinkPreviewOptions
 from manashelper.localization.locale import Locale
 from manashelper.modules.eders.application.tracking import EdersEvent
 from manashelper.modules.eders.presentation.formatter import format_eders_event, format_material_events
-from manashelper.modules.users.application.theme import ThemeService
+from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.outbox.service import OutboxService
 
 
 class TelegramEdersNotificationSender:
-    def __init__(self, outbox: OutboxService, themes: ThemeService) -> None:
+    def __init__(self, outbox: OutboxService, themes: ThemeQuery) -> None:
         self._outbox = outbox
         self._themes = themes
 

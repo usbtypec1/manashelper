@@ -12,6 +12,9 @@ from manashelper.core.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.notifications import router
+from manashelper.modules.notifications.application.use_cases.get_notification_settings import (
+    GetNotificationSettingsUseCase,
+)
 from manashelper.modules.notifications.callbacks import NotificationSettingCallback
 from manashelper.modules.notifications.keyboards import build_notifications_keyboard
 from manashelper.modules.notifications.orm import NotificationSettings
@@ -20,12 +23,11 @@ from manashelper.modules.notifications.queries import NotificationRecipientsQuer
 from manashelper.modules.notifications.repository import NotificationSettingsRepository
 from manashelper.modules.notifications.settings import (
     NotificationSetting,
-    NotificationSettingsService,
     NotificationSettingsSummary,
     UserNotFoundError,
 )
 from manashelper.modules.obis import jobs
-from manashelper.modules.obis.application.obis import ObisService
+from manashelper.modules.obis.application.queries import ObisResultsQuery
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
@@ -37,10 +39,13 @@ from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
+from tests.modules.notifications.application_factories import build_notification_settings_service
 
 
 def service(session):
-    return NotificationSettingsService(NotificationSettingsRepository(session), UsersQuery(UserRepository(session)))
+    return build_notification_settings_service(
+        NotificationSettingsRepository(session), UsersQuery(UserRepository(session))
+    )
 
 
 @pytest.mark.parametrize("action", ["get", *NotificationSetting])
@@ -116,13 +121,15 @@ async def test_initial_menu_and_first_click_match_persisted_settings(session, se
     open_settings = router.on_open_notifications if is_schedule else on_obis_notifications
     toggle_setting = router.on_toggle_notification_setting if is_schedule else on_obis_notification_setting
     with i18n.context(), i18n.use_locale("ru"):
-        await open_settings(callback, settings_service)
+        await open_settings(callback, SimpleNamespace(execute=settings_service.get_settings))
         keyboard = callback.message.edit_text.call_args.kwargs["reply_markup"]
         selected = next(button for row in keyboard.inline_keyboard for button in row if button.callback_data == payload)
         assert selected.text.startswith("✅")
         await session.commit()
         session.expire_all()
-        await toggle_setting(callback, callback_type(setting=setting), settings_service)
+        await toggle_setting(
+            callback, callback_type(setting=setting), SimpleNamespace(execute=settings_service.toggle_setting)
+        )
         keyboard = callback.message.edit_text.call_args.kwargs["reply_markup"]
         selected = next(button for row in keyboard.inline_keyboard for button in row if button.callback_data == payload)
         assert selected.text.startswith("❌")
@@ -184,12 +191,14 @@ async def test_notification_handlers_keep_rendering_and_unknown_user_alerts(acti
     with i18n.context(), i18n.use_locale("ru"):
         if action == "toggle":
             await router.on_toggle_notification_setting(
-                callback, NotificationSettingCallback(setting=NotificationSetting.EXAM_GRADES), settings_service
+                callback,
+                NotificationSettingCallback(setting=NotificationSetting.EXAM_GRADES),
+                SimpleNamespace(execute=settings_service.toggle_setting),
             )
             method.assert_awaited_once_with(972001, NotificationSetting.EXAM_GRADES)
         else:
             handler = router.on_open_notifications if action == "open" else router.on_back_to_notifications
-            await handler(callback, settings_service)
+            await handler(callback, SimpleNamespace(execute=settings_service.get_settings))
             method.assert_awaited_once_with(972001)
         if known_user:
             callback.message.edit_text.assert_awaited_once_with(
@@ -211,14 +220,14 @@ async def test_obis_poll_refreshes_all_eligible_users_with_recipient_flags_and_l
     if load_fails:
         recipients.for_lesson_skips.side_effect = RuntimeError("Recipients unavailable")
     opened = []
-    service = AsyncMock(spec=ObisService)
+    service = AsyncMock(spec=ObisResultsQuery)
     service.get_poll_user_ids.return_value = [11, 12, 13, 14]
 
     @asynccontextmanager
     async def container():
         opened.append(object())
         yield SimpleNamespace(
-            get=AsyncMock(side_effect={NotificationRecipientsQuery: recipients, ObisService: service}.__getitem__)
+            get=AsyncMock(side_effect={NotificationRecipientsQuery: recipients, ObisResultsQuery: service}.__getitem__)
         )
 
     poll = AsyncMock()
@@ -282,13 +291,13 @@ async def test_notification_provider_preserves_request_scope_and_model_registry(
         UsersProvider(),
     ) as container:
         async with container() as request:
-            settings = await request.get(NotificationSettingsService)
+            settings = await request.get(GetNotificationSettingsUseCase)
             recipients = await request.get(NotificationRecipientsQuery)
             repository = await request.get(NotificationSettingsRepository)
-            assert settings is await request.get(NotificationSettingsService)
+            assert settings is await request.get(GetNotificationSettingsUseCase)
             assert recipients is await request.get(NotificationRecipientsQuery)
             assert repository is await request.get(NotificationSettingsRepository)
         async with container() as request:
-            assert settings is not await request.get(NotificationSettingsService)
+            assert settings is not await request.get(GetNotificationSettingsUseCase)
             assert recipients is not await request.get(NotificationRecipientsQuery)
             assert repository is not await request.get(NotificationSettingsRepository)

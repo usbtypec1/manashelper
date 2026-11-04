@@ -2,7 +2,7 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.modules.schedule.application.department import DepartmentService
+from manashelper.modules.schedule.application.department import DepartmentQuery
 from manashelper.modules.schedule.infrastructure.models.department import Department
 from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
 from manashelper.modules.schedule.infrastructure.repositories.department import DepartmentRepository
@@ -19,7 +19,7 @@ async def test_get_departments_by_faculty_returns_only_that_faculty(session: Asy
     session.add_all([department, other_department])
     await session.flush()
 
-    service = DepartmentService(DepartmentRepository(session))
+    service = DepartmentQuery(DepartmentRepository(session))
     departments = await service.get_departments_by_faculty(faculty.id)
 
     assert [d.id for d in departments] == [department.id]

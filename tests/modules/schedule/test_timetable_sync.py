@@ -4,8 +4,8 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.modules.schedule.application import timetable_sync
-from manashelper.modules.schedule.application.timetable_sync import TimetableSyncService
+from manashelper.modules.schedule.application.use_cases import sync_timetable as timetable_sync
+from manashelper.modules.schedule.application.use_cases.sync_timetable import SyncTimetableUseCase
 from manashelper.modules.schedule.infrastructure.models.course import Course
 from manashelper.modules.schedule.infrastructure.models.department import Department
 from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
@@ -71,8 +71,8 @@ async def test_synchronize_course_timetable_updates_content_and_records_history(
         ],
     )
 
-    service = TimetableSyncService(_FakeTimetableClient(), LessonRepository(session), LessonHistoryRepository(session))
-    changes = await service.synchronize_course_timetable(course.id)
+    service = SyncTimetableUseCase(_FakeTimetableClient(), LessonRepository(session), LessonHistoryRepository(session))
+    changes = await service.execute(course.id)
     await session.flush()
 
     assert len(changes) == 1
@@ -110,8 +110,8 @@ async def test_synchronize_course_timetable_first_sync_creates_no_history(
         ],
     )
 
-    service = TimetableSyncService(_FakeTimetableClient(), LessonRepository(session), LessonHistoryRepository(session))
-    changes = await service.synchronize_course_timetable(course.id)
+    service = SyncTimetableUseCase(_FakeTimetableClient(), LessonRepository(session), LessonHistoryRepository(session))
+    changes = await service.execute(course.id)
     await session.flush()
 
     assert changes == []

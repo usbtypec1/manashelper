@@ -8,8 +8,8 @@ from manashelper.modules.food_menu.presentation.keyboards.food_menu import (
     build_food_menu_settings_buttons,
     build_menu_rating_buttons,
 )
-from manashelper.modules.users.application.locale import LocaleService
-from manashelper.modules.users.application.theme import ThemeService
+from manashelper.modules.users.application.locale import LocaleQuery
+from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.outbox.service import OutboxService
 
@@ -18,8 +18,8 @@ class TelegramFoodMenuSender:
     def __init__(
         self,
         outbox: OutboxService,
-        locales: LocaleService,
-        themes: ThemeService,
+        locales: LocaleQuery,
+        themes: ThemeQuery,
     ) -> None:
         self._outbox = outbox
         self._locales = locales

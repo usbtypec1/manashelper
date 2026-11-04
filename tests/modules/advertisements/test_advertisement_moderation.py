@@ -1,15 +1,17 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.modules.advertisements.application.advertisement import AdvertisementService
 from manashelper.modules.advertisements.application.advertisement_moderation import (
-    AdvertisementModerationService,
     AdvertisementNotPendingError,
 )
 from manashelper.modules.advertisements.infrastructure.repositories.advertisement import AdvertisementRepository
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.modules.users.queries import UsersQuery
+from tests.modules.advertisements.application_factories import (
+    build_advertisement_moderation_service,
+    build_advertisement_service,
+)
 
 
 async def _make_user(session: AsyncSession, user_id: int) -> User:
@@ -22,7 +24,7 @@ async def _make_user(session: AsyncSession, user_id: int) -> User:
 async def test_approve_publishes_advertisement(session: AsyncSession) -> None:
     owner = await _make_user(session, 920_001)
     ad_repository = AdvertisementRepository(session)
-    ad_service = AdvertisementService(ad_repository, UsersQuery(UserRepository(session)))
+    ad_service = build_advertisement_service(ad_repository, UsersQuery(UserRepository(session)))
     summary = await ad_service.create_advertisement(
         user_id=owner.id,
         title="Item",
@@ -33,7 +35,7 @@ async def test_approve_publishes_advertisement(session: AsyncSession) -> None:
         phone_number="+996700123456",
     )
 
-    moderation_service = AdvertisementModerationService(ad_repository)
+    moderation_service = build_advertisement_moderation_service(ad_repository)
     approved = await moderation_service.approve(summary.id)
 
     assert approved.status.value == "published"
@@ -42,7 +44,7 @@ async def test_approve_publishes_advertisement(session: AsyncSession) -> None:
 async def test_approve_twice_raises_not_pending(session: AsyncSession) -> None:
     owner = await _make_user(session, 920_002)
     ad_repository = AdvertisementRepository(session)
-    ad_service = AdvertisementService(ad_repository, UsersQuery(UserRepository(session)))
+    ad_service = build_advertisement_service(ad_repository, UsersQuery(UserRepository(session)))
     summary = await ad_service.create_advertisement(
         user_id=owner.id,
         title="Item",
@@ -53,7 +55,7 @@ async def test_approve_twice_raises_not_pending(session: AsyncSession) -> None:
         phone_number="+996700123456",
     )
 
-    moderation_service = AdvertisementModerationService(ad_repository)
+    moderation_service = build_advertisement_moderation_service(ad_repository)
     await moderation_service.approve(summary.id)
 
     with pytest.raises(AdvertisementNotPendingError):
@@ -63,7 +65,7 @@ async def test_approve_twice_raises_not_pending(session: AsyncSession) -> None:
 async def test_reject_stores_comment(session: AsyncSession) -> None:
     owner = await _make_user(session, 920_003)
     ad_repository = AdvertisementRepository(session)
-    ad_service = AdvertisementService(ad_repository, UsersQuery(UserRepository(session)))
+    ad_service = build_advertisement_service(ad_repository, UsersQuery(UserRepository(session)))
     summary = await ad_service.create_advertisement(
         user_id=owner.id,
         title="Item",
@@ -74,7 +76,7 @@ async def test_reject_stores_comment(session: AsyncSession) -> None:
         phone_number="+996700123456",
     )
 
-    moderation_service = AdvertisementModerationService(ad_repository)
+    moderation_service = build_advertisement_moderation_service(ad_repository)
     rejected = await moderation_service.reject(summary.id, "Not allowed")
 
     assert rejected.status.value == "rejected"
@@ -84,7 +86,7 @@ async def test_reject_stores_comment(session: AsyncSession) -> None:
 async def test_reject_twice_raises_not_pending(session: AsyncSession) -> None:
     owner = await _make_user(session, 920_004)
     ad_repository = AdvertisementRepository(session)
-    ad_service = AdvertisementService(ad_repository, UsersQuery(UserRepository(session)))
+    ad_service = build_advertisement_service(ad_repository, UsersQuery(UserRepository(session)))
     summary = await ad_service.create_advertisement(
         user_id=owner.id,
         title="Item",
@@ -95,7 +97,7 @@ async def test_reject_twice_raises_not_pending(session: AsyncSession) -> None:
         phone_number="+996700123456",
     )
 
-    moderation_service = AdvertisementModerationService(ad_repository)
+    moderation_service = build_advertisement_moderation_service(ad_repository)
     await moderation_service.reject(summary.id, None)
 
     with pytest.raises(AdvertisementNotPendingError):

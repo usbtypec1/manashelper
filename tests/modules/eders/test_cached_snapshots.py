@@ -5,20 +5,20 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from manashelper.modules.eders.application.eders import EdersService
 from manashelper.modules.eders.application.models import EdersSnapshot
 from manashelper.modules.eders.errors import EdersFetchError, EdersLoginError, EdersSnapshotNotReadyError
 from manashelper.modules.eders.infrastructure.models.eders import EdersState
 from manashelper.modules.obis.application.credentials import ObisCredentials
 from manashelper.modules.obis.errors import UserHasNoCredentialsError
 from manashelper.modules.users.infrastructure.models.user import User
+from tests.modules.eders.application_factories import build_eders_service
 from tests.modules.eders.factories import NOW, item
 
 
 async def test_eders_cache_miss_never_fetches_and_empty_snapshot_is_ready(tracking):
     credentials, client = AsyncMock(), AsyncMock()
     credentials.get_student_number.return_value = "student"
-    service = EdersService(credentials, client, tracking)
+    service = build_eders_service(credentials, client, tracking)
     with pytest.raises(EdersSnapshotNotReadyError):
         await service.get_snapshot(980_001)
     client.fetch_snapshot.assert_not_awaited()
@@ -32,7 +32,7 @@ async def test_eders_cache_miss_never_fetches_and_empty_snapshot_is_ready(tracki
 async def test_eders_reads_last_success_even_when_old_or_upstream_is_down(tracking):
     credentials, client = AsyncMock(), AsyncMock()
     credentials.get_student_number.return_value = "student"
-    service = EdersService(credentials, client, tracking)
+    service = build_eders_service(credentials, client, tracking)
     client.fetch_snapshot.return_value = EdersSnapshot((item(),), NOW - timedelta(days=1))
     previous = await service.refresh_snapshot(980_001)
     client.fetch_snapshot.side_effect = EdersFetchError("unavailable")
@@ -45,7 +45,7 @@ async def test_eders_account_change_hides_previous_snapshot_and_rebaselines(trac
     credentials, client = AsyncMock(), AsyncMock()
     credentials.get_student_number.return_value = "student-a"
     client.fetch_snapshot.return_value = EdersSnapshot((item(),), NOW)
-    service = EdersService(credentials, client, tracking)
+    service = build_eders_service(credentials, client, tracking)
     await service.refresh_snapshot(980_001)
     credentials.get_student_number.return_value = "student-b"
     with pytest.raises(EdersSnapshotNotReadyError):
@@ -74,7 +74,7 @@ async def test_direct_login_does_not_decrypt_obis_password(tracking, failure):
     credentials.get_student_number.return_value = "student"
     client.fetch_snapshot.return_value = EdersSnapshot((), NOW)
     client.fetch_snapshot.side_effect = failure
-    service = EdersService(credentials, client, tracking)
+    service = build_eders_service(credentials, client, tracking)
     if failure:
         with pytest.raises(EdersFetchError, match="read failed"):
             await service.refresh_snapshot(980_001)
@@ -91,7 +91,7 @@ async def test_only_login_failure_uses_obis_fallback_and_preserves_cached_snapsh
     credentials.get_credentials.return_value = ObisCredentials("student", "obis-password", "ciphertext-marker")
     previous = EdersSnapshot((item(),), NOW - timedelta(minutes=15))
     client.fetch_snapshot.return_value = previous
-    service = EdersService(credentials, client, tracking)
+    service = build_eders_service(credentials, client, tracking)
     await service.refresh_snapshot(980_001)
     client.reset_mock()
     current = EdersSnapshot((), NOW)

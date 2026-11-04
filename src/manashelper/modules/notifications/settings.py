@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime
 from enum import StrEnum
 
 from manashelper.modules.notifications.orm import NotificationSettings
@@ -27,7 +27,7 @@ class NotificationSettingsSummary:
     broadcast_muted_until: datetime | None = None
 
 
-def _to_summary(settings: NotificationSettings) -> NotificationSettingsSummary:
+def to_summary(settings: NotificationSettings) -> NotificationSettingsSummary:
     return NotificationSettingsSummary(
         schedule_changes_enabled=settings.schedule_changes_enabled,
         exam_grades_enabled=settings.exam_grades_enabled,
@@ -36,36 +36,9 @@ def _to_summary(settings: NotificationSettings) -> NotificationSettingsSummary:
     )
 
 
-class NotificationSettingsService:
-    def __init__(
-        self,
-        notification_settings_repository: NotificationSettingsRepository,
-        users: UsersQuery,
-    ) -> None:
-        self._notification_settings_repository = notification_settings_repository
-        self._users = users
-
-    async def get_settings(self, user_id: int) -> NotificationSettingsSummary:
-        settings = await self._get_or_create(user_id)
-        return _to_summary(settings)
-
-    async def toggle_setting(self, user_id: int, setting: NotificationSetting) -> NotificationSettingsSummary:
-        settings = await self._get_or_create(user_id)
-        match setting:
-            case NotificationSetting.SCHEDULE_CHANGES:
-                settings.schedule_changes_enabled = not settings.schedule_changes_enabled
-            case NotificationSetting.EXAM_GRADES:
-                settings.exam_grades_enabled = not settings.exam_grades_enabled
-            case NotificationSetting.LESSON_SKIPS:
-                settings.lesson_skips_enabled = not settings.lesson_skips_enabled
-        return _to_summary(settings)
-
-    async def set_broadcast_mute(self, user_id: int, muted: bool) -> NotificationSettingsSummary:
-        settings = await self._get_or_create(user_id)
-        settings.broadcast_muted_until = datetime.now(UTC) + timedelta(days=14) if muted else None
-        return _to_summary(settings)
-
-    async def _get_or_create(self, user_id: int) -> NotificationSettings:
-        if not await self._users.exists(user_id):
-            raise UserNotFoundError(user_id)
-        return await self._notification_settings_repository.get_or_create(user_id)
+async def get_or_create_notification_settings(
+    notification_settings_repository: NotificationSettingsRepository, users: UsersQuery, user_id: int
+) -> NotificationSettings:
+    if not await users.exists(user_id):
+        raise UserNotFoundError(user_id)
+    return await notification_settings_repository.get_or_create(user_id)

@@ -16,7 +16,6 @@ from sqlalchemy import select
 from manashelper.modules.notifications.orm import NotificationSettings
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
 from manashelper.modules.notifications.repository import NotificationSettingsRepository
-from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.platform.telegram.outbox.models import OutboxMessage, OutboxRateBucket
@@ -24,6 +23,7 @@ from manashelper.platform.telegram.outbox.rate_limit import CHAT_BUCKET, GLOBAL_
 from manashelper.platform.telegram.outbox.repository import OutboxRepository
 from manashelper.platform.telegram.outbox.service import METHOD_TYPES, OutboxService, is_night
 from manashelper.platform.telegram.outbox.worker import MAX_FAILURES, OutboxWorker, retry_delay
+from tests.modules.users.application_factories import build_bot_status_service
 
 
 @pytest.fixture
@@ -31,14 +31,14 @@ async def context(session):
     session.add_all([User(id=983001, full_name="One"), User(id=983002, full_name="Two")])
     await session.flush()
     repository = OutboxRepository(session)
-    status = BotStatusService(UserRepository(session))
+    status = build_bot_status_service(UserRepository(session))
     recipients = NotificationRecipientsQuery(NotificationSettingsRepository(session))
     return SimpleNamespace(
         session=session,
         repository=repository,
         status=status,
         service=OutboxService(repository, status),
-        worker=OutboxWorker(repository, status, recipients),
+        worker=OutboxWorker(repository, SimpleNamespace(execute=status.stop), recipients),
         recipients=recipients,
         now=datetime.now(UTC),
         bot_id=983000,
@@ -108,7 +108,9 @@ async def test_daytime_queue_becomes_silent_at_night_and_stays_silent_on_morning
     context.session.expire_all()
     assert all(part["data"]["disable_notification"] is True for part in (await rows(context))[0].methods)
     morning = datetime(2099, 1, 2, 2, tzinfo=UTC)
-    recreated = OutboxWorker(OutboxRepository(context.session), context.status, context.recipients)
+    recreated = OutboxWorker(
+        OutboxRepository(context.session), SimpleNamespace(execute=context.status.stop), context.recipients
+    )
     retry = await recreated.claim(context.bot_id, morning)
     assert retry.method.disable_notification is True
     await recreated.complete(retry, morning)
@@ -167,7 +169,9 @@ async def test_retry_after_survives_worker_recreation_and_pauses_other_recipient
         claim, TelegramRetryAfter(claim.method, "Flood control", retry_after=10), context.bot_id, now
     )
     await enqueue(context, 983002)
-    recreated = OutboxWorker(OutboxRepository(context.session), context.status, context.recipients)
+    recreated = OutboxWorker(
+        OutboxRepository(context.session), SimpleNamespace(execute=context.status.stop), context.recipients
+    )
     assert await recreated.claim(context.bot_id, now + timedelta(seconds=9)) is None
     message = (await rows(context))[0]
     assert message.status == "pending" and message.available_at >= now + timedelta(seconds=10)
@@ -301,9 +305,11 @@ async def test_concurrent_workers_claim_distinct_rows_and_only_committed_message
 
     def services(session):
         repository = OutboxRepository(session)
-        status = BotStatusService(UserRepository(session))
+        status = build_bot_status_service(UserRepository(session))
         recipients = NotificationRecipientsQuery(NotificationSettingsRepository(session))
-        return OutboxService(repository, status), OutboxWorker(repository, status, recipients)
+        return OutboxService(repository, status), OutboxWorker(
+            repository, SimpleNamespace(execute=status.stop), recipients
+        )
 
     try:
         async with sessions.begin() as setup:

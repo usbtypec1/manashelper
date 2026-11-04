@@ -36,13 +36,13 @@ def parse_time_range_end_minutes(time_range: str) -> int:
 MAX_GAP_MINUTES_TO_GROUP = 20
 
 
-class ScheduleService:
-    def __init__(self, lesson_repository: LessonRepository, tracking_repository: CourseTrackingRepository) -> None:
-        self._lesson_repository = lesson_repository
-        self._tracking_repository = tracking_repository
+@dataclass(frozen=True, slots=True)
+class ScheduleQuery:
+    lesson_repository: LessonRepository
+    tracking_repository: CourseTrackingRepository
 
     async def get_user_schedule(self, user_id: int) -> list[ScheduleLessonModel]:
-        user = await self._tracking_repository.get_with_tracked_courses(user_id)
+        user = await self.tracking_repository.get_with_tracked_courses(user_id)
         if user is None:
             raise UserNotFoundError(user_id)
 
@@ -50,7 +50,7 @@ class ScheduleService:
         if not course_ids:
             raise NoTrackedCoursesError(user_id)
 
-        lessons = await self._lesson_repository.get_all_by_course_ids(course_ids)
+        lessons = await self.lesson_repository.get_all_by_course_ids(course_ids)
         return sorted(
             (
                 ScheduleLessonModel(weekday=lesson.weekday, time_range=lesson.time_range, content=lesson.content)

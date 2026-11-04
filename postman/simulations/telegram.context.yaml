@@ -37,7 +37,23 @@ assumptions:
     verification: On 2026-11-03, checked the official FAQ and ResponseParameters. Orbit's sendPhoto integration brief confirmed the cached-file-ID request shape and identified retries and queueing as caller responsibilities. No live rate-limit errors were induced. The existing repository mock was reused; no authenticated owner-mock lookup was performed, and this CLI version does not implement postman status.
     source: https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this; https://core.telegram.org/bots/api#responseparameters; docs/outbox.md
     updated_at: "2026-11-03"
+  - id: application-use-case-refactor-local-delivery
+    status: supported
+    claim: In the modeled Telegram failures, the extracted user-status use case preserves durable recipient suppression and outbox retry behavior.
+    reason: The real aiogram client, PostgreSQL outbox worker and request-scoped StopBotDeliveryUseCase ran against the existing repository-owned stand-in.
+    verification: >-
+      On 2026-11-04, the full suite with all four local simulations passed 816 tests with one unrelated optional
+      Eders corpus test skipped. The Telegram simulation used its /telegram route. Request events and persisted
+      state confirmed photo/text serialization, blocked/deactivated/missing recipients, 429 cooldown, 503 and HTML
+      502 retries, expiration and no repeat of an acknowledged photo. These are synthetic scenarios, not live
+      Telegram availability or an exactly-once guarantee. Fingerprint modules-use-cases-2026-11-04.
+    source: tests/platform/telegram/test_outbox_http.py; tests/modules/users/test_bot_status.py; postman/mocks/telegram/default.js
+    updated_at: "2026-11-04"
 fingerprints:
+  - id: modules-use-cases-2026-11-04
+    date: "2026-11-04"
+    commit: "606dcaab221420519ee2e5e460bcf087632f5238 (working tree changes)"
+    cli: "1.74.0"
   - id: broadcast-delivery-2026-10-30
     date: "2026-10-30"
     commit: e407141d68ba4f2c06fef19a32218b9a29a534a7 (working tree with broadcast/delivery changes)

@@ -4,14 +4,14 @@ from aiogram.methods import SendMessage
 
 from manashelper.modules.schedule.application.timetable_sync import LessonChange
 from manashelper.modules.schedule.presentation.timetable_formatter import format_lesson_changes
-from manashelper.modules.users.application.locale import LocaleService
-from manashelper.modules.users.application.theme import ThemeService
+from manashelper.modules.users.application.locale import LocaleQuery
+from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.outbox.service import OutboxService
 
 
 class TelegramScheduleChangeSender:
-    def __init__(self, outbox: OutboxService, locales: LocaleService, themes: ThemeService) -> None:
+    def __init__(self, outbox: OutboxService, locales: LocaleQuery, themes: ThemeQuery) -> None:
         self._outbox = outbox
         self._locales = locales
         self._themes = themes

@@ -18,11 +18,13 @@ from manashelper.modules.advertisements.application.advertisement import (
     AdvertisementForbiddenError,
     AdvertisementMediaItem,
     AdvertisementNotFoundError,
-    AdvertisementService,
+    AdvertisementQuery,
     AdvertisementSummary,
     TooManyAdvertisementsError,
     UserNotFoundError,
 )
+from manashelper.modules.advertisements.application.use_cases.create_advertisement import CreateAdvertisementUseCase
+from manashelper.modules.advertisements.application.use_cases.delete_advertisement import DeleteAdvertisementUseCase
 from manashelper.modules.advertisements.domain.contact import (
     ContactStatus,
     InvalidPhoneNumberError,
@@ -131,14 +133,14 @@ async def on_marketplace_button(message: Message, settings: FromDishka[Settings]
 async def on_create_requested(
     message: Message,
     state: FSMContext,
-    advertisement_service: FromDishka[AdvertisementService],
+    advertisement_query: FromDishka[AdvertisementQuery],
 ) -> None:
     if message.from_user is None:
         return
     user_id = message.from_user.id
     try:
-        await advertisement_service.assert_can_post(user_id)
-        contact = await advertisement_service.get_contact_status(user_id)
+        await advertisement_query.assert_can_post(user_id)
+        contact = await advertisement_query.get_contact_status(user_id)
     except TooManyAdvertisementsError:
         await message.answer(_("ads.hourly_limit"))
         return
@@ -183,13 +185,13 @@ async def on_phone_number_entered(message: Message, state: FSMContext) -> None:
 async def on_phone_number_skipped(
     callback_query: CallbackQuery,
     state: FSMContext,
-    advertisement_service: FromDishka[AdvertisementService],
+    advertisement_query: FromDishka[AdvertisementQuery],
 ) -> None:
     if await state.get_state() != AdvertisementForm.phone_number.state:
         await callback_query.answer(_("common.error_retry"), show_alert=True)
         return
     try:
-        contact = await advertisement_service.get_contact_status(callback_query.from_user.id)
+        contact = await advertisement_query.get_contact_status(callback_query.from_user.id)
     except UserNotFoundError:
         await callback_query.answer(_("common.start_required"), show_alert=True)
         return
@@ -313,12 +315,12 @@ async def _append_media(
 ) -> None:
     data = await state.get_data()
     media: list[dict[str, str]] = list(data.get("media", []))
-    if len(media) >= AdvertisementService.MAX_MEDIA_ITEMS:
+    if len(media) >= AdvertisementQuery.MAX_MEDIA_ITEMS:
         await _render_media_prompt(
             message,
             state,
             bot,
-            _("ads.media_limit").format(max=AdvertisementService.MAX_MEDIA_ITEMS),
+            _("ads.media_limit").format(max=AdvertisementQuery.MAX_MEDIA_ITEMS),
         )
         return
 
@@ -328,7 +330,7 @@ async def _append_media(
         message,
         state,
         bot,
-        _("ads.media_added").format(count=len(media), max=AdvertisementService.MAX_MEDIA_ITEMS),
+        _("ads.media_added").format(count=len(media), max=AdvertisementQuery.MAX_MEDIA_ITEMS),
     )
 
 
@@ -392,7 +394,8 @@ async def on_form_submitted(
     state: FSMContext,
     bot: Bot,
     settings: FromDishka[Settings],
-    advertisement_service: FromDishka[AdvertisementService],
+    advertisement_query: FromDishka[AdvertisementQuery],
+    create_advertisement: FromDishka[CreateAdvertisementUseCase],
 ) -> None:
     user_id = callback_query.from_user.id
     data = await state.get_data()
@@ -403,7 +406,7 @@ async def on_form_submitted(
     ]
 
     try:
-        summary = await advertisement_service.create_advertisement(
+        summary = await create_advertisement.execute(
             user_id=user_id,
             title=str(data.get("title", "")),
             description=str(data.get("description", "")),
@@ -427,7 +430,7 @@ async def on_form_submitted(
         await callback_query.message.edit_text(_("ads.submitted"))
         await send_marketplace_menu(callback_query.message, settings)
 
-    contact = await advertisement_service.get_contact_status(
+    contact = await advertisement_query.get_contact_status(
         user_id, [data["phone_number"]] if data.get("phone_number") else []
     )
     await _notify_moderation_chat(bot, settings, summary, contact)
@@ -457,10 +460,10 @@ async def _notify_moderation_chat(
 
 @router.message(TranslatedText("ads.my_ads"))
 @flags.private_chat_only
-async def on_my_ads_requested(message: Message, advertisement_service: FromDishka[AdvertisementService]) -> None:
+async def on_my_ads_requested(message: Message, advertisement_query: FromDishka[AdvertisementQuery]) -> None:
     if message.from_user is None:
         return
-    text, keyboard = await _build_my_ads_view(advertisement_service, message.from_user.id, 0)
+    text, keyboard = await _build_my_ads_view(advertisement_query, message.from_user.id, 0)
     await message.answer(text, reply_markup=keyboard)
 
 
@@ -469,18 +472,18 @@ async def on_my_ads_requested(message: Message, advertisement_service: FromDishk
 async def on_my_ads_page(
     callback_query: CallbackQuery,
     callback_data: AdvertisementsPageCallback,
-    advertisement_service: FromDishka[AdvertisementService],
+    advertisement_query: FromDishka[AdvertisementQuery],
 ) -> None:
-    text, keyboard = await _build_my_ads_view(advertisement_service, callback_query.from_user.id, callback_data.page)
+    text, keyboard = await _build_my_ads_view(advertisement_query, callback_query.from_user.id, callback_data.page)
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(text, reply_markup=keyboard)
     await callback_query.answer()
 
 
 async def _build_my_ads_view(
-    advertisement_service: AdvertisementService, user_id: int, page: int
+    advertisement_query: AdvertisementQuery, user_id: int, page: int
 ) -> tuple[str, InlineKeyboardMarkup]:
-    ad_page = await advertisement_service.get_page_by_user_id(user_id, page)
+    ad_page = await advertisement_query.get_page_by_user_id(user_id, page)
     text = _("ads.list_page").format(page=ad_page.page + 1, total=ad_page.total_pages)
     if not ad_page.items:
         text = _("ads.empty_list")
@@ -493,16 +496,16 @@ async def _build_my_ads_view(
 async def on_advertisement_selected(
     callback_query: CallbackQuery,
     callback_data: AdvertisementCallback,
-    advertisement_service: FromDishka[AdvertisementService],
+    advertisement_query: FromDishka[AdvertisementQuery],
 ) -> None:
-    await _render_advertisement_detail(callback_query, advertisement_service, callback_data.id, callback_data.page)
+    await _render_advertisement_detail(callback_query, advertisement_query, callback_data.id, callback_data.page)
 
 
 async def _render_advertisement_detail(
-    callback_query: CallbackQuery, advertisement_service: AdvertisementService, advertisement_id: uuid.UUID, page: int
+    callback_query: CallbackQuery, advertisement_query: AdvertisementQuery, advertisement_id: uuid.UUID, page: int
 ) -> None:
     try:
-        summary = await advertisement_service.get_owned_by_id(advertisement_id, callback_query.from_user.id)
+        summary = await advertisement_query.get_owned_by_id(advertisement_id, callback_query.from_user.id)
     except (AdvertisementNotFoundError, AdvertisementForbiddenError):
         await callback_query.answer(_("ads.not_found"), show_alert=True)
         return
@@ -530,9 +533,9 @@ async def on_delete_requested(callback_query: CallbackQuery, callback_data: Adve
 async def on_delete_cancelled(
     callback_query: CallbackQuery,
     callback_data: AdvertisementDeleteCallback,
-    advertisement_service: FromDishka[AdvertisementService],
+    advertisement_query: FromDishka[AdvertisementQuery],
 ) -> None:
-    await _render_advertisement_detail(callback_query, advertisement_service, callback_data.id, callback_data.page)
+    await _render_advertisement_detail(callback_query, advertisement_query, callback_data.id, callback_data.page)
 
 
 @router.callback_query(AdvertisementDeleteCallback.filter(F.action == AdvertisementDeleteAction.CONFIRM))
@@ -542,10 +545,11 @@ async def on_delete_confirmed(
     callback_data: AdvertisementDeleteCallback,
     bot: Bot,
     settings: FromDishka[Settings],
-    advertisement_service: FromDishka[AdvertisementService],
+    advertisement_query: FromDishka[AdvertisementQuery],
+    delete_advertisement: FromDishka[DeleteAdvertisementUseCase],
 ) -> None:
     try:
-        result = await advertisement_service.delete_owned(callback_data.id, callback_query.from_user.id)
+        result = await delete_advertisement.execute(callback_data.id, callback_query.from_user.id)
     except (AdvertisementNotFoundError, AdvertisementForbiddenError):
         await callback_query.answer(_("ads.not_found"), show_alert=True)
         return
@@ -556,7 +560,7 @@ async def on_delete_confirmed(
         except TelegramAPIError:
             logger.warning("Failed to delete channel messages for advertisement %s", callback_data.id, exc_info=True)
 
-    ad_page = await advertisement_service.get_page_by_user_id(callback_query.from_user.id, callback_data.page)
+    ad_page = await advertisement_query.get_page_by_user_id(callback_query.from_user.id, callback_data.page)
     text = _("ads.deleted")
     keyboard = build_my_ads_keyboard(ad_page.items, ad_page.page, ad_page.total_pages)
     if isinstance(callback_query.message, Message):

@@ -12,14 +12,14 @@ from aiogram.types import BotCommandScopeChat, CallbackQuery, Chat, Message, Pho
 
 from manashelper.localization.locale import Locale
 from manashelper.modules.broadcast import router as handlers
+from manashelper.modules.broadcast.application.use_cases.send_broadcast import SendBroadcastUseCase
 from manashelper.modules.broadcast.callbacks import BroadcastAction, BroadcastCallback
 from manashelper.modules.broadcast.keyboards import build_broadcast_confirm_keyboard
-from manashelper.modules.broadcast.service import SendBroadcast
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
-from manashelper.modules.users.application.locale import LocaleService
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.commands import setup_commands
 from manashelper.platform.telegram.outbox.service import OutboxService
+from tests.modules.users.application_factories import build_locale_service
 
 ADMIN_CHAT_ID = -100947000
 ACTOR_ID = 947_001
@@ -59,7 +59,7 @@ def context(monkeypatch):
     monkeypatch.setattr(bot.session, "make_request", request)
     users = AsyncMock(spec=NotificationRecipientsQuery)
     users.for_broadcasts.return_value = RECIPIENT_IDS
-    locales = AsyncMock(spec=LocaleService)
+    locales = AsyncMock(spec=build_locale_service(AsyncMock()))
     locales.get_locale.side_effect = LOCALES.__getitem__
     callback = CallbackQuery(id="broadcast", from_user=message.from_user, chat_instance="chat", message=message).as_(
         bot
@@ -71,7 +71,7 @@ def context(monkeypatch):
             state=state,
             request=request,
             users=users,
-            service=SendBroadcast(users),
+            service=SendBroadcastUseCase(users),
             outbox=outbox,
             locales=locales,
             callback=callback,

@@ -4,8 +4,9 @@ import pytest
 from dishka import Provider, Scope, make_async_container, provide
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from manashelper.modules.broadcast.application.use_cases.send_broadcast import SendBroadcastUseCase
 from manashelper.modules.broadcast.provider import BroadcastProvider
-from manashelper.modules.broadcast.service import BroadcastResult, BroadcastSender, SendBroadcast
+from manashelper.modules.broadcast.service import BroadcastResult, BroadcastSender
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
 from manashelper.modules.notifications.repository import NotificationSettingsRepository
 from manashelper.modules.users.infrastructure.models.user import User
@@ -22,7 +23,7 @@ async def test_broadcast_reaches_every_registered_user(session: AsyncSession) ->
 
     sender = AsyncMock(spec=BroadcastSender)
     sender.send.return_value = True
-    result = await SendBroadcast(NotificationRecipientsQuery(NotificationSettingsRepository(session))).execute(
+    result = await SendBroadcastUseCase(NotificationRecipientsQuery(NotificationSettingsRepository(session))).execute(
         "All users", sender
     )
     recipient_ids = [delivery.args[0] for delivery in sender.send.await_args_list]
@@ -39,7 +40,7 @@ async def test_application_preserves_order_body_and_counts_failed_deliveries(out
     sender.send.side_effect = outcomes
     body = "  <raw> & body\n "
 
-    result = await SendBroadcast(users).execute(body, sender)
+    result = await SendBroadcastUseCase(users).execute(body, sender)
 
     assert result == BroadcastResult(sent=sum(outcomes), total=len(outcomes))
     assert sender.send.await_args_list == [call(user_id, body) for user_id in range(len(outcomes))]
@@ -53,7 +54,7 @@ async def test_application_propagates_unexpected_sender_failure_and_stops_delive
     sender.send.side_effect = [True, RuntimeError("unexpected delivery failure"), True]
 
     with pytest.raises(RuntimeError, match="unexpected delivery failure"):
-        await SendBroadcast(users).execute("body", sender)
+        await SendBroadcastUseCase(users).execute("body", sender)
 
     assert sender.send.await_args_list == [call(1, "body"), call(2, "body")]
 
@@ -66,7 +67,7 @@ async def test_broadcast_use_case_retains_request_scope():
 
     async with make_async_container(BroadcastProvider(), TestUsersProvider()) as container:
         async with container() as request:
-            first = await request.get(SendBroadcast)
-            assert first is await request.get(SendBroadcast)
+            first = await request.get(SendBroadcastUseCase)
+            assert first is await request.get(SendBroadcastUseCase)
         async with container() as request:
-            assert first is not await request.get(SendBroadcast)
+            assert first is not await request.get(SendBroadcastUseCase)

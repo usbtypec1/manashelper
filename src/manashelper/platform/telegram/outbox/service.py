@@ -6,7 +6,7 @@ from typing import Any
 from aiogram.methods import SendMessage, SendPhoto, SendRichMessage
 
 from manashelper.core.time import BISHKEK_TZ
-from manashelper.modules.users.application.bot_status import BotStatusService
+from manashelper.modules.users.application.bot_status import BotStatusQuery
 from manashelper.platform.telegram.outbox.models import OutboxMessage
 from manashelper.platform.telegram.outbox.repository import OutboxRepository
 
@@ -24,7 +24,7 @@ def is_night(now: datetime) -> bool:
 
 
 class OutboxService:
-    def __init__(self, repository: OutboxRepository, status: BotStatusService) -> None:
+    def __init__(self, repository: OutboxRepository, status: BotStatusQuery) -> None:
         self._repository = repository
         self._status = status
 

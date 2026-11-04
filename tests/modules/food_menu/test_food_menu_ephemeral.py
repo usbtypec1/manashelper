@@ -86,7 +86,13 @@ async def test_group_command_sends_private_menu(monkeypatch, chat_type, source, 
     else:
         service.get_daily_menu_by_skipping_days.side_effect = DailyMenuNotFoundError(menu.date)
     with i18n.context(), i18n.use_locale("en"):
-        await cmd_yemek(incoming, CommandObject(command="yemek", args="today"), service)
+        await cmd_yemek(
+            incoming,
+            CommandObject(command="yemek", args="today"),
+            service,
+            get_daily_menu=SimpleNamespace(execute=service.get_daily_menu_by_date),
+            get_daily_menu_by_offset=SimpleNamespace(execute=service.get_daily_menu_by_skipping_days),
+        )
     service.get_daily_menu_by_skipping_days.assert_awaited_once_with(0, user_id=USER.id)
     sent = _methods(request, SendRichMessage if found else SendMessage)[0]
     assert sent.chat_id == CHAT_ID
@@ -110,7 +116,13 @@ async def test_ordinary_group_command_uses_day_selector_when_bot_is_not_admin(mo
     incoming = Message(message_id=10, from_user=USER, date=0, chat=Chat(id=CHAT_ID, type="group")).as_(bot)
     service = AsyncMock()
     with i18n.context(), i18n.use_locale("en"):
-        await cmd_yemek(incoming, CommandObject(command="yemek", args="today"), service)
+        await cmd_yemek(
+            incoming,
+            CommandObject(command="yemek", args="today"),
+            service,
+            get_daily_menu=SimpleNamespace(execute=service.get_daily_menu_by_date),
+            get_daily_menu_by_offset=SimpleNamespace(execute=service.get_daily_menu_by_skipping_days),
+        )
     prompt = _methods(request, SendRichMessage)[0]
     assert prompt.ephemeral_message_parameters is None
     rows = [block for block in prompt.rich_message.blocks if block.type == "buttons"]
@@ -141,7 +153,13 @@ async def test_group_day_callback_targets_person_who_clicked_even_when_bot_is_no
     else:
         service.get_daily_menu_by_skipping_days.side_effect = DailyMenuNotFoundError(date(2026, 10, 2))
     with i18n.context(), i18n.use_locale("en"):
-        await on_food_menu_day_callback(callback, FoodMenuCallback(day=FoodMenuDay.TOMORROW), service)
+        await on_food_menu_day_callback(
+            callback,
+            FoodMenuCallback(day=FoodMenuDay.TOMORROW),
+            service,
+            get_daily_menu=SimpleNamespace(execute=service.get_daily_menu_by_date),
+            get_daily_menu_by_offset=SimpleNamespace(execute=service.get_daily_menu_by_skipping_days),
+        )
     sent = _methods(request, SendRichMessage if found else SendMessage)[0]
     parameters = sent.ephemeral_message_parameters
     assert parameters.receiver_user_id == USER.id
@@ -165,7 +183,13 @@ async def test_ephemeral_command_usage_and_day_picker_remain_private(monkeypatch
     today = date(2026, 10, 1)
     service.get_available_dates.return_value = DailyMenuAvailability(today, [today, today + timedelta(days=6)])
     with i18n.context(), i18n.use_locale("en"):
-        await cmd_yemek(incoming, CommandObject(command="yemek", args=args), service)
+        await cmd_yemek(
+            incoming,
+            CommandObject(command="yemek", args=args),
+            service,
+            get_daily_menu=SimpleNamespace(execute=service.get_daily_menu_by_date),
+            get_daily_menu_by_offset=SimpleNamespace(execute=service.get_daily_menu_by_skipping_days),
+        )
     prompt = _methods(request, SendRichMessage)[0]
     assert prompt.ephemeral_message_parameters.receiver_user_id == USER.id
     assert prompt.reply_parameters.ephemeral_message_id == 11
@@ -211,7 +235,13 @@ async def test_date_selection_opens_original_date_even_after_midnight(monkeypatc
     menu = _menu()
     service.get_daily_menu_by_date.return_value = menu
     with i18n.context(), i18n.use_locale("en"):
-        await on_food_menu_date_callback(callback, FoodMenuDateCallback(menu_date="2026-10-01"), service)
+        await on_food_menu_date_callback(
+            callback,
+            FoodMenuDateCallback(menu_date="2026-10-01"),
+            service,
+            get_daily_menu=SimpleNamespace(execute=service.get_daily_menu_by_date),
+            get_daily_menu_by_offset=SimpleNamespace(execute=service.get_daily_menu_by_skipping_days),
+        )
     service.get_daily_menu_by_date.assert_awaited_once_with(
         date(2026, 10, 1), user_id=USER.id if chat_type == "supergroup" else CHAT_ID
     )
@@ -231,7 +261,13 @@ async def test_day_picker_is_ephemeral_in_groups_and_normal_in_private_chat(monk
     today = date(2026, 10, 1)
     service.get_available_dates.return_value = DailyMenuAvailability(today, [today])
     with i18n.context(), i18n.use_locale("en"):
-        await cmd_yemek(incoming, CommandObject(command="yemek"), service)
+        await cmd_yemek(
+            incoming,
+            CommandObject(command="yemek"),
+            service,
+            get_daily_menu=SimpleNamespace(execute=service.get_daily_menu_by_date),
+            get_daily_menu_by_offset=SimpleNamespace(execute=service.get_daily_menu_by_skipping_days),
+        )
     prompt = _methods(request, SendRichMessage)[0]
     assert (prompt.ephemeral_message_parameters is None) is (chat_type == "private")
     assert prompt.reply_parameters is None
@@ -256,7 +292,11 @@ async def test_ephemeral_rating_uses_ephemeral_edit_and_preserves_personal_selec
         callback = CallbackQuery(id="rate", from_user=USER, chat_instance="chat", message=message).as_(bot)
         service = AsyncMock()
         service.set_rating.return_value = menu
-        await on_food_menu_rating_callback(callback, FoodMenuRatingCallback(daily_menu_id=menu.id, rating=4), service)
+        await on_food_menu_rating_callback(
+            callback,
+            FoodMenuRatingCallback(daily_menu_id=menu.id, rating=4),
+            SimpleNamespace(execute=service.set_rating),
+        )
     edited = _methods(request, EditEphemeralMessageText)[0]
     assert edited.chat_id == CHAT_ID
     assert edited.receiver_user_id == USER.id

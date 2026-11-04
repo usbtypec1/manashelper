@@ -12,8 +12,16 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.modules.notifications.settings import NotificationSetting, NotificationSettingsService
-from manashelper.modules.obis.application.obis import ObisService
+from manashelper.modules.notifications.application.use_cases.get_notification_settings import (
+    GetNotificationSettingsUseCase,
+)
+from manashelper.modules.notifications.application.use_cases.toggle_notification_setting import (
+    ToggleNotificationSettingUseCase,
+)
+from manashelper.modules.notifications.settings import NotificationSetting
+from manashelper.modules.obis.application.queries import ObisResultsQuery
+from manashelper.modules.obis.application.use_cases.clear_obis_credentials import ClearObisCredentialsUseCase
+from manashelper.modules.obis.application.use_cases.save_obis_credentials import SaveObisCredentialsUseCase
 from manashelper.modules.obis.errors import (
     ObisLoginError,
     ObisParseError,
@@ -70,10 +78,10 @@ async def on_back_to_obis_menu(callback: CallbackQuery) -> None:
 @router.callback_query(ObisCallback.filter(F.action == ObisAction.NOTIFICATIONS))
 @flags.private_chat_only
 async def on_obis_notifications(
-    callback: CallbackQuery, notification_settings_service: FromDishka[NotificationSettingsService]
+    callback: CallbackQuery, get_notification_settings: FromDishka[GetNotificationSettingsUseCase]
 ) -> None:
     try:
-        settings = await notification_settings_service.get_settings(callback.from_user.id)
+        settings = await get_notification_settings.execute(callback.from_user.id)
     except UserNotFoundError:
         await callback.answer(_("common.start_required"), show_alert=True)
         return
@@ -93,10 +101,10 @@ async def on_obis_notifications(
 async def on_obis_notification_setting(
     callback: CallbackQuery,
     callback_data: ObisNotificationSettingCallback,
-    notification_settings_service: FromDishka[NotificationSettingsService],
+    toggle_notification_setting: FromDishka[ToggleNotificationSettingUseCase],
 ) -> None:
     try:
-        settings = await notification_settings_service.toggle_setting(callback.from_user.id, callback_data.setting)
+        settings = await toggle_notification_setting.execute(callback.from_user.id, callback_data.setting)
     except UserNotFoundError:
         await callback.answer(_("common.start_required"), show_alert=True)
         return
@@ -160,17 +168,17 @@ async def _show_obis_results[T](
 
 @router.message(TranslatedText("menu.attendance"))
 @flags.private_chat_only
-async def on_attendance_button(message: Message, state: FSMContext, obis_service: FromDishka[ObisService]) -> None:
+async def on_attendance_button(message: Message, state: FSMContext, results: FromDishka[ObisResultsQuery]) -> None:
     await _show_obis_results(
-        message, state, obis_service.get_attendance, format_attendance_pages, _("obis.loading_attendance")
+        message, state, results.get_attendance, format_attendance_pages, _("obis.loading_attendance")
     )
 
 
 @router.message(TranslatedText("menu.grades"))
 @flags.private_chat_only
-async def on_exams_button(message: Message, state: FSMContext, obis_service: FromDishka[ObisService]) -> None:
+async def on_exams_button(message: Message, state: FSMContext, results: FromDishka[ObisResultsQuery]) -> None:
     await _show_obis_results(
-        message, state, obis_service.get_exam_grades, format_exam_grades_pages, _("obis.loading_grades")
+        message, state, results.get_exam_grades, format_exam_grades_pages, _("obis.loading_grades")
     )
 
 
@@ -213,7 +221,7 @@ async def on_obis_view(
     callback: CallbackQuery,
     callback_data: ObisCallback,
     state: FSMContext,
-    obis_service: FromDishka[ObisService],
+    results: FromDishka[ObisResultsQuery],
 ) -> None:
     await callback.answer()
     if not isinstance(callback.message, Message):
@@ -222,7 +230,7 @@ async def on_obis_view(
         await _show_obis_results(
             callback.message,
             state,
-            obis_service.get_attendance,
+            results.get_attendance,
             format_attendance_pages,
             _("obis.loading_attendance"),
             user_id=callback.from_user.id,
@@ -231,7 +239,7 @@ async def on_obis_view(
         await _show_obis_results(
             callback.message,
             state,
-            obis_service.get_exam_grades,
+            results.get_exam_grades,
             format_exam_grades_pages,
             _("obis.loading_grades"),
             user_id=callback.from_user.id,
@@ -279,11 +287,11 @@ async def on_clear_credentials_requested(callback_query: CallbackQuery) -> None:
 @flags.private_chat_only
 async def on_confirm_clear_credentials(
     callback_query: CallbackQuery,
-    obis_service: FromDishka[ObisService],
+    clear_obis_credentials: FromDishka[ClearObisCredentialsUseCase],
     state: FSMContext,
 ) -> None:
     try:
-        await obis_service.clear_credentials(callback_query.from_user.id)
+        await clear_obis_credentials.execute(callback_query.from_user.id)
     except UserNotFoundError:
         await callback_query.answer(_("common.start_required"), show_alert=True)
         return
@@ -315,7 +323,7 @@ async def on_student_number_entered(message: Message, state: FSMContext) -> None
 async def on_password_entered(
     message: Message,
     state: FSMContext,
-    obis_service: FromDishka[ObisService],
+    save_obis_credentials: FromDishka[SaveObisCredentialsUseCase],
 ) -> None:
     password = message.text.strip() if message.text else ""
     data = await state.get_data()
@@ -330,7 +338,7 @@ async def on_password_entered(
         return
 
     try:
-        await obis_service.save_credentials(message.from_user.id, student_number, password)
+        await save_obis_credentials.execute(message.from_user.id, student_number, password)
     except ObisLoginError:
         await state.set_state(ObisCredentialsForm.student_number)
         await message.answer(_("obis.login_failed"), reply_markup=build_cancel_keyboard())

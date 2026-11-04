@@ -17,14 +17,18 @@ from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notific
 from manashelper.modules.notifications.orm import NotificationSettings
 from manashelper.modules.notifications.repository import NotificationSettingsRepository
 from manashelper.modules.schedule.infrastructure.models.course import Course
-from manashelper.modules.users.application.bot_status import BotStatusService
-from manashelper.modules.users.application.locale import LocaleService
-from manashelper.modules.users.application.theme import ThemeService
+from manashelper.modules.users.application.theme import ThemeQuery
+from manashelper.modules.users.application.use_cases.resolve_user_locale import ResolveUserLocaleUseCase
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.telegram.delivery import UserMessageDelivery
 from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
+from tests.modules.users.application_factories import (
+    build_bot_status_service,
+    build_locale_service,
+    build_theme_service,
+)
 
 
 async def test_stopped_users_are_excluded_from_every_recipient_selection(session):
@@ -57,7 +61,7 @@ async def test_private_interaction_resumes_bot_without_changing_preferences(sess
     settings = NotificationSettings(user_id=user.id, schedule_changes_enabled=False, exam_grades_enabled=False)
     session.add(settings)
     await session.flush()
-    locales = LocaleService(UserRepository(session))
+    locales = build_locale_service(UserRepository(session))
     await locales.resolve(user.id, "Group activity", None, "en")
     assert user.bot_stopped is True
     await locales.resolve(user.id, "Private activity", None, "en", resume_bot=True)
@@ -67,11 +71,18 @@ async def test_private_interaction_resumes_bot_without_changing_preferences(sess
 
 @pytest.mark.parametrize("chat_type", ["private", "group", "supergroup", "channel"])
 async def test_only_private_updates_request_bot_resumption(chat_type):
-    locales = AsyncMock(spec=LocaleService)
+    locales = AsyncMock(spec=build_locale_service(AsyncMock()))
     locales.resolve.return_value = Locale.RU
-    themes = AsyncMock(spec=ThemeService)
+    themes = AsyncMock(spec=build_theme_service(AsyncMock()))
     themes.get_theme.return_value = Theme.BASIC
-    request = SimpleNamespace(get=AsyncMock(side_effect={LocaleService: locales, ThemeService: themes}.__getitem__))
+    request = SimpleNamespace(
+        get=AsyncMock(
+            side_effect={
+                ResolveUserLocaleUseCase: SimpleNamespace(execute=locales.resolve),
+                ThemeQuery: themes,
+            }.__getitem__
+        )
+    )
     user = TelegramUser(id=42, is_bot=False, first_name="Student")
     chat = Chat(id=42 if chat_type == "private" else -42, type=chat_type)
     message = Message(message_id=1, date=0, chat=chat, from_user=user, text="any input")
@@ -89,7 +100,10 @@ async def test_permanent_failure_persists_flag_and_suppresses_next_attempt(sessi
     user_id = 946604
     session.add(User(id=user_id, full_name="Recipient"))
     await session.flush()
-    delivery = UserMessageDelivery(BotStatusService(UserRepository(session)))
+    delivery = UserMessageDelivery(
+        build_bot_status_service(UserRepository(session)),
+        stop_bot_delivery=SimpleNamespace(execute=build_bot_status_service(UserRepository(session)).stop),
+    )
     send = AsyncMock(
         side_effect=TelegramForbiddenError(
             method=SendMessage(chat_id=user_id, text="test"),
@@ -110,17 +124,19 @@ async def test_permanent_failure_persists_flag_and_suppresses_next_attempt(sessi
     ["Forbidden: user is deactivated", "Bad Request: chat not found", "Forbidden: bot was blocked by the user"],
 )
 async def test_permanent_telegram_errors_mark_user_stopped(reason):
-    status = AsyncMock(spec=BotStatusService)
+    status = AsyncMock(spec=build_bot_status_service(AsyncMock()))
     status.is_stopped.return_value = False
     error = TelegramForbiddenError(method=SendMessage(chat_id=42, text="test"), message=reason)
     with pytest.raises(TelegramForbiddenError):
-        await UserMessageDelivery(status).send(42, AsyncMock(side_effect=error))
+        await UserMessageDelivery(status, stop_bot_delivery=SimpleNamespace(execute=status.stop)).send(
+            42, AsyncMock(side_effect=error)
+        )
     status.stop.assert_awaited_once_with(42)
 
 
 @pytest.mark.parametrize("kind", ["rate_limit", "server", "invalid_content"])
 async def test_temporary_or_content_errors_preserve_delivery_eligibility(kind):
-    status = AsyncMock(spec=BotStatusService)
+    status = AsyncMock(spec=build_bot_status_service(AsyncMock()))
     status.is_stopped.return_value = False
     method = SendMessage(chat_id=42, text="test")
     error = (
@@ -131,5 +147,7 @@ async def test_temporary_or_content_errors_preserve_delivery_eligibility(kind):
         else TelegramBadRequest(method=method, message="Bad Request: can't parse entities")
     )
     with pytest.raises(type(error)):
-        await UserMessageDelivery(status).send(42, AsyncMock(side_effect=error))
+        await UserMessageDelivery(status, stop_bot_delivery=SimpleNamespace(execute=status.stop)).send(
+            42, AsyncMock(side_effect=error)
+        )
     status.stop.assert_not_awaited()

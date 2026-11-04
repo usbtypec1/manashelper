@@ -14,18 +14,18 @@ from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme
 from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.food_menu import jobs
-from manashelper.modules.food_menu.application import broadcast as broadcast_module
-from manashelper.modules.food_menu.application.broadcast import BroadcastFoodMenu
 from manashelper.modules.food_menu.application.daily_menu import (
     DailyMenuModel,
     DailyMenuNotFoundError,
 )
 from manashelper.modules.food_menu.application.food_menu_notification_settings import (
     FoodMenuMeal,
-    FoodMenuNotificationSettingsService,
+    FoodMenuSettingsQuery,
     UserNotFoundError,
 )
-from manashelper.modules.food_menu.application.food_menu_sync import FoodMenuSyncService
+from manashelper.modules.food_menu.application.use_cases import broadcast_food_menu as broadcast_module
+from manashelper.modules.food_menu.application.use_cases.broadcast_food_menu import BroadcastFoodMenuUseCase
+from manashelper.modules.food_menu.application.use_cases.sync_food_menus import SyncFoodMenusUseCase
 from manashelper.modules.food_menu.infrastructure.food_menu_client import FoodMenuClient
 from manashelper.modules.food_menu.infrastructure.food_menu_parser import FoodMenuParser, ScrapedDailyMenu, ScrapedDish
 from manashelper.modules.food_menu.infrastructure.repositories.daily_menu import DailyMenuRepository
@@ -44,8 +44,8 @@ from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
-from manashelper.modules.users.application.locale import LocaleService
-from manashelper.modules.users.application.theme import ThemeService
+from manashelper.modules.users.application.locale import LocaleQuery
+from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.modules.users.provider import UsersProvider
@@ -54,13 +54,14 @@ from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.telegram.outbox.service import OutboxService
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
+from tests.modules.food_menu.application_factories import build_food_menu_notification_settings_service
 
 
 async def test_notification_defaults_weekday_meal_and_bulk_toggles(session):
     session.add(User(id=960001, full_name="Menu settings"))
     await session.flush()
     repository = FoodMenuNotificationSettingsRepository(session)
-    service = FoodMenuNotificationSettingsService(repository, UsersQuery(UserRepository(session)))
+    service = build_food_menu_notification_settings_service(repository, UsersQuery(UserRepository(session)))
     summary = await service.get_settings(960001)
     assert [(day.weekday, day.lunch_enabled, day.dinner_enabled) for day in summary.days] == [
         (weekday, True, True) for weekday in range(7)
@@ -97,7 +98,7 @@ async def test_notification_defaults_weekday_meal_and_bulk_toggles(session):
 async def test_first_food_toggle_disables_selection_and_survives_reload(session, action, args, disabled):
     session.add(User(id=960001, full_name="Menu settings"))
     await session.flush()
-    service = FoodMenuNotificationSettingsService(
+    service = build_food_menu_notification_settings_service(
         FoodMenuNotificationSettingsRepository(session), UsersQuery(UserRepository(session))
     )
     summary = await getattr(service, action)(960001, *args)
@@ -119,7 +120,7 @@ async def test_new_weekday_toggle_preserves_other_saved_preferences(session):
     row.lunch_enabled = row.dinner_enabled = False
     await session.commit()
     session.expire_all()
-    service = FoodMenuNotificationSettingsService(repository, UsersQuery(UserRepository(session)))
+    service = build_food_menu_notification_settings_service(repository, UsersQuery(UserRepository(session)))
     summary = await service.toggle(960001, 2, FoodMenuMeal.LUNCH)
     assert (summary.days[1].lunch_enabled, summary.days[1].dinner_enabled) == (False, False)
     assert (summary.days[2].lunch_enabled, summary.days[2].dinner_enabled) == (False, True)
@@ -130,7 +131,7 @@ async def test_new_weekday_toggle_preserves_other_saved_preferences(session):
 async def test_first_food_click_updates_visible_button_and_persisted_preference(session, meal):
     session.add(User(id=960001, full_name="Menu settings"))
     await session.flush()
-    service = FoodMenuNotificationSettingsService(
+    service = build_food_menu_notification_settings_service(
         FoodMenuNotificationSettingsRepository(session), UsersQuery(UserRepository(session))
     )
     callback = AsyncMock(spec=CallbackQuery)
@@ -149,7 +150,7 @@ async def test_first_food_click_updates_visible_button_and_persisted_preference(
         assert selected.text == "✅"
         await session.commit()
         session.expire_all()
-        await on_toggle_food_menu_notification_day(callback, data, service)
+        await on_toggle_food_menu_notification_day(callback, data, SimpleNamespace(execute=service.toggle))
         keyboard = callback.message.edit_text.call_args.kwargs["reply_markup"]
         selected = next(
             button for row in keyboard.inline_keyboard for button in row if button.callback_data == data.pack()
@@ -174,7 +175,7 @@ async def test_first_food_click_updates_visible_button_and_persisted_preference(
     ],
 )
 async def test_notification_settings_require_an_existing_user(session, action, args):
-    service = FoodMenuNotificationSettingsService(
+    service = build_food_menu_notification_settings_service(
         FoodMenuNotificationSettingsRepository(session), UsersQuery(UserRepository(session))
     )
     with pytest.raises(UserNotFoundError) as error:
@@ -207,9 +208,11 @@ async def test_broadcast_job_selects_today_and_skips_missing_menu(monkeypatch, m
     select_recipients = getattr(settings, f"get_user_ids_with_{meal}_enabled_for_weekday")
     select_recipients.return_value = [960011]
     dependencies = {
-        BroadcastFoodMenu: BroadcastFoodMenu(daily, settings),
-        LocaleService: users,
-        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+        BroadcastFoodMenuUseCase: BroadcastFoodMenuUseCase(
+            SimpleNamespace(execute=daily.get_daily_menu_by_skipping_days), settings
+        ),
+        LocaleQuery: users,
+        ThemeQuery: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
         OutboxService: AsyncMock(spec=OutboxService),
     }
 
@@ -254,7 +257,7 @@ async def test_broadcast_queue_exception_boundary(stage):
 
 async def test_sync_normalized_names_preserve_existing_dishes_and_replace_changed_menu(session):
     menus = DailyMenuRepository(session)
-    service = FoodMenuSyncService(AsyncMock(), AsyncMock(), menus, DishRepository(session))
+    service = SyncFoodMenusUseCase(AsyncMock(), AsyncMock(), menus, DishRepository(session))
     day = date(2098, 2, 1)
     await service._synchronize_daily_menu(ScrapedDailyMenu(day, [ScrapedDish("Soup", "https://example.com/a", 100)]))
     await session.flush()
@@ -283,14 +286,14 @@ async def test_food_menu_provider_preserves_app_and_request_lifetimes():
         client = await container.get(FoodMenuClient)
         parser = await container.get(FoodMenuParser)
         async with container() as request:
-            first = await request.get(BroadcastFoodMenu)
-            assert first is await request.get(BroadcastFoodMenu)
+            first = await request.get(BroadcastFoodMenuUseCase)
+            assert first is await request.get(BroadcastFoodMenuUseCase)
             assert client is await request.get(FoodMenuClient)
             assert parser is await request.get(FoodMenuParser)
-            await request.get(FoodMenuSyncService)
-            await request.get(FoodMenuNotificationSettingsService)
+            await request.get(SyncFoodMenusUseCase)
+            await request.get(FoodMenuSettingsQuery)
         async with container() as request:
-            assert first is not await request.get(BroadcastFoodMenu)
+            assert first is not await request.get(BroadcastFoodMenuUseCase)
             assert client is await request.get(FoodMenuClient)
             assert parser is await request.get(FoodMenuParser)
 

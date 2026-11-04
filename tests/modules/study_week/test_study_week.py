@@ -24,8 +24,9 @@ from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, User
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.application.schedule import NoTrackedCoursesError, ScheduleLessonModel
 from manashelper.modules.schedule.provider import ScheduleProvider
-from manashelper.modules.study_week import application
-from manashelper.modules.study_week.application import GetStudyWeek, StudyWeek, week_end
+from manashelper.modules.study_week.application import StudyWeek, week_end
+from manashelper.modules.study_week.application.use_cases import get_study_week as application
+from manashelper.modules.study_week.application.use_cases.get_study_week import GetStudyWeekUseCase
 from manashelper.modules.study_week.formatter import format_study_week
 from manashelper.modules.study_week.provider import StudyWeekProvider
 from manashelper.modules.study_week.router import on_week_command, router
@@ -71,7 +72,7 @@ async def test_week_reads_eders_then_schedule_then_current_bishkek_date(monkeypa
         return datetime(2026, 10, 1, 0, 5, tzinfo=BISHKEK_TZ)
 
     monkeypatch.setitem(vars(application), "datetime", SimpleNamespace(now=now))
-    result = await GetStudyWeek(
+    result = await GetStudyWeekUseCase(
         SimpleNamespace(get_snapshot=eders), SimpleNamespace(get_user_schedule=schedule)
     ).execute(42)
     assert calls == [("eders", 42), ("schedule", 42), ("now", BISHKEK_TZ)]
@@ -90,7 +91,7 @@ async def test_source_failures_propagate_without_returning_partial_week(source):
         eders if source == "eders" else schedule, "get_snapshot" if source == "eders" else "get_user_schedule"
     ).side_effect = error
     with pytest.raises(RuntimeError) as caught:
-        await GetStudyWeek(eders, schedule).execute(42)
+        await GetStudyWeekUseCase(eders, schedule).execute(42)
     assert caught.value is error
     if source == "eders":
         schedule.get_user_schedule.assert_not_awaited()
@@ -255,9 +256,9 @@ async def test_study_week_provider_owns_request_scoped_use_case():
         StudyWeekProvider(),
     ) as container:
         async with container() as request:
-            first = await request.get(GetStudyWeek)
-            assert first is await request.get(GetStudyWeek)
+            first = await request.get(GetStudyWeekUseCase)
+            assert first is await request.get(GetStudyWeekUseCase)
         async with container() as request:
-            second = await request.get(GetStudyWeek)
+            second = await request.get(GetStudyWeekUseCase)
             assert first is not second
-            assert isinstance(second, GetStudyWeek)
+            assert isinstance(second, GetStudyWeekUseCase)

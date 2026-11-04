@@ -83,11 +83,11 @@ def _group_lessons(lessons: Sequence[Lesson]) -> list[LessonSearchResult]:
     ]
 
 
-class LessonSearchService:
-    def __init__(self, lesson_repository: LessonRepository) -> None:
-        self._lesson_repository = lesson_repository
+@dataclass(frozen=True, slots=True)
+class LessonSearchQuery:
+    lesson_repository: LessonRepository
 
     async def search(self, query: str) -> list[LessonSearchResult]:
         normalized_query = fold_turkish(query)
-        lessons = await self._lesson_repository.search_by_normalized_content(normalized_query)
+        lessons = await self.lesson_repository.search_by_normalized_content(normalized_query)
         return _group_lessons(lessons)

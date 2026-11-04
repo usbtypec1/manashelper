@@ -12,7 +12,7 @@ from manashelper.modules.eders.errors import (
 )
 from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
 from manashelper.modules.obis.presentation.keyboards import build_no_credentials_keyboard
-from manashelper.modules.study_week.application import GetStudyWeek
+from manashelper.modules.study_week.application.use_cases.get_study_week import GetStudyWeekUseCase
 from manashelper.modules.study_week.formatter import format_study_week
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
 
@@ -22,7 +22,7 @@ router = Router(name="study_week")
 @router.message(TranslatedText("menu.study_week"))
 @router.message(Command("week"))
 @flags.private_chat_only
-async def on_week_command(message: Message, get_study_week: FromDishka[GetStudyWeek]) -> None:
+async def on_week_command(message: Message, get_study_week: FromDishka[GetStudyWeekUseCase]) -> None:
     if message.from_user is None:
         return
     try:

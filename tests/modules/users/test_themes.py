@@ -14,8 +14,8 @@ from sqlalchemy import text
 
 from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme
-from manashelper.modules.users.application.locale import LocaleService
-from manashelper.modules.users.application.theme import ThemeService
+from manashelper.modules.users.application.theme import ThemeQuery
+from manashelper.modules.users.application.use_cases.resolve_user_locale import ResolveUserLocaleUseCase
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.modules.users.presentation.callbacks import ThemeCallback
 from manashelper.modules.users.presentation.routers import theme
@@ -25,6 +25,7 @@ from manashelper.platform.telegram.filters.translated_text import TranslatedText
 from manashelper.platform.telegram.keyboards.settings import build_settings_keyboard
 from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
 from manashelper.platform.telegram.navigation import build_main_keyboard
+from tests.modules.users.application_factories import build_locale_service, build_theme_service
 from tests.paths import PROJECT_ROOT
 
 
@@ -42,7 +43,7 @@ def context(monkeypatch):
 
 async def test_theme_defaults_persists_and_profile_refresh_preserves_other_preferences(session):
     repository = UserRepository(session)
-    service = ThemeService(repository)
+    service = build_theme_service(repository)
     assert await service.get_theme(976001) == Theme.BASIC
     await service.set_theme(976001, Theme.HALLOWEEN)
     assert await repository.get_by_id(976001) is None
@@ -55,7 +56,7 @@ async def test_theme_defaults_persists_and_profile_refresh_preserves_other_prefe
     await service.set_theme(976001, Theme.HALLOWEEN)
     await session.flush()
     session.expire_all()
-    assert await ThemeService(UserRepository(session)).get_theme(976001) == Theme.HALLOWEEN
+    assert await build_theme_service(UserRepository(session)).get_theme(976001) == Theme.HALLOWEEN
     user = await repository.upsert(976001, "New name", "new_username")
     assert (user.theme, user.locale, user.student_number, user.encrypted_password) == (
         "halloween",
@@ -76,7 +77,7 @@ async def test_theme_defaults_persists_and_profile_refresh_preserves_other_prefe
 @pytest.mark.parametrize("locale", list(Locale))
 @pytest.mark.parametrize("selected", list(Theme))
 async def test_theme_picker_selection_refreshes_menu_in_selected_theme(context, locale, selected):
-    service = AsyncMock(spec=ThemeService)
+    service = AsyncMock(spec=build_theme_service(AsyncMock()))
     service.get_theme.return_value = Theme.BASIC
     with i18n.use_locale(locale.value):
         buttons = [button for row in build_settings_keyboard().inline_keyboard for button in row]
@@ -94,7 +95,9 @@ async def test_theme_picker_selection_refreshes_menu_in_selected_theme(context, 
         )
         context.request.reset_mock()
 
-        await theme.on_theme_selected(context.callback, ThemeCallback(theme=selected), service)
+        await theme.on_theme_selected(
+            context.callback, ThemeCallback(theme=selected), SimpleNamespace(execute=service.set_theme)
+        )
         service.set_theme.assert_awaited_once_with(976001, selected)
         methods = [call.args[1] for call in context.request.await_args_list]
         with i18n.use_theme(selected):
@@ -107,14 +110,14 @@ async def test_theme_picker_selection_refreshes_menu_in_selected_theme(context, 
 
 
 async def test_repeated_selection_does_not_edit_identical_message(context):
-    service = AsyncMock(spec=ThemeService)
+    service = AsyncMock(spec=build_theme_service(AsyncMock()))
     selected = ThemeCallback(theme=Theme.HALLOWEEN)
-    await theme.on_theme_selected(context.callback, selected, service)
+    await theme.on_theme_selected(context.callback, selected, SimpleNamespace(execute=service.set_theme))
     method = context.request.await_args_list[0].args[1]
     current = context.message.model_copy(update={"text": method.text, "reply_markup": method.reply_markup})
     callback = context.callback.model_copy(update={"message": current})
     context.request.reset_mock()
-    await theme.on_theme_selected(callback, selected, service)
+    await theme.on_theme_selected(callback, selected, SimpleNamespace(execute=service.set_theme))
     assert [call.args[1].__api_method__ for call in context.request.await_args_list] == [
         "sendMessage",
         "answerCallbackQuery",
@@ -133,9 +136,12 @@ def test_theme_callbacks_reject_unknown_values_and_handlers_are_private():
 async def test_middleware_reads_saved_theme_and_restores_context(session, context, fails):
     repository = UserRepository(session)
     await repository.upsert(976001, "Student", None)
-    service = ThemeService(repository)
+    service = build_theme_service(repository)
     await service.set_theme(976001, Theme.HALLOWEEN)
-    dependencies = {LocaleService: LocaleService(repository), ThemeService: service}
+    dependencies = {
+        ResolveUserLocaleUseCase: SimpleNamespace(execute=build_locale_service(repository).resolve),
+        ThemeQuery: service,
+    }
     data = {
         CONTAINER_NAME: SimpleNamespace(get=AsyncMock(side_effect=dependencies.__getitem__)),
         "event_from_user": context.callback.from_user,

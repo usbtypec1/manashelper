@@ -10,7 +10,10 @@ from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
 from manashelper.core.time import BISHKEK_TZ
-from manashelper.modules.food_menu.application.daily_menu import DailyMenuNotFoundError, DailyMenuService
+from manashelper.modules.food_menu.application.daily_menu import DailyMenuNotFoundError, DailyMenuQuery
+from manashelper.modules.food_menu.application.use_cases.get_daily_menu import GetDailyMenuUseCase
+from manashelper.modules.food_menu.application.use_cases.get_daily_menu_by_offset import GetDailyMenuByOffsetUseCase
+from manashelper.modules.food_menu.application.use_cases.rate_daily_menu import RateDailyMenuUseCase
 from manashelper.modules.food_menu.presentation.callbacks import (
     FOOD_MENU_DAY_TO_SKIP_DAYS,
     FoodMenuCallback,
@@ -71,7 +74,7 @@ async def _send_menu_launcher(message: Message) -> None:
 
 async def _show_day_prompt(
     message: Message,
-    daily_menu_service: DailyMenuService,
+    daily_menu_query: DailyMenuQuery,
     *,
     callback_query: CallbackQuery | None = None,
     show_usage: bool = False,
@@ -80,7 +83,7 @@ async def _show_day_prompt(
     if message.chat.type in (ChatType.GROUP, ChatType.SUPERGROUP) and parameters is None:
         await _send_menu_launcher(message)
         return
-    availability = await daily_menu_service.get_available_dates()
+    availability = await daily_menu_query.get_available_dates()
     await message.answer_rich(
         rich_message=build_menu_day_selection(
             build_menu_day_buttons(availability.dates, availability.today), show_usage=show_usage
@@ -91,15 +94,17 @@ async def _show_day_prompt(
 
 
 @router.message(TranslatedText("menu.food"))
-async def on_food_menu_button(message: Message, daily_menu_service: FromDishka[DailyMenuService]) -> None:
-    await _show_day_prompt(message, daily_menu_service)
+async def on_food_menu_button(message: Message, daily_menu_query: FromDishka[DailyMenuQuery]) -> None:
+    await _show_day_prompt(message, daily_menu_query)
 
 
-async def _send_daily_menu(
+async def send_daily_menu(
     message: Message,
     skip_days: int,
-    daily_menu_service: DailyMenuService,
+    daily_menu_query: DailyMenuQuery,
     *,
+    get_daily_menu: GetDailyMenuUseCase,
+    get_daily_menu_by_offset: GetDailyMenuByOffsetUseCase,
     callback_query: CallbackQuery | None = None,
     menu_date: date | None = None,
 ) -> None:
@@ -112,9 +117,9 @@ async def _send_daily_menu(
         if message.chat.type == ChatType.PRIVATE:
             user_id = message.chat.id
         if menu_date is None:
-            daily_menu = await daily_menu_service.get_daily_menu_by_skipping_days(skip_days, user_id=user_id)
+            daily_menu = await get_daily_menu_by_offset.execute(skip_days, user_id=user_id)
         else:
-            daily_menu = await daily_menu_service.get_daily_menu_by_date(menu_date, user_id=user_id)
+            daily_menu = await get_daily_menu.execute(menu_date, user_id=user_id)
     except DailyMenuNotFoundError:
         if menu_date is not None:
             skip_days = 0 if menu_date == datetime.now(BISHKEK_TZ).date() else 1
@@ -153,22 +158,30 @@ def _parse_skip_days(args: str | None) -> int | None:
 async def cmd_yemek(
     message: Message,
     command: CommandObject,
-    daily_menu_service: FromDishka[DailyMenuService],
+    daily_menu_query: FromDishka[DailyMenuQuery],
+    get_daily_menu: FromDishka[GetDailyMenuUseCase],
+    get_daily_menu_by_offset: FromDishka[GetDailyMenuByOffsetUseCase],
 ) -> None:
     skip_days = _parse_skip_days(command.args)
     if skip_days is None:
-        await _show_day_prompt(message, daily_menu_service, show_usage=bool(command.args))
+        await _show_day_prompt(message, daily_menu_query, show_usage=bool(command.args))
         return
-    await _send_daily_menu(message, skip_days, daily_menu_service)
+    await send_daily_menu(
+        message,
+        skip_days,
+        daily_menu_query,
+        get_daily_menu=get_daily_menu,
+        get_daily_menu_by_offset=get_daily_menu_by_offset,
+    )
 
 
 @router.callback_query(FoodMenuOpenCallback.filter())
 async def on_food_menu_open_callback(
     callback_query: CallbackQuery,
-    daily_menu_service: FromDishka[DailyMenuService],
+    daily_menu_query: FromDishka[DailyMenuQuery],
 ) -> None:
     if isinstance(callback_query.message, Message):
-        await _show_day_prompt(callback_query.message, daily_menu_service, callback_query=callback_query)
+        await _show_day_prompt(callback_query.message, daily_menu_query, callback_query=callback_query)
     await callback_query.answer()
 
 
@@ -176,7 +189,9 @@ async def on_food_menu_open_callback(
 async def on_food_menu_date_callback(
     callback_query: CallbackQuery,
     callback_data: FoodMenuDateCallback,
-    daily_menu_service: FromDishka[DailyMenuService],
+    daily_menu_query: FromDishka[DailyMenuQuery],
+    get_daily_menu: FromDishka[GetDailyMenuUseCase],
+    get_daily_menu_by_offset: FromDishka[GetDailyMenuByOffsetUseCase],
 ) -> None:
     try:
         menu_date = date.fromisoformat(callback_data.menu_date)
@@ -184,10 +199,12 @@ async def on_food_menu_date_callback(
         await callback_query.answer(_("food.menu_unpublished"), show_alert=True)
         return
     if isinstance(callback_query.message, Message):
-        await _send_daily_menu(
+        await send_daily_menu(
             callback_query.message,
             0,
-            daily_menu_service,
+            daily_menu_query,
+            get_daily_menu=get_daily_menu,
+            get_daily_menu_by_offset=get_daily_menu_by_offset,
             callback_query=callback_query,
             menu_date=menu_date,
         )
@@ -198,14 +215,18 @@ async def on_food_menu_date_callback(
 async def on_food_menu_day_callback(
     callback_query: CallbackQuery,
     callback_data: FoodMenuCallback,
-    daily_menu_service: FromDishka[DailyMenuService],
+    daily_menu_query: FromDishka[DailyMenuQuery],
+    get_daily_menu: FromDishka[GetDailyMenuUseCase],
+    get_daily_menu_by_offset: FromDishka[GetDailyMenuByOffsetUseCase],
 ) -> None:
     skip_days = FOOD_MENU_DAY_TO_SKIP_DAYS[callback_data.day]
     if isinstance(callback_query.message, Message):
-        await _send_daily_menu(
+        await send_daily_menu(
             callback_query.message,
             skip_days,
-            daily_menu_service,
+            daily_menu_query,
+            get_daily_menu=get_daily_menu,
+            get_daily_menu_by_offset=get_daily_menu_by_offset,
             callback_query=callback_query,
         )
     await callback_query.answer()
@@ -215,10 +236,10 @@ async def on_food_menu_day_callback(
 async def on_food_menu_rating_callback(
     callback_query: CallbackQuery,
     callback_data: FoodMenuRatingCallback,
-    daily_menu_service: FromDishka[DailyMenuService],
+    rate_daily_menu: FromDishka[RateDailyMenuUseCase],
 ) -> None:
     try:
-        daily_menu = await daily_menu_service.set_rating(
+        daily_menu = await rate_daily_menu.execute(
             callback_query.from_user.id, callback_data.daily_menu_id, callback_data.rating
         )
     except ValueError:

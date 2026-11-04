@@ -4,7 +4,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.modules.users.application.locale import LocaleService
+from manashelper.modules.users.application.use_cases.set_user_locale import SetUserLocaleUseCase
 from manashelper.modules.users.presentation.callbacks import LocaleCallback
 from manashelper.modules.users.presentation.keyboards.locale import build_locale_keyboard, native_language_name
 from manashelper.platform.i18n.catalog import i18n
@@ -33,9 +33,9 @@ async def on_open_language(callback_query: CallbackQuery) -> None:
 async def on_locale_selected(
     callback_query: CallbackQuery,
     callback_data: LocaleCallback,
-    locale_service: FromDishka[LocaleService],
+    set_user_locale: FromDishka[SetUserLocaleUseCase],
 ) -> None:
-    await locale_service.set_locale(callback_query.from_user.id, callback_data.locale)
+    await set_user_locale.execute(callback_query.from_user.id, callback_data.locale)
 
     # The picker fires before a locale is resolved (or while switching away from the current
     # one), so the ambient gettext context can't be trusted here — bind explicitly to the one
