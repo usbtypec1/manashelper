@@ -26,7 +26,7 @@ def test_disabled_feature_has_no_entry_points_or_jobs(monkeypatch):
         assert not settings.eders_enabled
         container = make_async_container(CoreProvider())
         dispatcher = create_dispatcher(container)
-        assert not {'eders', 'study_week'} & {r.name for r in dispatcher.sub_routers}
+        assert not {'eders', 'eders_menu', 'study_week'} & {r.name for r in dispatcher.sub_routers}
         assert all(j.func is not poll_eders_job for j in create_scheduler(container, None).get_jobs())
         with i18n.context(), i18n.use_locale('ru'):
             labels = [b.text for row in build_main_keyboard().keyboard for b in row]

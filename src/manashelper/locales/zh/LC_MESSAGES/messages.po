@@ -861,11 +861,8 @@ msgstr "资料已更新"
 msgid "eders.materials_help"
 msgstr "按课程、章节或标题搜索：/materials 文本。新增是指首次同步后发现的资料。"
 
-msgid "notifications.eders"
-msgstr "Eders"
-
 msgid "menu.eders"
-msgstr "Eders 截止日期"
+msgstr "Eders"
 
 msgid "menu.eders_materials"
 msgstr "Eders 课程资料"
@@ -978,3 +975,12 @@ msgstr "群发消息已暂停至 {until}（比什凯克时间）。"
 
 msgid "notifications.broadcast_resumed"
 msgstr "已恢复群发消息"
+
+msgid "menu.obis"
+msgstr "OBIS"
+
+msgid "eders.deadlines"
+msgstr "截止日期"
+
+msgid "obis.notifications_header"
+msgstr "OBIS 通知"

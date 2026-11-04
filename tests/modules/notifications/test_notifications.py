@@ -90,7 +90,7 @@ async def test_read_creates_enabled_settings_before_flush(session):
     assert summary == NotificationSettingsSummary(True, True, True)
     with i18n.context(), i18n.use_locale("ru"):
         keyboard = build_notifications_keyboard(summary)
-    assert all(keyboard.inline_keyboard[index][0].text.startswith("✅") for index in (0, 2, 3))
+    assert keyboard.inline_keyboard[0][0].text.startswith("✅")
     await session.flush()
     assert await service(session).get_settings(972001) == NotificationSettingsSummary(True, True, True)
     rows = await session.scalars(select(NotificationSettings).where(NotificationSettings.user_id == 972001))
@@ -99,6 +99,9 @@ async def test_read_creates_enabled_settings_before_flush(session):
 
 @pytest.mark.parametrize("setting", list(NotificationSetting))
 async def test_initial_menu_and_first_click_match_persisted_settings(session, setting):
+    from manashelper.modules.obis.presentation.callbacks import ObisNotificationSettingCallback
+    from manashelper.modules.obis.presentation.router import on_obis_notification_setting, on_obis_notifications
+
     session.add(User(id=972001, full_name="Notifications"))
     await session.flush()
     callback = AsyncMock(spec=CallbackQuery)
@@ -107,17 +110,19 @@ async def test_initial_menu_and_first_click_match_persisted_settings(session, se
     callback.message.edit_text = AsyncMock()
     callback.answer = AsyncMock()
     settings_service = service(session)
-    payload = NotificationSettingCallback(setting=setting).pack()
+    is_schedule = setting == NotificationSetting.SCHEDULE_CHANGES
+    callback_type = NotificationSettingCallback if is_schedule else ObisNotificationSettingCallback
+    payload = callback_type(setting=setting).pack()
+    open_settings = router.on_open_notifications if is_schedule else on_obis_notifications
+    toggle_setting = router.on_toggle_notification_setting if is_schedule else on_obis_notification_setting
     with i18n.context(), i18n.use_locale("ru"):
-        await router.on_open_notifications(callback, settings_service)
+        await open_settings(callback, settings_service)
         keyboard = callback.message.edit_text.call_args.kwargs["reply_markup"]
         selected = next(button for row in keyboard.inline_keyboard for button in row if button.callback_data == payload)
         assert selected.text.startswith("✅")
         await session.commit()
         session.expire_all()
-        await router.on_toggle_notification_setting(
-            callback, NotificationSettingCallback(setting=setting), settings_service
-        )
+        await toggle_setting(callback, callback_type(setting=setting), settings_service)
         keyboard = callback.message.edit_text.call_args.kwargs["reply_markup"]
         selected = next(button for row in keyboard.inline_keyboard for button in row if button.callback_data == payload)
         assert selected.text.startswith("❌")
@@ -152,12 +157,9 @@ def test_notification_payload_keyboard_order_and_private_flags():
     assert [button.callback_data for button in buttons] == [
         "notification_setting:schedule_changes",
         "settings:open_food_menu_notifications",
-        "notification_setting:exam_grades",
-        "notification_setting:lesson_skips",
-        "settings:open_eders_notifications",
         "settings:back_to_settings",
     ]
-    assert buttons[0].text.startswith("✅") and buttons[2].text.startswith("❌")
+    assert buttons[0].text.startswith("✅")
     names = {"on_open_notifications", "on_back_to_notifications", "on_toggle_notification_setting"}
     handlers = [handler for handler in router.router.callback_query.handlers if handler.callback.__name__ in names]
     assert len(handlers) == 3

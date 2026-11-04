@@ -868,11 +868,8 @@ msgstr "Materyal güncellendi"
 msgid "eders.materials_help"
 msgstr "Ders, bölüm veya başlığa göre arama: /materials metin. Yeni, ilk eşitlemeden sonra keşfedilen demektir."
 
-msgid "notifications.eders"
-msgstr "Eders"
-
 msgid "menu.eders"
-msgstr "Eders son tarihler"
+msgstr "Eders"
 
 msgid "menu.eders_materials"
 msgstr "Eders materyalleri"
@@ -985,3 +982,12 @@ msgstr "Toplu mesajlar {until} tarihine kadar kapalı (Bişkek saati)."
 
 msgid "notifications.broadcast_resumed"
 msgstr "Toplu mesajlar yeniden açıldı"
+
+msgid "menu.obis"
+msgstr "OBIS"
+
+msgid "eders.deadlines"
+msgstr "Son tarihler"
+
+msgid "obis.notifications_header"
+msgstr "OBIS bildirimleri"

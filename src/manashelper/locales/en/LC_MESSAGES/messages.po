@@ -869,11 +869,8 @@ msgstr "Material updated"
 msgid "eders.materials_help"
 msgstr "Search by course, section or title: /materials text. New means first discovered after the initial sync."
 
-msgid "notifications.eders"
-msgstr "Eders"
-
 msgid "menu.eders"
-msgstr "Eders deadlines"
+msgstr "Eders"
 
 msgid "menu.eders_materials"
 msgstr "Eders materials"
@@ -986,3 +983,12 @@ msgstr "Admin broadcasts are muted until {until} (Bishkek time)."
 
 msgid "notifications.broadcast_resumed"
 msgstr "Broadcasts resumed"
+
+msgid "menu.obis"
+msgstr "OBIS"
+
+msgid "eders.deadlines"
+msgstr "Deadlines"
+
+msgid "obis.notifications_header"
+msgstr "OBIS notifications"

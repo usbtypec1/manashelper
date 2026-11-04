@@ -11,7 +11,7 @@ from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.platform.telegram.delivery import is_permanent_recipient_error
 from manashelper.platform.telegram.outbox.models import OutboxMessage
 from manashelper.platform.telegram.outbox.repository import OutboxRepository
-from manashelper.platform.telegram.outbox.service import METHOD_TYPES, OutgoingMethod
+from manashelper.platform.telegram.outbox.service import METHOD_TYPES, OutgoingMethod, is_night
 
 logger = logging.getLogger(__name__)
 MAX_FAILURES = 12
@@ -74,6 +74,16 @@ class OutboxWorker:
                 row.last_error = "invalid_payload"
                 finish(row, "failed", now)
                 continue
+            if is_night(now):
+                method.disable_notification = True
+                # Replace the JSON value for SQLAlchemy change tracking. Keep the
+                # flag for retries and every remaining part, even after morning.
+                row.methods = [
+                    {**part, "data": {**part["data"], "disable_notification": True}}
+                    if position >= row.position
+                    else part
+                    for position, part in enumerate(row.methods)
+                ]
             row.status = "processing"
             row.lease_token = uuid4()
             row.locked_until = now + timedelta(seconds=LEASE_SECONDS)

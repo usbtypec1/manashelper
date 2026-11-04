@@ -12,6 +12,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
+from manashelper.modules.notifications.settings import NotificationSetting, NotificationSettingsService
 from manashelper.modules.obis.application.obis import ObisService
 from manashelper.modules.obis.errors import (
     ObisLoginError,
@@ -20,12 +21,19 @@ from manashelper.modules.obis.errors import (
     UserHasNoCredentialsError,
     UserNotFoundError,
 )
-from manashelper.modules.obis.presentation.callbacks import ObisAction, ObisCallback, ObisResultsPageCallback
+from manashelper.modules.obis.presentation.callbacks import (
+    ObisAction,
+    ObisCallback,
+    ObisNotificationSettingCallback,
+    ObisResultsPageCallback,
+)
 from manashelper.modules.obis.presentation.formatter import format_attendance_pages, format_exam_grades_pages
 from manashelper.modules.obis.presentation.keyboards import (
     build_cancel_keyboard,
     build_confirm_clear_credentials_keyboard,
     build_no_credentials_keyboard,
+    build_obis_menu_keyboard,
+    build_obis_notifications_keyboard,
     build_obis_results_keyboard,
     build_obis_settings_keyboard,
     build_terms_keyboard,
@@ -33,6 +41,7 @@ from manashelper.modules.obis.presentation.keyboards import (
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
 
 router = Router(name="obis")
+menu_router = Router(name="obis_menu")
 logger = logging.getLogger(__name__)
 RESULTS_KEY = "obis_result_pages"
 MAX_SAVED_RESULTS = 5
@@ -43,18 +52,76 @@ class ObisCredentialsForm(StatesGroup):
     password = State()
 
 
+@menu_router.message(TranslatedText("menu.obis"))
+@flags.private_chat_only
+async def on_obis_menu(message: Message, state: FSMContext) -> None:
+    await state.clear()
+    await message.answer(_("menu.obis"), reply_markup=build_obis_menu_keyboard())
+
+
+@menu_router.callback_query(ObisCallback.filter(F.action == ObisAction.MENU))
+@flags.private_chat_only
+async def on_back_to_obis_menu(callback: CallbackQuery) -> None:
+    if isinstance(callback.message, Message):
+        await callback.message.edit_text(_("menu.obis"), reply_markup=build_obis_menu_keyboard())
+    await callback.answer()
+
+
+@router.callback_query(ObisCallback.filter(F.action == ObisAction.NOTIFICATIONS))
+@flags.private_chat_only
+async def on_obis_notifications(
+    callback: CallbackQuery, notification_settings_service: FromDishka[NotificationSettingsService]
+) -> None:
+    try:
+        settings = await notification_settings_service.get_settings(callback.from_user.id)
+    except UserNotFoundError:
+        await callback.answer(_("common.start_required"), show_alert=True)
+        return
+    if isinstance(callback.message, Message):
+        await callback.message.edit_text(
+            _("obis.notifications_header"), reply_markup=build_obis_notifications_keyboard(settings)
+        )
+    await callback.answer()
+
+
+@router.callback_query(
+    ObisNotificationSettingCallback.filter(
+        F.setting.in_({NotificationSetting.EXAM_GRADES, NotificationSetting.LESSON_SKIPS})
+    )
+)
+@flags.private_chat_only
+async def on_obis_notification_setting(
+    callback: CallbackQuery,
+    callback_data: ObisNotificationSettingCallback,
+    notification_settings_service: FromDishka[NotificationSettingsService],
+) -> None:
+    try:
+        settings = await notification_settings_service.toggle_setting(callback.from_user.id, callback_data.setting)
+    except UserNotFoundError:
+        await callback.answer(_("common.start_required"), show_alert=True)
+        return
+    if isinstance(callback.message, Message):
+        await callback.message.edit_text(
+            _("obis.notifications_header"), reply_markup=build_obis_notifications_keyboard(settings)
+        )
+    await callback.answer()
+
+
 async def _show_obis_results[T](
     message: Message,
     state: FSMContext,
     fetch: Callable[[int], Awaitable[list[T]]],
     format_results: Callable[[list[T]], list[str]],
     loading_text: str,
+    *,
+    user_id: int | None = None,
 ) -> None:
-    if message.from_user is None:
+    recipient_id = user_id if user_id is not None else message.from_user.id if message.from_user else None
+    if recipient_id is None:
         return
     sent = await message.answer(loading_text, parse_mode=None)
     try:
-        lessons = await fetch(message.from_user.id)
+        lessons = await fetch(recipient_id)
     except UserNotFoundError:
         await sent.edit_text(_("common.start_required"))
         return
@@ -138,6 +205,37 @@ async def on_obis_results_page(
         await callback_query.answer(_("common.error_retry"), show_alert=True)
         return
     await callback_query.answer()
+
+
+@router.callback_query(ObisCallback.filter(F.action.in_({ObisAction.ATTENDANCE, ObisAction.GRADES})))
+@flags.private_chat_only
+async def on_obis_view(
+    callback: CallbackQuery,
+    callback_data: ObisCallback,
+    state: FSMContext,
+    obis_service: FromDishka[ObisService],
+) -> None:
+    await callback.answer()
+    if not isinstance(callback.message, Message):
+        return
+    if callback_data.action == ObisAction.ATTENDANCE:
+        await _show_obis_results(
+            callback.message,
+            state,
+            obis_service.get_attendance,
+            format_attendance_pages,
+            _("obis.loading_attendance"),
+            user_id=callback.from_user.id,
+        )
+    else:
+        await _show_obis_results(
+            callback.message,
+            state,
+            obis_service.get_exam_grades,
+            format_exam_grades_pages,
+            _("obis.loading_grades"),
+            user_id=callback.from_user.id,
+        )
 
 
 @router.callback_query(ObisCallback.filter(F.action == ObisAction.START_CREDENTIALS))

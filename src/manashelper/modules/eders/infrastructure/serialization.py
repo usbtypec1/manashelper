@@ -48,6 +48,7 @@ def deserialize_snapshot(payload: str) -> EdersSnapshot:
             first_seen=datetime.fromisoformat(value["first_seen"]) if value["first_seen"] else None,
             section=value.get("section", ""),
             description=value.get("description", ""),
+            completed=value.get("completed", False),
         )
         for value in data["activities"]
     )

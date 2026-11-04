@@ -70,6 +70,7 @@ class EdersActivity:
     first_seen: datetime | None = None
     section: str = ""
     description: str = ""
+    completed: bool = False
 
 
 @dataclass(frozen=True, slots=True)

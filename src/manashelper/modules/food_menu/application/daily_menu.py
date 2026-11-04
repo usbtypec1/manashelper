@@ -11,7 +11,7 @@ from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_rating
     DailyMenuRatingRepository,
 )
 
-MENU_LOOKAHEAD_DAYS = 7
+MENU_LOOKAHEAD_DAYS = 5
 
 
 class DailyMenuNotFoundError(Exception):

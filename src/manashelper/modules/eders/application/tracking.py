@@ -71,7 +71,7 @@ def plan_events(snapshot: EdersSnapshot, previous: EdersSnapshot | None, setting
                 events.append(_event(activity, "material_new", now, now))
             elif before and (before.name, before.description) != (activity.name, activity.description):
                 events.append(_event(activity, "material_changed", now, now))
-        if activity.kind not in {ActivityKind.ASSIGNMENT, ActivityKind.QUIZ}:
+        if activity.kind not in {ActivityKind.ASSIGNMENT, ActivityKind.QUIZ} or activity.completed:
             continue
         closes, opens = activity.closes.instant, activity.opens.instant
         if (
@@ -182,10 +182,14 @@ class EdersTrackingService:
         for stored_event in existing:
             item = current.get(stored_event.activity_key)
             valid_change = (
-                stored_event.event_type == "changed" and item and item.closes.instant == stored_event.event_time
+                stored_event.event_type == "changed"
+                and item
+                and not item.completed
+                and item.closes.instant == stored_event.event_time
             )
             valid_reminder = (
                 item
+                and not item.completed
                 and item.submission != SubmissionStatus.SUBMITTED
                 and (
                     (
@@ -257,6 +261,7 @@ class EdersTrackingService:
             activity = deserialize_snapshot(row.payload).activities[0]
             if (
                 not enabled
+                or (row.event_type not in {"material_new", "material_changed"} and activity.completed)
                 or (
                     row.event_type not in {"material_new", "material_changed"}
                     and activity.closes.instant
