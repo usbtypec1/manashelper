@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const fixtures = path.resolve(__dirname, '../../../tests/fixtures/eders');
 const methodname = 'core_course_get_enrolled_courses_by_timeline_classification';
+const completionMethod = 'core_completion_update_activity_completion_status_manually';
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://fixture');
   const send = (status, body, headers = {}) => { res.writeHead(status, headers); res.end(body); };
@@ -72,6 +73,22 @@ http.createServer(async (req, res) => {
     if (mode === 'invalid-json') return send(200, '<h1>Unexpected HTML</h1>');
     if (mode === 'expired') return send(302, '', {location: '/login/index.php'});
     const body = req.body;
+    if (url.searchParams.get('info') === completionMethod) {
+      if (req.method !== 'POST' || url.searchParams.get('sesskey') !== 'fakekey' ||
+          !req.headers['content-type']?.startsWith('application/json') ||
+          !Array.isArray(body) || body.length !== 1 || body[0]?.index !== 0 ||
+          body[0]?.methodname !== completionMethod || !['20', '21'].includes(body[0]?.args?.cmid) ||
+          typeof body[0]?.args?.completed !== 'boolean')
+        return send(400, JSON.stringify({error: 'Unexpected completion contract'}));
+      if (mode === 'completion-denied')
+        return send(200, JSON.stringify([{error: true, exception: {errorcode: 'nopermissions'}}]));
+      if (mode === 'completion-false')
+        return send(200, JSON.stringify([{error: false, data: {status: false, warnings: []}}]));
+      if (mode === 'completion-expired')
+        return send(200, JSON.stringify([{error: true, exception: {errorcode: 'invalidsesskey'}}]));
+      return send(200, JSON.stringify([{error: false, data: {status: true, warnings: []}}]),
+                  {'content-type': 'application/json'});
+    }
     if (req.method !== 'POST' || url.searchParams.get('sesskey') !== 'fakekey' ||
         url.searchParams.get('info') !== methodname || !Array.isArray(body) ||
         body[0]?.methodname !== methodname || body[0]?.args?.classification !== 'all' || body[0]?.args?.limit !== 0)

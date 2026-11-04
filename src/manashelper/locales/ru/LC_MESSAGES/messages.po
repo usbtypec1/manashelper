@@ -992,3 +992,24 @@ msgstr "Дедлайны"
 
 msgid "obis.notifications_header"
 msgstr "Уведомления OBIS"
+
+msgid "eders.mark_done"
+msgstr "Отметить выполненным"
+
+msgid "eders.mark_undone"
+msgstr "Отметить невыполненным"
+
+msgid "eders.marked_done"
+msgstr "[отмечено выполненным]"
+
+msgid "eders.completion_done"
+msgstr "В Eders отмечено выполненным."
+
+msgid "eders.completion_undone"
+msgstr "В Eders отмечено невыполненным."
+
+msgid "eders.completion_failed"
+msgstr "Не удалось обновить задание в Eders. Попробуйте ещё раз."
+
+msgid "eders.completion_unavailable"
+msgstr "Для этого задания больше недоступна ручная отметка. Проверьте его в Eders."

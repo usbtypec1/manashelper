@@ -44,6 +44,9 @@ def test_course_completion_is_read_from_its_own_control(markup, completed):
     {markup}</li></ul></div></main>"""
     parsed = parse_course_activities(html, activity.course)[0]
     assert parsed.completed is completed
+    assert parsed.manual_completion is (
+        'data-action="toggle-manual-completion"' in markup and 'data-cmid="20"' in markup
+    )
     assert parsed.submission == SubmissionStatus.UNKNOWN
 
 
@@ -62,11 +65,13 @@ def test_details_preserve_course_completion_unless_an_explicit_control_overrides
 
 
 def test_completion_round_trip_and_legacy_snapshot():
-    snapshot = EdersSnapshot((item(completed=True),), NOW)
+    snapshot = EdersSnapshot((item(completed=True, manual_completion=True),), NOW)
     assert deserialize_snapshot(serialize_snapshot(snapshot)) == snapshot
     legacy = json.loads(serialize_snapshot(snapshot))
     del legacy["activities"][0]["completed"]
+    del legacy["activities"][0]["manual_completion"]
     assert not deserialize_snapshot(json.dumps(legacy)).activities[0].completed
+    assert not deserialize_snapshot(json.dumps(legacy)).activities[0].manual_completion
 
 
 def test_completed_activity_has_no_deadline_or_opening_events():

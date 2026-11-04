@@ -995,3 +995,24 @@ msgstr "Мөөнөттөр"
 
 msgid "obis.notifications_header"
 msgstr "OBIS билдирүүлөрү"
+
+msgid "eders.mark_done"
+msgstr "Аткарылды деп белгилөө"
+
+msgid "eders.mark_undone"
+msgstr "Аткарылган жок деп белгилөө"
+
+msgid "eders.marked_done"
+msgstr "[аткарылды деп белгиленди]"
+
+msgid "eders.completion_done"
+msgstr "Eders ичинде аткарылды деп белгиленди."
+
+msgid "eders.completion_undone"
+msgstr "Eders ичинде аткарылган жок деп белгиленди."
+
+msgid "eders.completion_failed"
+msgstr "Eders ичиндеги тапшырманы жаңыртуу мүмкүн болгон жок. Кайра аракет кылыңыз."
+
+msgid "eders.completion_unavailable"
+msgstr "Бул тапшырманы кол менен белгилөө мындан ары жеткиликсиз. Eders ичинен текшериңиз."

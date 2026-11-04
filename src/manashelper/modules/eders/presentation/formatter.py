@@ -1,6 +1,7 @@
 from aiogram.utils.i18n import gettext as _
 
 from manashelper.core.time import BISHKEK_TZ
+from manashelper.localization.locale import Locale
 from manashelper.modules.eders.application.models import (
     ActivityDate,
     ActivityKind,
@@ -9,7 +10,19 @@ from manashelper.modules.eders.application.models import (
     SubmissionStatus,
 )
 from manashelper.modules.eders.application.tracking import EdersEvent
+from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.html import escape_html
+
+
+def format_completion_message(text: str, completed: bool) -> str:
+    # A user may have changed language since marking this reminder as done.
+    before, separator, tail = text.rpartition("\n\n")
+    markers = {escape_html(i18n.gettext("eders.marked_done", locale=locale.value)) for locale in Locale}
+    if separator and tail in markers:
+        text = before
+    if completed:
+        text += "\n\n" + escape_html(_("eders.marked_done"))
+    return text
 
 
 def _date(value: ActivityDate, source_limit: int = 300) -> str:

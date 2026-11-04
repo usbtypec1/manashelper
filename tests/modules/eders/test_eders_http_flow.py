@@ -103,6 +103,39 @@ async def test_http_expired_session_retries_once(monkeypatch):
     assert len(transports) == 2
 
 
+@pytest.mark.parametrize("completed", [True, False])
+async def test_http_manual_completion_uses_authenticated_json_contract(monkeypatch, completed):
+    transports = install_client(monkeypatch)
+    await make_eders_client().set_activity_completion("fake-student", 20, completed)
+    assert len(transports) == 1
+    assert transports[0].paths[-1] == ("POST", "/lib/ajax/service.php")
+    assert transports[0].paths[:2] == [("GET", "/login/index.php"), ("POST", "/login/index.php")]
+
+
+@pytest.mark.parametrize("completed", [True, False])
+async def test_http_manual_completion_supports_obis_sso(monkeypatch, completed):
+    transports = install_client(monkeypatch)
+    await make_eders_client().set_activity_completion("fake-student", 20, completed, "fake-password")
+    assert transports[0].paths[0] == ("GET", "/site/login")
+    assert transports[0].paths[-1] == ("POST", "/lib/ajax/service.php")
+
+
+@pytest.mark.parametrize("mode", ["completion-denied", "completion-false", "invalid-json", "html-error"])
+async def test_http_manual_completion_never_accepts_unconfirmed_success(monkeypatch, mode):
+    transports = install_client(monkeypatch, mode)
+    with pytest.raises(EdersFetchError):
+        await make_eders_client().set_activity_completion("fake-student", 20, True)
+    assert len(transports) == 1
+
+
+@pytest.mark.parametrize("mode", ["completion-expired", "expired"])
+async def test_http_manual_completion_reauthenticates_at_most_once(monkeypatch, mode):
+    transports = install_client(monkeypatch, mode)
+    with pytest.raises(EdersSessionExpiredError):
+        await make_eders_client().set_activity_completion("fake-student", 20, True)
+    assert len(transports) == 2
+
+
 @pytest.mark.parametrize("mode", ["eders-login-denied", "eders-token-missing"])
 async def test_http_login_failure_stops_before_reading_user_data(monkeypatch, mode):
     transports = install_client(monkeypatch, mode)
