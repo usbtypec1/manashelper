@@ -9,7 +9,8 @@ from aiogram.exceptions import (
     TelegramRetryAfter,
     TelegramServerError,
 )
-from aiogram.methods import SendMessage, SendPhoto
+from aiogram.methods import SendMessage, SendPhoto, SendRichMessage
+from aiogram.types import InputRichMessage
 from sqlalchemy import select
 
 from manashelper.modules.notifications.orm import NotificationSettings
@@ -21,7 +22,7 @@ from manashelper.modules.users.infrastructure.repositories.user import UserRepos
 from manashelper.platform.telegram.outbox.models import OutboxMessage, OutboxRateBucket
 from manashelper.platform.telegram.outbox.rate_limit import CHAT_BUCKET, GLOBAL_BUCKET
 from manashelper.platform.telegram.outbox.repository import OutboxRepository
-from manashelper.platform.telegram.outbox.service import OutboxService
+from manashelper.platform.telegram.outbox.service import METHOD_TYPES, OutboxService, is_night
 from manashelper.platform.telegram.outbox.worker import MAX_FAILURES, OutboxWorker, retry_delay
 
 
@@ -50,6 +51,69 @@ async def enqueue(context, user_id=983001, **kwargs):
 
 async def rows(context):
     return list((await context.session.scalars(select(OutboxMessage).order_by(OutboxMessage.id))).all())
+
+
+def freeze_enqueue_clock(monkeypatch, now):
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return now.astimezone(tz)
+
+    monkeypatch.setattr("manashelper.platform.telegram.outbox.service.datetime", Clock)
+
+
+@pytest.mark.parametrize(
+    ("utc_time", "silent"),
+    [("01:59:59", True), ("02:00:00", False), ("15:59:59", False), ("16:00:00", True), ("23:00:00", True)],
+)
+@pytest.mark.parametrize("category", ["broadcast", "notification"])
+async def test_night_flag_is_persisted_for_all_methods(context, monkeypatch, utc_time, silent, category):
+    now = datetime.fromisoformat(f"2099-01-01T{utc_time}+00:00")
+    freeze_enqueue_clock(monkeypatch, now)
+    assert is_night(now) is silent
+    methods = [SendMessage(chat_id=983001, text="Text"), SendPhoto(chat_id=983001, photo="photo")]
+    rich = SendRichMessage(chat_id=983001, rich_message=InputRichMessage(html="Rich text"))
+    methods.append(rich)
+    assert await context.service.enqueue(983001, methods, category=category)
+    context.session.expire_all()
+    message = (await rows(context))[0]
+    assert len(message.methods) == 3
+    for part in message.methods:
+        assert part["data"]["disable_notification"] is silent
+        assert METHOD_TYPES[part["method"]].model_validate(part["data"]).disable_notification is silent
+
+
+async def test_daytime_preserves_explicit_silence_and_source_deduplication(context, monkeypatch):
+    day = datetime(2099, 1, 1, 15, 59, 59, tzinfo=UTC)
+    freeze_enqueue_clock(monkeypatch, day)
+    assert await context.service.enqueue(983001, [SendMessage(chat_id=983001, text="Quiet", disable_notification=True)])
+    assert (await rows(context))[0].methods[0]["data"]["disable_notification"] is True
+    assert await enqueue(context, source_keys=["same-event"])
+    freeze_enqueue_clock(monkeypatch, day + timedelta(seconds=1))
+    assert await enqueue(context, source_keys=["same-event"])
+    assert len(await rows(context)) == 2
+
+
+async def test_daytime_queue_becomes_silent_at_night_and_stays_silent_on_morning_retry(context, monkeypatch):
+    day = datetime(2099, 1, 1, 15, 59, 59, tzinfo=UTC)
+    freeze_enqueue_clock(monkeypatch, day)
+    await context.service.enqueue(
+        983001, [SendPhoto(chat_id=983001, photo="photo"), SendMessage(chat_id=983001, text="Text")]
+    )
+    night = day + timedelta(seconds=1)
+    photo = await context.worker.claim(context.bot_id, night)
+    assert photo.method.disable_notification is True
+    await context.worker.fail(photo, TelegramNetworkError(photo.method, "Retry"), context.bot_id, night)
+    await context.session.flush()
+    context.session.expire_all()
+    assert all(part["data"]["disable_notification"] is True for part in (await rows(context))[0].methods)
+    morning = datetime(2099, 1, 2, 2, tzinfo=UTC)
+    recreated = OutboxWorker(OutboxRepository(context.session), context.status, context.recipients)
+    retry = await recreated.claim(context.bot_id, morning)
+    assert retry.method.disable_notification is True
+    await recreated.complete(retry, morning)
+    text = await recreated.claim(context.bot_id, morning + timedelta(seconds=1))
+    assert isinstance(text.method, SendMessage) and text.method.disable_notification is True
 
 
 async def test_atomic_enqueue_rollback_and_deduplication(context):

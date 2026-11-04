@@ -7,6 +7,11 @@ immediate delivery because they use Telegram responses or message IDs.
 
 ## Delivery
 
+Between 22:00 (inclusive) and 08:00 (exclusive), Bishkek time, queued deliveries use
+`disable_notification=true`. The flag is stored in each method's JSON payload when enqueued.
+Claims also enable and persist it for remaining parts if daytime work reaches delivery at night.
+Once enabled, it survives retries and multipart delivery after 08:00. Explicit silent sends remain silent during the day.
+
 The scheduler starts one continuous worker per process. Claims use `FOR UPDATE SKIP LOCKED`, a random token and
 a 60-second lease. Claims and rate reservations commit before HTTP; results commit in a separate request scope.
 Requests have a 20-second timeout. Expired leases recover after a crash; stale workers cannot acknowledge new leases.

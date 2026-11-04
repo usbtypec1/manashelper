@@ -1,9 +1,11 @@
 import hashlib
 import json
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from aiogram.methods import SendMessage, SendPhoto, SendRichMessage
 
+from manashelper.core.time import BISHKEK_TZ
 from manashelper.modules.users.application.bot_status import BotStatusService
 from manashelper.platform.telegram.outbox.models import OutboxMessage
 from manashelper.platform.telegram.outbox.repository import OutboxRepository
@@ -14,6 +16,11 @@ METHOD_TYPES: dict[str, type[OutgoingMethod]] = {
     "sendPhoto": SendPhoto,
     "sendRichMessage": SendRichMessage,
 }
+
+
+def is_night(now: datetime) -> bool:
+    hour = now.astimezone(BISHKEK_TZ).hour
+    return hour >= 22 or hour < 8
 
 
 class OutboxService:
@@ -37,7 +44,7 @@ class OutboxService:
             raise ValueError("Outbox expiration must include a timezone")
         if not methods or expires_at <= now or await self._status.is_stopped(user_id):
             return False
-        payload = []
+        payload: list[dict[str, Any]] = []
         for method in methods:
             if method.chat_id != user_id:
                 raise ValueError("Outbox methods must target their recipient")
@@ -50,6 +57,10 @@ class OutboxService:
         if source_keys and deduplication_key is None:
             identity = json.dumps([user_id, sorted(source_keys), payload], sort_keys=True, ensure_ascii=False)
             deduplication_key = hashlib.sha256(identity.encode()).hexdigest()
+        # Apply the delivery policy after computing the source identity, so a
+        # retry across the day/night boundary cannot enqueue the same event twice.
+        for part in payload:
+            part["data"]["disable_notification"] = is_night(now) or bool(part["data"].get("disable_notification"))
         added = await self._repository.add(
             OutboxMessage(
                 user_id=user_id,
