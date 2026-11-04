@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 from aiogram.exceptions import TelegramAPIError, TelegramNetworkError, TelegramRetryAfter, TelegramServerError
 
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
-from manashelper.modules.users.application.bot_status import BotStatusService
+from manashelper.modules.users.application.use_cases.stop_bot_delivery import StopBotDeliveryUseCase
 from manashelper.platform.telegram.delivery import is_permanent_recipient_error
 from manashelper.platform.telegram.outbox.models import OutboxMessage
 from manashelper.platform.telegram.outbox.repository import OutboxRepository
@@ -41,10 +41,13 @@ def finish(message: OutboxMessage, status: str, now: datetime) -> None:
 
 class OutboxWorker:
     def __init__(
-        self, repository: OutboxRepository, status: BotStatusService, recipients: NotificationRecipientsQuery
+        self,
+        repository: OutboxRepository,
+        stop_bot_delivery: StopBotDeliveryUseCase,
+        recipients: NotificationRecipientsQuery,
     ) -> None:
         self._repository = repository
-        self._status = status
+        self._stop_bot_delivery = stop_bot_delivery
         self._recipients = recipients
 
     async def claim(self, bot_id: int, now: datetime) -> ClaimedMessage | None:
@@ -124,7 +127,7 @@ class OutboxWorker:
             if row.failures < MAX_FAILURES:
                 delay = retry_delay(row.failures)
         elif isinstance(error, TelegramAPIError) and is_permanent_recipient_error(error):
-            await self._status.stop(row.user_id)
+            await self._stop_bot_delivery.execute(row.user_id)
         if delay is None:
             finish(row, "failed", now)
             logger.warning("Outbox message %s failed: %s", row.id, row.last_error)

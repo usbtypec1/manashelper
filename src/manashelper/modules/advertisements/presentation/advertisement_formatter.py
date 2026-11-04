@@ -40,7 +40,7 @@ def format_advertisement(
     """Renders an ad as HTML. `contact`/`contact_deep_link` are mutually exclusive: pass `contact`
     for an audience allowed to see raw contact details directly (the poster's own preview, a
     moderator's review message), or `contact_deep_link` for a public audience (the channel post)
-    that should only see contacts after opening the bot - see `AdvertisementContactService`.
+    that should only see contacts after opening the bot - see `RevealAdvertisementContactUseCase`.
 
     All user-supplied fields (title, description, rejection comment, contact details) are HTML-escaped
     here, since a bare `&`/`<`/`>` would otherwise make Telegram reject the whole message."""

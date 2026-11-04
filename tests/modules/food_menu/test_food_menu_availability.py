@@ -5,13 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.core.time import BISHKEK_TZ
 from manashelper.modules.food_menu.application import daily_menu as daily_menu_module
-from manashelper.modules.food_menu.application.daily_menu import DailyMenuService
 from manashelper.modules.food_menu.infrastructure.models.daily_menu import DailyMenu
 from manashelper.modules.food_menu.infrastructure.repositories.daily_menu import DailyMenuRepository
 from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_rating import (
     DailyMenuRatingRepository,
 )
 from manashelper.platform.i18n.catalog import i18n
+from tests.modules.food_menu.application_factories import build_daily_menu_service
 
 
 class _Clock(datetime):
@@ -32,7 +32,7 @@ async def test_availability_includes_only_published_dates_in_five_day_window_and
     ]
     session.add_all(menus)
     await session.flush()
-    service = DailyMenuService(DailyMenuRepository(session), DailyMenuRatingRepository(session))
+    service = build_daily_menu_service(DailyMenuRepository(session), DailyMenuRatingRepository(session))
     available = await service.get_available_dates()
     assert available.today == today
     assert available.dates == [today + timedelta(days=offset) for offset in (0, 2, 4)]
@@ -43,7 +43,7 @@ async def test_availability_includes_only_published_dates_in_five_day_window_and
 
 async def test_availability_is_empty_when_no_menu_is_published(session: AsyncSession, monkeypatch) -> None:
     monkeypatch.setattr(daily_menu_module, "datetime", _Clock)
-    service = DailyMenuService(DailyMenuRepository(session), DailyMenuRatingRepository(session))
+    service = build_daily_menu_service(DailyMenuRepository(session), DailyMenuRatingRepository(session))
     assert (await service.get_available_dates()).dates == []
 
 

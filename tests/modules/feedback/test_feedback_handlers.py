@@ -21,9 +21,10 @@ from manashelper.modules.feedback.router import (
     on_open_feedback,
     router,
 )
-from manashelper.modules.feedback.service import BODY_MAX_LENGTH, FeedbackService, FeedbackSummary
-from manashelper.modules.users.application.locale import LocaleService
+from manashelper.modules.feedback.service import BODY_MAX_LENGTH, FeedbackQuery, FeedbackSummary
+from manashelper.modules.users.application.locale import LocaleQuery
 from manashelper.platform.i18n.catalog import i18n
+from tests.modules.feedback.application_factories import build_feedback_service
 
 USER_ID = 941_001
 ADMIN_CHAT_ID = -100941001
@@ -45,7 +46,7 @@ def context(monkeypatch):
     request = AsyncMock(side_effect=respond)
     monkeypatch.setattr(bot.session, "make_request", request)
     state = FSMContext(MemoryStorage(), StorageKey(bot_id=bot.id, chat_id=USER_ID, user_id=USER_ID))
-    service = AsyncMock(spec=FeedbackService)
+    service = AsyncMock(spec=build_feedback_service(AsyncMock()))
     summary = FeedbackSummary(id=uuid.uuid4(), user_id=USER_ID, body="A <question> & idea")
     service.submit.return_value = summary
     service.get_by_admin_chat_message_id.return_value = summary
@@ -112,6 +113,8 @@ async def test_invalid_body_keeps_form_without_submission(context, body):
         context.bot,
         context.settings,
         context.service,
+        record_feedback_admin_message=SimpleNamespace(execute=context.service.record_admin_chat_message),
+        submit_feedback=SimpleNamespace(execute=context.service.submit),
     )
     context.service.submit.assert_not_awaited()
     assert await context.state.get_state() == "FeedbackForm:message"
@@ -131,6 +134,8 @@ async def test_submit_strips_body_and_forwards_escaped_text_in_admin_locale(cont
         context.bot,
         context.settings,
         context.service,
+        record_feedback_admin_message=SimpleNamespace(execute=context.service.record_admin_chat_message),
+        submit_feedback=SimpleNamespace(execute=context.service.submit),
     )
     context.service.submit.assert_awaited_once_with(USER_ID, "A <question> & idea")
     context.service.record_admin_chat_message.assert_awaited_once_with(context.summary.id, 42)
@@ -150,6 +155,8 @@ async def test_boundary_body_length_is_accepted(context):
         context.bot,
         context.settings,
         context.service,
+        record_feedback_admin_message=SimpleNamespace(execute=context.service.record_admin_chat_message),
+        submit_feedback=SimpleNamespace(execute=context.service.submit),
     )
     context.service.submit.assert_awaited_once_with(USER_ID, "x" * 2000)
 
@@ -164,7 +171,15 @@ async def test_forward_failure_preserves_existing_acknowledgement_and_cleared_st
 
     context.request.side_effect = fail_admin
     await context.state.set_state(FeedbackForm.message)
-    await on_feedback_entered(context.message, context.state, context.bot, context.settings, context.service)
+    await on_feedback_entered(
+        context.message,
+        context.state,
+        context.bot,
+        context.settings,
+        context.service,
+        record_feedback_admin_message=SimpleNamespace(execute=context.service.record_admin_chat_message),
+        submit_feedback=SimpleNamespace(execute=context.service.submit),
+    )
     context.service.submit.assert_awaited_once()
     context.service.record_admin_chat_message.assert_not_awaited()
     assert await context.state.get_state() is None
@@ -176,8 +191,8 @@ async def test_router_restricts_admin_reply_to_configured_group(context, chat_id
     message = admin_message(context, chat_id=chat_id)
     dependencies = {
         Settings: context.settings,
-        FeedbackService: context.service,
-        LocaleService: context.locale_service,
+        FeedbackQuery: context.service,
+        LocaleQuery: context.locale_service,
     }
 
     async def resolve(dependency, component=""):

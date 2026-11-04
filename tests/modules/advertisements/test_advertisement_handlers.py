@@ -20,7 +20,6 @@ from manashelper.modules.advertisements.application.advertisement import (
     AdvertisementMediaItem,
     AdvertisementNotFoundError,
     AdvertisementPage,
-    AdvertisementService,
     AdvertisementSummary,
     TooManyAdvertisementsError,
 )
@@ -58,6 +57,7 @@ from manashelper.modules.advertisements.presentation.callbacks import (
     AdvertisementModerationCallback,
 )
 from manashelper.platform.i18n.catalog import i18n
+from tests.modules.advertisements.application_factories import build_advertisement_service
 
 USER_ID = 942_001
 MODERATION_CHAT_ID = -100942001
@@ -98,7 +98,7 @@ def context(monkeypatch):
         datetime.now(),
         [],
     )
-    service = AsyncMock(spec=AdvertisementService)
+    service = AsyncMock(spec=build_advertisement_service(AsyncMock(), AsyncMock()))
     service.create_advertisement.return_value = summary
     service.delete_owned.return_value = AdvertisementDeletionResult(AdvertisementStatus.PUBLISHED, [10, 11])
     service.get_page_by_user_id.return_value = AdvertisementPage([], 0, 1)
@@ -108,7 +108,7 @@ def context(monkeypatch):
     contacts = service
     contacts.get_contact_status.return_value = ContactStatus(username="seller", phone_numbers=["+996700000000"])
     reveal = AsyncMock()
-    reveal.reveal_contact.return_value = ContactReveal(summary.title, contacts.get_contact_status.return_value)
+    reveal.execute.return_value = ContactReveal(summary.title, contacts.get_contact_status.return_value)
     with i18n.context(), i18n.use_locale("en"):
         yield SimpleNamespace(
             bot=bot,
@@ -166,7 +166,14 @@ async def test_create_form_preserves_states_payloads_and_submission(context):
         callback(context), AdvertisementExpiryCallback(option=AdvertisementExpiryOption.NONE), context.state
     )
     assert await context.state.get_state() == "AdvertisementForm:confirm"
-    await on_form_submitted(callback(context), context.state, context.bot, context.settings, context.service)
+    await on_form_submitted(
+        callback(context),
+        context.state,
+        context.bot,
+        context.settings,
+        context.service,
+        create_advertisement=SimpleNamespace(execute=context.service.create_advertisement),
+    )
     context.service.create_advertisement.assert_awaited_once_with(
         user_id=USER_ID,
         title="<Book>",
@@ -241,8 +248,8 @@ async def test_approval_preserves_channel_locale_hidden_contacts_and_message_ids
         AdvertisementModerationCallback(id=AD_ID, action=AdvertisementModerationAction.APPROVE),
         context.bot,
         context.settings,
-        context.service,
-        context.moderation,
+        SimpleNamespace(execute=context.service.record_channel_messages),
+        SimpleNamespace(execute=context.moderation.approve),
         context.locale,
     )
     publication = methods(context, SendMediaGroup if media else SendMessage)[0]
@@ -264,8 +271,8 @@ async def test_moderation_from_other_chat_is_rejected_before_service_call(contex
         AdvertisementModerationCallback(id=AD_ID, action=AdvertisementModerationAction.APPROVE),
         context.bot,
         context.settings,
-        context.service,
-        context.moderation,
+        SimpleNamespace(execute=context.service.record_channel_messages),
+        SimpleNamespace(execute=context.moderation.approve),
         context.locale,
     )
     context.moderation.approve.assert_not_awaited()
@@ -287,8 +294,8 @@ async def test_publication_failure_does_not_record_message_ids_or_notify_owner(c
         AdvertisementModerationCallback(id=AD_ID, action=AdvertisementModerationAction.APPROVE),
         context.bot,
         context.settings,
-        context.service,
-        context.moderation,
+        SimpleNamespace(execute=context.service.record_channel_messages),
+        SimpleNamespace(execute=context.moderation.approve),
         context.locale,
     )
     # Existing behavior: approve runs before publication. No compensation is performed here.
@@ -310,7 +317,9 @@ async def test_rejection_comment_keeps_fsm_and_existing_storage_truncation(conte
     message = context.message.model_copy(
         update={"text": " " + raw + " ", "chat": Chat(id=MODERATION_CHAT_ID, type="supergroup")}
     )
-    await on_reject_comment_entered(message, context.state, context.bot, context.moderation, context.locale)
+    await on_reject_comment_entered(
+        message, context.state, context.bot, SimpleNamespace(execute=context.moderation.reject), context.locale
+    )
     context.moderation.reject.assert_awaited_once_with(AD_ID, raw[:512])
     assert await context.state.get_state() is None
     owner = [message for message in methods(context, SendMessage) if message.chat_id == USER_ID][0]
@@ -325,10 +334,10 @@ async def test_start_payload_routes_market_contacts_or_welcome(context, payload)
     )
     text = methods(context, SendMessage)[0].text
     if payload == f"ad_{AD_ID}":
-        context.reveal.reveal_contact.assert_awaited_once_with(AD_ID, USER_ID)
+        context.reveal.execute.assert_awaited_once_with(AD_ID, USER_ID)
         assert "&lt;Book&gt;" in text and "@seller" in text
     else:
-        context.reveal.reveal_contact.assert_not_awaited()
+        context.reveal.execute.assert_not_awaited()
         assert text == (
             i18n.gettext("ads.marketplace_intro").format(link="https://t.me/example")
             if payload == "market"
@@ -337,7 +346,7 @@ async def test_start_payload_routes_market_contacts_or_welcome(context, payload)
 
 
 async def test_missing_contact_ad_shows_not_found(context):
-    context.reveal.reveal_contact.side_effect = AdvertisementNotFoundError(AD_ID)
+    context.reveal.execute.side_effect = AdvertisementNotFoundError(AD_ID)
     await on_advertisement_deep_link(
         context.message, CommandObject(command="start", args=f"ad_{AD_ID}"), context.settings, context.reveal
     )
@@ -359,6 +368,7 @@ async def test_owner_deletion_continues_after_channel_delete_failure(context):
         context.bot,
         context.settings,
         context.service,
+        delete_advertisement=SimpleNamespace(execute=context.service.delete_owned),
     )
     context.service.delete_owned.assert_awaited_once_with(AD_ID, USER_ID)
     deletion = methods(context, DeleteMessages)[0]

@@ -8,9 +8,10 @@ from aiogram.types import CallbackQuery, LinkPreviewOptions, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.modules.eders.application.eders import EdersService, filter_activities
+from manashelper.modules.eders.application.eders import EdersQuery, filter_activities
 from manashelper.modules.eders.application.models import DeadlineFilter, EdersSnapshot
 from manashelper.modules.eders.application.tracking import EdersTrackingService
+from manashelper.modules.eders.application.use_cases.toggle_eders_setting import ToggleEdersSettingUseCase
 from manashelper.modules.eders.errors import (
     EdersFetchError,
     EdersParseError,
@@ -62,7 +63,7 @@ async def on_back_to_eders_menu(callback: CallbackQuery) -> None:
 async def on_eders_command(
     message: Message,
     state: FSMContext,
-    eders_service: FromDishka[EdersService],
+    eders_query: FromDishka[EdersQuery],
     tracking: FromDishka[EdersTrackingService],
 ) -> None:
     if message.from_user is None:
@@ -74,7 +75,7 @@ async def on_eders_command(
         message,
         message.from_user.id,
         state,
-        eders_service,
+        eders_query,
         tracking,
         selected,
         query if command.startswith("/") else "",
@@ -85,14 +86,14 @@ async def _show_eders_view(
     message: Message,
     user_id: int,
     state: FSMContext,
-    eders_service: EdersService,
+    eders_query: EdersQuery,
     tracking: EdersTrackingService,
     selected: DeadlineFilter,
     query: str = "",
 ) -> None:
     await state.update_data({SNAPSHOT_KEY: None})
     try:
-        snapshot = await eders_service.get_snapshot(user_id)
+        snapshot = await eders_query.get_snapshot(user_id)
     except UserNotFoundError:
         await message.answer(_("common.start_required"))
         return
@@ -134,13 +135,13 @@ async def on_eders_view(
     callback: CallbackQuery,
     callback_data: EdersMenuCallback,
     state: FSMContext,
-    eders_service: FromDishka[EdersService],
+    eders_query: FromDishka[EdersQuery],
     tracking: FromDishka[EdersTrackingService],
 ) -> None:
     await callback.answer()
     if isinstance(callback.message, Message):
         selected = DeadlineFilter.MATERIALS if callback_data.action == EdersAction.MATERIALS else DeadlineFilter.ALL
-        await _show_eders_view(callback.message, callback.from_user.id, state, eders_service, tracking, selected)
+        await _show_eders_view(callback.message, callback.from_user.id, state, eders_query, tracking, selected)
 
 
 @router.callback_query(EdersPageCallback.filter())
@@ -206,10 +207,12 @@ async def on_open_eders_settings(callback: CallbackQuery, tracking: FromDishka[E
 @router.callback_query(EdersSettingCallback.filter())
 @flags.private_chat_only
 async def on_eders_setting(
-    callback: CallbackQuery, callback_data: EdersSettingCallback, tracking: FromDishka[EdersTrackingService]
+    callback: CallbackQuery,
+    callback_data: EdersSettingCallback,
+    toggle_eders_setting: FromDishka[ToggleEdersSettingUseCase],
 ) -> None:
     try:
-        settings = await tracking.toggle(callback.from_user.id, callback_data.setting)
+        settings = await toggle_eders_setting.execute(callback.from_user.id, callback_data.setting)
     except UserNotFoundError:
         await callback.answer(_("common.start_required"), show_alert=True)
         return

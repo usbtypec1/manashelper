@@ -36,10 +36,32 @@ assumptions:
       while reading still returned the previous snapshot without adding requests. Simulation request events
       confirmed the login, course/detail reads and the injected AJAX 500. This proves the local application
       behavior, not successful authentication or response compatibility with real university accounts.
+      On 2026-11-04, after extracting the OBIS ResultsSource and SnapshotStore protocols, the focused OBIS,
+      snapshot-concurrency and HTTP-flow suite passed all 98 tests against the same repository-owned stand-in.
+      Simulation request events confirmed the HTTP dependency path; new boundary tests checked lock/fetch/save
+      ordering, account-marker rejection before JSON decoding and legacy snapshot serialization compatibility.
+      Fingerprint obis-results-boundaries-2026-11-04. Real university-account compatibility remains unverified.
+      Later on 2026-11-04, the OBIS credential and notification-baseline boundaries were extracted as well.
+      The OBIS/Eders/concurrency suite passed 276 tests with the same local simulation; one optional HTML-corpus
+      test was skipped because the local export was absent. Its 174 request events exercised direct and fallback
+      authentication and injected HTTP errors. Credential failure tests retained both previous stored fields,
+      and pure comparison tests retained silent baselines, nonempty-grade delivery and attendance increase rules.
+      Fingerprint obis-credential-baseline-boundaries-2026-11-04. These findings remain limited to the local stand-in.
+      On 2026-11-04, OBIS service facades were replaced by application/use_cases classes with execute entry points
+      and read-only queries. The full repository suite passed 806 tests; seven optional corpus/other-simulator tests
+      were skipped. The existing stand-in exercised the real HTTP clients through the new credential and refresh
+      use cases. A PostgreSQL savepoint test confirmed that an enqueue failure rolls back the snapshot and comparison
+      baseline together and a retry still reports the changed grade. Fingerprint obis-use-cases-2026-11-04.
+      This preserves local caller behavior and does not establish real university-account compatibility.
     source: >-
       tests/modules/eders/test_eders_http_flow.py;
-      postman/mocks/eders/default.js; fingerprint persisted-student-snapshots-2026-10-29.
-    updated_at: "2026-10-29"
+      tests/modules/obis/test_results_boundaries.py; tests/modules/obis/test_cached_snapshots.py;
+      tests/modules/obis/test_credentials_boundaries.py; tests/modules/obis/test_notification_comparison.py;
+      src/manashelper/modules/obis/infrastructure/results_source.py;
+      postman/mocks/eders/default.js; fingerprints persisted-student-snapshots-2026-10-29,
+      obis-results-boundaries-2026-11-04, obis-credential-baseline-boundaries-2026-11-04,
+      obis-use-cases-2026-11-04.
+    updated_at: "2026-11-04"
   - id: direct-login-obis-fallback-local-scenarios
     status: supported
     claim: In the simulated login failures, Eders tries the Moodle form first and then OBIS SSO using saved credentials.
@@ -68,7 +90,39 @@ assumptions:
       git show 3fe9692^:src/manashelper/modules/eders/infrastructure/client.py;
       postman/mocks/eders/default.js; tests/modules/eders/test_eders_http_flow.py.
     updated_at: "2026-10-30"
+  - id: application-use-case-refactor-local-contract
+    status: supported
+    claim: In the repository-owned HTTP scenarios, extracted Eders and OBIS use cases preserve authentication order, snapshot persistence and failure isolation.
+    reason: The real clients and PostgreSQL-backed application ran through the new request-scoped use cases and read-only queries against the existing stand-in.
+    verification: >-
+      On 2026-11-04, the full repository suite with all four local simulations passed 816 tests; one optional
+      Eders HTML-corpus test was skipped because no local export was available. Request events confirmed direct
+      Moodle login, OBIS verification/SSO fallback and injected HTTP failures. Regression tests preserved cached
+      reads without HTTP, credential atomicity, silent baselines and snapshot/baseline rollback after enqueue failure.
+      All 39 use cases resolved in independent Dishka request scopes. This establishes local caller behavior only;
+      real university-account compatibility remains unverified. Fingerprint modules-use-cases-2026-11-04.
+    source: >-
+      tests/modules/eders/test_eders_http_flow.py; tests/modules/obis/test_cached_snapshots.py;
+      tests/modules/obis/test_credentials_boundaries.py; tests/test_application_architecture.py;
+      postman/mocks/eders/default.js.
+    updated_at: "2026-11-04"
 fingerprints:
+  - id: modules-use-cases-2026-11-04
+    date: "2026-11-04"
+    commit: "606dcaab221420519ee2e5e460bcf087632f5238 (working tree changes)"
+    cli: "1.74.0"
+  - id: obis-use-cases-2026-11-04
+    date: "2026-11-04"
+    commit: "606dcaab221420519ee2e5e460bcf087632f5238 (working tree changes)"
+    cli: "1.74.0"
+  - id: obis-credential-baseline-boundaries-2026-11-04
+    date: "2026-11-04"
+    commit: "606dcaab221420519ee2e5e460bcf087632f5238 (working tree changes)"
+    cli: "1.74.0"
+  - id: obis-results-boundaries-2026-11-04
+    date: "2026-11-04"
+    commit: "606dcaab221420519ee2e5e460bcf087632f5238 (working tree changes)"
+    cli: "1.74.0"
   - id: eders-direct-login-2026-10-29
     date: "2026-10-29"
     commit: "745395c707e5486a209aa53c6ab590b769d528a6 (working tree changes)"

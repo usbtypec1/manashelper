@@ -6,13 +6,16 @@ from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
 from manashelper.core.time import BISHKEK_TZ
+from manashelper.modules.notifications.application.use_cases.get_notification_settings import (
+    GetNotificationSettingsUseCase,
+)
+from manashelper.modules.notifications.application.use_cases.set_broadcast_mute import SetBroadcastMuteUseCase
+from manashelper.modules.notifications.application.use_cases.toggle_notification_setting import (
+    ToggleNotificationSettingUseCase,
+)
 from manashelper.modules.notifications.callbacks import BroadcastMuteCallback, NotificationSettingCallback
 from manashelper.modules.notifications.keyboards import build_notifications_keyboard
-from manashelper.modules.notifications.settings import (
-    NotificationSettingsService,
-    NotificationSettingsSummary,
-    UserNotFoundError,
-)
+from manashelper.modules.notifications.settings import NotificationSettingsSummary, UserNotFoundError
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 
 router = Router(name="notifications")
@@ -32,10 +35,10 @@ async def _show_notifications_menu(callback_query: CallbackQuery, settings: Noti
 @flags.private_chat_only
 async def on_open_notifications(
     callback_query: CallbackQuery,
-    notification_settings_service: FromDishka[NotificationSettingsService],
+    get_notification_settings: FromDishka[GetNotificationSettingsUseCase],
 ) -> None:
     try:
-        settings = await notification_settings_service.get_settings(callback_query.from_user.id)
+        settings = await get_notification_settings.execute(callback_query.from_user.id)
     except UserNotFoundError:
         await callback_query.answer(_("common.start_required"), show_alert=True)
         return
@@ -47,9 +50,9 @@ async def on_open_notifications(
 @flags.private_chat_only
 async def on_back_to_notifications(
     callback_query: CallbackQuery,
-    notification_settings_service: FromDishka[NotificationSettingsService],
+    get_notification_settings: FromDishka[GetNotificationSettingsUseCase],
 ) -> None:
-    await on_open_notifications(callback_query, notification_settings_service)
+    await on_open_notifications(callback_query, get_notification_settings)
 
 
 @router.callback_query(NotificationSettingCallback.filter())
@@ -57,12 +60,10 @@ async def on_back_to_notifications(
 async def on_toggle_notification_setting(
     callback_query: CallbackQuery,
     callback_data: NotificationSettingCallback,
-    notification_settings_service: FromDishka[NotificationSettingsService],
+    toggle_notification_setting: FromDishka[ToggleNotificationSettingUseCase],
 ) -> None:
     try:
-        settings = await notification_settings_service.toggle_setting(
-            callback_query.from_user.id, callback_data.setting
-        )
+        settings = await toggle_notification_setting.execute(callback_query.from_user.id, callback_data.setting)
     except UserNotFoundError:
         await callback_query.answer(_("common.start_required"), show_alert=True)
         return
@@ -76,12 +77,10 @@ async def on_toggle_notification_setting(
 async def on_broadcast_mute(
     callback_query: CallbackQuery,
     callback_data: BroadcastMuteCallback,
-    notification_settings_service: FromDishka[NotificationSettingsService],
+    set_broadcast_mute: FromDishka[SetBroadcastMuteUseCase],
 ) -> None:
     try:
-        settings = await notification_settings_service.set_broadcast_mute(
-            callback_query.from_user.id, callback_data.muted
-        )
+        settings = await set_broadcast_mute.execute(callback_query.from_user.id, callback_data.muted)
     except UserNotFoundError:
         await callback_query.answer(_("common.start_required"), show_alert=True)
         return

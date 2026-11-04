@@ -2,7 +2,7 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.modules.schedule.application.lesson_search import LessonSearchService
+from manashelper.modules.schedule.application.lesson_search import LessonSearchQuery
 from manashelper.modules.schedule.application.text_normalization import fold_turkish
 from manashelper.modules.schedule.infrastructure.models.course import Course
 from manashelper.modules.schedule.infrastructure.models.department import Department
@@ -43,7 +43,7 @@ async def test_search_matches_query_with_plain_latin_for_turkish_diacritics(sess
     )
     await session.flush()
 
-    service = LessonSearchService(LessonRepository(session))
+    service = LessonSearchQuery(LessonRepository(session))
     results = await service.search("sgiouc deneme")  # plain Latin for "Şğıöüç Deneme"
 
     assert len(results) == 1
@@ -80,7 +80,7 @@ async def test_search_groups_consecutive_periods_with_same_content(session: Asyn
     )
     await session.flush()
 
-    service = LessonSearchService(LessonRepository(session))
+    service = LessonSearchQuery(LessonRepository(session))
     results = await service.search("bloklu")
 
     assert len(results) == 1
@@ -102,7 +102,7 @@ async def test_search_returns_nothing_for_unrelated_query(session: AsyncSession)
     )
     await session.flush()
 
-    service = LessonSearchService(LessonRepository(session))
+    service = LessonSearchQuery(LessonRepository(session))
     results = await service.search("fizika")
 
     assert results == []

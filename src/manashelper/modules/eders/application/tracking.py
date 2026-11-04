@@ -102,48 +102,27 @@ def plan_events(snapshot: EdersSnapshot, previous: EdersSnapshot | None, setting
     return events
 
 
+@dataclass(frozen=True, slots=True)
 class EdersTrackingService:
-    def __init__(self, eders_repository: EdersRepository, users: UsersQuery, outbox: OutboxService) -> None:
-        self._repository = eders_repository
-        self._users = users
-        self._outbox = outbox
+    eders_repository: EdersRepository
+    users: UsersQuery
+    outbox: OutboxService
 
     async def get_settings(self, user_id: int) -> EdersSettings:
-        if not await self._users.exists(user_id):
-            raise UserNotFoundError(user_id)
-        state = await self._repository.read_state(user_id)
-        if state is None:
-            return EdersSettings(True, True, True, True, True, True)
-        return EdersSettings(*(getattr(state, item.value) for item in EdersSetting))
+        return await get_eders_settings(self.eders_repository, self.users, user_id)
 
     async def get_snapshot(self, user_id: int, marker: str) -> EdersSnapshot:
-        state = await self._repository.read_state(user_id)
+        state = await self.eders_repository.read_state(user_id)
         if state is None or not state.snapshot or state.credential_marker != marker:
             raise EdersSnapshotNotReadyError
         return deserialize_snapshot(state.snapshot)
 
     async def lock(self, user_id: int) -> None:
-        await self._repository.get_state(user_id)
-
-    async def toggle(self, user_id: int, setting: EdersSetting) -> EdersSettings:
-        await self.get_settings(user_id)
-        state = await self._repository.get_state(user_id)
-        setattr(state, setting.value, not getattr(state, setting.value))
-        if not getattr(state, setting.value):
-            event_types = {
-                EdersSetting.DAY_BEFORE: {"before_24"},
-                EdersSetting.TWO_HOURS_BEFORE: {"before_2"},
-                EdersSetting.OPENINGS: {"opened"},
-                EdersSetting.DEADLINE_CHANGES: {"changed"},
-                EdersSetting.NEW_MATERIALS: {"material_new", "material_changed"},
-            }.get(setting, set())
-            rows = await self._repository.get_notifications(user_id)
-            await self._outbox.cancel_sources([row.event_key for row in rows if row.event_type in event_types])
-        return EdersSettings(*(getattr(state, item.value) for item in EdersSetting))
+        await self.eders_repository.get_state(user_id)
 
     async def observe(self, user_id: int, marker: str, snapshot: EdersSnapshot) -> EdersSnapshot:
-        settings = await self.get_settings(user_id)
-        state = await self._repository.get_state(user_id)
+        settings = await get_eders_settings(self.eders_repository, self.users, user_id)
+        state = await self.eders_repository.get_state(user_id)
         previous = (
             deserialize_snapshot(state.snapshot) if state.snapshot and state.credential_marker == marker else None
         )
@@ -160,13 +139,11 @@ class EdersTrackingService:
                     item,
                     first_seen=old[activity_key(item)].first_seen
                     if activity_key(item) in old
-                    else (
-                        snapshot.fetched_at
-                        if previous
-                        and previous.schema_version == snapshot.schema_version
-                        and item.course.id in known_courses
-                        else None
-                    ),
+                    else snapshot.fetched_at
+                    if previous
+                    and previous.schema_version == snapshot.schema_version
+                    and (item.course.id in known_courses)
+                    else None,
                 )
                 for item in snapshot.activities
             ),
@@ -175,7 +152,7 @@ class EdersTrackingService:
         for event in plan_events(snapshot, previous, settings):
             key = hashlib.sha256(f"{marker}:{event.key}".encode()).hexdigest()
             planned[key] = replace(event, key=key)
-        existing = await self._repository.get_notifications(user_id)
+        existing = await self.eders_repository.get_notifications(user_id)
         stored = {event.event_key: event for event in existing}
         current = {activity_key(item): item for item in snapshot.activities}
         cancelled_keys = []
@@ -184,28 +161,26 @@ class EdersTrackingService:
             valid_change = (
                 stored_event.event_type == "changed"
                 and item
-                and not item.completed
-                and item.closes.instant == stored_event.event_time
+                and (not item.completed)
+                and (item.closes.instant == stored_event.event_time)
             )
             valid_reminder = (
                 item
-                and not item.completed
-                and item.submission != SubmissionStatus.SUBMITTED
+                and (not item.completed)
+                and (item.submission != SubmissionStatus.SUBMITTED)
                 and (
-                    (
-                        stored_event.event_type == "before_24"
-                        and settings.day_before
-                        and item.closes.instant == stored_event.event_time
-                    )
+                    stored_event.event_type == "before_24"
+                    and settings.day_before
+                    and (item.closes.instant == stored_event.event_time)
                     or (
                         stored_event.event_type == "before_2"
                         and settings.two_hours_before
-                        and item.closes.instant == stored_event.event_time
+                        and (item.closes.instant == stored_event.event_time)
                     )
                     or (
                         stored_event.event_type == "opened"
                         and settings.openings
-                        and item.opens.instant == stored_event.event_time
+                        and (item.opens.instant == stored_event.event_time)
                     )
                 )
             )
@@ -213,7 +188,10 @@ class EdersTrackingService:
                 item and stored_event.event_type in {"material_new", "material_changed"} and settings.new_materials
             )
             if previous is None or (
-                stored_event.event_key not in planned and not valid_change and not valid_reminder and not valid_material
+                stored_event.event_key not in planned
+                and (not valid_change)
+                and (not valid_reminder)
+                and (not valid_material)
             ):
                 stored_event.cancelled = True
                 if previous is None or not valid_material:
@@ -226,7 +204,7 @@ class EdersTrackingService:
                     stored[key].cancelled = False
                     stored[key].payload = serialize_snapshot(EdersSnapshot((event.activity,), snapshot.fetched_at))
                 continue
-            self._repository.add_notification(
+            self.eders_repository.add_notification(
                 EdersNotification(
                     user_id=user_id,
                     event_key=key,
@@ -238,14 +216,14 @@ class EdersTrackingService:
                     previous_deadline=event.previous_deadline,
                 )
             )
-        await self._outbox.cancel_sources(cancelled_keys)
+        await self.outbox.cancel_sources(cancelled_keys)
         state.snapshot = serialize_snapshot(snapshot)
         state.credential_marker = marker
         return snapshot
 
     async def pending_events(self, user_id: int, now: datetime) -> list[EdersEvent]:
-        settings = await self.get_settings(user_id)
-        rows = await self._repository.get_notifications(user_id)
+        settings = await get_eders_settings(self.eders_repository, self.users, user_id)
+        rows = await self.eders_repository.get_notifications(user_id)
         candidates = []
         for row in rows:
             if row.cancelled or row.sent_at or row.due_at > now:
@@ -265,7 +243,7 @@ class EdersTrackingService:
                 or (
                     row.event_type not in {"material_new", "material_changed"}
                     and activity.closes.instant
-                    and activity.closes.instant <= now
+                    and (activity.closes.instant <= now)
                 )
                 or (row.event_type == "opened" and now - row.event_time > timedelta(days=1))
             ):
@@ -274,7 +252,6 @@ class EdersTrackingService:
             candidates.append(
                 EdersEvent(row.event_key, activity, row.event_type, row.event_time, row.due_at, row.previous_deadline)
             )
-        # If a prolonged outage crossed both thresholds, deliver the nearest reminder.
         nearer = {activity_key(event.activity) for event in candidates if event.event_type == "before_2"}
         for row in rows:
             if row.event_type == "before_24" and row.activity_key in nearer:
@@ -286,10 +263,19 @@ class EdersTrackingService:
         ]
 
     async def mark_sent(self, user_id: int, key: str, now: datetime) -> None:
-        for event in await self._repository.get_notifications(user_id):
+        for event in await self.eders_repository.get_notifications(user_id):
             if event.event_key == key:
                 event.sent_at = now
                 return
 
     async def get_poll_user_ids(self) -> list[int]:
-        return await self._repository.get_poll_user_ids()
+        return await self.eders_repository.get_poll_user_ids()
+
+
+async def get_eders_settings(eders_repository: EdersRepository, users: UsersQuery, user_id: int) -> EdersSettings:
+    if not await users.exists(user_id):
+        raise UserNotFoundError(user_id)
+    state = await eders_repository.read_state(user_id)
+    if state is None:
+        return EdersSettings(True, True, True, True, True, True)
+    return EdersSettings(*(getattr(state, item.value) for item in EdersSetting))

@@ -25,9 +25,10 @@ The planned feature migration is complete. `bootstrap.py` explicitly loads ORM m
 and `core/time.py` owns the shared timezone. Schedule owns its application text normalization helper.
 Empty legacy `bot/`, `services/`, `repositories/` and `scraping/` packages were removed.
 Feedback and advertisements live in `modules/feedback/` and `modules/advertisements/`, with REQUEST providers in `main.py`.
-Advertisements separates presentation, application and infrastructure, with domain enums; feedback stays flat.
+Advertisements separates presentation, application and infrastructure, with domain enums.
+Feedback keeps its flat persistence/presentation layout and owns application/use_cases plus FeedbackQuery.
 The student survey and its response table are removed; only historical Alembic migrations remain.
-Broadcast lives in flat `modules/broadcast/`: SendBroadcast uses active, unmuted IDs from NotificationRecipientsQuery and a delivery protocol;
+Broadcast lives in `modules/broadcast/`: SendBroadcastUseCase uses active, unmuted IDs from NotificationRecipientsQuery and a delivery protocol;
 Telegram localization, HTML and photo/text preparation stay in its sender adapter. Its provider retains REQUEST scope.
 Broadcast accepts a text/photo draft and URL or existing callback buttons, with preview and explicit confirmation.
 Each delivery adds a localized 14-day unsubscribe button. Notifications owns the timezone-aware
@@ -40,13 +41,13 @@ in their existing transaction; an independent worker uses durable leases, SKIP L
 buckets. It retries 429 using retry_after, 5xx/network errors with exponential jittered backoff, and respects
 expires_at. Cleanup runs daily and retains valid pending work. See `docs/outbox.md` for guarantees and TTLs.
 Food menu lives in `modules/food_menu/` with application, presentation, infrastructure, jobs and provider.
-Its client/parser retain APP scope; repositories and services retain REQUEST. BroadcastFoodMenu selects
+Its client/parser retain APP scope; repositories, queries and use cases retain REQUEST. BroadcastFoodMenuUseCase selects
 the menu/recipients, TelegramFoodMenuSender handles delivery, and jobs are thin request-scope entry points.
 Schedule lives in `modules/schedule/`: catalog/tracking, timetable/search, sync, presentation, infrastructure and jobs.
 TimetableClient remains APP; services/repositories remain REQUEST. CourseTrackingRepository owns the tracked-course
-query formerly in UserRepository, preserving ORM collections. SyncCourseTimetable uses public NotificationRecipientsQuery;
-its Telegram sender preserves per-recipient locale and delivery behavior. GetStudyWeek consumes its public application results.
-Notifications lives in flat `modules/notifications/`: settings, recipient queries, ORM, repository, callbacks,
+query formerly in UserRepository, preserving ORM collections. SyncCourseTimetableUseCase uses public NotificationRecipientsQuery;
+its Telegram sender preserves per-recipient locale and delivery behavior. GetStudyWeekUseCase consumes its public application results.
+Notifications lives in `modules/notifications/`: application/use_cases, settings, recipient queries, ORM, repository, callbacks,
 keyboard and router. Its provider retains REQUEST scope. Settings checks users through UsersQuery;
 Schedule and OBIS polling select recipients through NotificationRecipientsQuery. Shared Settings navigation
 stays in `platform/telegram/`; Food menu/Eders preferences and OBIS polling remain owned by their features.
@@ -54,13 +55,13 @@ NotificationSettingsRepository initializes all three flags to True when creating
 the first toggle disables the selected flag and summaries never expose transient None values.
 Missing rows still opt recipients into all notifications. Do not rely on INSERT-time defaults when toggling new rows.
 Shared weekday labels live in `localization/weekdays.py`; reuse `core/time.py::BISHKEK_TZ` instead of a feature's timezone.
-Users lives in `modules/users/`: application locale/theme/profile services, infrastructure profile ORM and
+Users lives in `modules/users/`: application locale/theme/status queries and use cases, infrastructure profile ORM and
 repositories, presentation language/theme routers, keyboards and callbacks. UsersProvider retains REQUEST
-scope for all its dependencies, including public UsersQuery (counts, IDs, existence). LocaleService is the
-shared user-locale boundary for middleware and delivery. UsersQuery also exposes the current Telegram username.
+scope for all its dependencies, including public UsersQuery (counts, IDs, existence). ResolveUserLocaleUseCase owns
+profile refresh and locale resolution; LocaleQuery serves delivery reads. UsersQuery also exposes the current Telegram username.
 User keeps OBIS credential columns and the Schedule tracked_courses relationship without schema changes.
 OBIS owns credential access through ObisCredentialsRepository on the unchanged User row.
-EdersService reads the student number without decrypting a password for direct login and cached snapshots.
+EdersQuery and RefreshEdersSnapshotUseCase read the student number without decrypting a password for direct login and cached snapshots.
 Only a failed direct login triggers OBIS credential decryption and the legacy OBIS SSO fallback.
 Eders tracking checks existence through UsersQuery; its repository owns credential eligibility SQL and the user-row lock.
 Shared Telegram navigation lives in `platform/telegram/navigation.py`; feature routers must not import the start router for it.
@@ -77,10 +78,19 @@ Router order matters because aiogram uses the first matching handler; the
 advertisement deep-link router must precede the plain `/start` router. Use typed `CallbackData` classes for inline
 button payloads.
 
-Routers and jobs depend on services, not repositories or `AsyncSession`. Services hold injected collaborators and
-business logic; repositories handle persistence. Services return plain dataclasses, not ORM instances, to the
+Routers and jobs depend on use cases, queries and shared application services, not repositories or `AsyncSession`.
+Use cases own complete scenarios; shared services retain reusable application logic; repositories handle persistence.
+Application boundaries return plain dataclasses, not ORM instances, to the
 presentation layer. Put pure mapping and formatting helpers at module level. Escape user-provided and other dynamic
 text with `platform/telegram/html.py::escape_html` before inserting it into Telegram HTML messages.
+
+New or extracted use cases live in `application/use_cases/`: files use action names without a suffix
+(for example, `save_obis_credentials.py`), classes use the `UseCase` suffix, and `execute()` is the single entry point.
+Pure scenarios without state or injected dependencies may remain functions. Read-only operations may be grouped in queries.
+Use `@dataclass(frozen=True, slots=True)` for application classes with injected dependencies, including queries and shared services.
+Functions imported by another Python module are public and must not have a leading underscore; keep `_` for local helpers.
+GetNotificationSettingsUseCase owns settings initialization; GetDailyMenuUseCase owns view-count updates.
+Keep EdersTrackingService as the shared snapshot/event reconciliation component used by refresh and polling.
 
 Core lives in `core/`: config.py, database.py, logging.py and provider.py. CoreProvider owns APP settings,
 engine, session factory and the shared HTTP client, plus the REQUEST session. The last legacy `di.py` was removed;
@@ -97,13 +107,22 @@ Scheduled message deletion and food menu auto-delete settings have been removed,
 Immediate message deletion remains available for advertisement publication removal.
 The gettext adapter lives in `platform/i18n/catalog.py`; pure Locale/weekday labels stay in `localization/`.
 Command JSON and .mo runtime directories are unchanged, with checkout/Docker-like path tests.
-OBIS lives in `modules/obis/`: application facade/credentials/snapshot comparison/polling, HTTP/parser/crypto,
+OBIS lives in `modules/obis/`: application queries/use cases/snapshot comparison, HTTP/parser/crypto,
 credential and snapshot repositories/ORM, Telegram presentation, provider and jobs. ObisProvider keeps
-ObisClient/CryptoService in APP and all other dependencies in REQUEST. Public errors live in errors.py.
-ObisService retains save/has/clear/get methods; ObisCredentialsService owns verification/storage/decryption.
+ObisClient/CryptoService/ObisResultsSource in APP and all other dependencies in REQUEST. Public errors live in errors.py.
+SaveObisCredentialsUseCase and ClearObisCredentialsUseCase own credential changes and snapshot/baseline reset.
+ObisCredentialsQuery owns credential reads/decryption; ObisResultsQuery reads cached results and eligible polling IDs.
+RefreshObisGradesUseCase and RefreshObisAttendanceUseCase lock the user, fetch, persist snapshots, compare and save
+notification baselines, returning data and changes. PollObisUserUseCase coordinates refresh and conditional delivery.
+Use cases use application-owned ResultsSource and SnapshotStore protocols. ObisResultsSource owns HTTP/HTML
+mapping; ObisSnapshotRepository owns JSON/ORM mapping and checks the account marker before decoding snapshots.
+Application models live in application/models.py; attendance skip calculations stay in the application layer.
+Credentials use CredentialsStore, CredentialsVerifier and PasswordCipher protocols; stored credential read models
+hide both fields in repr. Notification comparisons are pure application functions returning changed baseline records
+and notification events; ExamGradeStore/AttendanceStore persist those records without exposing ORM objects.
 Its frozen read model hides secrets in repr; OBIS credentials retain the SHA-256 ciphertext marker.
 Eders owns its HTTP client: try direct Moodle form login first, then the legacy OBIS login and /site/eders SSO flow.
-PollObisUser handles expected auth/parse errors; its sender owns locale/HTML and enqueues messages transactionally.
+PollObisUserUseCase handles expected auth/parse errors; its sender owns locale/HTML and enqueues messages transactionally.
 Unexpected errors abort that user and are logged by the job, without stopping the next user.
 The first grade snapshot and attendance's first row are silent. Later new or changed nonempty grades notify.
 Saving verifies login and encrypts the password before assigning either credential field, so login/encryption failures
@@ -118,7 +137,7 @@ and comparison baselines; Eders validates its student-number marker.
 
 Eders lives in `modules/eders/`: application snapshot/filter/tracking/polling, infrastructure client/parser/URL validation,
 serialization/repository/ORM, Telegram presentation, jobs and provider. EdersProvider keeps the client APP and other
-dependencies REQUEST. PollEdersUser preserves refresh→locale→pending→enqueue→ack ordering; its Telegram sender groups
+dependencies REQUEST. PollEdersUserUseCase preserves refresh→locale→pending→enqueue→ack ordering; its Telegram sender groups
 materials and yields events after transactional handoff to the outbox. Queue failures abort only that user;
 the outbox worker owns HTTP retries, expiration and permanent recipient failures. Preserve snapshot JSON, event keys, baseline/account/schema suppression,
 monotonic observations, user-row FOR UPDATE before first state, and the one-retry whole-snapshot login flow.
@@ -130,8 +149,8 @@ Eders polling requires only a nonempty saved student number; the snapshot marker
 The first sync after switching from the ciphertext marker establishes a silent account baseline.
 Eders exceptions are public in `modules/eders/errors.py`; other features must not import them through HTTP/parser modules.
 
-Study week is flat `modules/study_week/`: application.py, formatter.py, router.py and provider.py.
-GetStudyWeek.execute reads Eders first, then Schedule, and derives the start date from the current Bishkek clock.
+Study week lives in `modules/study_week/`: application models/helpers, application/use_cases, formatter.py, router.py and provider.py.
+GetStudyWeekUseCase.execute reads Eders first, then Schedule, and derives the start date from the current Bishkek clock.
 Only NoTrackedCoursesError becomes an empty timetable; other source errors propagate. The formatter covers seven local
 calendar days, preserving sorting, HTML escaping, complete-line chunks and existing eders.* translation keys.
 Its private `/week` router follows Eders immediately; Eders must not depend on Study week.
@@ -183,7 +202,7 @@ revision flags; omit `--autogenerate` for a handwritten migration. Never rewrite
   configured channel. Public posts hide contact details behind a `/start ad_<id>` link; contact opens are logged.
   The channel post IDs must remain available for deletion when an ad is removed or expires. The marketplace menu
   is a reply keyboard reached from its main-menu button or `/start market`.
-  Expiry runs through `modules/advertisements/jobs.py` and `ExpireAdvertisements`; the use case depends on its
+  Expiry runs through `modules/advertisements/jobs.py` and `ExpireAdvertisementsUseCase`; the use case depends on its
   repository and `PublicationRemover`, while the Telegram adapter handles batching and best-effort failures.
   Preserve the contact gate, five-ads/hour limit, ten-media limit and pending-status checks for moderation.
   My ads uses SQL pagination; uploaded albums update one tracked prompt instead of replying to each item.

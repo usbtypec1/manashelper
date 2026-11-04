@@ -6,16 +6,9 @@ from datetime import UTC, datetime, timedelta
 
 from manashelper.modules.advertisements.domain.contact import (
     ContactStatus,
-    InvalidPhoneNumberError,
-    MissingContactError,
-    is_valid_phone_number,
 )
 from manashelper.modules.advertisements.domain.enums import AdvertisementMediaType, AdvertisementStatus
 from manashelper.modules.advertisements.infrastructure.models.advertisement import Advertisement
-from manashelper.modules.advertisements.infrastructure.models.advertisement_channel_message import (
-    AdvertisementChannelMessage,
-)
-from manashelper.modules.advertisements.infrastructure.models.advertisement_media import AdvertisementMedia
 from manashelper.modules.advertisements.infrastructure.repositories.advertisement import AdvertisementRepository
 from manashelper.modules.users.queries import UsersQuery
 
@@ -78,7 +71,7 @@ class AdvertisementDeletionResult:
     channel_message_ids: list[int]
 
 
-def _to_summary(advertisement: Advertisement) -> AdvertisementSummary:
+def to_summary(advertisement: Advertisement) -> AdvertisementSummary:
     return AdvertisementSummary(
         id=advertisement.id,
         user_id=advertisement.user_id,
@@ -97,94 +90,45 @@ def _to_summary(advertisement: Advertisement) -> AdvertisementSummary:
 
 
 def _to_summaries(advertisements: Sequence[Advertisement]) -> list[AdvertisementSummary]:
-    return [_to_summary(advertisement) for advertisement in advertisements]
+    return [to_summary(advertisement) for advertisement in advertisements]
 
 
-class AdvertisementService:
+@dataclass(frozen=True, slots=True)
+class AdvertisementQuery:
     MAX_ADS_PER_HOUR = 5
     MAX_MEDIA_ITEMS = 10
-
-    def __init__(self, advertisement_repository: AdvertisementRepository, users: UsersQuery) -> None:
-        self._advertisement_repository = advertisement_repository
-        self._users = users
+    advertisement_repository: AdvertisementRepository
+    users: UsersQuery
 
     async def get_contact_status(self, user_id: int, phone_numbers: Sequence[str] = ()) -> ContactStatus:
-        if not await self._users.exists(user_id):
-            raise UserNotFoundError(user_id)
-        return ContactStatus(username=await self._users.get_username(user_id), phone_numbers=list(phone_numbers))
+        return await get_advertisement_contact_status(self.users, user_id, phone_numbers)
 
     async def assert_can_post(self, user_id: int) -> None:
-        since = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=1)
-        if await self._advertisement_repository.count_created_since(user_id, since) >= self.MAX_ADS_PER_HOUR:
-            raise TooManyAdvertisementsError(user_id)
-
-    async def create_advertisement(
-        self,
-        user_id: int,
-        title: str,
-        description: str,
-        price: int | None,
-        expires_at: datetime | None,
-        media_items: Sequence[AdvertisementMediaItem],
-        *,
-        phone_number: str | None = None,
-    ) -> AdvertisementSummary:
-        await self.assert_can_post(user_id)
-        phone_number = phone_number.strip() if phone_number is not None else None
-        if phone_number is not None and not is_valid_phone_number(phone_number):
-            raise InvalidPhoneNumberError(phone_number)
-        numbers = [phone_number] if phone_number is not None else []
-        if not (await self.get_contact_status(user_id, numbers)).has_contact:
-            raise MissingContactError("A phone number or Telegram username is required")
-
-        advertisement = Advertisement(
-            id=uuid.uuid4(),
-            user_id=user_id,
-            title=title,
-            description=description,
-            price=price,
-            phone_numbers=numbers,
-            status=AdvertisementStatus.PENDING.value,
-            expires_at=expires_at,
-        )
-        advertisement.media = [
-            AdvertisementMedia(id=uuid.uuid4(), file_id=item.file_id, media_type=item.media_type.value, position=index)
-            for index, item in enumerate(media_items)
-        ]
-        self._advertisement_repository.add(advertisement)
-        return _to_summary(advertisement)
+        return await assert_can_post_advertisement(self.advertisement_repository, user_id)
 
     async def get_page_by_user_id(self, user_id: int, page: int) -> AdvertisementPage:
-        advertisements, total = await self._advertisement_repository.get_page_by_user_id(user_id, page, PAGE_SIZE)
+        advertisements, total = await self.advertisement_repository.get_page_by_user_id(user_id, page, PAGE_SIZE)
         total_pages = max(1, math.ceil(total / PAGE_SIZE))
         return AdvertisementPage(items=_to_summaries(advertisements), page=page, total_pages=total_pages)
 
     async def get_owned_by_id(self, advertisement_id: uuid.UUID, user_id: int) -> AdvertisementSummary:
-        advertisement = await self._advertisement_repository.get_by_id(advertisement_id)
+        advertisement = await self.advertisement_repository.get_by_id(advertisement_id)
         if advertisement is None:
             raise AdvertisementNotFoundError(advertisement_id)
         if advertisement.user_id != user_id:
             raise AdvertisementForbiddenError(advertisement_id, user_id)
-        return _to_summary(advertisement)
+        return to_summary(advertisement)
 
-    async def delete_owned(self, advertisement_id: uuid.UUID, user_id: int) -> AdvertisementDeletionResult:
-        advertisement = await self._advertisement_repository.get_by_id(advertisement_id)
-        if advertisement is None:
-            raise AdvertisementNotFoundError(advertisement_id)
-        if advertisement.user_id != user_id:
-            raise AdvertisementForbiddenError(advertisement_id, user_id)
 
-        result = AdvertisementDeletionResult(
-            status=AdvertisementStatus(advertisement.status),
-            channel_message_ids=[cm.message_id for cm in advertisement.channel_messages],
-        )
-        await self._advertisement_repository.delete(advertisement)
-        return result
+async def get_advertisement_contact_status(
+    users: UsersQuery, user_id: int, phone_numbers: Sequence[str] = ()
+) -> ContactStatus:
+    if not await users.exists(user_id):
+        raise UserNotFoundError(user_id)
+    return ContactStatus(username=await users.get_username(user_id), phone_numbers=list(phone_numbers))
 
-    async def record_channel_messages(self, advertisement_id: uuid.UUID, message_ids: Sequence[int]) -> None:
-        advertisement = await self._advertisement_repository.get_by_id(advertisement_id)
-        if advertisement is None:
-            raise AdvertisementNotFoundError(advertisement_id)
-        advertisement.channel_messages = [
-            AdvertisementChannelMessage(id=uuid.uuid4(), message_id=message_id) for message_id in message_ids
-        ]
+
+async def assert_can_post_advertisement(advertisement_repository: AdvertisementRepository, user_id: int) -> None:
+    since = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=1)
+    if await advertisement_repository.count_created_since(user_id, since) >= AdvertisementQuery.MAX_ADS_PER_HOUR:
+        raise TooManyAdvertisementsError(user_id)

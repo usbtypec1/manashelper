@@ -17,7 +17,7 @@ from manashelper.core.provider import CoreProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme
-from manashelper.modules.eders.application.eders import EdersService
+from manashelper.modules.eders.application.eders import EdersQuery
 from manashelper.modules.eders.application.models import (
     ActivityDate,
     ActivityKind,
@@ -26,8 +26,8 @@ from manashelper.modules.eders.application.models import (
     EdersCourse,
     EdersSnapshot,
 )
-from manashelper.modules.eders.application.polling import PollEdersUser
 from manashelper.modules.eders.application.tracking import EdersEvent, EdersTrackingService
+from manashelper.modules.eders.application.use_cases.poll_eders_user import PollEdersUserUseCase
 from manashelper.modules.eders.errors import EdersParseError
 from manashelper.modules.eders.jobs import poll_eders_job
 from manashelper.modules.eders.presentation.callbacks import EdersPageCallback
@@ -38,9 +38,9 @@ from manashelper.modules.obis.errors import UserHasNoCredentialsError
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.application.schedule import NoTrackedCoursesError
 from manashelper.modules.schedule.provider import ScheduleProvider
-from manashelper.modules.study_week.application import GetStudyWeek
+from manashelper.modules.study_week.application.use_cases.get_study_week import GetStudyWeekUseCase
 from manashelper.modules.study_week.provider import StudyWeekProvider
-from manashelper.modules.users.application.theme import ThemeService
+from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.dispatcher import create_dispatcher
@@ -173,7 +173,7 @@ async def test_week_without_tracked_courses_keeps_eders_dates() -> None:
     eders, schedule = AsyncMock(), AsyncMock()
     eders.get_snapshot.return_value = snapshot()
     schedule.get_user_schedule.side_effect = NoTrackedCoursesError(1)
-    result = await GetStudyWeek(eders, schedule).execute(1)
+    result = await GetStudyWeekUseCase(eders, schedule).execute(1)
     assert result.lessons == () and not result.has_tracked_courses
     assert len(result.snapshot.activities) == 1
 
@@ -196,10 +196,12 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
     locales.get_locale.side_effect = recipient_locale
     tracking.pending_events.return_value = [event]
     dependencies = {
-        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+        ThemeQuery: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
         OutboxService: AsyncMock(spec=OutboxService),
         EdersTrackingService: tracking,
-        PollEdersUser: PollEdersUser(service, tracking, locales),
+        PollEdersUserUseCase: PollEdersUserUseCase(
+            SimpleNamespace(execute=service.refresh_snapshot), tracking, locales
+        ),
     }
 
     class Request:
@@ -239,8 +241,8 @@ async def test_application_resolves_new_services_and_registers_fifteen_minute_po
         assert "student_questions" not in router_names
         assert router_names.index("advertisement_contact") < router_names.index("start")
         async with container() as request:
-            assert isinstance(await request.get(EdersService), EdersService)
-            assert isinstance(await request.get(GetStudyWeek), GetStudyWeek)
+            assert isinstance(await request.get(EdersQuery), EdersQuery)
+            assert isinstance(await request.get(GetStudyWeekUseCase), GetStudyWeekUseCase)
         scheduler = create_scheduler(container, bot)
         jobs = [job for job in scheduler.get_jobs() if job.func == poll_eders_job]
         assert len(jobs) == 1 and jobs[0].trigger.interval == timedelta(minutes=15)
@@ -278,10 +280,12 @@ async def test_job_groups_new_materials_and_acknowledges_all_events_only_on_succ
     tracking.pending_events.return_value = [first, second]
     locales.get_locale.return_value = Locale.EN
     dependencies = {
-        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+        ThemeQuery: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
         OutboxService: AsyncMock(spec=OutboxService),
         EdersTrackingService: tracking,
-        PollEdersUser: PollEdersUser(service, tracking, locales),
+        PollEdersUserUseCase: PollEdersUserUseCase(
+            SimpleNamespace(execute=service.refresh_snapshot), tracking, locales
+        ),
     }
 
     @asynccontextmanager
@@ -342,7 +346,9 @@ async def test_eders_settings_open_from_eders_menu_and_keep_return_path_after_to
     tracking.get_settings.assert_awaited_once_with(42)
     for selected in (None, EdersSetting.DAY_BEFORE):
         if selected:
-            await on_eders_setting(callback, EdersSettingCallback(setting=selected), tracking)
+            await on_eders_setting(
+                callback, EdersSettingCallback(setting=selected), SimpleNamespace(execute=tracking.toggle)
+            )
         keyboard = callback.message.edit_text.call_args.kwargs["reply_markup"]
         assert keyboard.inline_keyboard[-1][0].callback_data == EdersMenuCallback(action=EdersAction.MENU).pack()
         assert len(keyboard.inline_keyboard) == len(EdersSetting) + 1

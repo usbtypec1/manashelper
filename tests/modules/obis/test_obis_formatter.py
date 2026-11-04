@@ -1,6 +1,6 @@
 import pytest
 
-from manashelper.modules.obis.application.obis import ExamModel, LessonAttendanceModel, LessonExamsModel
+from manashelper.modules.obis.application.models import ExamModel, LessonAttendanceModel, LessonExamsModel
 from manashelper.modules.obis.presentation.formatter import (
     MAX_PAGE_BODY_CHARS,
     MAX_PAGE_BODY_LINES,

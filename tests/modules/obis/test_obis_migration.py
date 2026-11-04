@@ -18,17 +18,34 @@ from manashelper.core.provider import CoreProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme
-from manashelper.modules.eders.application.eders import EdersService
 from manashelper.modules.obis import jobs
-from manashelper.modules.obis.application.credentials import ObisCredentialsService
+from manashelper.modules.obis.application.credentials import ObisCredentialsQuery
+from manashelper.modules.obis.application.models import (
+    ExamModel,
+    LessonAttendanceModel,
+    LessonExamsModel,
+    RefreshResult,
+)
 from manashelper.modules.obis.application.notification import (
     ExamGradeChange,
     LessonSkipChange,
-    ObisNotificationService,
     SkipType,
 )
-from manashelper.modules.obis.application.obis import ExamModel, LessonAttendanceModel, LessonExamsModel, ObisService
-from manashelper.modules.obis.application.polling import PollObisUser
+from manashelper.modules.obis.application.ports import (
+    AttendanceStore,
+    CredentialsStore,
+    CredentialsVerifier,
+    ExamGradeStore,
+    PasswordCipher,
+    ResultsSource,
+    SnapshotStore,
+)
+from manashelper.modules.obis.application.queries import ObisResultsQuery
+from manashelper.modules.obis.application.use_cases.clear_obis_credentials import ClearObisCredentialsUseCase
+from manashelper.modules.obis.application.use_cases.poll_obis_user import PollObisUserUseCase
+from manashelper.modules.obis.application.use_cases.refresh_obis_attendance import RefreshObisAttendanceUseCase
+from manashelper.modules.obis.application.use_cases.refresh_obis_grades import RefreshObisGradesUseCase
+from manashelper.modules.obis.application.use_cases.save_obis_credentials import SaveObisCredentialsUseCase
 from manashelper.modules.obis.errors import (
     DecryptionError,
     ObisLoginError,
@@ -40,7 +57,6 @@ from manashelper.modules.obis.infrastructure import crypto as crypto_module
 from manashelper.modules.obis.infrastructure.client import ObisClient
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
 from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
-from manashelper.modules.obis.infrastructure.repositories.snapshot import ObisSnapshotRepository
 from manashelper.modules.obis.infrastructure.repositories.user_exam_grade import UserExamGradeRepository
 from manashelper.modules.obis.infrastructure.repositories.user_lesson_attendance import UserLessonAttendanceRepository
 from manashelper.modules.obis.presentation import router as router
@@ -50,6 +66,8 @@ from manashelper.modules.obis.presentation.sender import TelegramObisNotificatio
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.users.infrastructure.models.user import User as DbUser
 from manashelper.platform.i18n.catalog import i18n
+from tests.modules.eders.application_factories import build_eders_service
+from tests.modules.obis.factories import build_obis
 
 KEY = bytes(range(32))
 
@@ -62,10 +80,7 @@ def crypto():
 @pytest.fixture
 def credentials(session, crypto):
     client = AsyncMock(spec=ObisClient)
-    account = ObisCredentialsService(ObisCredentialsRepository(session), client, crypto)
-    return SimpleNamespace(
-        service=ObisService(account, client, ObisSnapshotRepository(session)), client=client, account=account
-    )
+    return build_obis(session, client, crypto)
 
 
 async def test_credentials_verify_before_storage_and_keep_cipher_format(session, credentials, crypto):
@@ -79,24 +94,24 @@ async def test_credentials_verify_before_storage_and_keep_cipher_format(session,
         assert (user.student_number, user.encrypted_password) == ("old", old)
 
     credentials.client.verify_credentials.side_effect = verify
-    await credentials.service.save_credentials(975001, "new", "fake-password")
+    await credentials.save.execute(975001, "new", "fake-password")
     assert user.student_number == "new" and crypto.decrypt(user.encrypted_password) == "fake-password"
     assert len(base64.b64decode(user.encrypted_password)) == 12 + len("fake-password") + 16
-    assert await credentials.service.has_credentials(975001)
-    await credentials.service.clear_credentials(975001)
+    assert await credentials.account.has_credentials(975001)
+    await credentials.clear.execute(975001)
     assert (user.student_number, user.encrypted_password) == (None, None)
-    assert not await credentials.service.has_credentials(975001)
+    assert not await credentials.account.has_credentials(975001)
 
 
 @pytest.mark.parametrize("operation", ["save", "has", "clear"])
 async def test_unknown_user_never_attempts_login(credentials, operation):
     with pytest.raises(UserNotFoundError) as error:
         if operation == "save":
-            await credentials.service.save_credentials(975001, "fake-student", "fake-password")
+            await credentials.save.execute(975001, "fake-student", "fake-password")
         elif operation == "has":
-            await credentials.service.has_credentials(975001)
+            await credentials.account.has_credentials(975001)
         else:
-            await credentials.service.clear_credentials(975001)
+            await credentials.clear.execute(975001)
     assert error.value.user_id == 975001
     credentials.client.verify_credentials.assert_not_awaited()
 
@@ -107,7 +122,7 @@ async def test_failed_login_does_not_replace_existing_credentials(session, crede
     await session.flush()
     credentials.client.verify_credentials.side_effect = ObisLoginError("denied")
     with pytest.raises(ObisLoginError):
-        await credentials.service.save_credentials(975001, "new", "fake-password")
+        await credentials.save.execute(975001, "new", "fake-password")
     assert (user.student_number, user.encrypted_password) == ("old", "old-ciphertext")
     await session.commit()
     await session.refresh(user)
@@ -124,7 +139,7 @@ async def test_encryption_failure_does_not_replace_existing_credentials(session,
 
     monkeypatch.setattr(crypto, "encrypt", fail)
     with pytest.raises(RuntimeError, match="Encryption unavailable"):
-        await credentials.service.save_credentials(975001, "new", "fake-password")
+        await credentials.save.execute(975001, "new", "fake-password")
     assert (user.student_number, user.encrypted_password) == ("old", "old-ciphertext")
     await session.commit()
     await session.refresh(user)
@@ -136,7 +151,7 @@ async def test_missing_or_corrupt_credentials_never_fetch_data(session, credenti
     session.add(DbUser(id=975001, full_name="Student", student_number="fake-student", encrypted_password=ciphertext))
     await session.flush()
     with pytest.raises(UserHasNoCredentialsError) as error:
-        await credentials.service.get_exam_grades(975001)
+        await credentials.results.get_exam_grades(975001)
     assert (error.value.__cause__ is not None) is (ciphertext is not None)
     credentials.client.fetch_exam_grades_html.assert_not_awaited()
 
@@ -161,42 +176,50 @@ def test_crypto_errors_keep_generic_message_without_plaintext(crypto, ciphertext
 async def test_first_grade_snapshot_is_silent_and_subsequent_changes_notify(session, score):
     session.add(DbUser(id=975001, full_name="Student"))
     await session.flush()
-    source = AsyncMock(spec=ObisService)
-    source.refresh_exam_grades.return_value = [LessonExamsModel("Math", "MATH", [ExamModel("Midterm", score)])]
-    service = ObisNotificationService(source, UserExamGradeRepository(session), UserLessonAttendanceRepository(session))
-    first = await service.check_exam_grade_changes(975001)
+    source = AsyncMock()
+    source.fetch_exam_grades.return_value = [LessonExamsModel("Math", "MATH", [ExamModel("Midterm", score)])]
+    account = AsyncMock(spec=ObisCredentialsQuery)
+    account.get_credentials.return_value = SimpleNamespace(
+        student_number="student", plain_password="password", credential_marker="marker"
+    )
+    service = RefreshObisGradesUseCase(account, AsyncMock(), source, AsyncMock(), UserExamGradeRepository(session))
+    first = (await service.execute(975001)).changes
     assert first == []
     await session.flush()
     saved = await UserExamGradeRepository(session).get_all_by_user_id(975001)
     assert [(grade.lesson_code, grade.exam_name, grade.score) for grade in saved] == [("MATH", "Midterm", score)]
-    assert await service.check_exam_grade_changes(975001) == []
-    source.refresh_exam_grades.return_value = [LessonExamsModel("Math", "MATH", [ExamModel("Midterm", None)])]
-    assert await service.check_exam_grade_changes(975001) == []
-    source.refresh_exam_grades.return_value = [LessonExamsModel("Math", "MATH", [ExamModel("Midterm", "85")])]
-    assert [change.score for change in await service.check_exam_grade_changes(975001)] == ["85"]
-    source.refresh_exam_grades.return_value = [
+    assert (await service.execute(975001)).changes == []
+    source.fetch_exam_grades.return_value = [LessonExamsModel("Math", "MATH", [ExamModel("Midterm", None)])]
+    assert (await service.execute(975001)).changes == []
+    source.fetch_exam_grades.return_value = [LessonExamsModel("Math", "MATH", [ExamModel("Midterm", "85")])]
+    assert [change.score for change in (await service.execute(975001)).changes] == ["85"]
+    source.fetch_exam_grades.return_value = [
         LessonExamsModel("Math", "MATH", [ExamModel("Midterm", "85"), ExamModel("Final", "90")])
     ]
-    assert [(change.exam_name, change.score) for change in await service.check_exam_grade_changes(975001)] == [
-        ("Final", "90")
-    ]
+    assert [(change.exam_name, change.score) for change in (await service.execute(975001)).changes] == [("Final", "90")]
     await session.flush()
-    assert await service.check_exam_grade_changes(975001) == []
+    assert (await service.execute(975001)).changes == []
 
 
 async def test_attendance_baseline_is_silent_and_only_known_increases_notify(session):
     session.add(DbUser(id=975001, full_name="Student"))
     await session.flush()
-    source = AsyncMock(spec=ObisService)
-    source.refresh_attendance.return_value = [LessonAttendanceModel("Math", "MATH", 12.5, None, 2, None)]
-    service = ObisNotificationService(source, UserExamGradeRepository(session), UserLessonAttendanceRepository(session))
-    assert await service.check_lesson_skip_changes(975001) == []
+    source = AsyncMock()
+    source.fetch_attendance.return_value = [LessonAttendanceModel("Math", "MATH", 12.5, None, 2, None)]
+    account = AsyncMock(spec=ObisCredentialsQuery)
+    account.get_credentials.return_value = SimpleNamespace(
+        student_number="student", plain_password="password", credential_marker="marker"
+    )
+    service = RefreshObisAttendanceUseCase(
+        account, AsyncMock(), source, AsyncMock(), UserLessonAttendanceRepository(session)
+    )
+    assert (await service.execute(975001)).changes == []
     await session.flush()
-    source.refresh_attendance.return_value = [LessonAttendanceModel("Math", "MATH", 18.75, 6.25, 1, 2)]
-    changes = await service.check_lesson_skip_changes(975001)
+    source.fetch_attendance.return_value = [LessonAttendanceModel("Math", "MATH", 18.75, 6.25, 1, 2)]
+    changes = (await service.execute(975001)).changes
     assert [(change.skip_type, change.skips_percentage) for change in changes] == [(SkipType.THEORY, 18.75)]
-    source.refresh_attendance.return_value = [LessonAttendanceModel("Math", "MATH", 0, None, 4, None)]
-    assert await service.check_lesson_skip_changes(975001) == []
+    source.fetch_attendance.return_value = [LessonAttendanceModel("Math", "MATH", 0, None, 4, None)]
+    assert (await service.execute(975001)).changes == []
 
 
 def test_obis_callbacks_fsm_private_and_password_mask_contract():
@@ -221,16 +244,14 @@ async def test_credentials_form_deletes_password_and_preserves_fsm_transitions(m
     state = FSMContext(MemoryStorage(), StorageKey(bot_id=bot.id, chat_id=user.id, user_id=user.id))
     service = AsyncMock()
     if failure:
-        service.save_credentials.side_effect = (
-            ObisLoginError("denied") if failure == "login" else UserNotFoundError(user.id)
-        )
+        service.execute.side_effect = ObisLoginError("denied") if failure == "login" else UserNotFoundError(user.id)
     with i18n.context(), i18n.use_locale("en"):
         await router.on_accept_terms(callback, state)
         await router.on_student_number_entered(message.model_copy(update={"text": " fake-student "}), state)
         assert await state.get_state() == "ObisCredentialsForm:password"
         request.reset_mock()
         await router.on_password_entered(message.model_copy(update={"text": " fake-password "}), state, service)
-    service.save_credentials.assert_awaited_once_with(user.id, "fake-student", "fake-password")
+    service.execute.assert_awaited_once_with(user.id, "fake-student", "fake-password")
     methods = [call.args[1] for call in request.await_args_list]
     assert methods[0].__api_method__ == "deleteMessage"
     assert await state.get_state() == ("ObisCredentialsForm:student_number" if failure == "login" else None)
@@ -257,7 +278,7 @@ async def test_public_credentials_keep_ciphertext_marker_and_hide_secrets(sessio
     snapshot = object()
     client.fetch_snapshot.return_value = snapshot
     tracking.observe.return_value = snapshot
-    assert await EdersService(credentials.account, client, tracking).refresh_snapshot(user.id) is snapshot
+    assert await build_eders_service(credentials.account, client, tracking).refresh_snapshot(user.id) is snapshot
     client.fetch_snapshot.assert_awaited_once_with("fake-student")
     tracking.observe.assert_awaited_once_with(user.id, hashlib.sha256(b"fake-student").hexdigest(), snapshot)
     credentials.client.verify_credentials.assert_not_awaited()
@@ -277,7 +298,7 @@ async def test_eders_missing_student_number_never_fetches(session, credentials, 
     client, tracking = AsyncMock(), AsyncMock()
     expected = UserNotFoundError if mode == "unknown" else UserHasNoCredentialsError
     with pytest.raises(expected) as error:
-        await EdersService(credentials.account, client, tracking).refresh_snapshot(975001)
+        await build_eders_service(credentials.account, client, tracking).refresh_snapshot(975001)
     assert error.value.__cause__ is None
     tracking.get_settings.assert_awaited_once_with(975001)
     client.fetch_snapshot.assert_not_awaited()
@@ -288,7 +309,7 @@ async def test_eders_checks_tracking_before_reading_credentials():
     account, client, tracking = AsyncMock(), AsyncMock(), AsyncMock()
     tracking.get_settings.side_effect = RuntimeError("Tracking failed")
     with pytest.raises(RuntimeError, match="Tracking failed"):
-        await EdersService(account, client, tracking).refresh_snapshot(975001)
+        await build_eders_service(account, client, tracking).refresh_snapshot(975001)
     account.get_student_number.assert_not_awaited()
     client.fetch_snapshot.assert_not_awaited()
 
@@ -306,49 +327,54 @@ async def test_eders_checks_tracking_before_reading_credentials():
     ],
 )
 async def test_polling_use_case_keeps_expected_error_suppression_and_unexpected_abort(error):
-    notifications = AsyncMock(spec=ObisNotificationService)
-    notifications.check_exam_grade_changes.return_value = ["grade"]
-    notifications.check_lesson_skip_changes.return_value = ["skip"]
-    notifications.check_exam_grade_changes.side_effect = error
+    grades = AsyncMock(spec=RefreshObisGradesUseCase)
+    attendance = AsyncMock(spec=RefreshObisAttendanceUseCase)
+    grades.execute.return_value = RefreshResult([], ["grade"])
+    attendance.execute.return_value = RefreshResult([], ["skip"])
+    grades.execute.side_effect = error
     sender = AsyncMock()
-    polling = PollObisUser(notifications)
+    polling = PollObisUserUseCase(grades, attendance)
     if isinstance(error, (httpx.HTTPError, RuntimeError)):
         with pytest.raises(type(error)):
             await polling.execute(975001, True, True, sender)
-        notifications.check_lesson_skip_changes.assert_not_awaited()
+        attendance.execute.assert_not_awaited()
         sender.lesson_skips_changed.assert_not_awaited()
     else:
         await polling.execute(975001, True, True, sender)
-        notifications.check_lesson_skip_changes.assert_awaited_once_with(975001)
+        attendance.execute.assert_awaited_once_with(975001)
         sender.lesson_skips_changed.assert_awaited_once_with("skip")
     assert sender.exam_grade_changed.await_count == int(error is None)
 
 
 @pytest.mark.parametrize("failure", [False, True])
 async def test_telegram_sender_keeps_recipient_locale_and_queue_failure_boundary(failure):
-    notifications = AsyncMock(spec=ObisNotificationService)
-    notifications.check_exam_grade_changes.return_value = [
-        ExamGradeChange("Math", "Midterm", "80"),
-        ExamGradeChange("Math", "Final", "90"),
-    ]
-    notifications.check_lesson_skip_changes.return_value = [LessonSkipChange("Math", SkipType.THEORY, 25, 0)]
+    grades = AsyncMock(spec=RefreshObisGradesUseCase)
+    attendance = AsyncMock(spec=RefreshObisAttendanceUseCase)
+    grades.execute.return_value = RefreshResult(
+        [],
+        [
+            ExamGradeChange("Math", "Midterm", "80"),
+            ExamGradeChange("Math", "Final", "90"),
+        ],
+    )
+    attendance.execute.return_value = RefreshResult([], [LessonSkipChange("Math", SkipType.THEORY, 25, 0)])
     bot = AsyncMock()
     if failure:
         bot.enqueue.side_effect = RuntimeError("Queue failed")
     sender = TelegramObisNotificationSender(bot, 975001, Locale.ZH, Theme.BASIC)
     with i18n.context(), i18n.use_locale("ru"):
         if not failure:
-            await PollObisUser(notifications).execute(975001, True, True, sender)
+            await PollObisUserUseCase(grades, attendance).execute(975001, True, True, sender)
             assert bot.enqueue.await_count == 3
             assert all("Math" in call.args[1][0].text for call in bot.enqueue.await_args_list)
             with i18n.use_locale("zh"):
-                expected = format_exam_grade_change(notifications.check_exam_grade_changes.return_value[0])
+                expected = format_exam_grade_change(grades.execute.return_value.changes[0])
             assert bot.enqueue.await_args_list[0].args[1][0].text == expected
         else:
             with pytest.raises(RuntimeError, match="Queue failed"):
-                await PollObisUser(notifications).execute(975001, True, True, sender)
+                await PollObisUserUseCase(grades, attendance).execute(975001, True, True, sender)
             assert bot.enqueue.await_count == 1
-            notifications.check_lesson_skip_changes.assert_not_awaited()
+            attendance.execute.assert_not_awaited()
         assert i18n.current_locale == "ru"
 
 
@@ -360,24 +386,41 @@ async def test_obis_provider_preserves_app_request_scopes_and_model_registry():
     assert Base.metadata.tables["obis_user_lesson_attendance"] is UserLessonAttendance.__table__
     dependencies = (
         ObisCredentialsRepository,
-        ObisCredentialsService,
-        ObisService,
-        ObisNotificationService,
+        ObisCredentialsQuery,
+        ObisResultsQuery,
+        RefreshObisGradesUseCase,
+        RefreshObisAttendanceUseCase,
+        SaveObisCredentialsUseCase,
+        ClearObisCredentialsUseCase,
         UserExamGradeRepository,
         UserLessonAttendanceRepository,
-        PollObisUser,
+        PollObisUserUseCase,
+        SnapshotStore,
+        CredentialsStore,
+        ExamGradeStore,
+        AttendanceStore,
     )
     async with make_async_container(CoreProvider(), ObisProvider()) as container:
         client, crypto = await container.get(ObisClient), await container.get(CryptoService)
+        source = await container.get(ResultsSource)
         async with container() as request:
             first = [await request.get(dependency) for dependency in dependencies]
             for dependency, instance in zip(dependencies, first, strict=True):
                 assert instance is await request.get(dependency)
             assert client is await request.get(ObisClient) and crypto is await request.get(CryptoService)
+            assert source is await request.get(ResultsSource)
+            assert await request.get(CredentialsStore) is await request.get(ObisCredentialsRepository)
+            assert await request.get(ExamGradeStore) is await request.get(UserExamGradeRepository)
+            assert await request.get(AttendanceStore) is await request.get(UserLessonAttendanceRepository)
+            assert client is await request.get(CredentialsVerifier)
+            assert crypto is await request.get(PasswordCipher)
         async with container() as request:
             for dependency, instance in zip(dependencies, first, strict=True):
                 assert instance is not await request.get(dependency)
             assert client is await request.get(ObisClient) and crypto is await request.get(CryptoService)
+            assert source is await request.get(ResultsSource)
+            assert client is await request.get(CredentialsVerifier)
+            assert crypto is await request.get(PasswordCipher)
 
 
 def test_obis_polling_refreshes_every_fifteen_minutes():

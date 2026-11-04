@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
@@ -62,11 +63,21 @@ async def test_study_feature_menu_views_notifications_and_back(monkeypatch, loca
         get_settings=AsyncMock(return_value=NotificationSettingsSummary(True, True, True)),
         toggle_setting=AsyncMock(return_value=NotificationSettingsSummary(True, False, True)),
     )
+
+    async def settings_execute(user_id, setting=None):
+        if setting is None:
+            return await settings_service.get_settings(user_id)
+        return await settings_service.toggle_setting(user_id, setting)
+
+    tracking.execute = tracking.toggle
     dependencies = dict(
-        eders_service=eders_service,
+        eders_query=eders_service,
         tracking=tracking,
-        obis_service=obis_service,
-        notification_settings_service=settings_service,
+        toggle_eders_setting=tracking,
+        results=obis_service,
+        get_notification_settings=SimpleNamespace(execute=settings_execute),
+        set_broadcast_mute=SimpleNamespace(execute=settings_execute),
+        toggle_notification_setting=SimpleNamespace(execute=settings_execute),
     )
     chat = Chat(id=42, type="private")
     user = User(id=42, is_bot=False, first_name="Student")

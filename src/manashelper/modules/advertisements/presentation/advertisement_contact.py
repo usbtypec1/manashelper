@@ -8,7 +8,9 @@ from dishka import FromDishka
 
 from manashelper.core.config import Settings
 from manashelper.modules.advertisements.application.advertisement import AdvertisementNotFoundError
-from manashelper.modules.advertisements.application.advertisement_contact import AdvertisementContactService
+from manashelper.modules.advertisements.application.use_cases.reveal_advertisement_contact import (
+    RevealAdvertisementContactUseCase,
+)
 from manashelper.modules.advertisements.presentation.advertisement import send_marketplace_menu
 from manashelper.modules.advertisements.presentation.advertisement_formatter import format_contact_reveal
 from manashelper.platform.telegram.navigation import send_welcome
@@ -25,7 +27,7 @@ async def on_advertisement_deep_link(
     message: Message,
     command: CommandObject,
     settings: FromDishka[Settings],
-    advertisement_contact_service: FromDishka[AdvertisementContactService],
+    reveal_advertisement_contact: FromDishka[RevealAdvertisementContactUseCase],
 ) -> None:
     payload = command.args or ""
     if message.from_user is None:
@@ -46,7 +48,7 @@ async def on_advertisement_deep_link(
         return
 
     try:
-        reveal = await advertisement_contact_service.reveal_contact(advertisement_id, message.from_user.id)
+        reveal = await reveal_advertisement_contact.execute(advertisement_id, message.from_user.id)
     except AdvertisementNotFoundError:
         await message.answer(_("ads.not_found"))
         return

@@ -3,12 +3,12 @@ import logging
 from aiogram import Bot
 from dishka import AsyncContainer
 
-from manashelper.modules.eders.application.polling import PollEdersUser
 from manashelper.modules.eders.application.tracking import EdersTrackingService
+from manashelper.modules.eders.application.use_cases.poll_eders_user import PollEdersUserUseCase
 from manashelper.modules.eders.errors import EdersFetchError, EdersParseError, EdersUnsafeUrlError
 from manashelper.modules.eders.presentation.sender import TelegramEdersNotificationSender
 from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
-from manashelper.modules.users.application.theme import ThemeService
+from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.platform.telegram.outbox.service import OutboxService
 
 logger = logging.getLogger(__name__)
@@ -25,10 +25,10 @@ async def poll_eders_job(container: AsyncContainer, bot: Bot) -> None:
     for user_id in user_ids:
         try:
             async with container() as request:
-                poll = await request.get(PollEdersUser)
-                themes = await request.get(ThemeService)
+                poll_eders_user = await request.get(PollEdersUserUseCase)
+                themes = await request.get(ThemeQuery)
                 outbox = await request.get(OutboxService)
-                await poll.execute(user_id, TelegramEdersNotificationSender(outbox, themes))
+                await poll_eders_user.execute(user_id, TelegramEdersNotificationSender(outbox, themes))
         except (
             UserNotFoundError,
             UserHasNoCredentialsError,
@@ -40,4 +40,4 @@ async def poll_eders_job(container: AsyncContainer, bot: Bot) -> None:
         ):
             logger.warning("Could not refresh eders for user %s", user_id)
         except Exception:
-            logger.exception("Failed to poll eders for user %s", user_id)
+            logger.exception("Failed to poll_eders_user eders for user %s", user_id)

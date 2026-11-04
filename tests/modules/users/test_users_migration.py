@@ -21,8 +21,10 @@ from manashelper.localization.theme import Theme
 from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis import jobs
-from manashelper.modules.obis.application.notification import ObisNotificationService
-from manashelper.modules.obis.application.polling import PollObisUser
+from manashelper.modules.obis.application.models import RefreshResult
+from manashelper.modules.obis.application.use_cases.poll_obis_user import PollObisUserUseCase
+from manashelper.modules.obis.application.use_cases.refresh_obis_attendance import RefreshObisAttendanceUseCase
+from manashelper.modules.obis.application.use_cases.refresh_obis_grades import RefreshObisGradesUseCase
 from manashelper.modules.obis.presentation import sender as obis_sender
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.infrastructure.models.course import Course
@@ -30,8 +32,9 @@ from manashelper.modules.schedule.infrastructure.models.department import Depart
 from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
-from manashelper.modules.users.application.locale import LocaleService
-from manashelper.modules.users.application.theme import ThemeService
+from manashelper.modules.users.application.locale import LocaleQuery
+from manashelper.modules.users.application.theme import ThemeQuery
+from manashelper.modules.users.application.use_cases.resolve_user_locale import ResolveUserLocaleUseCase
 from manashelper.modules.users.infrastructure.models.user import User as DbUser
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.modules.users.presentation.callbacks import (
@@ -45,6 +48,7 @@ from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
 from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.telegram.outbox.service import OutboxService
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
+from tests.modules.users.application_factories import build_locale_service, build_theme_service
 
 
 @pytest.fixture
@@ -62,7 +66,7 @@ def context(monkeypatch):
 
 async def test_profile_refresh_preserves_locale_credentials_and_course_relationship(session):
     repository = UserRepository(session)
-    locales = LocaleService(repository)
+    locales = build_locale_service(repository)
     faculty = Faculty(id=uuid.uuid4(), name="Users migration")
     department = Department(id=uuid.uuid4(), name="Users migration", faculty=faculty)
     course = Course(id=973100, number=1, department=department)
@@ -89,7 +93,7 @@ async def test_profile_refresh_preserves_locale_credentials_and_course_relations
 
 async def test_locale_read_and_set_do_not_register_missing_users(session):
     repository = UserRepository(session)
-    locales = LocaleService(repository)
+    locales = build_locale_service(repository)
     assert await locales.get_locale(973001) == DEFAULT_LOCALE
     await locales.set_locale(973001, Locale.EN)
     assert await repository.get_by_id(973001) is None
@@ -101,7 +105,7 @@ async def test_locale_read_and_set_do_not_register_missing_users(session):
 async def test_invalid_saved_locale_still_propagates_value_error(session):
     session.add(DbUser(id=973001, full_name="Student", locale="xx"))
     await session.flush()
-    locales = LocaleService(UserRepository(session))
+    locales = build_locale_service(UserRepository(session))
     with pytest.raises(ValueError):
         await locales.get_locale(973001)
     with pytest.raises(ValueError):
@@ -116,8 +120,10 @@ def test_users_callback_payload_fsm_and_private_flags():
 
 @pytest.mark.parametrize("selected", list(Locale))
 async def test_selected_language_controls_confirmation_and_welcome(context, selected):
-    locales = AsyncMock(spec=LocaleService)
-    await locale.on_locale_selected(context.callback, LocaleCallback(locale=selected), locales)
+    locales = AsyncMock(spec=build_locale_service(AsyncMock()))
+    await locale.on_locale_selected(
+        context.callback, LocaleCallback(locale=selected), SimpleNamespace(execute=locales.set_locale)
+    )
     locales.set_locale.assert_awaited_once_with(973001, selected)
     requests = [call.args[1] for call in context.request.await_args_list]
     expected = i18n.gettext("language.selected", locale=selected.value).format(
@@ -135,13 +141,14 @@ async def test_obis_user_poll_keeps_locale_fallback_and_failure_isolation(monkey
     users.get_by_id.return_value = SimpleNamespace(locale=saved) if saved is not None else None
     if saved == "read_failure":
         users.get_by_id.side_effect = RuntimeError("Locale unavailable")
-    service = AsyncMock(spec=ObisNotificationService)
-    service.check_exam_grade_changes.return_value = [object()]
-    service.check_lesson_skip_changes.return_value = [object()]
+    grades = AsyncMock(spec=RefreshObisGradesUseCase)
+    attendance = AsyncMock(spec=RefreshObisAttendanceUseCase)
+    grades.execute.return_value = RefreshResult([], [object()])
+    attendance.execute.return_value = RefreshResult([], [object()])
     dependencies = {
-        LocaleService: LocaleService(users),
-        PollObisUser: PollObisUser(service),
-        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+        LocaleQuery: build_locale_service(users),
+        PollObisUserUseCase: PollObisUserUseCase(grades, attendance),
+        ThemeQuery: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
         OutboxService: AsyncMock(spec=OutboxService),
     }
     opened = []
@@ -160,13 +167,13 @@ async def test_obis_user_poll_keeps_locale_fallback_and_failure_isolation(monkey
     assert len(opened) == 1
     users.get_by_id.assert_awaited_once_with(973001)
     if saved in ("xx", "read_failure"):
-        service.check_exam_grade_changes.assert_not_awaited()
-        service.check_lesson_skip_changes.assert_not_awaited()
+        grades.execute.assert_not_awaited()
+        attendance.execute.assert_not_awaited()
         send.assert_not_awaited()
         assert "Failed to poll OBIS notifications for user 973001" in caplog.text
     else:
-        service.check_exam_grade_changes.assert_awaited_once_with(973001)
-        service.check_lesson_skip_changes.assert_awaited_once_with(973001)
+        grades.execute.assert_awaited_once_with(973001)
+        attendance.execute.assert_awaited_once_with(973001)
         assert [call.args[0] for call in send.await_args_list] == [973001, 973001]
         assert [call.args[1][0].text for call in send.await_args_list] == [
             i18n.gettext(key, locale=saved or DEFAULT_LOCALE.value) for key in ("menu.grades", "menu.attendance")
@@ -177,8 +184,8 @@ async def test_users_provider_scopes_and_orm_registry():
     assert Base.metadata.tables["users"] is DbUser.__table__
     dependencies = (
         UsersQuery,
-        LocaleService,
-        ThemeService,
+        LocaleQuery,
+        ThemeQuery,
         UserRepository,
     )
     async with make_async_container(
@@ -203,11 +210,18 @@ async def test_users_provider_scopes_and_orm_registry():
 
 @pytest.mark.parametrize("has_user", [False, True])
 async def test_locale_middleware_keeps_request_context_and_profile_refresh(context, has_user):
-    locales = AsyncMock(spec=LocaleService)
+    locales = AsyncMock(spec=build_locale_service(AsyncMock()))
     locales.resolve.return_value = Locale.ZH
-    themes = AsyncMock(spec=ThemeService)
+    themes = AsyncMock(spec=build_theme_service(AsyncMock()))
     themes.get_theme.return_value = Theme.BASIC
-    request = SimpleNamespace(get=AsyncMock(side_effect={LocaleService: locales, ThemeService: themes}.__getitem__))
+    request = SimpleNamespace(
+        get=AsyncMock(
+            side_effect={
+                ResolveUserLocaleUseCase: SimpleNamespace(execute=locales.resolve),
+                ThemeQuery: themes,
+            }.__getitem__
+        )
+    )
     data = {CONTAINER_NAME: request}
     if has_user:
         data["event_from_user"] = context.message.from_user
@@ -221,7 +235,7 @@ async def test_locale_middleware_keeps_request_context_and_profile_refresh(conte
     assert observed == [(context.message, Locale.ZH if has_user else None, "zh" if has_user else "ru")]
     assert i18n.current_locale == "ru"
     if has_user:
-        assert [call.args[0] for call in request.get.await_args_list] == [LocaleService, ThemeService]
+        assert [call.args[0] for call in request.get.await_args_list] == [ResolveUserLocaleUseCase, ThemeQuery]
         user = context.message.from_user
         locales.resolve.assert_awaited_once_with(
             user_id=user.id,

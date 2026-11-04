@@ -6,7 +6,6 @@ import pytest
 from aiogram.methods import SendMessage
 from sqlalchemy import select
 
-from manashelper.modules.eders.application.eders import EdersService
 from manashelper.modules.eders.application.models import (
     ActivityDate,
     ActivityKind,
@@ -15,9 +14,11 @@ from manashelper.modules.eders.application.models import (
 )
 from manashelper.modules.eders.application.tracking import EdersSetting
 from manashelper.modules.eders.infrastructure.repositories.eders import EdersRepository
+from manashelper.modules.obis.application.credentials import ObisCredentialsQuery
 from manashelper.modules.obis.errors import UserHasNoCredentialsError
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.platform.telegram.outbox.models import OutboxMessage
+from tests.modules.eders.application_factories import build_eders_service
 from tests.modules.eders.factories import NOW, item
 
 
@@ -141,11 +142,10 @@ async def test_after_outage_only_nearest_deadline_reminder_is_sent(tracking):
 
 async def test_missing_credentials_do_not_make_network_requests(session, tracking):
     client, crypto = AsyncMock(), AsyncMock()
-    from manashelper.modules.obis.application.credentials import ObisCredentialsService
     from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
 
-    account = ObisCredentialsService(ObisCredentialsRepository(session), AsyncMock(), crypto)
-    service = EdersService(account, client, tracking)
+    account = ObisCredentialsQuery(ObisCredentialsRepository(session), crypto)
+    service = build_eders_service(account, client, tracking)
     with pytest.raises(UserHasNoCredentialsError):
         await service.get_snapshot(980_001)
     client.fetch_snapshot.assert_not_awaited()
@@ -153,7 +153,6 @@ async def test_missing_credentials_do_not_make_network_requests(session, trackin
 
 @pytest.mark.parametrize("encrypted_password", [None, "bad-ciphertext"])
 async def test_eders_needs_only_student_number_and_polling_includes_it(session, tracking, encrypted_password):
-    from manashelper.modules.obis.application.credentials import ObisCredentialsService
     from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
 
     user = await session.get(User, 980_001)
@@ -162,8 +161,8 @@ async def test_eders_needs_only_student_number_and_polling_includes_it(session, 
     await session.flush()
     client, crypto = AsyncMock(), AsyncMock()
     client.fetch_snapshot.return_value = EdersSnapshot((item(),), NOW)
-    account = ObisCredentialsService(ObisCredentialsRepository(session), AsyncMock(), crypto)
-    result = await EdersService(account, client, tracking).refresh_snapshot(user.id)
+    account = ObisCredentialsQuery(ObisCredentialsRepository(session), crypto)
+    result = await build_eders_service(account, client, tracking).refresh_snapshot(user.id)
     assert result.activities[0].id == 20
     client.fetch_snapshot.assert_awaited_once_with("fake-student")
     crypto.decrypt.assert_not_called()

@@ -1,0 +1,69 @@
+from dataclasses import dataclass, field
+from datetime import datetime
+from uuid import UUID
+
+
+@dataclass(frozen=True, slots=True)
+class ExamModel:
+    name: str | None
+    score: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class LessonExamsModel:
+    lesson_name: str | None
+    lesson_code: str | None
+    exams: list[ExamModel]
+
+
+@dataclass(frozen=True, slots=True)
+class AttendanceRecord:
+    lesson_name: str
+    lesson_code: str
+    theory_skips_percentage: float | None
+    practice_skips_percentage: float | None
+
+
+@dataclass(frozen=True, slots=True)
+class LessonAttendanceModel:
+    lesson_name: str
+    lesson_code: str
+    theory_skips_percentage: float | None
+    practice_skips_percentage: float | None
+    theory_skippable: int | None
+    practice_skippable: int | None
+
+
+@dataclass(frozen=True, slots=True)
+class Snapshot[T]:
+    credential_marker: str
+    lessons: list[T]
+    fetched_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class RefreshResult[T, C]:
+    lessons: list[T]
+    changes: list[C]
+
+
+@dataclass(frozen=True, slots=True)
+class StoredCredentials:
+    student_number: str | None = field(repr=False)
+    encrypted_password: str | None = field(repr=False)
+
+
+@dataclass(frozen=True, slots=True)
+class ExamGradeRecord:
+    id: UUID | None
+    lesson_code: str | None
+    exam_name: str | None
+    score: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class AttendanceBaseline:
+    id: UUID | None
+    lesson_code: str
+    theory_skips_percentage: float | None
+    practice_skips_percentage: float | None

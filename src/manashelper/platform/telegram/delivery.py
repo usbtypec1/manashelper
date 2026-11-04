@@ -5,7 +5,8 @@ from itertools import batched
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError, TelegramBadRequest, TelegramForbiddenError
 
-from manashelper.modules.users.application.bot_status import BotStatusService
+from manashelper.modules.users.application.bot_status import BotStatusQuery
+from manashelper.modules.users.application.use_cases.stop_bot_delivery import StopBotDeliveryUseCase
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +35,9 @@ def is_permanent_recipient_error(error: TelegramAPIError) -> bool:
 
 
 class UserMessageDelivery:
-    def __init__(self, status: BotStatusService) -> None:
+    def __init__(self, status: BotStatusQuery, stop_bot_delivery: StopBotDeliveryUseCase) -> None:
         self._status = status
+        self._stop_bot_delivery = stop_bot_delivery
 
     async def send[T](self, user_id: int, action: Callable[[], Awaitable[T]]) -> T | None:
         if await self._status.is_stopped(user_id):
@@ -44,13 +46,15 @@ class UserMessageDelivery:
             return await action()
         except TelegramAPIError as error:
             if is_permanent_recipient_error(error):
-                await self._status.stop(user_id)
+                await self._stop_bot_delivery.execute(user_id)
             raise
 
 
-async def send_notification(bot: Bot, user_id: int, text: str, status: BotStatusService) -> None:
+async def send_notification(
+    bot: Bot, user_id: int, text: str, status: BotStatusQuery, stop_bot_delivery: StopBotDeliveryUseCase
+) -> None:
     try:
-        await UserMessageDelivery(status).send(user_id, lambda: bot.send_message(user_id, text))
+        await UserMessageDelivery(status, stop_bot_delivery).send(user_id, lambda: bot.send_message(user_id, text))
     except TelegramAPIError:
         logger.warning("Failed to send notification to user %s", user_id, exc_info=True)
 

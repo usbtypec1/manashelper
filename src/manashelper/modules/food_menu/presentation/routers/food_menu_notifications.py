@@ -4,10 +4,21 @@ from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
 from manashelper.modules.food_menu.application.food_menu_notification_settings import (
-    FoodMenuNotificationSettingsService,
     FoodMenuNotificationSettingsSummary,
+    FoodMenuSettingsQuery,
     UserNotFoundError,
 )
+from manashelper.modules.food_menu.application.use_cases.disable_food_menu_notifications import (
+    DisableFoodMenuNotificationsUseCase,
+)
+from manashelper.modules.food_menu.application.use_cases.enable_food_menu_notifications import (
+    EnableFoodMenuNotificationsUseCase,
+)
+from manashelper.modules.food_menu.application.use_cases.toggle_food_menu_meal import ToggleFoodMenuMealUseCase
+from manashelper.modules.food_menu.application.use_cases.toggle_food_menu_meal_for_week import (
+    ToggleFoodMenuMealForWeekUseCase,
+)
+from manashelper.modules.food_menu.application.use_cases.toggle_food_menu_weekday import ToggleFoodMenuWeekdayUseCase
 from manashelper.modules.food_menu.presentation.callbacks import (
     FoodMenuNotificationBulkCallback,
     FoodMenuNotificationDayCallback,
@@ -37,10 +48,10 @@ async def _show_food_menu_notifications(
 @flags.private_chat_only
 async def on_open_food_menu_notifications(
     callback_query: CallbackQuery,
-    food_menu_notification_settings_service: FromDishka[FoodMenuNotificationSettingsService],
+    food_menu_settings_query: FromDishka[FoodMenuSettingsQuery],
 ) -> None:
     try:
-        summary = await food_menu_notification_settings_service.get_settings(callback_query.from_user.id)
+        summary = await food_menu_settings_query.get_settings(callback_query.from_user.id)
     except UserNotFoundError:
         await callback_query.answer(_("common.start_required"), show_alert=True)
         return
@@ -53,10 +64,10 @@ async def on_open_food_menu_notifications(
 async def on_toggle_food_menu_notification_day(
     callback_query: CallbackQuery,
     callback_data: FoodMenuNotificationDayCallback,
-    food_menu_notification_settings_service: FromDishka[FoodMenuNotificationSettingsService],
+    toggle_food_menu_meal: FromDishka[ToggleFoodMenuMealUseCase],
 ) -> None:
     try:
-        summary = await food_menu_notification_settings_service.toggle(
+        summary = await toggle_food_menu_meal.execute(
             callback_query.from_user.id, callback_data.weekday, callback_data.meal
         )
     except UserNotFoundError:
@@ -71,12 +82,10 @@ async def on_toggle_food_menu_notification_day(
 async def on_toggle_food_menu_notification_weekday(
     callback_query: CallbackQuery,
     callback_data: FoodMenuNotificationWeekdayCallback,
-    food_menu_notification_settings_service: FromDishka[FoodMenuNotificationSettingsService],
+    toggle_food_menu_weekday: FromDishka[ToggleFoodMenuWeekdayUseCase],
 ) -> None:
     try:
-        summary = await food_menu_notification_settings_service.toggle_weekday(
-            callback_query.from_user.id, callback_data.weekday
-        )
+        summary = await toggle_food_menu_weekday.execute(callback_query.from_user.id, callback_data.weekday)
     except UserNotFoundError:
         await callback_query.answer(_("common.start_required"), show_alert=True)
         return
@@ -89,12 +98,10 @@ async def on_toggle_food_menu_notification_weekday(
 async def on_toggle_food_menu_notification_meal(
     callback_query: CallbackQuery,
     callback_data: FoodMenuNotificationMealCallback,
-    food_menu_notification_settings_service: FromDishka[FoodMenuNotificationSettingsService],
+    toggle_food_menu_meal_for_week: FromDishka[ToggleFoodMenuMealForWeekUseCase],
 ) -> None:
     try:
-        summary = await food_menu_notification_settings_service.toggle_meal(
-            callback_query.from_user.id, callback_data.meal
-        )
+        summary = await toggle_food_menu_meal_for_week.execute(callback_query.from_user.id, callback_data.meal)
     except UserNotFoundError:
         await callback_query.answer(_("common.start_required"), show_alert=True)
         return
@@ -107,13 +114,15 @@ async def on_toggle_food_menu_notification_meal(
 async def on_bulk_toggle_food_menu_notifications(
     callback_query: CallbackQuery,
     callback_data: FoodMenuNotificationBulkCallback,
-    food_menu_notification_settings_service: FromDishka[FoodMenuNotificationSettingsService],
+    food_menu_settings_query: FromDishka[FoodMenuSettingsQuery],
+    disable_food_menu_notifications: FromDishka[DisableFoodMenuNotificationsUseCase],
+    enable_food_menu_notifications: FromDishka[EnableFoodMenuNotificationsUseCase],
 ) -> None:
     try:
         if callback_data.enable:
-            summary = await food_menu_notification_settings_service.enable_all(callback_query.from_user.id)
+            summary = await enable_food_menu_notifications.execute(callback_query.from_user.id)
         else:
-            summary = await food_menu_notification_settings_service.disable_all(callback_query.from_user.id)
+            summary = await disable_food_menu_notifications.execute(callback_query.from_user.id)
     except UserNotFoundError:
         await callback_query.answer(_("common.start_required"), show_alert=True)
         return

@@ -6,9 +6,10 @@ from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
 from manashelper.core.time import BISHKEK_TZ
-from manashelper.modules.schedule.application.course import CourseNotFoundError, CourseService, UserNotFoundError
-from manashelper.modules.schedule.application.department import DepartmentService
-from manashelper.modules.schedule.application.schedule import NoTrackedCoursesError, ScheduleService
+from manashelper.modules.schedule.application.course import CourseNotFoundError, CourseQuery, UserNotFoundError
+from manashelper.modules.schedule.application.department import DepartmentQuery
+from manashelper.modules.schedule.application.schedule import NoTrackedCoursesError, ScheduleQuery
+from manashelper.modules.schedule.application.use_cases.toggle_tracked_course import ToggleTrackedCourseUseCase
 from manashelper.modules.schedule.presentation.callbacks import (
     CourseCallback,
     DepartmentCallback,
@@ -48,10 +49,10 @@ async def on_timetable_menu_button(message: Message) -> None:
 @flags.private_chat_only
 async def on_my_schedule_selected(
     callback_query: CallbackQuery,
-    schedule_service: FromDishka[ScheduleService],
+    schedule_query: FromDishka[ScheduleQuery],
 ) -> None:
     try:
-        lessons = await schedule_service.get_user_schedule(callback_query.from_user.id)
+        lessons = await schedule_query.get_user_schedule(callback_query.from_user.id)
     except UserNotFoundError:
         await callback_query.answer(_("common.start_required"), show_alert=True)
         return
@@ -85,10 +86,10 @@ async def on_my_schedule_selected(
 async def on_schedule_day_selected(
     callback_query: CallbackQuery,
     callback_data: ScheduleDayCallback,
-    schedule_service: FromDishka[ScheduleService],
+    schedule_query: FromDishka[ScheduleQuery],
 ) -> None:
     try:
-        lessons = await schedule_service.get_user_schedule(callback_query.from_user.id)
+        lessons = await schedule_query.get_user_schedule(callback_query.from_user.id)
     except UserNotFoundError:
         await callback_query.answer(_("common.start_required"), show_alert=True)
         return
@@ -109,9 +110,9 @@ async def on_schedule_day_selected(
 async def list_departments(
     callback_query: CallbackQuery,
     callback_data: FacultyCallback,
-    department_service: FromDishka[DepartmentService],
+    department_query: FromDishka[DepartmentQuery],
 ) -> None:
-    departments = await department_service.get_departments_by_faculty(callback_data.id)
+    departments = await department_query.get_departments_by_faculty(callback_data.id)
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(
             _("schedule.departments"), reply_markup=build_department_keyboard(departments)
@@ -124,9 +125,9 @@ async def list_departments(
 async def list_courses(
     callback_query: CallbackQuery,
     callback_data: DepartmentCallback,
-    course_service: FromDishka[CourseService],
+    course_query: FromDishka[CourseQuery],
 ) -> None:
-    courses = await course_service.get_courses_by_department(callback_data.id, callback_query.from_user.id)
+    courses = await course_query.get_courses_by_department(callback_data.id, callback_query.from_user.id)
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(_("schedule.courses"), reply_markup=build_course_keyboard(courses))
     await callback_query.answer()
@@ -137,10 +138,10 @@ async def list_courses(
 async def toggle_course_tracking(
     callback_query: CallbackQuery,
     callback_data: CourseCallback,
-    course_service: FromDishka[CourseService],
+    toggle_tracked_course: FromDishka[ToggleTrackedCourseUseCase],
 ) -> None:
     try:
-        courses = await course_service.toggle_tracked_course(callback_data.id, callback_query.from_user.id)
+        courses = await toggle_tracked_course.execute(callback_data.id, callback_query.from_user.id)
     except CourseNotFoundError:
         await callback_query.answer(_("schedule.course_not_found"), show_alert=True)
         return

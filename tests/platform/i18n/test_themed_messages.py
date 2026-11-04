@@ -30,12 +30,11 @@ from manashelper.modules.obis.application.notification import ExamGradeChange, L
 from manashelper.modules.obis.presentation.sender import TelegramObisNotificationSender
 from manashelper.modules.schedule.application.timetable_sync import LessonChange
 from manashelper.modules.schedule.presentation.sender import TelegramScheduleChangeSender
-from manashelper.modules.users.application.locale import LocaleService
-from manashelper.modules.users.application.theme import ThemeService
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.platform.i18n.catalog import i18n
 from tests.modules.eders.factories import NOW, item
+from tests.modules.users.application_factories import build_locale_service, build_theme_service
 
 
 @pytest.fixture
@@ -134,7 +133,7 @@ async def test_background_delivery_uses_each_recipients_saved_theme_and_restores
     )
     await session.flush()
     repository = UserRepository(session)
-    locales, themes = LocaleService(repository), ThemeService(repository)
+    locales, themes = build_locale_service(repository), build_theme_service(repository)
     bot = AsyncMock()
     bot.send_rich_message.return_value.message_id = 42
     with i18n.context(), i18n.use_locale("en"), i18n.use_theme(Theme.HALLOWEEN):

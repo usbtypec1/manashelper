@@ -13,8 +13,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.core.provider import CoreProvider
 from manashelper.modules.advertisements import jobs as job
-from manashelper.modules.advertisements.application.advertisement import AdvertisementService
-from manashelper.modules.advertisements.application.expiry import ExpireAdvertisements, PublicationRemover
+from manashelper.modules.advertisements.application.expiry import PublicationRemover
+from manashelper.modules.advertisements.application.use_cases.expire_advertisements import ExpireAdvertisementsUseCase
 from manashelper.modules.advertisements.infrastructure.models.advertisement import Advertisement
 from manashelper.modules.advertisements.infrastructure.models.advertisement_channel_message import (
     AdvertisementChannelMessage,
@@ -32,6 +32,7 @@ from manashelper.modules.users.provider import UsersProvider
 from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
+from tests.modules.advertisements.application_factories import build_advertisement_service
 
 CHANNEL_ID = -100943001
 
@@ -41,7 +42,7 @@ async def test_expiry_deletes_publications_in_batches_before_removing_rows(sessi
     session.add(User(id=943_001, full_name="Expiry owner", username=None))
     await session.flush()
     repository = AdvertisementRepository(session)
-    service = AdvertisementService(repository, UsersQuery(UserRepository(session)))
+    service = build_advertisement_service(repository, UsersQuery(UserRepository(session)))
     now = datetime.now(UTC).replace(tzinfo=None)
     expired = await service.create_advertisement(
         943_001, "Expired", "Published item", None, now - timedelta(minutes=1), [], phone_number="+996700123456"
@@ -125,7 +126,7 @@ async def test_expiry_use_case_preserves_order_and_propagates_unexpected_adapter
 
     publications.delete_publications.side_effect = remove
     repository.delete.side_effect = delete
-    use_case = ExpireAdvertisements(repository, publications)
+    use_case = ExpireAdvertisementsUseCase(repository, publications)
     if fail_publications:
         with pytest.raises(RuntimeError, match="adapter failed"):
             await use_case.execute()

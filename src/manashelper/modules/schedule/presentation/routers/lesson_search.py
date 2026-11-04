@@ -6,7 +6,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
-from manashelper.modules.schedule.application.lesson_search import LessonSearchResult, LessonSearchService
+from manashelper.modules.schedule.application.lesson_search import LessonSearchQuery, LessonSearchResult
 from manashelper.modules.schedule.presentation.callbacks import (
     LessonSearchPageCallback,
     TimetableMenuAction,
@@ -42,7 +42,7 @@ async def on_search_selected(callback_query: CallbackQuery, state: FSMContext) -
 async def on_search_query_entered(
     message: Message,
     state: FSMContext,
-    lesson_search_service: FromDishka[LessonSearchService],
+    lesson_search_query: FromDishka[LessonSearchQuery],
 ) -> None:
     await state.clear()
 
@@ -51,7 +51,7 @@ async def on_search_query_entered(
         await message.answer(_("schedule.query_too_short"))
         return
 
-    results = await lesson_search_service.search(query)
+    results = await lesson_search_query.search(query)
     if not results:
         await message.answer(_("schedule.no_results"))
         return

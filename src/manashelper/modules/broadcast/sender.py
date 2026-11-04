@@ -3,7 +3,7 @@ from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 
 from manashelper.modules.broadcast.keyboards import build_broadcast_delivery_keyboard
-from manashelper.modules.users.application.locale import LocaleService
+from manashelper.modules.users.application.locale import LocaleQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.html import escape_html
 from manashelper.platform.telegram.outbox.service import OutboxService, OutgoingMethod
@@ -13,7 +13,7 @@ class TelegramBroadcastSender:
     def __init__(
         self,
         outbox: OutboxService,
-        locales: LocaleService,
+        locales: LocaleQuery,
         *,
         photo_id: str | None = None,
         keyboard: InlineKeyboardMarkup | None = None,

@@ -9,21 +9,19 @@ import pytest
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from manashelper.modules.eders.application.eders import EdersService
 from manashelper.modules.eders.application.models import EdersSnapshot
-from manashelper.modules.eders.application.tracking import EdersTrackingService
 from manashelper.modules.eders.infrastructure.models.eders import EdersState
 from manashelper.modules.eders.infrastructure.repositories.eders import EdersRepository
 from manashelper.modules.eders.infrastructure.serialization import serialize_snapshot
-from manashelper.modules.obis.application.credentials import ObisCredentialsService
-from manashelper.modules.obis.application.obis import ObisService
+from manashelper.modules.obis.application.credentials import ObisCredentialsQuery
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
 from manashelper.modules.obis.infrastructure.models.snapshot import ObisSnapshot
 from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
-from manashelper.modules.obis.infrastructure.repositories.snapshot import ObisSnapshotRepository
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.modules.users.queries import UsersQuery
+from tests.modules.eders.application_factories import build_eders_service, build_eders_tracking_service
+from tests.modules.obis.factories import build_obis
 
 
 @pytest.mark.parametrize("feature", ["obis", "eders"])
@@ -63,12 +61,14 @@ async def test_cached_reads_do_not_wait_for_background_http_fetch(engine, featur
         raise RuntimeError("simulated outage")
 
     def services(session, client):
-        credentials = ObisCredentialsService(ObisCredentialsRepository(session), client, crypto)
+        credentials = ObisCredentialsQuery(ObisCredentialsRepository(session), crypto)
         if feature == "obis":
-            service = ObisService(credentials, client, ObisSnapshotRepository(session))
-            return service.refresh_exam_grades, service.get_exam_grades
-        tracking = EdersTrackingService(EdersRepository(session), UsersQuery(UserRepository(session)), AsyncMock())
-        service = EdersService(credentials, client, tracking)
+            service = build_obis(session, client, crypto)
+            return service.grades.execute, service.results.get_exam_grades
+        tracking = build_eders_tracking_service(
+            EdersRepository(session), UsersQuery(UserRepository(session)), AsyncMock()
+        )
+        service = build_eders_service(credentials, client, tracking)
         return service.refresh_snapshot, service.get_snapshot
 
     try:

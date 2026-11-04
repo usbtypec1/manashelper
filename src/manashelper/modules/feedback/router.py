@@ -12,10 +12,14 @@ from dishka import FromDishka
 
 from manashelper.core.config import Settings
 from manashelper.localization.locale import DEFAULT_LOCALE
+from manashelper.modules.feedback.application.use_cases.record_feedback_admin_message import (
+    RecordFeedbackAdminMessageUseCase,
+)
+from manashelper.modules.feedback.application.use_cases.submit_feedback import SubmitFeedbackUseCase
 from manashelper.modules.feedback.callbacks import FeedbackAction, FeedbackCallback
 from manashelper.modules.feedback.keyboards import build_feedback_cancel_keyboard
-from manashelper.modules.feedback.service import BODY_MAX_LENGTH, FeedbackService
-from manashelper.modules.users.application.locale import LocaleService
+from manashelper.modules.feedback.service import BODY_MAX_LENGTH, FeedbackQuery
+from manashelper.modules.users.application.locale import LocaleQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from manashelper.platform.telegram.html import escape_html
@@ -62,7 +66,9 @@ async def on_feedback_entered(
     state: FSMContext,
     bot: Bot,
     settings: FromDishka[Settings],
-    feedback_service: FromDishka[FeedbackService],
+    feedback_query: FromDishka[FeedbackQuery],
+    record_feedback_admin_message: FromDishka[RecordFeedbackAdminMessageUseCase],
+    submit_feedback: FromDishka[SubmitFeedbackUseCase],
 ) -> None:
     body = message.text.strip() if message.text else ""
     if not body or len(body) > BODY_MAX_LENGTH:
@@ -75,7 +81,7 @@ async def on_feedback_entered(
         return
 
     await state.clear()
-    summary = await feedback_service.submit(message.from_user.id, body)
+    summary = await submit_feedback.execute(message.from_user.id, body)
     await message.answer(_("feedback.sent"))
 
     sender = f"@{message.from_user.username}" if message.from_user.username else str(message.from_user.id)
@@ -89,7 +95,7 @@ async def on_feedback_entered(
         logger.warning("Failed to forward feedback message %s to the admin chat", summary.id, exc_info=True)
         return
 
-    await feedback_service.record_admin_chat_message(summary.id, sent.message_id)
+    await record_feedback_admin_message.execute(summary.id, sent.message_id)
 
 
 @router.message(F.chat.type.in_({ChatType.GROUP, ChatType.SUPERGROUP}), F.reply_to_message)
@@ -97,13 +103,13 @@ async def on_admin_reply(
     message: Message,
     bot: Bot,
     settings: FromDishka[Settings],
-    feedback_service: FromDishka[FeedbackService],
-    locale_service: FromDishka[LocaleService],
+    feedback_query: FromDishka[FeedbackQuery],
+    locale_query: FromDishka[LocaleQuery],
 ) -> None:
     if not _is_admin_chat(message, settings) or message.reply_to_message is None:
         return
 
-    feedback = await feedback_service.get_by_admin_chat_message_id(message.reply_to_message.message_id)
+    feedback = await feedback_query.get_by_admin_chat_message_id(message.reply_to_message.message_id)
     if feedback is None:
         return
 
@@ -111,7 +117,7 @@ async def on_admin_reply(
     if not reply_text:
         return
 
-    locale = await locale_service.get_locale(feedback.user_id)
+    locale = await locale_query.get_locale(feedback.user_id)
     with i18n.context(), i18n.use_locale(locale.value):
         text = _("feedback.admin_reply").format(text=escape_html(reply_text))
 

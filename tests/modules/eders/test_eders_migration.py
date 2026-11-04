@@ -11,10 +11,10 @@ from manashelper.core.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme
-from manashelper.modules.eders.application.eders import EdersService
+from manashelper.modules.eders.application.eders import EdersQuery
 from manashelper.modules.eders.application.models import DeadlineFilter, EdersSnapshot
-from manashelper.modules.eders.application.polling import PollEdersUser
 from manashelper.modules.eders.application.tracking import EdersEvent, EdersSetting, EdersTrackingService
+from manashelper.modules.eders.application.use_cases.poll_eders_user import PollEdersUserUseCase
 from manashelper.modules.eders.infrastructure.client import EdersClient
 from manashelper.modules.eders.infrastructure.models.eders import EdersState
 from manashelper.modules.eders.infrastructure.repositories.eders import EdersRepository
@@ -26,12 +26,13 @@ from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.errors import UserNotFoundError
 from manashelper.modules.obis.provider import ObisProvider
-from manashelper.modules.users.application.theme import ThemeService
+from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.telegram.outbox.service import OutboxService
+from tests.modules.eders.application_factories import build_eders_tracking_service
 from tests.modules.eders.factories import NOW, item
 
 
@@ -109,8 +110,10 @@ async def test_poll_failure_aborts_only_current_user_and_preserves_call_order(fa
     tracking.pending_events.side_effect = pending
     dependencies = {
         EdersTrackingService: tracking,
-        PollEdersUser: PollEdersUser(service, tracking, locales),
-        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+        PollEdersUserUseCase: PollEdersUserUseCase(
+            SimpleNamespace(execute=service.refresh_snapshot), tracking, locales
+        ),
+        ThemeQuery: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
         OutboxService: AsyncMock(spec=OutboxService),
     }
     scopes = []
@@ -138,7 +141,7 @@ async def test_missing_user_is_rejected_before_state_creation():
     repository, users = AsyncMock(), AsyncMock()
     users.exists.return_value = False
     with pytest.raises(UserNotFoundError):
-        await EdersTrackingService(repository, users, AsyncMock()).get_settings(42)
+        await build_eders_tracking_service(repository, users, AsyncMock()).get_settings(42)
     users.exists.assert_awaited_once_with(42)
     repository.get_state.assert_not_awaited()
 
@@ -186,7 +189,7 @@ async def test_delivery_acknowledges_success_immediately_and_preserves_failure_b
 
     bot.enqueue.side_effect = send
     tracking.mark_sent.side_effect = ack
-    poll = PollEdersUser(service, tracking, locales)
+    poll = PollEdersUserUseCase(SimpleNamespace(execute=service.refresh_snapshot), tracking, locales)
     with i18n.context(), i18n.use_locale("ru"):
         if failure == "rejected":
             await poll.execute(
@@ -233,7 +236,7 @@ async def test_eders_provider_keeps_app_request_scopes_and_model_registry():
 
     assert Base.metadata.tables["eders_states"] is EdersState.__table__
     assert Base.metadata.tables["eders_notifications"] is EdersNotification.__table__
-    dependencies = (EdersRepository, EdersService, EdersTrackingService, PollEdersUser)
+    dependencies = (EdersRepository, EdersQuery, EdersTrackingService, PollEdersUserUseCase)
     async with make_async_container(
         CoreProvider(), ObisProvider(), UsersProvider(), EdersProvider(), OutboxProvider(), NotificationsProvider()
     ) as container:

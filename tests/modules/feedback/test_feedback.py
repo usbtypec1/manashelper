@@ -4,8 +4,9 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.modules.feedback.repository import FeedbackRepository
-from manashelper.modules.feedback.service import FeedbackNotFoundError, FeedbackService
+from manashelper.modules.feedback.service import FeedbackNotFoundError
 from manashelper.modules.users.infrastructure.models.user import User
+from tests.modules.feedback.application_factories import build_feedback_service
 
 
 async def _make_user(session: AsyncSession, user_id: int) -> User:
@@ -17,7 +18,7 @@ async def _make_user(session: AsyncSession, user_id: int) -> User:
 
 async def test_submit_creates_feedback(session: AsyncSession) -> None:
     user = await _make_user(session, 940_001)
-    service = FeedbackService(FeedbackRepository(session))
+    service = build_feedback_service(FeedbackRepository(session))
 
     summary = await service.submit(user.id, "Hello, I have a question")
 
@@ -27,7 +28,7 @@ async def test_submit_creates_feedback(session: AsyncSession) -> None:
 
 async def test_record_admin_chat_message_allows_lookup(session: AsyncSession) -> None:
     user = await _make_user(session, 940_002)
-    service = FeedbackService(FeedbackRepository(session))
+    service = build_feedback_service(FeedbackRepository(session))
     summary = await service.submit(user.id, "Hello")
 
     await service.record_admin_chat_message(summary.id, 12345)
@@ -39,13 +40,13 @@ async def test_record_admin_chat_message_allows_lookup(session: AsyncSession) ->
 
 
 async def test_get_by_admin_chat_message_id_returns_none_when_unmatched(session: AsyncSession) -> None:
-    service = FeedbackService(FeedbackRepository(session))
+    service = build_feedback_service(FeedbackRepository(session))
 
     assert await service.get_by_admin_chat_message_id(999_999) is None
 
 
 async def test_record_admin_chat_message_raises_when_missing(session: AsyncSession) -> None:
-    service = FeedbackService(FeedbackRepository(session))
+    service = build_feedback_service(FeedbackRepository(session))
 
     with pytest.raises(FeedbackNotFoundError):
         await service.record_admin_chat_message(uuid.uuid4(), 1)

@@ -5,23 +5,27 @@ from unittest.mock import AsyncMock
 import pytest
 from aiogram.types import CallbackQuery, Message
 
+from manashelper.modules.broadcast.application.use_cases.send_broadcast import SendBroadcastUseCase
 from manashelper.modules.broadcast.keyboards import build_broadcast_delivery_keyboard
-from manashelper.modules.broadcast.service import BroadcastSender, SendBroadcast
+from manashelper.modules.broadcast.service import BroadcastSender
 from manashelper.modules.notifications import router
 from manashelper.modules.notifications.callbacks import BroadcastMuteCallback
 from manashelper.modules.notifications.keyboards import build_notifications_keyboard
 from manashelper.modules.notifications.orm import NotificationSettings
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
 from manashelper.modules.notifications.repository import NotificationSettingsRepository
-from manashelper.modules.notifications.settings import NotificationSettingsService, UserNotFoundError
+from manashelper.modules.notifications.settings import UserNotFoundError
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
+from tests.modules.notifications.application_factories import build_notification_settings_service
 
 
 def service(session):
-    return NotificationSettingsService(NotificationSettingsRepository(session), UsersQuery(UserRepository(session)))
+    return build_notification_settings_service(
+        NotificationSettingsRepository(session), UsersQuery(UserRepository(session))
+    )
 
 
 async def test_mute_persists_for_14_days_and_reset_preserves_other_preferences(session):
@@ -71,7 +75,7 @@ async def test_recipient_selection_covers_missing_null_expired_boundary_future_a
     assert ids[4] in await repository.get_user_ids_with_exam_grades_enabled()
     sender = AsyncMock(spec=BroadcastSender)
     sender.send.return_value = True
-    await SendBroadcast(NotificationRecipientsQuery(repository)).execute("body", sender)
+    await SendBroadcastUseCase(NotificationRecipientsQuery(repository)).execute("body", sender)
     delivered = {call.args[0] for call in sender.send.await_args_list}
     assert delivered & set(ids) == set(ids[:4])
 
@@ -92,12 +96,16 @@ async def test_callbacks_mute_actor_show_alert_and_reset_from_settings(session):
     callback.message = AsyncMock(spec=Message)
     callback.message.edit_text = AsyncMock()
     with i18n.context(), i18n.use_locale("ru"):
-        await router.on_broadcast_mute(callback, BroadcastMuteCallback(muted=True), service(session))
+        await router.on_broadcast_mute(
+            callback, BroadcastMuteCallback(muted=True), SimpleNamespace(execute=service(session).set_broadcast_mute)
+        )
         callback.answer.assert_awaited_once_with("Вы отписались от рассылок на 14 дней", show_alert=True)
         callback.message.edit_text.assert_not_awaited()
-        await router.on_open_notifications(callback, service(session))
+        await router.on_open_notifications(callback, SimpleNamespace(execute=service(session).get_settings))
         assert "Рассылки отключены до" in callback.message.edit_text.await_args.args[0]
-        await router.on_broadcast_mute(callback, BroadcastMuteCallback(muted=False), service(session))
+        await router.on_broadcast_mute(
+            callback, BroadcastMuteCallback(muted=False), SimpleNamespace(execute=service(session).set_broadcast_mute)
+        )
         assert callback.message.edit_text.await_args.args[0] == i18n.gettext("notifications.title")
     assert (await service(session).get_settings(972120)).broadcast_muted_until is None
 

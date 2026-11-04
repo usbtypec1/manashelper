@@ -14,7 +14,6 @@ from babel.messages.pofile import read_po
 
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale, resolve_from_language_code
 from manashelper.localization.theme import Theme
-from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.presentation.callbacks import LocaleCallback
 from manashelper.modules.users.presentation.keyboards.locale import build_locale_keyboard, native_language_name
 from manashelper.platform.i18n.catalog import CatalogI18n, i18n
@@ -26,6 +25,7 @@ from manashelper.platform.telegram.command_catalog import (
 from manashelper.platform.telegram.commands import setup_commands
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
 from manashelper.platform.telegram.navigation import build_main_keyboard, build_study_keyboard
+from tests.modules.users.application_factories import build_locale_service
 from tests.paths import PROJECT_ROOT
 
 ROOT = PROJECT_ROOT
@@ -212,7 +212,7 @@ async def test_chinese_locale_is_detected_saved_and_keeps_manual_selection() -> 
     repository = AsyncMock()
     repository.upsert.return_value = user
     repository.get_by_id.return_value = user
-    service = LocaleService(repository)
+    service = build_locale_service(repository)
     assert await service.resolve(1, "Student", None, "zh-CN") == Locale.ZH
     assert user.locale == "zh"
     assert await service.get_locale(1) == Locale.ZH

@@ -1,5 +1,6 @@
 import uuid
 from datetime import date, timedelta
+from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
@@ -21,7 +22,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.localization.theme import Theme
-from manashelper.modules.food_menu.application.daily_menu import DailyMenuModel, DailyMenuService, DishModel
+from manashelper.modules.food_menu.application.daily_menu import DailyMenuModel, DailyMenuQuery, DishModel
 from manashelper.modules.food_menu.infrastructure.models.daily_menu import DailyMenu
 from manashelper.modules.food_menu.infrastructure.models.daily_menu_rating import DailyMenuRating
 from manashelper.modules.food_menu.infrastructure.models.dish import Dish
@@ -38,16 +39,17 @@ from manashelper.modules.food_menu.presentation.keyboards.food_menu import (
     build_food_menu_settings_buttons,
     build_menu_rating_buttons,
 )
-from manashelper.modules.food_menu.presentation.routers.food_menu import _send_daily_menu, on_food_menu_rating_callback
+from manashelper.modules.food_menu.presentation.routers.food_menu import on_food_menu_rating_callback, send_daily_menu
 from manashelper.modules.food_menu.presentation.sender import TelegramFoodMenuSender
-from manashelper.modules.users.application.locale import LocaleService
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
+from tests.modules.food_menu.application_factories import build_daily_menu_service
+from tests.modules.users.application_factories import build_locale_service
 
 
-def _service(session: AsyncSession) -> DailyMenuService:
-    return DailyMenuService(DailyMenuRepository(session), DailyMenuRatingRepository(session))
+def _service(session: AsyncSession) -> DailyMenuQuery:
+    return build_daily_menu_service(DailyMenuRepository(session), DailyMenuRatingRepository(session))
 
 
 async def _seed(session: AsyncSession) -> tuple[DailyMenu, DailyMenu]:
@@ -199,7 +201,7 @@ async def test_callback_updates_menu_rating_and_repeated_score_still_answers(
     monkeypatch.setattr(Message, "edit_text", edit)
     monkeypatch.setattr(CallbackQuery, "answer", answer)
     with i18n.context(), i18n.use_locale("en"):
-        await on_food_menu_rating_callback(callback, data, service)
+        await on_food_menu_rating_callback(callback, data, SimpleNamespace(execute=service.set_rating))
         service.set_rating.assert_awaited_once_with(900_001, menu.id, 4)
         rich = edit.call_args.kwargs["rich_message"]
         rating_row = next(block for block in rich.blocks if block.type == "buttons" and len(block.buttons) == 5)
@@ -210,7 +212,7 @@ async def test_callback_updates_menu_rating_and_repeated_score_still_answers(
         edit.side_effect = TelegramBadRequest(
             method=EditMessageText(chat_id=900_001, message_id=42), message="message is not modified"
         )
-        await on_food_menu_rating_callback(callback, data, service)
+        await on_food_menu_rating_callback(callback, data, SimpleNamespace(execute=service.set_rating))
     assert answer.await_count == 2
 
 
@@ -223,7 +225,7 @@ async def test_callback_from_old_menu_message_still_records_rating(monkeypatch) 
     answer = AsyncMock()
     monkeypatch.setattr(CallbackQuery, "answer", answer)
     with i18n.context(), i18n.use_locale("en"):
-        await on_food_menu_rating_callback(callback, data, service)
+        await on_food_menu_rating_callback(callback, data, SimpleNamespace(execute=service.set_rating))
     service.set_rating.assert_awaited_once_with(900_001, data.daily_menu_id, 5)
     answer.assert_awaited_once()
 
@@ -238,7 +240,9 @@ async def test_callback_answers_when_menu_cannot_be_rated(monkeypatch) -> None:
     monkeypatch.setattr(CallbackQuery, "answer", answer)
     with i18n.context(), i18n.use_locale("en"):
         await on_food_menu_rating_callback(
-            callback, FoodMenuRatingCallback(daily_menu_id=uuid.uuid4(), rating=6), service
+            callback,
+            FoodMenuRatingCallback(daily_menu_id=uuid.uuid4(), rating=6),
+            SimpleNamespace(execute=service.set_rating),
         )
     answer.assert_awaited_once_with("This menu is no longer available for rating.", show_alert=True)
 
@@ -252,7 +256,13 @@ async def test_menu_delivery_and_broadcast_keep_ratings_without_auto_delete_cont
     service = AsyncMock()
     service.get_daily_menu_by_skipping_days.return_value = menu
     with i18n.context(), i18n.use_locale("en"):
-        await _send_daily_menu(message, 0, service)
+        await send_daily_menu(
+            message,
+            0,
+            service,
+            get_daily_menu=SimpleNamespace(execute=service.get_daily_menu_by_date),
+            get_daily_menu_by_offset=SimpleNamespace(execute=service.get_daily_menu_by_skipping_days),
+        )
     message.answer_rich.assert_awaited_once()
     requested_rich = message.answer_rich.call_args.kwargs["rich_message"]
     requested_settings = [
@@ -266,7 +276,7 @@ async def test_menu_delivery_and_broadcast_keep_ratings_without_auto_delete_cont
     users.get_by_id.return_value.locale = "ru"
     await TelegramFoodMenuSender(
         bot,
-        LocaleService(users),
+        build_locale_service(users),
         AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
     ).send(menu, 900_001)
     rich = bot.enqueue.call_args.args[1][0].rich_message

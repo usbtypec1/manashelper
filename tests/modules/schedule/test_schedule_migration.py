@@ -21,11 +21,11 @@ from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule import jobs
-from manashelper.modules.schedule.application.course import CourseService, UserNotFoundError
+from manashelper.modules.schedule.application.course import CourseQuery, UserNotFoundError
 from manashelper.modules.schedule.application.lesson_search import LessonSearchResult
-from manashelper.modules.schedule.application.schedule import NoTrackedCoursesError, ScheduleService
-from manashelper.modules.schedule.application.sync_course import SyncCourseTimetable
+from manashelper.modules.schedule.application.schedule import NoTrackedCoursesError, ScheduleQuery
 from manashelper.modules.schedule.application.timetable_sync import LessonChange
+from manashelper.modules.schedule.application.use_cases.sync_course_timetable import SyncCourseTimetableUseCase
 from manashelper.modules.schedule.infrastructure.models.course import Course
 from manashelper.modules.schedule.infrastructure.models.department import Department
 from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
@@ -38,14 +38,15 @@ from manashelper.modules.schedule.presentation.callbacks import (
 from manashelper.modules.schedule.presentation.routers import lesson_search, timetable
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
-from manashelper.modules.users.application.locale import LocaleService
-from manashelper.modules.users.application.theme import ThemeService
+from manashelper.modules.users.application.locale import LocaleQuery
+from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.modules.users.infrastructure.models.user import User as DbUser
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.telegram.outbox.service import OutboxService
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
+from tests.modules.users.application_factories import build_locale_service
 
 
 @pytest.fixture
@@ -134,7 +135,7 @@ async def test_schedule_query_sorts_by_weekday_and_numeric_start_time():
         SimpleNamespace(weekday=1, time_range="10:00-10:50", content="Late"),
         SimpleNamespace(weekday=1, time_range="9:00-9:50", content="Early"),
     ]
-    result = await ScheduleService(lessons, users).get_user_schedule(961001)
+    result = await ScheduleQuery(lessons, users).get_user_schedule(961001)
     assert [lesson.content for lesson in result] == ["Early", "Late", "Tuesday"]
     lessons.get_all_by_course_ids.assert_awaited_once_with([2])
 
@@ -144,7 +145,7 @@ async def test_sync_job_keeps_course_scopes_and_failure_isolation(failure):
     courses, sync, notifications, users, bot = (AsyncMock() for _ in range(5))
     courses.get_all_ids.return_value = [1, 2]
     changes = [LessonChange(1, "09:00-09:50", "Old", "New")]
-    sync.synchronize_course_timetable.side_effect = [
+    sync.execute.side_effect = [
         RuntimeError("sync failed") if failure == "sync" else ([] if failure == "unchanged" else changes),
         changes,
     ]
@@ -168,10 +169,10 @@ async def test_sync_job_keeps_course_scopes_and_failure_isolation(failure):
     outbox = AsyncMock(spec=OutboxService)
     outbox.enqueue.side_effect = send
     dependencies = {
-        CourseService: courses,
-        SyncCourseTimetable: SyncCourseTimetable(sync, NotificationRecipientsQuery(notifications)),
-        LocaleService: LocaleService(users),
-        ThemeService: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
+        CourseQuery: courses,
+        SyncCourseTimetableUseCase: SyncCourseTimetableUseCase(sync, NotificationRecipientsQuery(notifications)),
+        LocaleQuery: build_locale_service(users),
+        ThemeQuery: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
         OutboxService: outbox,
     }
     scopes = []
@@ -183,7 +184,7 @@ async def test_sync_job_keeps_course_scopes_and_failure_isolation(failure):
 
     await jobs.sync_timetable_job(container, bot)
     assert len(scopes) == 3
-    assert [call.args[0] for call in sync.synchronize_course_timetable.await_args_list] == [1, 2]
+    assert [call.args[0] for call in sync.execute.await_args_list] == [1, 2]
     expected = [10, 11, 20] if failure == "telegram" else ([10, 20] if failure == "transport" else [20])
     assert [call.args[0] for call in outbox.enqueue.await_args_list] == expected
 
@@ -223,13 +224,13 @@ async def test_schedule_provider_scopes_and_hourly_job_contract():
     ) as container:
         client = await container.get(TimetableClient)
         async with container() as request:
-            first = await request.get(SyncCourseTimetable)
-            assert first is await request.get(SyncCourseTimetable)
+            first = await request.get(SyncCourseTimetableUseCase)
+            assert first is await request.get(SyncCourseTimetableUseCase)
             assert client is await request.get(TimetableClient)
-            await request.get(ScheduleService)
-            await request.get(CourseService)
+            await request.get(ScheduleQuery)
+            await request.get(CourseQuery)
         async with container() as request:
-            assert first is not await request.get(SyncCourseTimetable)
+            assert first is not await request.get(SyncCourseTimetableUseCase)
             assert client is await request.get(TimetableClient)
     scheduler = create_scheduler("container", "bot")
     registered = [job for job in scheduler.get_jobs() if job.func == jobs.sync_timetable_job]

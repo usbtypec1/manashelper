@@ -4,11 +4,11 @@ from aiogram import Bot
 from dishka import AsyncContainer
 
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
-from manashelper.modules.obis.application.obis import ObisService
-from manashelper.modules.obis.application.polling import PollObisUser
+from manashelper.modules.obis.application.queries import ObisResultsQuery
+from manashelper.modules.obis.application.use_cases.poll_obis_user import PollObisUserUseCase
 from manashelper.modules.obis.presentation.sender import TelegramObisNotificationSender
-from manashelper.modules.users.application.locale import LocaleService
-from manashelper.modules.users.application.theme import ThemeService
+from manashelper.modules.users.application.locale import LocaleQuery
+from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.platform.telegram.outbox.service import OutboxService
 
 logger = logging.getLogger(__name__)
@@ -20,8 +20,8 @@ async def poll_obis_notifications_job(container: AsyncContainer, bot: Bot) -> No
             recipients = await request_container.get(NotificationRecipientsQuery)
             exam_grade_user_ids = set(await recipients.for_exam_grades())
             lesson_skip_user_ids = set(await recipients.for_lesson_skips())
-            service = await request_container.get(ObisService)
-            user_ids = await service.get_poll_user_ids()
+            obis_results_query = await request_container.get(ObisResultsQuery)
+            user_ids = await obis_results_query.get_poll_user_ids()
     except Exception:
         logger.exception("Failed to load users for OBIS notification polling")
         return
@@ -41,13 +41,13 @@ async def _poll_user_obis_notifications(
 ) -> None:
     try:
         async with container() as request_container:
-            polling = await request_container.get(PollObisUser)
-            locales = await request_container.get(LocaleService)
+            poll_obis_user = await request_container.get(PollObisUserUseCase)
+            locales = await request_container.get(LocaleQuery)
             locale = await locales.get_locale(user_id)
-            themes = await request_container.get(ThemeService)
+            themes = await request_container.get(ThemeQuery)
             theme = await themes.get_theme(user_id)
             outbox = await request_container.get(OutboxService)
             sender = TelegramObisNotificationSender(outbox, user_id, locale, theme)
-            await polling.execute(user_id, check_exam_grades, check_lesson_skips, sender)
+            await poll_obis_user.execute(user_id, check_exam_grades, check_lesson_skips, sender)
     except Exception:
         logger.exception("Failed to poll OBIS notifications for user %s", user_id)

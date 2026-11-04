@@ -15,13 +15,16 @@ from manashelper.core.config import Settings
 from manashelper.localization.locale import DEFAULT_LOCALE
 from manashelper.modules.advertisements.application.advertisement import (
     AdvertisementNotFoundError,
-    AdvertisementService,
     AdvertisementSummary,
 )
 from manashelper.modules.advertisements.application.advertisement_moderation import (
-    AdvertisementModerationService,
     AdvertisementNotPendingError,
 )
+from manashelper.modules.advertisements.application.use_cases.approve_advertisement import ApproveAdvertisementUseCase
+from manashelper.modules.advertisements.application.use_cases.record_advertisement_publications import (
+    RecordAdvertisementPublicationsUseCase,
+)
+from manashelper.modules.advertisements.application.use_cases.reject_advertisement import RejectAdvertisementUseCase
 from manashelper.modules.advertisements.presentation.advertisement_formatter import (
     build_media_group,
     format_advertisement,
@@ -33,7 +36,7 @@ from manashelper.modules.advertisements.presentation.callbacks import (
 from manashelper.modules.advertisements.presentation.keyboards.advertisement_moderation import (
     build_reject_comment_choice_keyboard,
 )
-from manashelper.modules.users.application.locale import LocaleService
+from manashelper.modules.users.application.locale import LocaleQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.html import escape_html
 
@@ -56,10 +59,10 @@ def _is_moderation_chat(callback_query: CallbackQuery, settings: Settings) -> bo
     return isinstance(callback_query.message, Message) and callback_query.message.chat.id == settings.moderation_chat_id
 
 
-async def _notify_owner(bot: Bot, locale_service: LocaleService, owner_id: int, build_text: Callable[[], str]) -> None:
+async def _notify_owner(bot: Bot, locale_query: LocaleQuery, owner_id: int, build_text: Callable[[], str]) -> None:
     """`build_text` is called *inside* the owner's own locale context, not the caller's - a plain
     pre-built string would be resolved under whichever moderator's locale triggered the action."""
-    locale = await locale_service.get_locale(owner_id)
+    locale = await locale_query.get_locale(owner_id)
     with i18n.context(), i18n.use_locale(locale.value):
         message = build_text()
     try:
@@ -74,16 +77,16 @@ async def on_approve(
     callback_data: AdvertisementModerationCallback,
     bot: Bot,
     settings: FromDishka[Settings],
-    advertisement_service: FromDishka[AdvertisementService],
-    moderation_service: FromDishka[AdvertisementModerationService],
-    locale_service: FromDishka[LocaleService],
+    record_advertisement_publications: FromDishka[RecordAdvertisementPublicationsUseCase],
+    approve_advertisement: FromDishka[ApproveAdvertisementUseCase],
+    locale_query: FromDishka[LocaleQuery],
 ) -> None:
     if not _is_moderation_chat(callback_query, settings):
         await callback_query.answer(_("common.permission_denied"), show_alert=True)
         return
 
     try:
-        summary = await moderation_service.approve(callback_data.id)
+        summary = await approve_advertisement.execute(callback_data.id)
     except AdvertisementNotFoundError:
         await callback_query.answer(_("ads.not_found"), show_alert=True)
         return
@@ -115,7 +118,7 @@ async def on_approve(
         await callback_query.answer(_("ads.publish_failed"), show_alert=True)
         return
 
-    await advertisement_service.record_channel_messages(callback_data.id, message_ids)
+    await record_advertisement_publications.execute(callback_data.id, message_ids)
 
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(_("ads.approved_published"))
@@ -123,7 +126,7 @@ async def on_approve(
 
     await _notify_owner(
         bot,
-        locale_service,
+        locale_query,
         summary.user_id,
         lambda: _("ads.owner_approved").format(title=escape_html(summary.title)),
     )
@@ -158,15 +161,15 @@ async def on_reject_without_comment(
     callback_data: AdvertisementModerationCallback,
     bot: Bot,
     settings: FromDishka[Settings],
-    moderation_service: FromDishka[AdvertisementModerationService],
-    locale_service: FromDishka[LocaleService],
+    reject_advertisement: FromDishka[RejectAdvertisementUseCase],
+    locale_query: FromDishka[LocaleQuery],
 ) -> None:
     if not _is_moderation_chat(callback_query, settings):
         await callback_query.answer(_("common.permission_denied"), show_alert=True)
         return
 
     try:
-        summary = await moderation_service.reject(callback_data.id, None)
+        summary = await reject_advertisement.execute(callback_data.id, None)
     except AdvertisementNotFoundError:
         await callback_query.answer(_("ads.not_found"), show_alert=True)
         return
@@ -178,7 +181,7 @@ async def on_reject_without_comment(
         await callback_query.message.edit_text(_("ads.rejected_notice"))
     await callback_query.answer()
 
-    await _notify_owner(bot, locale_service, summary.user_id, lambda: _build_owner_rejection_text(summary, None))
+    await _notify_owner(bot, locale_query, summary.user_id, lambda: _build_owner_rejection_text(summary, None))
 
 
 @router.callback_query(AdvertisementModerationCallback.filter(F.action == AdvertisementModerationAction.ADD_COMMENT))
@@ -210,8 +213,8 @@ async def on_reject_comment_entered(
     message: Message,
     state: FSMContext,
     bot: Bot,
-    moderation_service: FromDishka[AdvertisementModerationService],
-    locale_service: FromDishka[LocaleService],
+    reject_advertisement: FromDishka[RejectAdvertisementUseCase],
+    locale_query: FromDishka[LocaleQuery],
 ) -> None:
     comment = message.text.strip() if message.text else ""
     if not comment:
@@ -230,7 +233,7 @@ async def on_reject_comment_entered(
     advertisement_id = uuid.UUID(advertisement_id_raw)
 
     try:
-        summary = await moderation_service.reject(advertisement_id, comment[:512])
+        summary = await reject_advertisement.execute(advertisement_id, comment[:512])
     except AdvertisementNotFoundError:
         await message.answer(_("ads.not_found"))
         return
@@ -246,4 +249,4 @@ async def on_reject_comment_entered(
         logger.warning("Failed to edit moderation message for advertisement %s", advertisement_id, exc_info=True)
 
     await message.answer(_("ads.rejection_sent"))
-    await _notify_owner(bot, locale_service, summary.user_id, lambda: _build_owner_rejection_text(summary, comment))
+    await _notify_owner(bot, locale_query, summary.user_id, lambda: _build_owner_rejection_text(summary, comment))

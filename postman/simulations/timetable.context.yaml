@@ -1,0 +1,20 @@
+purpose:
+  stands_in_for: Synthetic Manas timetable HTML and HTTP failures.
+  unblocks: Local verification of the timetable client/parser while extracting synchronization use cases.
+assumptions:
+  - id: local-timetable-http-contract
+    status: supported
+    claim: In the repository-owned timetable scenarios, the real client/parser reads the fixture lesson on HTTP 200 and propagates HTTP 500.
+    reason: Existing synthetic HTML and error responses exercised the installed HTTP client and parser without a real university request.
+    verification: >-
+      On 2026-11-04, both HTTP tests passed during the full suite: 816 passed, one unrelated optional Eders corpus
+      test skipped. Simulation request events recorded 200 and 500 timetable responses. PostgreSQL regression
+      tests retained silent initial synchronization, subsequent lesson/history changes and per-course failure
+      isolation through the extracted use cases. This verifies local caller behavior, not live university data.
+    source: tests/modules/schedule/test_timetable_http_simulation.py; tests/modules/schedule/test_timetable_sync.py; postman/mocks/timetable/default.js
+    updated_at: "2026-11-04"
+fingerprints:
+  - id: modules-use-cases-2026-11-04
+    date: "2026-11-04"
+    commit: "606dcaab221420519ee2e5e460bcf087632f5238 (working tree changes)"
+    cli: "1.74.0"

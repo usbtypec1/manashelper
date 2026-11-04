@@ -7,8 +7,8 @@ from aiogram.types import TelegramObject
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import CONTAINER_NAME
 
-from manashelper.modules.users.application.locale import LocaleService
-from manashelper.modules.users.application.theme import ThemeService
+from manashelper.modules.users.application.theme import ThemeQuery
+from manashelper.modules.users.application.use_cases.resolve_user_locale import ResolveUserLocaleUseCase
 from manashelper.platform.i18n.catalog import i18n
 
 
@@ -38,8 +38,8 @@ class LocaleMiddleware(BaseMiddleware):
             return await handler(event, data)
 
         container: AsyncContainer = data[CONTAINER_NAME]
-        locale_service = await container.get(LocaleService)
-        locale = await locale_service.resolve(
+        resolve_user_locale = await container.get(ResolveUserLocaleUseCase)
+        locale = await resolve_user_locale.execute(
             user_id=telegram_user.id,
             full_name=telegram_user.full_name,
             username=telegram_user.username,
@@ -47,8 +47,8 @@ class LocaleMiddleware(BaseMiddleware):
             resume_bot=getattr(data.get("event_chat"), "type", None) == ChatType.PRIVATE,
         )
 
-        theme_service = await container.get(ThemeService)
-        theme = await theme_service.get_theme(telegram_user.id)
+        theme_query = await container.get(ThemeQuery)
+        theme = await theme_query.get_theme(telegram_user.id)
         data["locale"] = locale
         with i18n.context(), i18n.use_locale(locale.value), i18n.use_theme(theme):
             return await handler(event, data)
