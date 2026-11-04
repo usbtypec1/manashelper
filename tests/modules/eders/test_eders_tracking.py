@@ -62,7 +62,7 @@ async def test_changed_deadline_cancels_old_schedule_and_records_old_and_new(tra
     )
 
 
-@pytest.mark.parametrize("change", ["deadline", "setting", "account"])
+@pytest.mark.parametrize("change", ["deadline", "setting", "account", "completion"])
 async def test_changes_cancel_a_reminder_already_accepted_into_outbox(tracking, session, outbox, change):
     now = datetime.now(UTC)
     activity = item(opens=ActivityDate(), closes=ActivityDate(now + timedelta(hours=2, minutes=5)))
@@ -80,7 +80,11 @@ async def test_changes_cancel_a_reminder_already_accepted_into_outbox(tracking, 
     if change == "setting":
         await tracking.toggle(980_001, EdersSetting.TWO_HOURS_BEFORE)
     else:
-        updated = replace(activity, closes=ActivityDate(now + timedelta(days=2)))
+        updated = (
+            replace(activity, completed=True)
+            if change == "completion"
+            else replace(activity, closes=ActivityDate(now + timedelta(days=2)))
+        )
         await tracking.observe(
             980_001,
             "account-b" if change == "account" else "account-a",

@@ -221,6 +221,26 @@ def _dates(node: Tag | BeautifulSoup, timezone: ZoneInfo | None) -> tuple[Activi
     return opens, closes
 
 
+def _completion(node: Tag | BeautifulSoup, activity_id: int) -> bool | None:
+    for button in node.select('[data-action="toggle-manual-completion"]'):
+        if button.get("data-cmid") not in (None, str(activity_id)):
+            continue
+        # Moodle exposes the available action: undo means it is already done.
+        action = button.get("data-toggletype")
+        if action == "manual:undo":
+            return True
+        if action == "manual:mark-done":
+            return False
+        text = button.get_text(" ", strip=True).casefold()
+        if text in {"done", "mark as done"}:
+            return text == "done"
+    for block in node.select(".activity-completion"):
+        text = block.get_text(" ", strip=True).casefold()
+        if text in {"done", "mark as done"}:
+            return text == "done"
+    return None
+
+
 def parse_course_activities(html: str, course: EdersCourse, timezone: ZoneInfo | None = None) -> list[EdersActivity]:
     soup = _page(html)
     if soup.select_one("#region-main .course-content") is None:
@@ -245,6 +265,7 @@ def parse_course_activities(html: str, course: EdersCourse, timezone: ZoneInfo |
                     f"{EDERS_BASE_URL}/course/view.php?id={course.id}#module-{identifier}",
                     section=section,
                     description=description,
+                    completed=_completion(item, identifier) is True,
                 )
             continue
         link = item.select_one(".activityname a[href], .activityinstance a[href]")
@@ -265,7 +286,16 @@ def parse_course_activities(html: str, course: EdersCourse, timezone: ZoneInfo |
         opens, closes = _dates(item, timezone)
         identifier = eders_id(url)
         activities[kind, identifier] = EdersActivity(
-            identifier, course, kind, name, url, opens, closes, section=section, description=description
+            identifier,
+            course,
+            kind,
+            name,
+            url,
+            opens,
+            closes,
+            section=section,
+            description=description,
+            completed=_completion(item, identifier) is True,
         )
     return list(activities.values())
 
@@ -367,6 +397,7 @@ def parse_activity_details(html: str, activity: EdersActivity, timezone: ZoneInf
             closes = _merge_date(closes, _parse_date(value, timezone))
     opens = _merge_date(activity.opens, opens)
     closes = _merge_date(activity.closes, closes)
+    completed = _completion(soup.select_one("#region-main") or soup, activity.id)
     submission, grading = _assignment_status(soup) if activity.kind == ActivityKind.ASSIGNMENT else _quiz_status(soup)
     mismatch = False
     if closes.instant is not None:
@@ -377,5 +408,11 @@ def parse_activity_details(html: str, activity: EdersActivity, timezone: ZoneInf
             except ValueError:
                 pass
     return replace(
-        activity, opens=opens, closes=closes, submission=submission, grading=grading, title_date_mismatch=mismatch
+        activity,
+        opens=opens,
+        closes=closes,
+        submission=submission,
+        grading=grading,
+        title_date_mismatch=mismatch,
+        completed=activity.completed if completed is None else completed,
     )
