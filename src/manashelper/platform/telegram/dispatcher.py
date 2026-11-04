@@ -12,6 +12,7 @@ from manashelper.modules.advertisements.presentation.advertisement_moderation im
     router as advertisement_moderation_router,
 )
 from manashelper.modules.broadcast.router import router as broadcast_router
+from manashelper.modules.eders.presentation.router import menu_router as eders_menu_router
 from manashelper.modules.eders.presentation.router import router as eders_router
 from manashelper.modules.feedback.router import router as feedback_router
 from manashelper.modules.food_menu.presentation.routers.food_menu import router as food_menu_router
@@ -19,6 +20,7 @@ from manashelper.modules.food_menu.presentation.routers.food_menu_notifications 
     router as food_menu_notifications_router,
 )
 from manashelper.modules.notifications.router import router as notifications_router
+from manashelper.modules.obis.presentation.router import menu_router as obis_menu_router
 from manashelper.modules.obis.presentation.router import router as obis_router
 from manashelper.modules.schedule.presentation.routers.lesson_search import router as lesson_search_router
 from manashelper.modules.schedule.presentation.routers.timetable import router as timetable_router
@@ -62,6 +64,8 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
         locale_router,
         theme_router,
         navigation_router,
+        obis_menu_router,
+        *((eders_menu_router,) if get_settings().eders_enabled else ()),
         timetable_router,
         lesson_search_router,
         food_menu_router,

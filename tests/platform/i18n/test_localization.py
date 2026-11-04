@@ -134,10 +134,10 @@ async def test_translated_reply_keyboard_buttons_match_filters(
 
     monkeypatch.setattr(get_settings(), "eders_password", SecretStr("fake-password") if eders_enabled else None)
     main_keys = ["menu.food", "menu.study", "menu.marketplace", "menu.settings"]
-    study_keys = ["menu.schedule", "menu.attendance", "menu.grades", "common.back_to_menu"]
+    study_keys = ["menu.schedule", "menu.obis", "common.back_to_menu"]
     if eders_enabled:
         study_keys.insert(1, "menu.study_week")
-        study_keys[-1:-1] = ["menu.eders", "menu.eders_materials"]
+        study_keys[-1:-1] = ["menu.eders"]
     with i18n.context(), i18n.use_locale(locale.value), i18n.use_theme(theme):
         main_labels = [button.text for row in build_main_keyboard().keyboard for button in row]
         study_labels = [button.text for row in build_study_keyboard().keyboard for button in row]

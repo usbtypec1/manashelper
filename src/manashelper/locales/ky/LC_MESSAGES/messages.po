@@ -872,11 +872,8 @@ msgstr "Материал өзгөрдү"
 msgid "eders.materials_help"
 msgstr "Курс, бөлүм же аталыш боюнча издөө: /materials текст. Жаңы — алгачкы шайкештештирүүдөн кийин табылган материалдар."
 
-msgid "notifications.eders"
-msgstr "Eders"
-
 msgid "menu.eders"
-msgstr "Eders мөөнөттөрү"
+msgstr "Eders"
 
 msgid "menu.eders_materials"
 msgstr "Eders материалдары"
@@ -989,3 +986,12 @@ msgstr "Таратмалар {until} чейин өчүрүлгөн (Бишкек
 
 msgid "notifications.broadcast_resumed"
 msgstr "Таратмалар кайра кошулду"
+
+msgid "menu.obis"
+msgstr "OBIS"
+
+msgid "eders.deadlines"
+msgstr "Мөөнөттөр"
+
+msgid "obis.notifications_header"
+msgstr "OBIS билдирүүлөрү"

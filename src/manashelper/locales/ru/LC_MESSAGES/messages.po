@@ -869,11 +869,8 @@ msgstr "Материал изменён"
 msgid "eders.materials_help"
 msgstr "Поиск по курсу, разделу или названию: /materials текст. Новые — впервые обнаруженные после начальной синхронизации."
 
-msgid "notifications.eders"
-msgstr "Eders"
-
 msgid "menu.eders"
-msgstr "Дедлайны Eders"
+msgstr "Eders"
 
 msgid "menu.eders_materials"
 msgstr "Материалы Eders"
@@ -986,3 +983,12 @@ msgstr "Рассылки отключены до {until} (время Бишке�
 
 msgid "notifications.broadcast_resumed"
 msgstr "Рассылки возобновлены"
+
+msgid "menu.obis"
+msgstr "OBIS"
+
+msgid "eders.deadlines"
+msgstr "Дедлайны"
+
+msgid "obis.notifications_header"
+msgstr "Уведомления OBIS"

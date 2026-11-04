@@ -4,7 +4,6 @@ from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from manashelper.core.config import get_settings
 from manashelper.modules.notifications.callbacks import BroadcastMuteCallback, NotificationSettingCallback
 from manashelper.modules.notifications.settings import NotificationSetting, NotificationSettingsSummary
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
@@ -24,19 +23,6 @@ def build_notifications_keyboard(settings: NotificationSettingsSummary) -> Inlin
         text=_("menu.food"),
         callback_data=SettingsCallback(action=SettingsAction.OPEN_FOOD_MENU_NOTIFICATIONS),
     )
-    builder.button(
-        text=f"{_mark(settings.exam_grades_enabled)} {_('notifications.exam_grades')}",
-        callback_data=NotificationSettingCallback(setting=NotificationSetting.EXAM_GRADES),
-    )
-    builder.button(
-        text=f"{_mark(settings.lesson_skips_enabled)} {_('notifications.lesson_skips')}",
-        callback_data=NotificationSettingCallback(setting=NotificationSetting.LESSON_SKIPS),
-    )
-    if get_settings().eders_enabled:
-        builder.button(
-            text=_("notifications.eders"),
-            callback_data=SettingsCallback(action=SettingsAction.OPEN_EDERS_NOTIFICATIONS),
-        )
     if settings.broadcast_muted_until is not None and settings.broadcast_muted_until > datetime.now(UTC):
         builder.button(text=_("notifications.resume_broadcasts"), callback_data=BroadcastMuteCallback(muted=False))
     builder.button(text=_("common.back"), callback_data=SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS))

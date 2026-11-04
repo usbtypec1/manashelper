@@ -22,12 +22,12 @@ def build_study_keyboard() -> ReplyKeyboardMarkup:
     if get_settings().eders_enabled:
         schedule_row.append(KeyboardButton(text=_("menu.study_week")))
         eders_rows = [
-            [KeyboardButton(text=_("menu.eders")), KeyboardButton(text=_("menu.eders_materials"))],
+            [KeyboardButton(text=_("menu.eders"))],
         ]
     return ReplyKeyboardMarkup(
         keyboard=[
             schedule_row,
-            [KeyboardButton(text=_("menu.attendance")), KeyboardButton(text=_("menu.grades"))],
+            [KeyboardButton(text=_("menu.obis"))],
             *eders_rows,
             [KeyboardButton(text=_("common.back_to_menu"))],
         ],

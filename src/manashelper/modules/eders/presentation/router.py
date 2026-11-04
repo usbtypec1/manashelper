@@ -17,21 +17,45 @@ from manashelper.modules.eders.errors import (
     EdersSnapshotNotReadyError,
     EdersUnsafeUrlError,
 )
-from manashelper.modules.eders.presentation.callbacks import EdersPageCallback, EdersSettingCallback
+from manashelper.modules.eders.presentation.callbacks import (
+    EdersAction,
+    EdersMenuCallback,
+    EdersPageCallback,
+    EdersSettingCallback,
+)
 from manashelper.modules.eders.presentation.formatter import format_activity_page
-from manashelper.modules.eders.presentation.keyboards import build_eders_keyboard, build_eders_settings_keyboard
+from manashelper.modules.eders.presentation.keyboards import (
+    build_eders_keyboard,
+    build_eders_menu_keyboard,
+    build_eders_settings_keyboard,
+)
 from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
 from manashelper.modules.obis.presentation.keyboards import build_no_credentials_keyboard
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
 
 router = Router(name="eders")
+menu_router = Router(name="eders_menu")
 SNAPSHOT_KEY = "eders_snapshot"
 SNAPSHOT_OPENED_AT_KEY = "eders_snapshot_opened_at"
 SNAPSHOT_TTL = timedelta(minutes=15)
 
 
-@router.message(TranslatedText("menu.eders"))
+@menu_router.message(TranslatedText("menu.eders"))
+@flags.private_chat_only
+async def on_eders_menu(message: Message, state: FSMContext) -> None:
+    await state.clear()
+    await message.answer(_("menu.eders"), reply_markup=build_eders_menu_keyboard())
+
+
+@menu_router.callback_query(EdersMenuCallback.filter(F.action == EdersAction.MENU))
+@flags.private_chat_only
+async def on_back_to_eders_menu(callback: CallbackQuery) -> None:
+    if isinstance(callback.message, Message):
+        await callback.message.edit_text(_("menu.eders"), reply_markup=build_eders_menu_keyboard())
+    await callback.answer()
+
+
 @router.message(TranslatedText("menu.eders_materials"))
 @router.message(Command("eders", "materials"))
 @flags.private_chat_only
@@ -43,9 +67,32 @@ async def on_eders_command(
 ) -> None:
     if message.from_user is None:
         return
+    command, _separator, query = (message.text or "").partition(" ")
+    is_materials = command.split("@")[0] == "/materials" or message.text == _("menu.eders_materials")
+    selected = DeadlineFilter.MATERIALS if is_materials else DeadlineFilter.ALL
+    await _show_eders_view(
+        message,
+        message.from_user.id,
+        state,
+        eders_service,
+        tracking,
+        selected,
+        query if command.startswith("/") else "",
+    )
+
+
+async def _show_eders_view(
+    message: Message,
+    user_id: int,
+    state: FSMContext,
+    eders_service: EdersService,
+    tracking: EdersTrackingService,
+    selected: DeadlineFilter,
+    query: str = "",
+) -> None:
     await state.update_data({SNAPSHOT_KEY: None})
     try:
-        snapshot = await eders_service.get_snapshot(message.from_user.id)
+        snapshot = await eders_service.get_snapshot(user_id)
     except UserNotFoundError:
         await message.answer(_("common.start_required"))
         return
@@ -61,11 +108,6 @@ async def on_eders_command(
     except (EdersFetchError, EdersParseError, EdersUnsafeUrlError, ObisParseError):
         await message.answer(_("eders.fetch_failed"))
         return
-    command, separator, query = (message.text or "").partition(" ")
-    is_materials = command.split("@")[0] == "/materials" or message.text == _("menu.eders_materials")
-    selected = DeadlineFilter.MATERIALS if is_materials else DeadlineFilter.ALL
-    if not command.startswith("/"):
-        query = ""
     if query.strip():
         search = query.strip().casefold()
         snapshot = replace(
@@ -77,13 +119,28 @@ async def on_eders_command(
             ),
         )
     await state.update_data({SNAPSHOT_KEY: snapshot, SNAPSHOT_OPENED_AT_KEY: datetime.now(UTC)})
-    settings = await tracking.get_settings(message.from_user.id)
+    settings = await tracking.get_settings(user_id)
     activities = filter_activities(snapshot.activities, selected, datetime.now(UTC), settings.hide_archived)
     await message.answer(
         format_activity_page(activities, 0),
         reply_markup=build_eders_keyboard(selected, 0, len(activities)),
         link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
+
+
+@router.callback_query(EdersMenuCallback.filter(F.action.in_({EdersAction.MATERIALS, EdersAction.DEADLINES})))
+@flags.private_chat_only
+async def on_eders_view(
+    callback: CallbackQuery,
+    callback_data: EdersMenuCallback,
+    state: FSMContext,
+    eders_service: FromDishka[EdersService],
+    tracking: FromDishka[EdersTrackingService],
+) -> None:
+    await callback.answer()
+    if isinstance(callback.message, Message):
+        selected = DeadlineFilter.MATERIALS if callback_data.action == EdersAction.MATERIALS else DeadlineFilter.ALL
+        await _show_eders_view(callback.message, callback.from_user.id, state, eders_service, tracking, selected)
 
 
 @router.callback_query(EdersPageCallback.filter())
@@ -131,6 +188,7 @@ async def on_eders_settings(message: Message, tracking: FromDishka[EdersTracking
 
 
 @router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_EDERS_NOTIFICATIONS))
+@router.callback_query(EdersMenuCallback.filter(F.action == EdersAction.NOTIFICATIONS))
 @flags.private_chat_only
 async def on_open_eders_settings(callback: CallbackQuery, tracking: FromDishka[EdersTrackingService]) -> None:
     try:

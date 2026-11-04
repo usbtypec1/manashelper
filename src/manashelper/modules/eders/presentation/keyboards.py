@@ -4,8 +4,21 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from manashelper.modules.eders.application.models import DeadlineFilter
 from manashelper.modules.eders.application.tracking import EdersSetting, EdersSettings
-from manashelper.modules.eders.presentation.callbacks import EdersPageCallback, EdersSettingCallback
-from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
+from manashelper.modules.eders.presentation.callbacks import (
+    EdersAction,
+    EdersMenuCallback,
+    EdersPageCallback,
+    EdersSettingCallback,
+)
+
+
+def build_eders_menu_keyboard() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(text=_("eders.filter_materials"), callback_data=EdersMenuCallback(action=EdersAction.MATERIALS))
+    builder.button(text=_("eders.deadlines"), callback_data=EdersMenuCallback(action=EdersAction.DEADLINES))
+    builder.button(text=_("settings.notifications"), callback_data=EdersMenuCallback(action=EdersAction.NOTIFICATIONS))
+    builder.adjust(1)
+    return builder.as_markup()
 
 
 def build_eders_keyboard(selected: DeadlineFilter, page: int, count: int) -> InlineKeyboardMarkup:
@@ -47,6 +60,6 @@ def build_eders_settings_keyboard(settings: EdersSettings) -> InlineKeyboardMark
     ):
         marker = "✅" if getattr(settings, setting.value) else "⬜"
         builder.button(text=f"{marker} {label}", callback_data=EdersSettingCallback(setting=setting))
-    builder.button(text=_("common.back"), callback_data=SettingsCallback(action=SettingsAction.BACK_TO_NOTIFICATIONS))
+    builder.button(text=_("common.back"), callback_data=EdersMenuCallback(action=EdersAction.MENU))
     builder.adjust(1)
     return builder.as_markup()

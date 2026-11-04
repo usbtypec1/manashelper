@@ -2,14 +2,38 @@ from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from manashelper.modules.notifications.settings import NotificationSetting, NotificationSettingsSummary
 from manashelper.modules.obis.presentation.callbacks import (
     ObisAction,
     ObisCallback,
+    ObisNotificationSettingCallback,
     ObisResultsPageCallback,
 )
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 
 TERMS_URL = "https://telegra.ph/Polzovatelskoe-soglashenie-manas-helper-bot-01-13"
+
+
+def build_obis_menu_keyboard() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(text=_("menu.attendance"), callback_data=ObisCallback(action=ObisAction.ATTENDANCE))
+    builder.button(text=_("menu.grades"), callback_data=ObisCallback(action=ObisAction.GRADES))
+    builder.button(text=_("settings.notifications"), callback_data=ObisCallback(action=ObisAction.NOTIFICATIONS))
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def build_obis_notifications_keyboard(settings: NotificationSettingsSummary) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    for setting, label, enabled in (
+        (NotificationSetting.EXAM_GRADES, _("notifications.exam_grades"), settings.exam_grades_enabled),
+        (NotificationSetting.LESSON_SKIPS, _("notifications.lesson_skips"), settings.lesson_skips_enabled),
+    ):
+        marker = "✅" if enabled else "❌"
+        builder.button(text=f"{marker} {label}", callback_data=ObisNotificationSettingCallback(setting=setting))
+    builder.button(text=_("common.back"), callback_data=ObisCallback(action=ObisAction.MENU))
+    builder.adjust(1)
+    return builder.as_markup()
 
 
 def build_obis_results_keyboard(page: int, total_pages: int) -> InlineKeyboardMarkup | None:
