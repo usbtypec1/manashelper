@@ -21,6 +21,15 @@ http.createServer((req, res) => {
     attempts.clear();
     return respond(200, {ok: true});
   }
+  const webhookMethod = req.url.match(/^\/bot[^/]+\/(setWebhook|deleteWebhook)$/);
+  if (req.method === 'POST' && webhookMethod) {
+    const data = typeof req.body === 'object' && req.body !== null ? req.body : Object.fromEntries(new URLSearchParams(req.body || ''));
+    if (webhookMethod[1] === 'setWebhook' && (!String(data.url).startsWith('https://') || !data.secret_token)) {
+      return respond(400, {ok: false, error_code: 400, description: 'Bad Request: invalid webhook'});
+    }
+    calls.push({method: webhookMethod[1], url: data.url, has_secret: Boolean(data.secret_token), allowed_updates: data.allowed_updates, max_connections: Number(data.max_connections)});
+    return respond(200, {ok: true, result: true});
+  }
   const match = req.url.match(/^\/bot[^/]+\/(sendMessage|sendPhoto|sendRichMessage)$/);
   if (req.method !== 'POST' || !match) return respond(501, {ok: false, description: 'Outside fixture contract'});
   const data = typeof req.body === 'object' && req.body !== null ? req.body : Object.fromEntries(new URLSearchParams(req.body || ''));

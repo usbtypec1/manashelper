@@ -12,6 +12,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
+from manashelper.modules.gamification.application.use_cases.record_activity import RecordActivityUseCase
 from manashelper.modules.notifications.application.use_cases.get_notification_settings import (
     GetNotificationSettingsUseCase,
 )
@@ -123,35 +124,35 @@ async def _show_obis_results[T](
     loading_text: str,
     *,
     user_id: int | None = None,
-) -> None:
+) -> bool:
     recipient_id = user_id if user_id is not None else message.from_user.id if message.from_user else None
     if recipient_id is None:
-        return
+        return False
     sent = await message.answer(loading_text, parse_mode=None)
     try:
         lessons = await fetch(recipient_id)
     except UserNotFoundError:
         await sent.edit_text(_("common.start_required"))
-        return
+        return False
     except ObisSnapshotNotReadyError:
         await sent.edit_text(_("data.preparing"))
-        return
+        return False
     except UserHasNoCredentialsError:
         await sent.edit_text(
             _("obis.credentials_missing"),
             reply_markup=build_no_credentials_keyboard(),
         )
-        return
+        return False
     except ObisLoginError:
         await sent.edit_text(
             _("obis.credentials_invalid"),
             reply_markup=build_no_credentials_keyboard(),
         )
-        return
+        return False
     except (ObisParseError, httpx.HTTPError):
         logger.warning("Failed to load requested OBIS data", exc_info=True)
         await sent.edit_text(_("obis.fetch_failed"))
-        return
+        return False
     except Exception:
         await sent.edit_text(_("obis.fetch_failed"))
         raise
@@ -164,6 +165,7 @@ async def _show_obis_results[T](
             snapshots.pop(next(iter(snapshots)))
         await state.update_data({RESULTS_KEY: snapshots})
     await sent.edit_text(pages[0], parse_mode=None, reply_markup=build_obis_results_keyboard(0, len(pages)))
+    return True
 
 
 @router.message(TranslatedText("menu.attendance"))
@@ -176,10 +178,17 @@ async def on_attendance_button(message: Message, state: FSMContext, results: Fro
 
 @router.message(TranslatedText("menu.grades"))
 @flags.private_chat_only
-async def on_exams_button(message: Message, state: FSMContext, results: FromDishka[ObisResultsQuery]) -> None:
-    await _show_obis_results(
+async def on_exams_button(
+    message: Message,
+    state: FSMContext,
+    results: FromDishka[ObisResultsQuery],
+    activity: FromDishka[RecordActivityUseCase],
+) -> None:
+    shown = await _show_obis_results(
         message, state, results.get_exam_grades, format_exam_grades_pages, _("obis.loading_grades")
     )
+    if shown and message.from_user is not None:
+        await activity.execute(message.from_user.id, "grades")
 
 
 @router.callback_query(ObisResultsPageCallback.filter())
@@ -222,6 +231,7 @@ async def on_obis_view(
     callback_data: ObisCallback,
     state: FSMContext,
     results: FromDishka[ObisResultsQuery],
+    activity: FromDishka[RecordActivityUseCase],
 ) -> None:
     await callback.answer()
     if not isinstance(callback.message, Message):
@@ -236,7 +246,7 @@ async def on_obis_view(
             user_id=callback.from_user.id,
         )
     else:
-        await _show_obis_results(
+        shown = await _show_obis_results(
             callback.message,
             state,
             results.get_exam_grades,
@@ -244,6 +254,8 @@ async def on_obis_view(
             _("obis.loading_grades"),
             user_id=callback.from_user.id,
         )
+        if shown:
+            await activity.execute(callback.from_user.id, "grades")
 
 
 @router.callback_query(ObisCallback.filter(F.action == ObisAction.START_CREDENTIALS))

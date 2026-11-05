@@ -61,6 +61,19 @@ jobs:
       - name: Compile gettext catalogs
         run: uv run pybabel compile -d src/manashelper/locales
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build Mini App
+        run: |
+          uv run python frontend/scripts/export_messages.py
+          npm --prefix frontend ci
+          npm --prefix frontend run build
+
       - name: Lint
         run: uv run ruff check .
 
@@ -75,6 +88,12 @@ jobs:
 
       - name: Run tests
         run: uv run pytest
+
+      - name: Test Mini App in Chromium
+        working-directory: frontend
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:e2e
 
 
   build:

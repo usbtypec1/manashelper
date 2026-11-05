@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 from manashelper.modules.food_menu.application.daily_menu import DailyMenuQuery
 from manashelper.modules.food_menu.application.food_menu_notification_settings import (
@@ -25,11 +26,15 @@ def build_daily_menu_service(daily_menu_repository, daily_menu_rating_repository
     return SimpleNamespace(
         get_available_dates=query.get_available_dates,
         get_daily_menu_by_date=GetDailyMenuUseCase(
-            daily_menu_repository=daily_menu_repository, daily_menu_rating_repository=daily_menu_rating_repository
+            daily_menu_repository=daily_menu_repository,
+            daily_menu_rating_repository=daily_menu_rating_repository,
+            activity=AsyncMock(),
         ).execute,
         get_daily_menu_by_skipping_days=GetDailyMenuByOffsetUseCase(
             get_daily_menu=GetDailyMenuUseCase(
-                daily_menu_repository=daily_menu_repository, daily_menu_rating_repository=daily_menu_rating_repository
+                daily_menu_repository=daily_menu_repository,
+                daily_menu_rating_repository=daily_menu_rating_repository,
+                activity=AsyncMock(),
             )
         ).execute,
         set_rating=RateDailyMenuUseCase(

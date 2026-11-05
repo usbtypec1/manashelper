@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 from manashelper.modules.advertisements.application.advertisement import AdvertisementQuery
 from manashelper.modules.advertisements.application.use_cases.approve_advertisement import ApproveAdvertisementUseCase
@@ -22,7 +23,7 @@ def build_advertisement_service(advertisement_repository, users):
         ).execute,
         delete_owned=DeleteAdvertisementUseCase(advertisement_repository=advertisement_repository).execute,
         record_channel_messages=RecordAdvertisementPublicationsUseCase(
-            advertisement_repository=advertisement_repository
+            activity=AsyncMock(), advertisement_repository=advertisement_repository
         ).execute,
     )
 

@@ -8,6 +8,7 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "aiogram[i18n]>=3.31.0",
+    "aiohttp>=3.13,<4",
     "alembic>=1.19.2",
     "apscheduler>=3.11.3",
     "asyncpg>=0.31.0",

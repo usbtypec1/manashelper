@@ -23,6 +23,7 @@ from manashelper.modules.eders.jobs import poll_eders_job
 from manashelper.modules.eders.presentation.callbacks import EdersPageCallback, EdersSettingCallback
 from manashelper.modules.eders.presentation.sender import TelegramEdersNotificationSender
 from manashelper.modules.eders.provider import EdersProvider
+from manashelper.modules.gamification.provider import GamificationProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.errors import UserNotFoundError
 from manashelper.modules.obis.provider import ObisProvider
@@ -238,7 +239,13 @@ async def test_eders_provider_keeps_app_request_scopes_and_model_registry():
     assert Base.metadata.tables["eders_notifications"] is EdersNotification.__table__
     dependencies = (EdersRepository, EdersQuery, EdersTrackingService, PollEdersUserUseCase)
     async with make_async_container(
-        CoreProvider(), ObisProvider(), UsersProvider(), EdersProvider(), OutboxProvider(), NotificationsProvider()
+        CoreProvider(),
+        ObisProvider(),
+        GamificationProvider(),
+        UsersProvider(),
+        EdersProvider(),
+        OutboxProvider(),
+        NotificationsProvider(),
     ) as container:
         client = await container.get(EdersClient)
         async with container() as request:

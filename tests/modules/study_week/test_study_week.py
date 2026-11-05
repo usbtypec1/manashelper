@@ -19,6 +19,7 @@ from manashelper.modules.eders.application.models import (
 )
 from manashelper.modules.eders.errors import EdersFetchError, EdersParseError, EdersUnsafeUrlError
 from manashelper.modules.eders.provider import EdersProvider
+from manashelper.modules.gamification.provider import GamificationProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
 from manashelper.modules.obis.provider import ObisProvider
@@ -248,6 +249,7 @@ async def test_study_week_provider_owns_request_scoped_use_case():
     async with make_async_container(
         CoreProvider(),
         ObisProvider(),
+        GamificationProvider(),
         UsersProvider(),
         NotificationsProvider(),
         ScheduleProvider(),

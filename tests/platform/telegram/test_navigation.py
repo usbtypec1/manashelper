@@ -18,14 +18,16 @@ from manashelper.platform.telegram.routers import navigation
 def register_handlers(dispatcher, router):
     for handler in router.message.handlers:
         dispatcher.message.register(
-            handler.callback, *(item.callback for item in handler.filters), flags=handler.flags.copy()
+            getattr(handler.callback, "__dishka_orig_func__", handler.callback),
+            *(item.callback for item in handler.filters),
+            flags=handler.flags.copy(),
         )
 
 
 @pytest.mark.parametrize("action", ["study", "back"])
 @pytest.mark.parametrize("chat_type", ["private", "group", "supergroup"])
 async def test_navigation_clears_private_forms_and_rejects_group_updates(monkeypatch, action, chat_type):
-    dispatcher = Dispatcher()
+    dispatcher = Dispatcher(gamification=AsyncMock(is_enabled=AsyncMock(return_value=False)))
     register_handlers(dispatcher, navigation.router)
     dispatcher.message.middleware(PrivateChatOnlyMiddleware())
     form_handler = AsyncMock()
@@ -61,7 +63,7 @@ async def test_navigation_clears_private_forms_and_rejects_group_updates(monkeyp
 
 
 async def test_study_submenu_opens_existing_schedule_handler(monkeypatch):
-    dispatcher = Dispatcher()
+    dispatcher = Dispatcher(gamification=AsyncMock(is_enabled=AsyncMock(return_value=False)))
     register_handlers(dispatcher, navigation.router)
     register_handlers(dispatcher, timetable.router)
     async with Bot(token="123456:development-placeholder") as bot:

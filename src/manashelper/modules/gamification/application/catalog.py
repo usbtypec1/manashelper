@@ -1,0 +1,23 @@
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True, slots=True)
+class Achievement:
+    key: str
+    emoji: str
+    target: int | float
+
+
+ACHIEVEMENTS = (
+    Achievement("night_owl", "🌚", 3),
+    Achievement("foodie", "😋", 50),
+    Achievement("cafeteria_boss", "😎", 100),
+    Achievement("formula_one", "🏎", 1),
+    Achievement("champion", "🏆", 1),
+    Achievement("comeback", "📈", 0.2),
+    Achievement("fall", "📉", 0.2),
+    Achievement("seller", "💩", 1),
+    Achievement("pokemon", "🐱", 1),
+    Achievement("eldin_balasy", "🤓", 3),
+    Achievement("thin_ice", "🥶", 5),
+)

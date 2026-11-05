@@ -96,7 +96,10 @@ async def test_theme_picker_selection_refreshes_menu_in_selected_theme(context, 
         context.request.reset_mock()
 
         await theme.on_theme_selected(
-            context.callback, ThemeCallback(theme=selected), SimpleNamespace(execute=service.set_theme)
+            context.callback,
+            ThemeCallback(theme=selected),
+            SimpleNamespace(execute=service.set_theme),
+            AsyncMock(is_enabled=AsyncMock(return_value=False)),
         )
         service.set_theme.assert_awaited_once_with(976001, selected)
         methods = [call.args[1] for call in context.request.await_args_list]
@@ -112,12 +115,22 @@ async def test_theme_picker_selection_refreshes_menu_in_selected_theme(context, 
 async def test_repeated_selection_does_not_edit_identical_message(context):
     service = AsyncMock(spec=build_theme_service(AsyncMock()))
     selected = ThemeCallback(theme=Theme.HALLOWEEN)
-    await theme.on_theme_selected(context.callback, selected, SimpleNamespace(execute=service.set_theme))
+    await theme.on_theme_selected(
+        context.callback,
+        selected,
+        SimpleNamespace(execute=service.set_theme),
+        AsyncMock(is_enabled=AsyncMock(return_value=False)),
+    )
     method = context.request.await_args_list[0].args[1]
     current = context.message.model_copy(update={"text": method.text, "reply_markup": method.reply_markup})
     callback = context.callback.model_copy(update={"message": current})
     context.request.reset_mock()
-    await theme.on_theme_selected(callback, selected, SimpleNamespace(execute=service.set_theme))
+    await theme.on_theme_selected(
+        callback,
+        selected,
+        SimpleNamespace(execute=service.set_theme),
+        AsyncMock(is_enabled=AsyncMock(return_value=False)),
+    )
     assert [call.args[1].__api_method__ for call in context.request.await_args_list] == [
         "sendMessage",
         "answerCallbackQuery",

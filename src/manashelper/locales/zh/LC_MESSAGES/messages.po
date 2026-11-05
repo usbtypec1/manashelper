@@ -985,6 +985,159 @@ msgstr "截止日期"
 msgid "obis.notifications_header"
 msgstr "OBIS 通知"
 
+msgid "menu.achievements"
+msgstr "成就"
+
+msgid "gamification.unavailable"
+msgstr "启用迷你应用后即可查看成就。"
+
+msgid "gamification.open_prompt"
+msgstr "查看你的成就、进度和排名。"
+
+msgid "gamification.grant_usage"
+msgstr "用法：/grant_pokemon <Telegram 用户 ID>"
+
+msgid "gamification.granted"
+msgstr "成就已授予。"
+
+msgid "gamification.already_granted"
+msgstr "该用户已获得此成就。"
+
+msgid "commands.grant_pokemon"
+msgstr "授予已审核的自拍成就"
+
+msgid "gamification.ui.collection"
+msgstr "我的收藏"
+
+msgid "gamification.ui.leaderboard"
+msgstr "排行榜"
+
+msgid "gamification.ui.earned"
+msgstr "已获得"
+
+msgid "gamification.ui.rank"
+msgstr "你的排名"
+
+msgid "gamification.ui.unranked"
+msgstr "获得成就即可加入排名"
+
+msgid "gamification.ui.locked"
+msgstr "尚未获得"
+
+msgid "gamification.ui.progress"
+msgstr "进度"
+
+msgid "gamification.ui.source_pending"
+msgstr "等待已验证的 OBIS 数据"
+
+msgid "gamification.ui.empty"
+msgstr "排行榜正在等待首批成就获得者。"
+
+msgid "gamification.ui.you"
+msgstr "你"
+
+msgid "gamification.ui.close"
+msgstr "关闭"
+
+msgid "gamification.ui.loading"
+msgstr "正在加载成就…"
+
+msgid "gamification.ui.error"
+msgstr "无法加载成就。请重新打开迷你应用或重试。"
+
+msgid "gamification.ui.retry"
+msgstr "重试"
+
+msgid "gamification.ui.open_telegram"
+msgstr "请从 Telegram 中的 Manashelper 机器人打开此迷你应用。"
+
+msgid "gamification.ui.subtitle"
+msgstr "用成就记录大学生活。"
+
+msgid "gamification.ui.top_ten"
+msgstr "前十名学生"
+
+msgid "gamification.night_owl.name"
+msgstr "夜猫子"
+
+msgid "gamification.night_owl.description"
+msgstr "连续三天在比什凯克时间 02:00 至 05:00 查看 OBIS 成绩。"
+
+msgid "gamification.foodie.name"
+msgstr "美食家"
+
+msgid "gamification.foodie.description"
+msgstr "查看食堂菜单 50 次，每次至少间隔 10 分钟。"
+
+msgid "gamification.cafeteria_boss.name"
+msgstr "食堂之王"
+
+msgid "gamification.cafeteria_boss.description"
+msgstr "查看食堂菜单 100 次，每次至少间隔 10 分钟。"
+
+msgid "gamification.formula_one.name"
+msgstr "一级方程式"
+
+msgid "gamification.formula_one.description"
+msgstr "在 OBIS 获得 F1 最终成绩。"
+
+msgid "gamification.champion.name"
+msgstr "冠军"
+
+msgid "gamification.champion.description"
+msgstr "在 OBIS 获得 FF 最终成绩。"
+
+msgid "gamification.comeback.name"
+msgstr "逆袭"
+
+msgid "gamification.comeback.description"
+msgstr "与上学期相比，累计平均绩点至少提高 0.20。"
+
+msgid "gamification.fall.name"
+msgstr "下滑"
+
+msgid "gamification.fall.description"
+msgstr "与上学期相比，累计平均绩点至少下降 0.20。"
+
+msgid "gamification.seller.name"
+msgstr "杂货卖家"
+
+msgid "gamification.seller.description"
+msgstr "发布第一条审核通过的市场广告。"
+
+msgid "gamification.pokemon.name"
+msgstr "宝可梦"
+
+msgid "gamification.pokemon.description"
+msgstr "与 Adilet（@yunbae）合影，并发送给机器人客服进行人工审核。"
+
+msgid "gamification.ui.baseline_missing"
+msgstr "尚无上学期的平均绩点。"
+
+msgid "gamification.eldin_balasy.name"
+msgstr "父母的骄傲"
+
+msgid "gamification.eldin_balasy.description"
+msgstr "在同一学期获得至少三门课程的最终 AA 成绩。"
+
+msgid "gamification.thin_ice.name"
+msgstr "如履薄冰"
+
+msgid "gamification.thin_ice.description"
+msgstr "在同一学期的五门不同课程中，理论课或实践课的缺勤率达到至少 18.75%。"
+
+msgid "commands.gamification"
+msgstr "开启或关闭用户的成就功能"
+
+msgid "gamification.access_usage"
+msgstr "用法：/gamification <Telegram user ID> on|off"
+
+msgid "gamification.access_enabled"
+msgstr "已开启成就功能。用户需要重新打开主菜单。"
+
+msgid "gamification.access_disabled"
+msgstr "已关闭成就功能。进度和奖励已保留。"
+
 msgid "eders.mark_done"
 msgstr "标记为已完成"
 

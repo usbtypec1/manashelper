@@ -19,6 +19,7 @@ from manashelper.modules.food_menu.presentation.routers.food_menu import router 
 from manashelper.modules.food_menu.presentation.routers.food_menu_notifications import (
     router as food_menu_notifications_router,
 )
+from manashelper.modules.gamification.presentation.router import router as gamification_router
 from manashelper.modules.notifications.router import router as notifications_router
 from manashelper.modules.obis.presentation.router import menu_router as obis_menu_router
 from manashelper.modules.obis.presentation.router import router as obis_router
@@ -35,12 +36,15 @@ from manashelper.platform.telegram.middlewares.rate_limit import RateLimitMiddle
 from manashelper.platform.telegram.routers.navigation import router as navigation_router
 from manashelper.platform.telegram.routers.settings import router as settings_router
 from manashelper.platform.telegram.routers.start import router as start_router
+from manashelper.platform.telegram.webhook_context import webhook_processing
 
 logger = logging.getLogger(__name__)
 
 
 async def on_error(event: ErrorEvent) -> None:
     logger.error("Unhandled exception while processing an update", exc_info=event.exception)
+    if webhook_processing.get():
+        raise event.exception
 
 
 def create_dispatcher(container: AsyncContainer) -> Dispatcher:
@@ -64,6 +68,7 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
         locale_router,
         theme_router,
         navigation_router,
+        gamification_router,
         obis_menu_router,
         *((eders_menu_router,) if get_settings().eders_enabled else ()),
         timetable_router,

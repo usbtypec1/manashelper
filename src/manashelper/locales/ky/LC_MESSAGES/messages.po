@@ -996,6 +996,159 @@ msgstr "Мөөнөттөр"
 msgid "obis.notifications_header"
 msgstr "OBIS билдирүүлөрү"
 
+msgid "menu.achievements"
+msgstr "Жетишкендиктер"
+
+msgid "gamification.unavailable"
+msgstr "Жетишкендиктер Mini App иштетилгенде жеткиликтүү."
+
+msgid "gamification.open_prompt"
+msgstr "Жетишкендиктериң, прогрессиң жана рейтингдеги ордуң."
+
+msgid "gamification.grant_usage"
+msgstr "Колдонуу: /grant_pokemon <колдонуучунун Telegram ID номери>"
+
+msgid "gamification.granted"
+msgstr "Жетишкендик берилди."
+
+msgid "gamification.already_granted"
+msgstr "Колдонуучуда бул жетишкендик мурунтан бар."
+
+msgid "commands.grant_pokemon"
+msgstr "Текшерилген селфи үчүн жетишкендик берүү"
+
+msgid "gamification.ui.collection"
+msgstr "Менин жыйнагым"
+
+msgid "gamification.ui.leaderboard"
+msgstr "Рейтинг"
+
+msgid "gamification.ui.earned"
+msgstr "Алынды"
+
+msgid "gamification.ui.rank"
+msgstr "Сенин ордуң"
+
+msgid "gamification.ui.unranked"
+msgstr "Катышуу үчүн жетишкендик ал"
+
+msgid "gamification.ui.locked"
+msgstr "Азырынча алынган жок"
+
+msgid "gamification.ui.progress"
+msgstr "Прогресс"
+
+msgid "gamification.ui.source_pending"
+msgstr "OBIS маалыматтарынын ырасталышы күтүлүүдө"
+
+msgid "gamification.ui.empty"
+msgstr "Рейтинг алгачкы жетишкендик ээлерин күтүп жатат."
+
+msgid "gamification.ui.you"
+msgstr "Сен"
+
+msgid "gamification.ui.close"
+msgstr "Жабуу"
+
+msgid "gamification.ui.loading"
+msgstr "Жетишкендиктер жүктөлүүдө…"
+
+msgid "gamification.ui.error"
+msgstr "Жетишкендиктер жүктөлгөн жок. Mini App колдонмосун кайра ач же дагы аракет кыл."
+
+msgid "gamification.ui.retry"
+msgstr "Кайталоо"
+
+msgid "gamification.ui.open_telegram"
+msgstr "Mini App колдонмосун Telegram ичиндеги Manashelper ботунан ач."
+
+msgid "gamification.ui.subtitle"
+msgstr "Студенттик жашоо жетишкендиктерде."
+
+msgid "gamification.ui.top_ten"
+msgstr "Мыкты 10 студент"
+
+msgid "gamification.night_owl.name"
+msgstr "Түнкү санаачыл"
+
+msgid "gamification.night_owl.description"
+msgstr "OBIS бааларыңды Бишкек убактысы боюнча 02:00–05:00 аралыгында үч күн катары менен ач."
+
+msgid "gamification.foodie.name"
+msgstr "Тамак сүйүүчү"
+
+msgid "gamification.foodie.description"
+msgstr "Ашкананын менюсун кеминде 10 мүнөт аралык менен 50 жолу көр."
+
+msgid "gamification.cafeteria_boss.name"
+msgstr "Ашкананын боссу"
+
+msgid "gamification.cafeteria_boss.description"
+msgstr "Ашкананын менюсун кеминде 10 мүнөт аралык менен 100 жолу көр."
+
+msgid "gamification.formula_one.name"
+msgstr "Формула 1"
+
+msgid "gamification.formula_one.description"
+msgstr "OBIS системасында F1 жыйынтык баасын ал."
+
+msgid "gamification.champion.name"
+msgstr "Чемпион"
+
+msgid "gamification.champion.description"
+msgstr "OBIS системасында FF жыйынтык баасын ал."
+
+msgid "gamification.comeback.name"
+msgstr "Cumback"
+
+msgid "gamification.comeback.description"
+msgstr "Орточо бааңды мурунку семестрге салыштырмалуу кеминде 0.20га көтөр."
+
+msgid "gamification.fall.name"
+msgstr "Төмөндөө"
+
+msgid "gamification.fall.description"
+msgstr "Орточо бааңды мурунку семестрге салыштырмалуу кеминде 0.20га түшүр."
+
+msgid "gamification.seller.name"
+msgstr "Керексиз буюм сатуучу"
+
+msgid "gamification.seller.description"
+msgstr "Текшерүүдөн өткөн биринчи жарыяңды чыгар."
+
+msgid "gamification.pokemon.name"
+msgstr "Покемон"
+
+msgid "gamification.pokemon.description"
+msgstr "Адилет (@yunbae) менен селфи жасап, кол менен текшерүү үчүн боттун колдоосуна жөнөт."
+
+msgid "gamification.ui.baseline_missing"
+msgstr "Мурунку семестрдин орточо баасы азырынча жок."
+
+msgid "gamification.eldin_balasy.name"
+msgstr "Элдин баласы"
+
+msgid "gamification.eldin_balasy.description"
+msgstr "Бир семестрде кеминде үч жыйынтык AA баасын ал."
+
+msgid "gamification.thin_ice.name"
+msgstr "Жука муз үстүндө"
+
+msgid "gamification.thin_ice.description"
+msgstr "Бир семестрде беш башка сабактын теориясынан же практикасынан кеминде 18,75% калтыр."
+
+msgid "commands.gamification"
+msgstr "Колдонуучунун жетишкендиктерин күйгүзүү же өчүрүү"
+
+msgid "gamification.access_usage"
+msgstr "Колдонуу: /gamification <Telegram user ID> on|off"
+
+msgid "gamification.access_enabled"
+msgstr "Жетишкендиктер күйгүзүлдү. Колдонуучу башкы менюну кайра ачышы керек."
+
+msgid "gamification.access_disabled"
+msgstr "Жетишкендиктер өчүрүлдү. Прогресс жана сыйлыктар сакталды."
+
 msgid "eders.mark_done"
 msgstr "Аткарылды деп белгилөө"
 

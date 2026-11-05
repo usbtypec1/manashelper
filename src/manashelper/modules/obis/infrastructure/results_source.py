@@ -1,9 +1,13 @@
-from manashelper.modules.obis.application.models import AttendanceRecord, ExamModel, LessonExamsModel
+from manashelper.modules.obis.application.models import AttendanceRecord, ExamModel, LessonExamsModel, Transcript
 from manashelper.modules.obis.infrastructure.client import ObisClient
 from manashelper.modules.obis.infrastructure.parser import parse_attendance_page, parse_exam_grades_page
+from manashelper.modules.obis.infrastructure.transcript_parser import parse_transcript
 
 
 class ObisResultsSource:
+    async def fetch_transcript(self, student_number: str, password: str) -> Transcript:
+        return parse_transcript(await self._client.fetch_transcript_html(student_number, password))
+
     def __init__(self, client: ObisClient) -> None:
         self._client = client
 

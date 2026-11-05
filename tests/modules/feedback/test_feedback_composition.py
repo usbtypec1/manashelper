@@ -13,6 +13,7 @@ from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.feedback.application.use_cases.submit_feedback import SubmitFeedbackUseCase
 from manashelper.modules.feedback.orm import FeedbackMessage
 from manashelper.modules.feedback.provider import FeedbackProvider
+from manashelper.modules.gamification.provider import GamificationProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
@@ -37,6 +38,7 @@ async def test_feedback_request_scope_commits_success_and_rolls_back_failure():
         CoreProvider(),
         TelegramPlatformProvider(),
         ObisProvider(),
+        GamificationProvider(),
         EdersProvider(),
         OutboxProvider(),
         StudyWeekProvider(),
@@ -89,6 +91,7 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry(monkeypa
         from manashelper.core.provider import CoreProvider
         from manashelper.platform.telegram.provider import TelegramPlatformProvider
         from manashelper.modules.obis.provider import ObisProvider
+        from manashelper.modules.gamification.provider import GamificationProvider
         from manashelper.modules.study_week.provider import StudyWeekProvider
         from manashelper.modules.eders.provider import EdersProvider
         from manashelper.platform.telegram.outbox.provider import OutboxProvider
@@ -102,7 +105,8 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry(monkeypa
 
         async def check():
             async with make_async_container(
-                CoreProvider(), TelegramPlatformProvider(), ObisProvider(), EdersProvider(), OutboxProvider(),
+                CoreProvider(), TelegramPlatformProvider(), ObisProvider(), GamificationProvider(),
+                EdersProvider(), OutboxProvider(),
                 StudyWeekProvider(),
                 ScheduleProvider(),
                 NotificationsProvider(),

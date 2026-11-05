@@ -8,6 +8,7 @@ from manashelper.modules.obis.application.models import (
     LessonExamsModel,
     Snapshot,
     StoredCredentials,
+    Transcript,
 )
 from manashelper.modules.obis.application.notification import ExamGradeChange, LessonSkipChange
 
@@ -19,6 +20,8 @@ class ObisNotificationSender(Protocol):
 
 
 class ResultsSource(Protocol):
+    async def fetch_transcript(self, student_number: str, password: str) -> Transcript: ...
+
     async def fetch_exam_grades(self, student_number: str, password: str) -> list[LessonExamsModel]: ...
 
     async def fetch_attendance(self, student_number: str, password: str) -> list[AttendanceRecord]: ...

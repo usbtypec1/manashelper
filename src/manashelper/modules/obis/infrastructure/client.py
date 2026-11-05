@@ -7,6 +7,7 @@ OBIS_BASE_URL = "https://obistest.manas.edu.kg"
 OBIS_LOGIN_PATH = "/site/login"
 OBIS_ATTENDANCE_PATH = "/vs-ders/taken-lessons"
 OBIS_EXAM_GRADES_PATH = "/vs-ders/taken-grades"
+OBIS_TRANSCRIPT_PATH = "/vs-ders/transkript-detailed"
 
 
 def new_http_client() -> httpx.AsyncClient:
@@ -32,6 +33,13 @@ async def login(client: httpx.AsyncClient, student_number: str, plain_password: 
 
 
 class ObisClient:
+    async def fetch_transcript_html(self, student_number: str, plain_password: str) -> str:
+        async with new_http_client() as client:
+            await login(client, student_number, plain_password)
+            response = await client.get(OBIS_TRANSCRIPT_PATH)
+            response.raise_for_status()
+            return response.text
+
     async def verify_credentials(self, student_number: str, plain_password: str) -> None:
         async with new_http_client() as client:
             await login(client, student_number, plain_password)

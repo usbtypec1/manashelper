@@ -74,7 +74,13 @@ async def test_refresh_locks_then_fetches_then_saves_snapshot_and_comparison_bas
     baseline.save_all.side_effect = save_baseline
     before = datetime.now(UTC)
     cls = RefreshObisGradesUseCase if kind == "exam_grades" else RefreshObisAttendanceUseCase
-    result = await cls(credentials, store, source, snapshots, baseline).execute(123)
+    recorder = AsyncMock()
+    args = [credentials, store, source, snapshots, baseline]
+    if kind == "attendance":
+        args.append(recorder)
+    result = await cls(*args).execute(123)
+    if kind == "attendance":
+        recorder.execute.assert_awaited_once_with(123, "student", expected)
     assert result.lessons == expected
     assert result.changes == []
     assert order == ["lock", "credentials", "fetch", "snapshot", "read_baseline", "save_baseline"]
@@ -105,8 +111,13 @@ async def test_failed_source_does_not_write_snapshot_or_comparison_baseline(kind
     snapshots = AsyncMock(spec=SnapshotStore)
     baseline = AsyncMock(spec=ExamGradeStore if kind == "exam_grades" else AttendanceStore)
     cls = RefreshObisGradesUseCase if kind == "exam_grades" else RefreshObisAttendanceUseCase
+    recorder = AsyncMock()
+    args = [credentials, store, source, snapshots, baseline]
+    if kind == "attendance":
+        args.append(recorder)
     with pytest.raises(ObisParseError):
-        await cls(credentials, store, source, snapshots, baseline).execute(123)
+        await cls(*args).execute(123)
+    recorder.execute.assert_not_awaited()
     snapshots.save_exam_grades.assert_not_awaited()
     snapshots.save_attendance.assert_not_awaited()
     baseline.save_all.assert_not_awaited()

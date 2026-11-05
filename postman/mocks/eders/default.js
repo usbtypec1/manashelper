@@ -31,12 +31,16 @@ http.createServer(async (req, res) => {
     if (url.searchParams.get('key') !== 'fake-sso') return send(401, 'Fake SSO key required');
     return send(303, '', {location: '/my/index.php?lang=ru', 'set-cookie': 'MoodleSession=fixture; Path=/'});
   }
-  const obisPages = {'/vs-ders/taken-grades': 'grades.html', '/vs-ders/taken-lessons': 'attendance.html'};
+  const obisPages = {'/vs-ders/taken-grades': 'grades.html', '/vs-ders/taken-lessons': 'attendance.html', '/vs-ders/transkript-detailed': 'transcript.html'};
   if (obisPages[url.pathname]) {
     if (req.method !== 'GET') return send(501, 'Read-only fixture');
     if (!req.headers.cookie?.includes('obis=fixture')) return send(401, 'Login required');
     if (req.headers['x-fixture-mode'] === 'html-error') return send(500, '<h1>Unavailable</h1>');
-    return send(200, fs.readFileSync(path.resolve(fixtures, '../obis', obisPages[url.pathname]), 'utf8'),
+    if (url.pathname === '/vs-ders/transkript-detailed' && req.headers['x-fixture-mode'] === 'transcript-malformed') return send(200, '<table></table>');
+    const achievementPage = req.headers['x-fixture-mode'] === 'achievement-progress'
+      ? {'/vs-ders/taken-lessons': 'attendance_achievements.html', '/vs-ders/transkript-detailed': 'transcript_achievements.html'}[url.pathname]
+      : null;
+    return send(200, fs.readFileSync(path.resolve(fixtures, '../obis', achievementPage || obisPages[url.pathname]), 'utf8'),
                 {'content-type': 'text/html'});
   }
   if (url.pathname === '/') return send(200, 'Logged in');

@@ -992,6 +992,159 @@ msgstr "Son tarihler"
 msgid "obis.notifications_header"
 msgstr "OBIS bildirimleri"
 
+msgid "menu.achievements"
+msgstr "Başarımlar"
+
+msgid "gamification.unavailable"
+msgstr "Başarımlar Mini App etkinleştirildiğinde kullanılabilir."
+
+msgid "gamification.open_prompt"
+msgstr "Başarımların, ilerlemen ve sıralamadaki yerin."
+
+msgid "gamification.grant_usage"
+msgstr "Kullanım: /grant_pokemon <Telegram kullanıcı kimliği>"
+
+msgid "gamification.granted"
+msgstr "Başarım verildi."
+
+msgid "gamification.already_granted"
+msgstr "Kullanıcı bu başarımı zaten kazanmış."
+
+msgid "commands.grant_pokemon"
+msgstr "Doğrulanmış selfie başarımını ver"
+
+msgid "gamification.ui.collection"
+msgstr "Koleksiyonum"
+
+msgid "gamification.ui.leaderboard"
+msgstr "Sıralama"
+
+msgid "gamification.ui.earned"
+msgstr "Kazanılan"
+
+msgid "gamification.ui.rank"
+msgstr "Sıralaman"
+
+msgid "gamification.ui.unranked"
+msgstr "Katılmak için bir başarım kazan"
+
+msgid "gamification.ui.locked"
+msgstr "Henüz kazanılmadı"
+
+msgid "gamification.ui.progress"
+msgstr "İlerleme"
+
+msgid "gamification.ui.source_pending"
+msgstr "Doğrulanmış OBIS verileri bekleniyor"
+
+msgid "gamification.ui.empty"
+msgstr "Sıralama ilk başarı sahiplerini bekliyor."
+
+msgid "gamification.ui.you"
+msgstr "Sen"
+
+msgid "gamification.ui.close"
+msgstr "Kapat"
+
+msgid "gamification.ui.loading"
+msgstr "Başarımlar yükleniyor…"
+
+msgid "gamification.ui.error"
+msgstr "Başarımlar yüklenemedi. Mini App uygulamasını yeniden aç veya tekrar dene."
+
+msgid "gamification.ui.retry"
+msgstr "Tekrar dene"
+
+msgid "gamification.ui.open_telegram"
+msgstr "Bu Mini App uygulamasını Telegram’daki Manashelper botundan aç."
+
+msgid "gamification.ui.subtitle"
+msgstr "Öğrencilik hayatının başarımları."
+
+msgid "gamification.ui.top_ten"
+msgstr "İlk 10 öğrenci"
+
+msgid "gamification.night_owl.name"
+msgstr "Gece kuşu"
+
+msgid "gamification.night_owl.description"
+msgstr "OBIS notlarını Bişkek saatine göre 02:00–05:00 arasında üç gün üst üste aç."
+
+msgid "gamification.foodie.name"
+msgstr "Obur"
+
+msgid "gamification.foodie.description"
+msgstr "Yemek menüsüne en az 10 dakika arayla 50 kez bak."
+
+msgid "gamification.cafeteria_boss.name"
+msgstr "Yemekhane patronu"
+
+msgid "gamification.cafeteria_boss.description"
+msgstr "Yemek menüsüne en az 10 dakika arayla 100 kez bak."
+
+msgid "gamification.formula_one.name"
+msgstr "Formula 1"
+
+msgid "gamification.formula_one.description"
+msgstr "OBIS’te F1 harf notu al."
+
+msgid "gamification.champion.name"
+msgstr "Şampiyon"
+
+msgid "gamification.champion.description"
+msgstr "OBIS’te FF harf notu al."
+
+msgid "gamification.comeback.name"
+msgstr "Cumback"
+
+msgid "gamification.comeback.description"
+msgstr "Genel not ortalamanı önceki döneme göre en az 0.20 artır."
+
+msgid "gamification.fall.name"
+msgstr "Düşüş"
+
+msgid "gamification.fall.description"
+msgstr "Genel not ortalamanı önceki döneme göre en az 0.20 düşür."
+
+msgid "gamification.seller.name"
+msgstr "Ivır zıvır satıcısı"
+
+msgid "gamification.seller.description"
+msgstr "İlk onaylanmış ilanını yayınla."
+
+msgid "gamification.pokemon.name"
+msgstr "Pokémon"
+
+msgid "gamification.pokemon.description"
+msgstr "Adilet (@yunbae) ile selfie çek ve doğrulama için bot desteğine gönder."
+
+msgid "gamification.ui.baseline_missing"
+msgstr "Önceki döneme ait ortalama henüz yok."
+
+msgid "gamification.eldin_balasy.name"
+msgstr "Ailenin gururu"
+
+msgid "gamification.eldin_balasy.description"
+msgstr "Bir yarıyılda en az üç AA harf notu al."
+
+msgid "gamification.thin_ice.name"
+msgstr "İnce buz üstünde"
+
+msgid "gamification.thin_ice.description"
+msgstr "Bir yarıyılda beş farklı dersin teori veya uygulama kısmında en az %18,75 devamsızlığa ulaş."
+
+msgid "commands.gamification"
+msgstr "Kullanıcının başarımlarını aç veya kapat"
+
+msgid "gamification.access_usage"
+msgstr "Kullanım: /gamification <Telegram user ID> on|off"
+
+msgid "gamification.access_enabled"
+msgstr "Başarımlar açıldı. Kullanıcı ana menüyü yeniden açmalıdır."
+
+msgid "gamification.access_disabled"
+msgstr "Başarımlar kapatıldı. İlerleme ve ödüller korundu."
+
 msgid "eders.mark_done"
 msgstr "Tamamlandı olarak işaretle"
 

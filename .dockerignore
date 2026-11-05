@@ -16,3 +16,8 @@ __pycache__/
 tests/
 docker-compose*.yaml
 docker/docker-compose*.yaml
+frontend/node_modules/
+frontend/test-results/
+frontend/playwright-report/
+frontend/src/messages.json
+src/manashelper/platform/web/static/

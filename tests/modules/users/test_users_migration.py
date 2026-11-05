@@ -19,6 +19,7 @@ from manashelper.core.provider import CoreProvider
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale
 from manashelper.localization.theme import Theme
 from manashelper.modules.eders.provider import EdersProvider
+from manashelper.modules.gamification.provider import GamificationProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis import jobs
 from manashelper.modules.obis.application.models import RefreshResult
@@ -122,7 +123,10 @@ def test_users_callback_payload_fsm_and_private_flags():
 async def test_selected_language_controls_confirmation_and_welcome(context, selected):
     locales = AsyncMock(spec=build_locale_service(AsyncMock()))
     await locale.on_locale_selected(
-        context.callback, LocaleCallback(locale=selected), SimpleNamespace(execute=locales.set_locale)
+        context.callback,
+        LocaleCallback(locale=selected),
+        SimpleNamespace(execute=locales.set_locale),
+        AsyncMock(is_enabled=AsyncMock(return_value=False)),
     )
     locales.set_locale.assert_awaited_once_with(973001, selected)
     requests = [call.args[1] for call in context.request.await_args_list]
@@ -147,7 +151,7 @@ async def test_obis_user_poll_keeps_locale_fallback_and_failure_isolation(monkey
     attendance.execute.return_value = RefreshResult([], [object()])
     dependencies = {
         LocaleQuery: build_locale_service(users),
-        PollObisUserUseCase: PollObisUserUseCase(grades, attendance),
+        PollObisUserUseCase: PollObisUserUseCase(grades, attendance, AsyncMock()),
         ThemeQuery: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
         OutboxService: AsyncMock(spec=OutboxService),
     }
@@ -192,6 +196,7 @@ async def test_users_provider_scopes_and_orm_registry():
         CoreProvider(),
         TelegramPlatformProvider(),
         ObisProvider(),
+        GamificationProvider(),
         EdersProvider(),
         OutboxProvider(),
         StudyWeekProvider(),
@@ -263,7 +268,7 @@ def test_users_standalone_import_uses_explicit_model_registration(module):
         "from manashelper.core.database import Base; "
         "assert len(Base.metadata.tables) < 27; "
         "from manashelper.bootstrap import load_models; load_models(); configure_mappers(); "
-        "assert len(Base.metadata.tables) == 26; "
+        "assert len(Base.metadata.tables) == 29; "
         "assert Base.metadata.tables['timetable_user_courses'].c.user_id.references(Base.metadata.tables['users'].c.id)"
     )
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)

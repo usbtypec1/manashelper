@@ -38,3 +38,8 @@ logs/*
 
 # Private Eders exports contain account and session data.
 /r/
+
+# Generated Telegram Mini App bundle
+src/manashelper/platform/web/static/
+frontend/test-results/
+frontend/playwright-report/

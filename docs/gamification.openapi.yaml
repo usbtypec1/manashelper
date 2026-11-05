@@ -1,0 +1,104 @@
+openapi: 3.1.0
+info:
+  title: Manashelper achievements
+  version: 1.0.0
+servers:
+  - url: https://bot.example.com
+paths:
+  /api/gamification/me:
+    get:
+      operationId: getMyAchievements
+      description: Reads cached personal progress; never calls OBIS synchronously.
+      security: [{ TelegramInitData: [] }]
+      responses:
+        '200':
+          description: Localized personal progress and rank; Cache-Control no-store.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profile' }
+        '401': { description: Invalid or expired initData; reopen the Mini App. }
+        '403': { description: Signed user is not registered or achievements are disabled for this user. }
+  /api/gamification/leaderboard:
+    get:
+      operationId: getAchievementLeaderboard
+      security: [{ TelegramInitData: [] }]
+      responses:
+        '200':
+          description: Top ten; equal scores share competition ranks. Personal position is returned by /me.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [entries]
+                properties:
+                  entries:
+                    type: array
+                    maxItems: 10
+                    items:
+                      type: object
+                      additionalProperties: false
+                      required: [full_name, score, rank, is_self]
+                      properties:
+                        full_name: { type: string }
+                        score: { type: integer, minimum: 1 }
+                        rank: { type: integer, minimum: 1 }
+                        is_self: { type: boolean }
+        '401': { description: Invalid or expired initData. }
+        '403': { description: Signed user is not registered or achievements are disabled for this user. }
+  /telegram/webhook:
+    post:
+      operationId: receiveTelegramUpdate
+      security: [{ TelegramWebhookSecret: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [update_id]
+              properties:
+                update_id: { type: integer }
+              additionalProperties: true
+      responses:
+        '200': { description: Handler and receipt committed, or an already completed duplicate. }
+        '400': { description: Malformed Telegram Update. }
+        '401': { description: Missing or incorrect webhook secret. }
+        '413': { description: Body exceeds one MiB. }
+        '500': { description: Handler or commit failed; Telegram should retry. }
+        '503': { description: The same update is still being processed; Telegram should retry. }
+components:
+  securitySchemes:
+    TelegramInitData:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'tma <raw Telegram WebApp initData>; valid for one hour.'
+    TelegramWebhookSecret:
+      type: apiKey
+      in: header
+      name: X-Telegram-Bot-Api-Secret-Token
+  schemas:
+    Profile:
+      type: object
+      required: [score, total, rank, achievements, locale, ui]
+      properties:
+        score: { type: integer, minimum: 0 }
+        total: { type: integer, const: 11 }
+        rank: { type: [integer, 'null'], minimum: 1 }
+        locale: { type: string, enum: [en, ru, ky, tr, zh] }
+        ui: { type: object, additionalProperties: { type: string } }
+        achievements:
+          type: array
+          items:
+            type: object
+            required: [key, emoji, name, description, current, target, earned_at, available, blocked_reason]
+            properties:
+              key: { type: string }
+              emoji: { type: string }
+              name: { type: string }
+              description: { type: string }
+              current: { type: number, minimum: 0 }
+              target: { type: number, exclusiveMinimum: 0 }
+              earned_at: { type: [string, 'null'], format: date-time }
+              available: { type: boolean }
+              blocked_reason: { type: [string, 'null'], enum: [source, baseline, null] }

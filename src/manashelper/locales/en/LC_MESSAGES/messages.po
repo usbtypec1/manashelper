@@ -1013,3 +1013,156 @@ msgstr "Could not update the task in Eders. Please try again."
 
 msgid "eders.completion_unavailable"
 msgstr "This task is no longer available for manual completion. Open Eders to check it."
+
+msgid "menu.achievements"
+msgstr "Achievements"
+
+msgid "gamification.unavailable"
+msgstr "Achievements are available when the Mini App is enabled."
+
+msgid "gamification.open_prompt"
+msgstr "Your achievements, progress and leaderboard."
+
+msgid "gamification.grant_usage"
+msgstr "Usage: /grant_pokemon <Telegram user ID>"
+
+msgid "gamification.granted"
+msgstr "Achievement granted."
+
+msgid "gamification.already_granted"
+msgstr "This user already has the achievement."
+
+msgid "commands.grant_pokemon"
+msgstr "Grant the verified selfie achievement"
+
+msgid "gamification.ui.collection"
+msgstr "My collection"
+
+msgid "gamification.ui.leaderboard"
+msgstr "Leaderboard"
+
+msgid "gamification.ui.earned"
+msgstr "Earned"
+
+msgid "gamification.ui.rank"
+msgstr "Your rank"
+
+msgid "gamification.ui.unranked"
+msgstr "Earn an achievement to join"
+
+msgid "gamification.ui.locked"
+msgstr "Not earned yet"
+
+msgid "gamification.ui.progress"
+msgstr "Progress"
+
+msgid "gamification.ui.source_pending"
+msgstr "Waiting for verified OBIS data"
+
+msgid "gamification.ui.empty"
+msgstr "The leaderboard is waiting for its first achievers."
+
+msgid "gamification.ui.you"
+msgstr "You"
+
+msgid "gamification.ui.close"
+msgstr "Close"
+
+msgid "gamification.ui.loading"
+msgstr "Loading achievements…"
+
+msgid "gamification.ui.error"
+msgstr "Could not load your achievements. Reopen the Mini App or try again."
+
+msgid "gamification.ui.retry"
+msgstr "Try again"
+
+msgid "gamification.ui.open_telegram"
+msgstr "Open this Mini App from the Manashelper bot in Telegram."
+
+msgid "gamification.ui.subtitle"
+msgstr "Small habits. A growing collection."
+
+msgid "gamification.ui.top_ten"
+msgstr "Top 10 students"
+
+msgid "gamification.night_owl.name"
+msgstr "Night owl"
+
+msgid "gamification.night_owl.description"
+msgstr "Open your OBIS grades between 02:00 and 05:00 Bishkek time on three consecutive days."
+
+msgid "gamification.foodie.name"
+msgstr "Foodie"
+
+msgid "gamification.foodie.description"
+msgstr "View the cafeteria menu 50 times, at least 10 minutes apart."
+
+msgid "gamification.cafeteria_boss.name"
+msgstr "Cafeteria boss"
+
+msgid "gamification.cafeteria_boss.description"
+msgstr "View the cafeteria menu 100 times, at least 10 minutes apart."
+
+msgid "gamification.formula_one.name"
+msgstr "Formula 1"
+
+msgid "gamification.formula_one.description"
+msgstr "Receive an F1 final grade in OBIS."
+
+msgid "gamification.champion.name"
+msgstr "Champion"
+
+msgid "gamification.champion.description"
+msgstr "Receive an FF final grade in OBIS."
+
+msgid "gamification.comeback.name"
+msgstr "Cumback"
+
+msgid "gamification.comeback.description"
+msgstr "Raise your cumulative GPA by at least 0.20 compared with the previous semester."
+
+msgid "gamification.fall.name"
+msgstr "The fall"
+
+msgid "gamification.fall.description"
+msgstr "Lower your cumulative GPA by at least 0.20 compared with the previous semester."
+
+msgid "gamification.seller.name"
+msgstr "Junk dealer"
+
+msgid "gamification.seller.description"
+msgstr "Publish your first approved marketplace advertisement."
+
+msgid "gamification.pokemon.name"
+msgstr "Pokémon"
+
+msgid "gamification.pokemon.description"
+msgstr "Take a selfie with Adilet (@yunbae) and send it to bot support for manual verification."
+
+msgid "gamification.ui.baseline_missing"
+msgstr "No previous semester GPA is available yet."
+
+msgid "gamification.eldin_balasy.name"
+msgstr "Parents’ pride"
+
+msgid "gamification.eldin_balasy.description"
+msgstr "Earn at least three final AA grades in one semester."
+
+msgid "gamification.thin_ice.name"
+msgstr "On thin ice"
+
+msgid "gamification.thin_ice.description"
+msgstr "Reach at least 18.75% absence in theory or practice for five different subjects in one semester."
+
+msgid "commands.gamification"
+msgstr "Enable or disable a user’s achievements"
+
+msgid "gamification.access_usage"
+msgstr "Usage: /gamification <Telegram user ID> on|off"
+
+msgid "gamification.access_enabled"
+msgstr "Achievements enabled. The user needs to reopen the main menu."
+
+msgid "gamification.access_disabled"
+msgstr "Achievements disabled. Progress and awards are preserved."

@@ -33,6 +33,7 @@ from manashelper.modules.eders.jobs import poll_eders_job
 from manashelper.modules.eders.presentation.callbacks import EdersPageCallback
 from manashelper.modules.eders.presentation.router import SNAPSHOT_KEY, on_eders_command, on_eders_page
 from manashelper.modules.eders.provider import EdersProvider
+from manashelper.modules.gamification.provider import GamificationProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.errors import UserHasNoCredentialsError
 from manashelper.modules.obis.provider import ObisProvider
@@ -226,6 +227,7 @@ async def test_application_resolves_new_services_and_registers_fifteen_minute_po
         CoreProvider(),
         TelegramPlatformProvider(),
         ObisProvider(),
+        GamificationProvider(),
         EdersProvider(),
         OutboxProvider(),
         StudyWeekProvider(),

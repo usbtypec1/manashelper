@@ -1,5 +1,8 @@
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
+from manashelper.modules.gamification.application.use_cases.record_attendance import RecordAttendanceUseCase
+from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
 from manashelper.modules.obis.application.credentials import ObisCredentialsQuery
 from manashelper.modules.obis.application.queries import ObisResultsQuery
 from manashelper.modules.obis.application.use_cases.clear_obis_credentials import ClearObisCredentialsUseCase
@@ -21,7 +24,12 @@ def build_obis(session, client, crypto):
     source = ObisResultsSource(client)
     grades = RefreshObisGradesUseCase(account, store, source, snapshots, UserExamGradeRepository(session))
     attendance = RefreshObisAttendanceUseCase(
-        account, store, source, snapshots, UserLessonAttendanceRepository(session)
+        account,
+        store,
+        source,
+        snapshots,
+        UserLessonAttendanceRepository(session),
+        RecordAttendanceUseCase(AchievementRepository(session)),
     )
     return SimpleNamespace(
         client=client,
@@ -31,5 +39,5 @@ def build_obis(session, client, crypto):
         attendance=attendance,
         save=SaveObisCredentialsUseCase(account, store, client, crypto, snapshots),
         clear=ClearObisCredentialsUseCase(account, store, snapshots),
-        poll=PollObisUserUseCase(grades, attendance),
+        poll=PollObisUserUseCase(grades, attendance, AsyncMock()),
     )

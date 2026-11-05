@@ -16,6 +16,7 @@ from manashelper.modules.obis.application.use_cases.clear_obis_credentials impor
 from manashelper.modules.obis.application.use_cases.poll_obis_user import PollObisUserUseCase
 from manashelper.modules.obis.application.use_cases.refresh_obis_attendance import RefreshObisAttendanceUseCase
 from manashelper.modules.obis.application.use_cases.refresh_obis_grades import RefreshObisGradesUseCase
+from manashelper.modules.obis.application.use_cases.refresh_obis_transcript import RefreshObisTranscriptUseCase
 from manashelper.modules.obis.application.use_cases.save_obis_credentials import SaveObisCredentialsUseCase
 from manashelper.modules.obis.infrastructure.client import ObisClient
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
@@ -37,6 +38,7 @@ class ObisProvider(Provider):
     attendance = provide(UserLessonAttendanceRepository)
     results = provide(ObisResultsQuery)
     refresh_grades = provide(RefreshObisGradesUseCase)
+    refresh_transcript = provide(RefreshObisTranscriptUseCase)
     refresh_attendance = provide(RefreshObisAttendanceUseCase)
     save_credentials = provide(SaveObisCredentialsUseCase)
     clear_credentials = provide(ClearObisCredentialsUseCase)

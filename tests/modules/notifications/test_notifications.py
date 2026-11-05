@@ -11,6 +11,7 @@ from sqlalchemy import select
 from manashelper.core.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.modules.eders.provider import EdersProvider
+from manashelper.modules.gamification.provider import GamificationProvider
 from manashelper.modules.notifications import router
 from manashelper.modules.notifications.application.use_cases.get_notification_settings import (
     GetNotificationSettingsUseCase,
@@ -283,6 +284,7 @@ async def test_notification_provider_preserves_request_scope_and_model_registry(
         CoreProvider(),
         TelegramPlatformProvider(),
         ObisProvider(),
+        GamificationProvider(),
         EdersProvider(),
         OutboxProvider(),
         StudyWeekProvider(),

@@ -22,6 +22,7 @@ from manashelper.modules.advertisements.infrastructure.models.advertisement_chan
 from manashelper.modules.advertisements.infrastructure.repositories.advertisement import AdvertisementRepository
 from manashelper.modules.advertisements.provider import AdvertisementsProvider
 from manashelper.modules.eders.provider import EdersProvider
+from manashelper.modules.gamification.provider import GamificationProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
@@ -90,6 +91,7 @@ async def test_expiry_deletes_publications_in_batches_before_removing_rows(sessi
         ScheduleProvider(),
         NotificationsProvider(),
         AdvertisementsProvider(),
+        GamificationProvider(),
         UsersProvider(),
         TestSessionProvider(),
     ) as container:

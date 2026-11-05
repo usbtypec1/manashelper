@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
+from manashelper.modules.gamification.application.use_cases.record_attendance import RecordAttendanceUseCase
 from manashelper.modules.obis.application.attendance import to_attendance_model
 from manashelper.modules.obis.application.credentials import ObisCredentialsQuery, get_results_credentials
 from manashelper.modules.obis.application.models import LessonAttendanceModel, RefreshResult, Snapshot
@@ -15,6 +16,7 @@ class RefreshObisAttendanceUseCase:
     source: ResultsSource
     snapshots: SnapshotStore
     attendance: AttendanceStore
+    record: RecordAttendanceUseCase
 
     async def execute(self, user_id: int) -> RefreshResult[LessonAttendanceModel, LessonSkipChange]:
         await self.store.lock(user_id)
@@ -26,4 +28,5 @@ class RefreshObisAttendanceUseCase:
         )
         baseline, changes = compare_attendance(lessons, await self.attendance.get_all_by_user_id(user_id))
         await self.attendance.save_all(user_id, baseline)
+        await self.record.execute(user_id, credentials.student_number, lessons)
         return RefreshResult(lessons, changes)

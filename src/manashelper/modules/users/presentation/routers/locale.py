@@ -4,6 +4,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
+from manashelper.modules.gamification.application.queries import GamificationQuery
 from manashelper.modules.users.application.use_cases.set_user_locale import SetUserLocaleUseCase
 from manashelper.modules.users.presentation.callbacks import LocaleCallback
 from manashelper.modules.users.presentation.keyboards.locale import build_locale_keyboard, native_language_name
@@ -34,6 +35,7 @@ async def on_locale_selected(
     callback_query: CallbackQuery,
     callback_data: LocaleCallback,
     set_user_locale: FromDishka[SetUserLocaleUseCase],
+    gamification: FromDishka[GamificationQuery],
 ) -> None:
     await set_user_locale.execute(callback_query.from_user.id, callback_data.locale)
 
@@ -45,5 +47,7 @@ async def on_locale_selected(
             await callback_query.message.edit_text(
                 _("language.selected").format(language=native_language_name(callback_data.locale))
             )
-            await send_welcome(callback_query.message)
+            await send_welcome(
+                callback_query.message, achievements_enabled=await gamification.is_enabled(callback_query.from_user.id)
+            )
     await callback_query.answer()
