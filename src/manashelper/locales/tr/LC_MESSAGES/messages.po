@@ -1147,3 +1147,7 @@ msgstr "Eders'teki görev güncellenemedi. Lütfen tekrar deneyin."
 
 msgid "eders.completion_unavailable"
 msgstr "Bu görev artık elle işaretlenemiyor. Eders'ten kontrol edin."
+
+
+msgid "gamification.award_notification"
+msgstr "🏆 Başarım kazanıldı: <b>{name}</b>\n\n{description}"

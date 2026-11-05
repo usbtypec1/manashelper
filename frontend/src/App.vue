@@ -87,14 +87,6 @@ onUnmounted(() => {
 
 <template>
   <main class="app-shell">
-    <header class="app-header">
-      <a class="wordmark" href="#" @click.prevent="selectTab('collection')" aria-label="Manashelper">
-        <span class="wordmark-symbol" aria-hidden="true">m<span>✦</span></span>
-        <span>MANASHELPER</span>
-      </a>
-      <span class="header-stars" aria-hidden="true">✧ · ✧</span>
-    </header>
-
     <section v-if="!telegram?.initData" class="notice" role="status">
       <span class="notice-icon" aria-hidden="true">✧</span><p>{{ copy.open_telegram }}</p>
     </section>
@@ -162,8 +154,6 @@ onUnmounted(() => {
         <div class="your-place"><span>{{ copy.you }}</span><strong>{{ profile.rank ? `#${profile.rank}` : '—' }}</strong><span>{{ copy.earned }} {{ profile.score }}</span></div>
       </section>
     </template>
-    <footer>MANAS UNIVERSITY <span aria-hidden="true">✧</span> MANASHELPER</footer>
-
     <dialog ref="dialog" class="achievement-sheet" :style="{ '--medal-tone': selectedTone }"
       aria-labelledby="achievement-title" aria-describedby="achievement-description"
       @close="afterClose" @click="($event.target === dialog) && close()"

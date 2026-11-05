@@ -1148,3 +1148,7 @@ msgstr "Не удалось обновить задание в Eders. Попро
 
 msgid "eders.completion_unavailable"
 msgstr "Для этого задания больше недоступна ручная отметка. Проверьте его в Eders."
+
+
+msgid "gamification.award_notification"
+msgstr "🏆 Получена ачивка: <b>{name}</b>\n\n{description}"

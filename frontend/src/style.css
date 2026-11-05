@@ -62,12 +62,6 @@ button:disabled { cursor: default; }
     max(24px, env(safe-area-inset-bottom))
     max(20px, env(safe-area-inset-left));
 }
-.app-header { display: flex; align-items: center; justify-content: space-between; min-height: 30px; }
-.wordmark { display: flex; gap: 9px; align-items: center; text-decoration: none; color: var(--text); }
-.wordmark > span:last-child { font-size: 10px; font-weight: 750; letter-spacing: .18em; }
-.wordmark-symbol { font-size: 30px; font-weight: 850; letter-spacing: -.07em; line-height: 1; }
-.wordmark-symbol span { color: var(--accent); font-size: 17px; margin-left: 2px; }
-.header-stars { color: var(--muted); font-size: 18px; letter-spacing: .08em; }
 .view-switch {
   display: flex;
   width: fit-content;
@@ -202,8 +196,6 @@ h1 { margin: 0; font-size: clamp(30px, 7vw, 38px); font-weight: 750; letter-spac
 .your-place { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 22px; border-top: 1px solid var(--line); padding: 22px 0 6px; color: var(--muted); font-size: 12px; }
 .your-place strong { color: var(--text); font-size: 16px; }
 .your-place > span:last-child { margin-left: auto; }
-footer { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 55px; font-size: 8px; letter-spacing: .14em; color: var(--faint); }
-footer span { font-size: 19px; }
 .notice { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; min-height: 65dvh; max-width: 340px; margin: 0 auto; gap: 16px; font-size: 16px; line-height: 1.6; color: var(--muted); }
 .notice p { margin: 0; }
 .notice-icon { color: #b7a0df; font-size: 60px; }

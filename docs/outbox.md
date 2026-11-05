@@ -1,6 +1,6 @@
 # Telegram notification outbox
 
-Broadcasts, menus, timetable changes, OBIS and Eders notifications are persisted in `telegram_outbox` in the
+Broadcasts, menus, timetable changes, achievements, OBIS and Eders notifications are persisted in `telegram_outbox` in the
 same transaction as their producing operation. Adapters render locale, theme, HTML and keyboards before enqueueing.
 Only committed records are sent. Interactive replies, previews, feedback and advertisement publication retain
 immediate delivery because they use Telegram responses or message IDs.
@@ -30,7 +30,7 @@ the message becomes `failed`; successful progress resets that counter. Permanent
 `users.bot_stopped`. Other non-retryable errors fail the message without disabling the recipient. Delivery rechecks
 stopped users and broadcast/academic preferences; Eders can cancel pending messages through their source keys.
 
-Default expiration: broadcasts/OBIS/materials 24 hours, timetable 6 hours, menus 2 hours, other Eders notifications
+Default expiration: broadcasts/achievements/OBIS/materials 24 hours, timetable 6 hours, menus 2 hours, other Eders notifications
 24 hours or the activity's closing time, whichever comes first. Callers may set an explicit aware `expires_at`.
 No attempt starts after expiration. A retry beyond expiration marks the record `expired`; this does not delete
 an already delivered Telegram message. Eders event acknowledgement now means transactional handoff to the outbox.

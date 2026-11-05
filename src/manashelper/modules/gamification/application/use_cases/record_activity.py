@@ -3,12 +3,14 @@ from datetime import UTC, datetime, timedelta
 from typing import Literal
 
 from manashelper.core.time import BISHKEK_TZ
+from manashelper.modules.gamification.application.use_cases.award_achievement import AwardAchievementUseCase
 from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
 
 
 @dataclass(frozen=True, slots=True)
 class RecordActivityUseCase:
     repository: AchievementRepository
+    awards: AwardAchievementUseCase
 
     async def execute(
         self, user_id: int, activity: Literal["food", "grades", "published"], *, observed_at: datetime | None = None
@@ -25,9 +27,9 @@ class RecordActivityUseCase:
             progress.food_views += 1
             progress.last_food_view = now
             if progress.food_views >= 50:
-                await self.repository.award(user_id, "foodie", now)
+                await self.awards.execute(user_id, "foodie", now)
             if progress.food_views >= 100:
-                await self.repository.award(user_id, "cafeteria_boss", now)
+                await self.awards.execute(user_id, "cafeteria_boss", now)
         elif activity == "grades":
             local = now.astimezone(BISHKEK_TZ)
             if not 2 <= local.hour < 5:
@@ -40,6 +42,6 @@ class RecordActivityUseCase:
             )
             progress.last_night_date = today
             if progress.night_streak >= 3:
-                await self.repository.award(user_id, "night_owl", now)
+                await self.awards.execute(user_id, "night_owl", now)
         elif activity == "published":
-            await self.repository.award(user_id, "seller", now)
+            await self.awards.execute(user_id, "seller", now)

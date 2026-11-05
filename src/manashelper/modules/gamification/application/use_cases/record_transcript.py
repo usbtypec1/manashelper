@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
 
+from manashelper.modules.gamification.application.use_cases.award_achievement import AwardAchievementUseCase
 from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
 from manashelper.modules.obis.application.models import Transcript
 
@@ -10,6 +11,7 @@ from manashelper.modules.obis.application.models import Transcript
 @dataclass(frozen=True, slots=True)
 class RecordTranscriptUseCase:
     repository: AchievementRepository
+    awards: AwardAchievementUseCase
 
     async def execute(self, user_id: int, student_number: str, transcript: Transcript) -> None:
         progress = await self.repository.lock_progress(user_id)
@@ -24,7 +26,7 @@ class RecordTranscriptUseCase:
         progress.gpa_current = transcript.overall_gpa
         progress.aa_count = max(term.grades.count("AA") for term in transcript.semesters)
         if progress.aa_count >= 3:
-            await self.repository.award(user_id, "eldin_balasy", now)
+            await self.awards.execute(user_id, "eldin_balasy", now)
         # Reconstruct the cumulative GPA before the latest semester from OBIS's
         # official credit/point totals. An unfinished semester has no GPA yet.
         previous = transcript.semesters[:-1]
@@ -39,11 +41,11 @@ class RecordTranscriptUseCase:
         if baseline is not None:
             delta = transcript.overall_gpa - baseline
             if delta >= Decimal("0.20"):
-                await self.repository.award(user_id, "comeback", now)
+                await self.awards.execute(user_id, "comeback", now)
             if delta <= Decimal("-0.20"):
-                await self.repository.award(user_id, "fall", now)
+                await self.awards.execute(user_id, "fall", now)
         grades = {grade for term in transcript.semesters for grade in term.grades}
         if "F1" in grades:
-            await self.repository.award(user_id, "formula_one", now)
+            await self.awards.execute(user_id, "formula_one", now)
         if "FF" in grades:
-            await self.repository.award(user_id, "champion", now)
+            await self.awards.execute(user_id, "champion", now)

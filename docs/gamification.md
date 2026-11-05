@@ -17,6 +17,11 @@ rows remain stored, but only keys in the active achievement catalog contribute t
   Regular OBIS synchronization continues. Disabling preserves awards/progress; enabling resumes them without
   backfilling missed activity. Academic history can qualify on the next successful refresh.
 - The collection contains ten achievements. One achievement = one point. Awards are permanent and unique per Telegram user/key.
+- Each newly earned achievement queues a localized text notification with its name and condition in
+  `telegram_outbox` (category `achievement`, 24-hour TTL). The award and queue entry commit together;
+  failures roll both back. Repeated observations and existing awards do not enqueue again.
+  Delivery uses the recipient's locale/theme and the shared stopped-user, retry and night-silence policy.
+  Existing awards are not backfilled with notifications. Outbox delivery remains at least once.
 - Equal scores share competition ranks (1, 1, 3). Display ties by the time the score was reached, then user ID.
   Top ten contains only users with at least one award. The profile includes the user's rank outside that list.
 - Food has one counter for both thresholds (50 and 100); ten minutes since the last counted view.
@@ -64,6 +69,10 @@ Shared interface copy uses `gamification.ui.*` in the same catalogs. After chang
 export messages and rebuild the frontend using the commands below.
 The medal sprite atlas is `frontend/src/assets/achievement-medals.png`; cell order and
 sheet colors are mapped by stable achievement key in `frontend/src/achievementArt.ts`.
+Seller, Formula One and Champion use individual `achievement-seller.png`,
+`achievement-formula-one.png` and `achievement-champion.png` assets in the same directory.
+They depict the mascot in the supplied suit meme, racing-driver portrait and military salute scenes.
+The key mapping selects these images for earned medals and detail sheets; locked medals still use the atlas.
 Reference screenshots/video under `reference/` are design inputs only, never served to clients.
 
 ## Build and verify locally

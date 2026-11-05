@@ -23,6 +23,7 @@ from manashelper.modules.obis.application.models import LessonAttendanceModel, T
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.navigation import build_main_keyboard
+from tests.modules.gamification.factories import build_awards
 
 
 async def seed(session: AsyncSession, user_id: int = 991001) -> AchievementRepository:
@@ -35,7 +36,7 @@ async def seed(session: AsyncSession, user_id: int = 991001) -> AchievementRepos
 
 async def test_food_cooldown_is_since_last_counted_view_and_both_thresholds(session):
     repo = await seed(session)
-    record = RecordActivityUseCase(repo)
+    record = RecordActivityUseCase(repo, build_awards(session))
     start = datetime(2026, 11, 1, tzinfo=UTC)
     for index in range(100):
         now = start + timedelta(minutes=10 * index)
@@ -47,7 +48,7 @@ async def test_food_cooldown_is_since_last_counted_view_and_both_thresholds(sess
 
 async def test_night_window_bishkek_dates_duplicates_and_gaps(session):
     repo = await seed(session)
-    record = RecordActivityUseCase(repo)
+    record = RecordActivityUseCase(repo, build_awards(session))
     # 20:00 UTC is 02:00 the next day in Bishkek; 23:00 is excluded.
     start = datetime(2026, 10, 31, 20, tzinfo=UTC)
     await record.execute(991001, "grades", observed_at=start - timedelta(seconds=1))
@@ -65,7 +66,7 @@ async def test_night_window_bishkek_dates_duplicates_and_gaps(session):
 @pytest.mark.parametrize("gpa,award", [("3.20", "comeback"), ("2.80", "fall")])
 async def test_official_transcript_thresholds_decimal_and_account_marker(session, gpa, award):
     repo = await seed(session)
-    record = RecordTranscriptUseCase(repo)
+    record = RecordTranscriptUseCase(repo, build_awards(session))
     transcript = Transcript(
         (
             TranscriptSemester("2025-2026:spring", Decimal(30), Decimal(90), ("F1", "FF")),
@@ -86,7 +87,7 @@ async def test_official_transcript_thresholds_decimal_and_account_marker(session
 async def test_first_semester_has_no_invented_baseline(session):
     repo = await seed(session)
     transcript = Transcript((TranscriptSemester("2026-2027:fall", Decimal(30), Decimal(90), ()),), Decimal(3))
-    await RecordTranscriptUseCase(repo).execute(991001, "fixture-student", transcript)
+    await RecordTranscriptUseCase(repo, build_awards(session)).execute(991001, "fixture-student", transcript)
     profile = await GamificationQuery(repo).profile(991001)
     assert all(card.blocked_reason == "baseline" for card in profile.achievements if card.key in {"comeback", "fall"})
     assert not await repo.get_awards(991001)
@@ -142,14 +143,14 @@ async def test_default_off_blocks_all_writers_and_opt_out_preserves_progress(ses
     repo = AchievementRepository(session)
     query = GamificationQuery(repo)
     access = SetGamificationEnabledUseCase(repo, get_settings())
-    activity = RecordActivityUseCase(repo)
+    activity = RecordActivityUseCase(repo, build_awards(session))
     transcript = Transcript((TranscriptSemester("term", None, None, ("AA", "AA", "AA", "F1")),), Decimal(3))
     assert not await query.is_enabled(991001)
     await activity.execute(991001, "food")
     await activity.execute(991001, "grades")
     await activity.execute(991001, "published")
-    await RecordTranscriptUseCase(repo).execute(991001, "fixture-student", transcript)
-    await RecordAttendanceUseCase(repo).execute(991001, "fixture-student", [])
+    await RecordTranscriptUseCase(repo, build_awards(session)).execute(991001, "fixture-student", transcript)
+    await RecordAttendanceUseCase(repo, build_awards(session)).execute(991001, "fixture-student", [])
     assert not await repo.award(991001, "seller", datetime.now(UTC))
     assert await repo.get_progress(991001) == (0, 0, None)
     assert not await repo.get_awards(991001)
@@ -174,7 +175,7 @@ async def test_default_off_blocks_all_writers_and_opt_out_preserves_progress(ses
 
 async def test_aa_requires_three_in_same_semester_and_progress_uses_best_semester(session):
     repo = await seed(session)
-    record = RecordTranscriptUseCase(repo)
+    record = RecordTranscriptUseCase(repo, build_awards(session))
     semesters = (
         TranscriptSemester("spring", Decimal(30), Decimal(90), ("AA", "AA")),
         TranscriptSemester("fall", None, None, ("AA",)),
@@ -195,7 +196,7 @@ async def test_aa_requires_three_in_same_semester_and_progress_uses_best_semeste
 
 async def test_attendance_counts_distinct_subjects_theory_or_practice_in_one_snapshot(session):
     repo = await seed(session)
-    record = RecordAttendanceUseCase(repo)
+    record = RecordAttendanceUseCase(repo, build_awards(session))
     lessons = [
         LessonAttendanceModel("Theory", "A", 18.75, None, None, None),
         LessonAttendanceModel("Practice", "B", None, 18.75, None, None),
@@ -256,7 +257,7 @@ async def test_transcript_fetch_is_skipped_for_disabled_users(session):
     await repo.set_enabled(991001, False)
     source, credentials, store = AsyncMock(), AsyncMock(), AsyncMock()
     refresh = RefreshObisTranscriptUseCase(
-        credentials, store, source, RecordTranscriptUseCase(repo), GamificationQuery(repo)
+        credentials, store, source, RecordTranscriptUseCase(repo, build_awards(session)), GamificationQuery(repo)
     )
     await refresh.execute(991001)
     source.fetch_transcript.assert_not_awaited()
