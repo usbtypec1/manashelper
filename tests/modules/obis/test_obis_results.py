@@ -63,7 +63,7 @@ def _lessons(kind, count=5):
 
 def _handler_and_fetch(service, kind):
     if kind == "grades":
-        return on_exams_button, service.get_exam_grades
+        return lambda *args: on_exams_button(*args, activity=AsyncMock()), service.get_exam_grades
     return on_attendance_button, service.get_attendance
 
 
@@ -169,7 +169,7 @@ async def test_pages_are_bound_to_each_message_and_do_not_refetch_obis(monkeypat
     service.get_exam_grades.return_value = _lessons("grades")
     service.get_attendance.return_value = _lessons("attendance")
     with i18n.context(), i18n.use_locale("en"):
-        await on_exams_button(message, state, service)
+        await on_exams_button(message, state, service, AsyncMock())
         await on_attendance_button(message, state, service)
         await on_obis_results_page(_callback(message, 41), ObisResultsPageCallback(page=1), state)
         await on_obis_results_page(_callback(message, 42), ObisResultsPageCallback(page=2), state)
@@ -207,7 +207,7 @@ async def test_saved_results_are_bounded_and_keep_latest_messages(monkeypatch) -
     service.get_exam_grades.return_value = _lessons("grades")
     with i18n.context(), i18n.use_locale("en"):
         for _ in range(MAX_SAVED_RESULTS + 1):
-            await on_exams_button(message, state, service)
+            await on_exams_button(message, state, service, AsyncMock())
     snapshots = (await state.get_data())[RESULTS_KEY]
     assert len(snapshots) == MAX_SAVED_RESULTS
     assert "41" not in snapshots
@@ -245,7 +245,7 @@ async def test_request_cancellation_cancels_obis_fetch(monkeypatch) -> None:
 
     service.get_exam_grades.side_effect = load
     with i18n.context(), i18n.use_locale("en"):
-        task = asyncio.create_task(on_exams_button(message, state, service))
+        task = asyncio.create_task(on_exams_button(message, state, service, AsyncMock()))
         await asyncio.wait_for(started.wait(), timeout=1)
         task.cancel()
         with pytest.raises(asyncio.CancelledError):

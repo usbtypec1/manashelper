@@ -87,7 +87,13 @@ def _snapshot(connection):
 
 
 def _verify_migration(connection):
-    historical_tables = set(Base.metadata.tables) - {"telegram_outbox", "telegram_outbox_rate_buckets"}
+    historical_tables = set(Base.metadata.tables) - {
+        "telegram_outbox",
+        "telegram_outbox_rate_buckets",
+        "gamification_progress",
+        "gamification_achievements",
+        "telegram_processed_updates",
+    }
     schema = f"table_prefix_test_{uuid4().hex}"
     connection.exec_driver_sql(f'CREATE SCHEMA "{schema}"')
     connection.exec_driver_sql(f'SET LOCAL search_path TO "{schema}"')
@@ -187,7 +193,7 @@ def _verify_migration(connection):
 
         # Apply later additions before executing current ORM mappings, then prove
         # their downgrade preserves the data under this historical migration.
-        later_revisions = [scripts.get_revision(name) for name in ("V26", "V27")]
+        later_revisions = [scripts.get_revision(name) for name in ("V26", "V27", "V28", "V29")]
         for later in later_revisions:
             later.module.upgrade()
         after = _snapshot(connection)

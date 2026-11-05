@@ -86,6 +86,7 @@ async def test_all_use_cases_resolve_in_independent_request_scopes():
     from manashelper.modules.eders.provider import EdersProvider
     from manashelper.modules.feedback.provider import FeedbackProvider
     from manashelper.modules.food_menu.provider import FoodMenuProvider
+    from manashelper.modules.gamification.provider import GamificationProvider
     from manashelper.modules.notifications.provider import NotificationsProvider
     from manashelper.modules.obis.provider import ObisProvider
     from manashelper.modules.schedule.provider import ScheduleProvider
@@ -111,6 +112,7 @@ async def test_all_use_cases_resolve_in_independent_request_scopes():
         EdersProvider(),
         FeedbackProvider(),
         FoodMenuProvider(),
+        GamificationProvider(),
         NotificationsProvider(),
         ObisProvider(),
         ScheduleProvider(),

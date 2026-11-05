@@ -40,7 +40,9 @@ Everything happens directly in the Telegram chat — there's no separate app or 
 
 Built with Python 3.13, [aiogram 3](https://docs.aiogram.dev/) for the Telegram bot layer, SQLAlchemy 2 (async)
 + Postgres for storage, and [Dishka](https://github.com/reagento/dishka) for dependency injection. There is no
-REST API — all interaction happens through Telegram long-polling. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+public general-purpose API. With `MANASHELPER_PUBLIC_URL`, one aiohttp process serves Telegram webhooks,
+the achievements Mini App and its authenticated API alongside background jobs. Without it, local polling is used.
+See [achievements and webhook setup](docs/gamification.md) and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 for the current package layout, [`docs/MIGRATION.md`](docs/MIGRATION.md) for the completed refactor and
 [`docs/BACKLOG.md`](docs/BACKLOG.md) for deferred fixes and verification.
 

@@ -16,6 +16,7 @@ from manashelper.core.provider import CoreProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.localization.theme import Theme
 from manashelper.modules.eders.provider import EdersProvider
+from manashelper.modules.gamification.provider import GamificationProvider
 from manashelper.modules.notifications.orm import NotificationSettings
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
@@ -215,6 +216,7 @@ async def test_schedule_provider_scopes_and_hourly_job_contract():
         CoreProvider(),
         TelegramPlatformProvider(),
         ObisProvider(),
+        GamificationProvider(),
         EdersProvider(),
         OutboxProvider(),
         StudyWeekProvider(),

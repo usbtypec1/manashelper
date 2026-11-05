@@ -330,7 +330,11 @@ async def test_rejection_comment_keeps_fsm_and_existing_storage_truncation(conte
 @pytest.mark.parametrize("payload", ["market", "ad_not-a-uuid", "unknown", f"ad_{AD_ID}"])
 async def test_start_payload_routes_market_contacts_or_welcome(context, payload):
     await on_advertisement_deep_link(
-        context.message, CommandObject(command="start", args=payload), context.settings, context.reveal
+        context.message,
+        CommandObject(command="start", args=payload),
+        context.settings,
+        context.reveal,
+        AsyncMock(is_enabled=AsyncMock(return_value=False)),
     )
     text = methods(context, SendMessage)[0].text
     if payload == f"ad_{AD_ID}":
@@ -348,7 +352,11 @@ async def test_start_payload_routes_market_contacts_or_welcome(context, payload)
 async def test_missing_contact_ad_shows_not_found(context):
     context.reveal.execute.side_effect = AdvertisementNotFoundError(AD_ID)
     await on_advertisement_deep_link(
-        context.message, CommandObject(command="start", args=f"ad_{AD_ID}"), context.settings, context.reveal
+        context.message,
+        CommandObject(command="start", args=f"ad_{AD_ID}"),
+        context.settings,
+        context.reveal,
+        AsyncMock(is_enabled=AsyncMock(return_value=False)),
     )
     assert methods(context, SendMessage)[0].text == i18n.gettext("ads.not_found")
 

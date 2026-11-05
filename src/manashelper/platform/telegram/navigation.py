@@ -5,11 +5,18 @@ from aiogram.utils.i18n import gettext as _
 from manashelper.core.config import get_settings
 
 
-def build_main_keyboard() -> ReplyKeyboardMarkup:
+def build_main_keyboard(*, achievements_enabled: bool = False) -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text=_("menu.food")), KeyboardButton(text=_("menu.study"))],
-            [KeyboardButton(text=_("menu.marketplace"))],
+            [
+                KeyboardButton(text=_("menu.marketplace")),
+                *(
+                    [KeyboardButton(text=_("menu.achievements"))]
+                    if achievements_enabled and get_settings().public_url
+                    else []
+                ),
+            ],
             [KeyboardButton(text=_("menu.settings"))],
         ],
         resize_keyboard=True,
@@ -18,23 +25,24 @@ def build_main_keyboard() -> ReplyKeyboardMarkup:
 
 def build_study_keyboard() -> ReplyKeyboardMarkup:
     schedule_row = [KeyboardButton(text=_("menu.schedule"))]
-    eders_rows = []
+    services_row = [KeyboardButton(text=_("menu.obis"))]
     if get_settings().eders_enabled:
         schedule_row.append(KeyboardButton(text=_("menu.study_week")))
-        eders_rows = [
-            [KeyboardButton(text=_("menu.eders"))],
-        ]
+        services_row.append(KeyboardButton(text=_("menu.eders")))
     return ReplyKeyboardMarkup(
         keyboard=[
             schedule_row,
-            [KeyboardButton(text=_("menu.obis"))],
-            *eders_rows,
+            services_row,
             [KeyboardButton(text=_("common.back_to_menu"))],
         ],
         resize_keyboard=True,
     )
 
 
-async def send_welcome(message: Message) -> None:
-    reply_markup = build_main_keyboard() if message.chat.type == ChatType.PRIVATE else ReplyKeyboardRemove()
+async def send_welcome(message: Message, *, achievements_enabled: bool = False) -> None:
+    reply_markup = (
+        build_main_keyboard(achievements_enabled=achievements_enabled)
+        if message.chat.type == ChatType.PRIVATE
+        else ReplyKeyboardRemove()
+    )
     await message.answer(_("common.welcome"), reply_markup=reply_markup)

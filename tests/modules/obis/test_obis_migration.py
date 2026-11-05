@@ -18,6 +18,7 @@ from manashelper.core.provider import CoreProvider
 from manashelper.jobs.scheduler import create_scheduler
 from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme
+from manashelper.modules.gamification.provider import GamificationProvider
 from manashelper.modules.obis import jobs
 from manashelper.modules.obis.application.credentials import ObisCredentialsQuery
 from manashelper.modules.obis.application.models import (
@@ -211,7 +212,7 @@ async def test_attendance_baseline_is_silent_and_only_known_increases_notify(ses
         student_number="student", plain_password="password", credential_marker="marker"
     )
     service = RefreshObisAttendanceUseCase(
-        account, AsyncMock(), source, AsyncMock(), UserLessonAttendanceRepository(session)
+        account, AsyncMock(), source, AsyncMock(), UserLessonAttendanceRepository(session), AsyncMock()
     )
     assert (await service.execute(975001)).changes == []
     await session.flush()
@@ -333,7 +334,7 @@ async def test_polling_use_case_keeps_expected_error_suppression_and_unexpected_
     attendance.execute.return_value = RefreshResult([], ["skip"])
     grades.execute.side_effect = error
     sender = AsyncMock()
-    polling = PollObisUserUseCase(grades, attendance)
+    polling = PollObisUserUseCase(grades, attendance, AsyncMock())
     if isinstance(error, (httpx.HTTPError, RuntimeError)):
         with pytest.raises(type(error)):
             await polling.execute(975001, True, True, sender)
@@ -364,7 +365,7 @@ async def test_telegram_sender_keeps_recipient_locale_and_queue_failure_boundary
     sender = TelegramObisNotificationSender(bot, 975001, Locale.ZH, Theme.BASIC)
     with i18n.context(), i18n.use_locale("ru"):
         if not failure:
-            await PollObisUserUseCase(grades, attendance).execute(975001, True, True, sender)
+            await PollObisUserUseCase(grades, attendance, AsyncMock()).execute(975001, True, True, sender)
             assert bot.enqueue.await_count == 3
             assert all("Math" in call.args[1][0].text for call in bot.enqueue.await_args_list)
             with i18n.use_locale("zh"):
@@ -372,7 +373,7 @@ async def test_telegram_sender_keeps_recipient_locale_and_queue_failure_boundary
             assert bot.enqueue.await_args_list[0].args[1][0].text == expected
         else:
             with pytest.raises(RuntimeError, match="Queue failed"):
-                await PollObisUserUseCase(grades, attendance).execute(975001, True, True, sender)
+                await PollObisUserUseCase(grades, attendance, AsyncMock()).execute(975001, True, True, sender)
             assert bot.enqueue.await_count == 1
             attendance.execute.assert_not_awaited()
         assert i18n.current_locale == "ru"
@@ -400,7 +401,7 @@ async def test_obis_provider_preserves_app_request_scopes_and_model_registry():
         ExamGradeStore,
         AttendanceStore,
     )
-    async with make_async_container(CoreProvider(), ObisProvider()) as container:
+    async with make_async_container(CoreProvider(), ObisProvider(), GamificationProvider()) as container:
         client, crypto = await container.get(ObisClient), await container.get(CryptoService)
         source = await container.get(ResultsSource)
         async with container() as request:

@@ -3,6 +3,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
+from manashelper.modules.gamification.application.queries import GamificationQuery
 from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.modules.users.application.use_cases.set_user_theme import SetUserThemeUseCase
 from manashelper.modules.users.presentation.callbacks import ThemeCallback
@@ -29,6 +30,7 @@ async def on_theme_selected(
     callback_query: CallbackQuery,
     callback_data: ThemeCallback,
     set_user_theme: FromDishka[SetUserThemeUseCase],
+    gamification: FromDishka[GamificationQuery],
 ) -> None:
     await set_user_theme.execute(callback_query.from_user.id, callback_data.theme)
     with i18n.use_theme(callback_data.theme):
@@ -37,5 +39,7 @@ async def on_theme_selected(
             keyboard = build_theme_keyboard(callback_data.theme)
             if callback_query.message.text != text or callback_query.message.reply_markup != keyboard:
                 await callback_query.message.edit_text(text, reply_markup=keyboard)
-            await send_welcome(callback_query.message)
+            await send_welcome(
+                callback_query.message, achievements_enabled=await gamification.is_enabled(callback_query.from_user.id)
+            )
         await callback_query.answer()

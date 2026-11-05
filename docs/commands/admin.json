@@ -2,5 +2,13 @@
   {
     "command": "broadcast",
     "description": "commands.broadcast"
+  },
+  {
+    "command": "grant_pokemon",
+    "description": "commands.grant_pokemon"
+  },
+  {
+    "command": "gamification",
+    "description": "commands.gamification"
   }
 ]

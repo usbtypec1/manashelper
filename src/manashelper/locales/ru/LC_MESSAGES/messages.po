@@ -992,3 +992,156 @@ msgstr "Дедлайны"
 
 msgid "obis.notifications_header"
 msgstr "Уведомления OBIS"
+
+msgid "menu.achievements"
+msgstr "Ачивки"
+
+msgid "gamification.unavailable"
+msgstr "Ачивки доступны при включённом Mini App."
+
+msgid "gamification.open_prompt"
+msgstr "Твои ачивки, прогресс и место в рейтинге."
+
+msgid "gamification.grant_usage"
+msgstr "Использование: /grant_pokemon <Telegram ID пользователя>"
+
+msgid "gamification.granted"
+msgstr "Ачивка выдана."
+
+msgid "gamification.already_granted"
+msgstr "У пользователя уже есть эта ачивка."
+
+msgid "commands.grant_pokemon"
+msgstr "Выдать ачивку за проверенное селфи"
+
+msgid "gamification.ui.collection"
+msgstr "Моя коллекция"
+
+msgid "gamification.ui.leaderboard"
+msgstr "Лидерборд"
+
+msgid "gamification.ui.earned"
+msgstr "Получено"
+
+msgid "gamification.ui.rank"
+msgstr "Твоё место"
+
+msgid "gamification.ui.unranked"
+msgstr "Получи ачивку для участия"
+
+msgid "gamification.ui.locked"
+msgstr "Пока не получена"
+
+msgid "gamification.ui.progress"
+msgstr "Прогресс"
+
+msgid "gamification.ui.source_pending"
+msgstr "Ожидаем подтверждённые данные OBIS"
+
+msgid "gamification.ui.empty"
+msgstr "Рейтинг ждёт первых обладателей ачивок."
+
+msgid "gamification.ui.you"
+msgstr "Ты"
+
+msgid "gamification.ui.close"
+msgstr "Закрыть"
+
+msgid "gamification.ui.loading"
+msgstr "Загружаем ачивки…"
+
+msgid "gamification.ui.error"
+msgstr "Не удалось загрузить ачивки. Открой Mini App заново или повтори попытку."
+
+msgid "gamification.ui.retry"
+msgstr "Повторить"
+
+msgid "gamification.ui.open_telegram"
+msgstr "Открой Mini App из бота Manashelper в Telegram."
+
+msgid "gamification.ui.subtitle"
+msgstr "Студенческая жизнь в достижениях."
+
+msgid "gamification.ui.top_ten"
+msgstr "Топ-10 студентов"
+
+msgid "gamification.night_owl.name"
+msgstr "Тревожник"
+
+msgid "gamification.night_owl.description"
+msgstr "Открой оценки OBIS с 02:00 до 05:00 по Бишкеку три дня подряд."
+
+msgid "gamification.foodie.name"
+msgstr "Обжора"
+
+msgid "gamification.foodie.description"
+msgstr "Посмотри йемек 50 раз с интервалом не менее 10 минут."
+
+msgid "gamification.cafeteria_boss.name"
+msgstr "Босс йемекхане"
+
+msgid "gamification.cafeteria_boss.description"
+msgstr "Посмотри йемек 100 раз с интервалом не менее 10 минут."
+
+msgid "gamification.formula_one.name"
+msgstr "Формула 1"
+
+msgid "gamification.formula_one.description"
+msgstr "Получи итоговую оценку F1 в OBIS."
+
+msgid "gamification.champion.name"
+msgstr "Чемпион"
+
+msgid "gamification.champion.description"
+msgstr "Получи итоговую оценку FF в OBIS."
+
+msgid "gamification.comeback.name"
+msgstr "Cumback"
+
+msgid "gamification.comeback.description"
+msgstr "Подними орталама минимум на 0.20 относительно предыдущего семестра."
+
+msgid "gamification.fall.name"
+msgstr "Падение"
+
+msgid "gamification.fall.description"
+msgstr "Опусти орталама минимум на 0.20 относительно предыдущего семестра."
+
+msgid "gamification.seller.name"
+msgstr "Продавец говна"
+
+msgid "gamification.seller.description"
+msgstr "Опубликуй первое прошедшее модерацию объявление."
+
+msgid "gamification.pokemon.name"
+msgstr "Покемон"
+
+msgid "gamification.pokemon.description"
+msgstr "Сделай селфи с Адилетом (@yunbae) и пришли в техподдержку бота для ручной проверки."
+
+msgid "gamification.ui.baseline_missing"
+msgstr "Пока нет орталама за предыдущий семестр."
+
+msgid "gamification.eldin_balasy.name"
+msgstr "Элдин баласы"
+
+msgid "gamification.eldin_balasy.description"
+msgstr "Получи минимум три итоговые оценки AA за один семестр."
+
+msgid "gamification.thin_ice.name"
+msgstr "По тонкому льду"
+
+msgid "gamification.thin_ice.description"
+msgstr "Набери минимум 18,75% пропусков по теории или практике у пяти разных предметов в одном семестре."
+
+msgid "commands.gamification"
+msgstr "Включить или отключить ачивки пользователя"
+
+msgid "gamification.access_usage"
+msgstr "Использование: /gamification <Telegram user ID> on|off"
+
+msgid "gamification.access_enabled"
+msgstr "Ачивки включены. Пользователю нужно заново открыть главное меню."
+
+msgid "gamification.access_disabled"
+msgstr "Ачивки выключены. Прогресс и награды сохранены."

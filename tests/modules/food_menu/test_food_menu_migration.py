@@ -40,6 +40,7 @@ from manashelper.modules.food_menu.presentation.routers.food_menu_notifications 
 )
 from manashelper.modules.food_menu.presentation.sender import TelegramFoodMenuSender
 from manashelper.modules.food_menu.provider import FoodMenuProvider
+from manashelper.modules.gamification.provider import GamificationProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
@@ -282,6 +283,7 @@ async def test_food_menu_provider_preserves_app_and_request_lifetimes():
         NotificationsProvider(),
         UsersProvider(),
         FoodMenuProvider(),
+        GamificationProvider(),
     ) as container:
         client = await container.get(FoodMenuClient)
         parser = await container.get(FoodMenuParser)

@@ -106,7 +106,35 @@ assumptions:
       tests/modules/obis/test_credentials_boundaries.py; tests/test_application_architecture.py;
       postman/mocks/eders/default.js.
     updated_at: "2026-11-04"
+  - id: official-transcript-achievement-refresh
+    status: supported
+    claim: The caller reads the authenticated detailed transcript and derives F1, FF and GPA achievement progress from its semester structure; malformed HTML or an HTTP 500 preserves the previous successful progress.
+    reason: The supplied local transcript was parsed without copying personal data into tests. A synthetic fixture with its nested table structure was served through the existing repository-owned OBIS/Eders mock to the real httpx client.
+    verification: On 2026-11-04, all 20 HTTP flow tests passed, including two transcript cases. Each used fresh CSRF/login/cookie requests before GET /vs-ders/transkript-detailed, persisted three expected awards in PostgreSQL, then retained prior progress after modeled HTTP/parse failure. No live student login was performed. Final combined suite: 845 passed, 5 unrelated optional tests skipped; fingerprint gamification-webhook-2026-11-04.
+    source: tests/modules/eders/test_eders_http_flow.py; tests/fixtures/obis/transcript.html; src/manashelper/modules/obis/infrastructure/transcript_parser.py; postman/mocks/eders/default.js
+    updated_at: "2026-11-04"
+  - id: opt-in-academic-achievements-local-contract
+    status: supported
+    claim: In the local HTTP scenarios, opted-in users earn AA and attendance achievements from authenticated OBIS responses, while disabled users skip the transcript fetch and failures preserve prior progress.
+    reason: Real HTTP clients, parsers, application use cases and PostgreSQL persistence were exercised against repository-owned synthetic fixtures; no university account was contacted.
+    verification: >-
+      On 2026-11-05, the full suite passed 850 tests with the existing OBIS/Eders simulation (8 unrelated optional tests skipped).
+      The new achievement-progress scenario supplied three AA grades within one semester and five distinct subjects with theory or practice absence at 18.75%.
+      The caller stored Eldin balasy and Thin ice together with the existing transcript awards. A later modeled attendance HTTP 500 retained prior progress and awards.
+      Before opt-in, the transcript refresh created no HTTP transport. Successful paths included GET /vs-ders/transkript-detailed and GET /vs-ders/taken-lessons after fresh login.
+      This proves caller behavior against the stand-in; real OBIS markup and live-account compatibility remain unverified.
+      Fingerprint gamification-opt-in-2026-11-05.
+    source: tests/modules/eders/test_eders_http_flow.py; tests/fixtures/obis/transcript_achievements.html; tests/fixtures/obis/attendance_achievements.html; postman/mocks/eders/default.js
+    updated_at: "2026-11-05"
 fingerprints:
+  - id: gamification-opt-in-2026-11-05
+    date: "2026-11-05"
+    commit: "a1c7cca438196580cb471ef28a5e921eacfe2507 (working tree changes)"
+    cli: "1.74.0"
+  - id: gamification-webhook-2026-11-04
+    date: "2026-11-04"
+    commit: "a1c7cca438196580cb471ef28a5e921eacfe2507 (working tree changes)"
+    cli: "1.74.0"
   - id: modules-use-cases-2026-11-04
     date: "2026-11-04"
     commit: "606dcaab221420519ee2e5e460bcf087632f5238 (working tree changes)"

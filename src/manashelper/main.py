@@ -1,11 +1,13 @@
 import asyncio
 import logging
+import signal
 from contextlib import AsyncExitStack
 from typing import Any
 
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiohttp import web
 from alembic.config import Config
 from dishka import make_async_container
 
@@ -20,6 +22,7 @@ from manashelper.modules.broadcast.provider import BroadcastProvider
 from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.feedback.provider import FeedbackProvider
 from manashelper.modules.food_menu.provider import FoodMenuProvider
+from manashelper.modules.gamification.provider import GamificationProvider
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
@@ -30,6 +33,7 @@ from manashelper.platform.telegram.dispatcher import create_dispatcher
 from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
 from manashelper.platform.telegram.session import TelegramSession
+from manashelper.platform.web.server import create_web_app
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +76,7 @@ async def main() -> None:
             UsersProvider(),
             BroadcastProvider(),
             FoodMenuProvider(),
+            GamificationProvider(),
         )
         stack.push_async_callback(container.close)
 
@@ -81,7 +86,32 @@ async def main() -> None:
         stack.callback(scheduler.shutdown)
 
         await setup_commands(bot, settings)
-        await dispatcher.start_polling(bot, close_bot_session=False)
+        if settings.public_url:
+            app = create_web_app(bot, dispatcher, container, settings)
+            runner = web.AppRunner(app, shutdown_timeout=60)
+            stack.push_async_callback(dispatcher.emit_shutdown, bot=bot)
+            await runner.setup()
+            stack.push_async_callback(runner.cleanup)
+            await web.TCPSite(runner, "0.0.0.0", settings.http_port).start()
+            await dispatcher.emit_startup(bot=bot)
+            assert settings.webhook_secret is not None
+            await bot.set_webhook(
+                url=f"{settings.public_url}/telegram/webhook",
+                secret_token=settings.webhook_secret.get_secret_value(),
+                allowed_updates=dispatcher.resolve_used_update_types(),
+                max_connections=10,
+                drop_pending_updates=False,
+            )
+            stopped = asyncio.Event()
+            loop = asyncio.get_running_loop()
+            for sig in (signal.SIGINT, signal.SIGTERM):
+                loop.add_signal_handler(sig, stopped.set)
+                stack.callback(loop.remove_signal_handler, sig)
+            logger.info("Webhook and Mini App server listening on port %d", settings.http_port)
+            await stopped.wait()
+        else:
+            await bot.delete_webhook(drop_pending_updates=False)
+            await dispatcher.start_polling(bot, close_bot_session=False)
 
 
 if __name__ == "__main__":

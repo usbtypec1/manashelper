@@ -22,6 +22,7 @@ def load_models() -> None:
     from manashelper.modules.food_menu.infrastructure.models.food_menu_notification_settings import (
         FoodMenuNotificationSettings,
     )
+    from manashelper.modules.gamification.infrastructure.models.achievement import GamificationProgress, UserAchievement
     from manashelper.modules.notifications.orm import NotificationSettings
     from manashelper.modules.obis.infrastructure.models.snapshot import ObisSnapshot
     from manashelper.modules.obis.infrastructure.models.user_exam_grade import UserExamGrade
@@ -35,5 +36,6 @@ def load_models() -> None:
     from manashelper.modules.users.infrastructure.models.user import User
     from manashelper.platform.telegram.audit.orm import ActionLog
     from manashelper.platform.telegram.outbox.models import OutboxMessage, OutboxRateBucket
+    from manashelper.platform.telegram.webhook_models import ProcessedTelegramUpdate
 
     Base.registry.configure()

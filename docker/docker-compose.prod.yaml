@@ -23,6 +23,8 @@ services:
   app:
     image: usbtypec1/manashelper:${MANASHELPER_VERSION}
     container_name: app
+    ports:
+      - "127.0.0.1:${MANASHELPER_HTTP_PORT:-8080}:${MANASHELPER_HTTP_PORT:-8080}"
     restart: always
     env_file:
       - .env

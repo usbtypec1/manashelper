@@ -13,6 +13,7 @@ from manashelper.modules.advertisements.application.use_cases.reveal_advertiseme
 )
 from manashelper.modules.advertisements.presentation.advertisement import send_marketplace_menu
 from manashelper.modules.advertisements.presentation.advertisement_formatter import format_contact_reveal
+from manashelper.modules.gamification.application.queries import GamificationQuery
 from manashelper.platform.telegram.navigation import send_welcome
 
 router = Router(name="advertisement_contact")
@@ -28,6 +29,7 @@ async def on_advertisement_deep_link(
     command: CommandObject,
     settings: FromDishka[Settings],
     reveal_advertisement_contact: FromDishka[RevealAdvertisementContactUseCase],
+    gamification: FromDishka[GamificationQuery],
 ) -> None:
     payload = command.args or ""
     if message.from_user is None:
@@ -38,13 +40,13 @@ async def on_advertisement_deep_link(
         return
 
     if not payload.startswith(AD_DEEPLINK_PAYLOAD_PREFIX):
-        await send_welcome(message)
+        await send_welcome(message, achievements_enabled=await gamification.is_enabled(message.from_user.id))
         return
 
     try:
         advertisement_id = uuid.UUID(payload[len(AD_DEEPLINK_PAYLOAD_PREFIX) :])
     except ValueError:
-        await send_welcome(message)
+        await send_welcome(message, achievements_enabled=await gamification.is_enabled(message.from_user.id))
         return
 
     try:

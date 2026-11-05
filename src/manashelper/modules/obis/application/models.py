@@ -1,6 +1,21 @@
 from dataclasses import dataclass, field
 from datetime import datetime
+from decimal import Decimal
 from uuid import UUID
+
+
+@dataclass(frozen=True, slots=True)
+class TranscriptSemester:
+    key: str
+    credits: Decimal | None
+    points: Decimal | None
+    grades: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class Transcript:
+    semesters: tuple[TranscriptSemester, ...]
+    overall_gpa: Decimal
 
 
 @dataclass(frozen=True, slots=True)

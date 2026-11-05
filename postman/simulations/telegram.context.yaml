@@ -49,7 +49,18 @@ assumptions:
       Telegram availability or an exactly-once guarantee. Fingerprint modules-use-cases-2026-11-04.
     source: tests/platform/telegram/test_outbox_http.py; tests/modules/users/test_bot_status.py; postman/mocks/telegram/default.js
     updated_at: "2026-11-04"
+  - id: webhook-registration-serialization
+    status: supported
+    claim: The real aiogram client serializes setWebhook with the HTTPS route, secret token, allowed update types and connection limit expected by the local stand-in.
+    reason: A real aiohttp client posted to the repository-owned Telegram mock; no live webhook was registered.
+    verification: On 2026-11-04, the webhook serialization test and both existing outbox HTTP tests passed (3 tests). Recorded requests confirmed setWebhook, a secret present without logging its value, the two update types and max_connections 10. This does not prove live TLS or Telegram reachability. Final combined suite: 845 passed, 5 unrelated optional tests skipped; fingerprint gamification-webhook-2026-11-04.
+    source: tests/platform/web/test_server.py; postman/mocks/telegram/default.js; https://core.telegram.org/bots/api#setwebhook
+    updated_at: "2026-11-04"
 fingerprints:
+  - id: gamification-webhook-2026-11-04
+    date: "2026-11-04"
+    commit: "a1c7cca438196580cb471ef28a5e921eacfe2507 (working tree changes)"
+    cli: "1.74.0"
   - id: modules-use-cases-2026-11-04
     date: "2026-11-04"
     commit: "606dcaab221420519ee2e5e460bcf087632f5238 (working tree changes)"

@@ -160,6 +160,55 @@ async def test_obis_http_failure_preserves_error_type(monkeypatch, mode, error):
         await ObisClient().fetch_exam_grades_html("fake-student", "fake-password")
 
 
+@pytest.mark.parametrize(
+    "failure_mode,error", [("html-error", httpx.HTTPStatusError), ("transcript-malformed", ObisParseError)]
+)
+async def test_obis_transcript_http_awards_and_failed_refresh_preserves_progress(
+    session, monkeypatch, failure_mode, error
+):
+    from manashelper.modules.gamification.application.queries import GamificationQuery
+    from manashelper.modules.gamification.application.use_cases.record_transcript import RecordTranscriptUseCase
+    from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
+    from manashelper.modules.obis.application.use_cases.refresh_obis_transcript import RefreshObisTranscriptUseCase
+    from manashelper.modules.obis.infrastructure.results_source import ObisResultsSource
+
+    transports = install_obis_client(monkeypatch)
+    crypto = CryptoService(SimpleNamespace(obis_encryption_key=base64.b64encode(bytes(range(32))).decode()))
+    user = User(
+        id=975105,
+        full_name="Transcript fixture",
+        student_number="fake-student",
+        encrypted_password=crypto.encrypt("fake-password"),
+    )
+    session.add(user)
+    await session.flush()
+    credentials = ObisCredentialsRepository(session)
+    repo = AchievementRepository(session)
+    await repo.set_enabled(user.id, True)
+    refresh = RefreshObisTranscriptUseCase(
+        ObisCredentialsQuery(credentials, crypto),
+        credentials,
+        ObisResultsSource(ObisClient()),
+        RecordTranscriptUseCase(repo),
+        GamificationQuery(repo),
+    )
+    await refresh.execute(user.id)
+    await session.flush()
+    before = await repo.academic_progress(user.id)
+    assert before[0] and before[1] is not None and before[2] is not None
+    assert set(await repo.get_awards(user.id)) == {"formula_one", "champion", "comeback"}
+    assert transports[0].paths == [
+        ("GET", "/site/login"),
+        ("POST", "/site/login"),
+        ("GET", "/"),
+        ("GET", "/vs-ders/transkript-detailed"),
+    ]
+    install_obis_client(monkeypatch, failure_mode)
+    with pytest.raises(error):
+        await refresh.execute(user.id)
+    assert await repo.academic_progress(user.id) == before
+
+
 async def test_eders_background_refresh_persists_snapshot_and_read_survives_upstream_failure(session, monkeypatch):
     transports = install_client(monkeypatch)
     user = User(id=975102, full_name="Cache fixture", student_number="fake-student")
@@ -180,6 +229,53 @@ async def test_eders_background_refresh_persists_snapshot_and_read_survives_upst
     paths = list(failed_transports[0].paths)
     assert await service.get_snapshot(user.id) == refreshed
     assert failed_transports[0].paths == paths
+
+
+async def test_new_achievements_through_real_http_refresh_with_opt_in_and_failure_preservation(session, monkeypatch):
+    from manashelper.modules.gamification.application.queries import GamificationQuery
+    from manashelper.modules.gamification.application.use_cases.record_transcript import RecordTranscriptUseCase
+    from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
+    from manashelper.modules.obis.application.use_cases.refresh_obis_transcript import RefreshObisTranscriptUseCase
+    from manashelper.modules.obis.infrastructure.results_source import ObisResultsSource
+
+    transports = install_obis_client(monkeypatch, "achievement-progress")
+    crypto = CryptoService(SimpleNamespace(obis_encryption_key=base64.b64encode(bytes(range(32))).decode()))
+    user = User(
+        id=975106,
+        full_name="Pilot fixture",
+        student_number="fake-student",
+        encrypted_password=crypto.encrypt("fake-password"),
+    )
+    session.add(user)
+    await session.flush()
+    repo = AchievementRepository(session)
+    credentials = ObisCredentialsRepository(session)
+    client = ObisClient()
+    refresh = RefreshObisTranscriptUseCase(
+        ObisCredentialsQuery(credentials, crypto),
+        credentials,
+        ObisResultsSource(client),
+        RecordTranscriptUseCase(repo),
+        GamificationQuery(repo),
+    )
+    await refresh.execute(user.id)
+    assert transports == []  # Default off prevents the extra OBIS login/fetch entirely.
+    await repo.set_enabled(user.id, True)
+    await refresh.execute(user.id)
+    attendance = build_obis(session, client, crypto).attendance
+    await attendance.execute(user.id)
+    await session.flush()
+    awards = await repo.get_awards(user.id)
+    assert set(awards) == {"formula_one", "champion", "comeback", "eldin_balasy", "thin_ice"}
+    before = await repo.attendance_progress(user.id)
+    assert before == (True, 5)
+    assert transports[0].paths[-1] == ("GET", "/vs-ders/transkript-detailed")
+    assert transports[1].paths[-1] == ("GET", "/vs-ders/taken-lessons")
+    install_obis_client(monkeypatch, "html-error")
+    with pytest.raises(httpx.HTTPStatusError):
+        await attendance.execute(user.id)
+    assert await repo.attendance_progress(user.id) == before
+    assert await repo.get_awards(user.id) == awards
 
 
 @pytest.mark.parametrize(

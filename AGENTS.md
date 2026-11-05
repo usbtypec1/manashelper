@@ -7,8 +7,10 @@ and [docs/BACKLOG.md](docs/BACKLOG.md) for deferred work. Check the code when do
 ## Project
 
 Manashelper is a Python 3.13 Telegram bot for Manas University students. It uses aiogram 3, async SQLAlchemy 2,
-Postgres, Dishka dependency injection, Alembic, APScheduler and gettext. There is no REST API. The entry point is
-`src/manashelper/main.py`; users interact with the bot through Telegram long polling.
+Postgres, Dishka dependency injection, Alembic, APScheduler and gettext. The entry point is `src/manashelper/main.py`.
+With MANASHELPER_PUBLIC_URL it runs an aiohttp webhook, Mini App API and Vue static assets in the same process as
+scheduler/outbox; without it, local polling is used. See [docs/gamification.md](docs/gamification.md) for setup,
+achievement rules, HTTP contracts and verification.
 
 Current features include the faculty/department/course catalog and course tracking, timetable and lesson search,
 cafeteria menus, OBIS grades and attendance, notification settings, scheduled change notifications, advertisements
@@ -180,6 +182,15 @@ revision flags; omit `--autogenerate` for a handwritten migration. Never rewrite
 `down_revision` values: production databases already reference them. Renaming migration files is safe.
 
 ## Feature-specific conventions
+
+- Gamification access is per-user and defaults off (`gamification_progress.enabled`; missing row means off).
+  Only the configured admin chat can use `/gamification <Telegram user ID> on|off`.
+  Disabled users must not accrue progress/awards, appear in ranking or access either Mini App API.
+  The main reply-keyboard achievement button sends plain text; its handler replies with an inline Web App button
+  so Telegram supplies signed initData. Never launch this authenticated Mini App from a reply-keyboard Web App button.
+  Preserve their earned awards and progress. The extra transcript fetch is skipped while disabled.
+  Eldin balasy counts three final AA grades within one semester; Thin ice counts five distinct subjects in one
+  current attendance snapshot with theory OR practice absence >= 18.75%, counting each subject once.
 
 - Food menu keeps rich/ephemeral message behavior, fixed-date callbacks and weekday meal
   notification settings. Its repository initializes new lunch/dinner flags to True before flush, so the first
