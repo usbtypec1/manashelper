@@ -49,6 +49,7 @@ def deserialize_snapshot(payload: str) -> EdersSnapshot:
             section=value.get("section", ""),
             description=value.get("description", ""),
             completed=value.get("completed", False),
+            manual_completion=value.get("manual_completion", False),
         )
         for value in data["activities"]
     )

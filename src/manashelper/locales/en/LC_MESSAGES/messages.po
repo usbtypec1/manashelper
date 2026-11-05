@@ -993,6 +993,27 @@ msgstr "Deadlines"
 msgid "obis.notifications_header"
 msgstr "OBIS notifications"
 
+msgid "eders.mark_done"
+msgstr "Mark as done"
+
+msgid "eders.mark_undone"
+msgstr "Mark as undone"
+
+msgid "eders.marked_done"
+msgstr "[marked as done]"
+
+msgid "eders.completion_done"
+msgstr "Marked as done in Eders."
+
+msgid "eders.completion_undone"
+msgstr "Marked as undone in Eders."
+
+msgid "eders.completion_failed"
+msgstr "Could not update the task in Eders. Please try again."
+
+msgid "eders.completion_unavailable"
+msgstr "This task is no longer available for manual completion. Open Eders to check it."
+
 msgid "menu.achievements"
 msgstr "Achievements"
 

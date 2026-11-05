@@ -1137,3 +1137,24 @@ msgstr "已开启成就功能。用户需要重新打开主菜单。"
 
 msgid "gamification.access_disabled"
 msgstr "已关闭成就功能。进度和奖励已保留。"
+
+msgid "eders.mark_done"
+msgstr "标记为已完成"
+
+msgid "eders.mark_undone"
+msgstr "标记为未完成"
+
+msgid "eders.marked_done"
+msgstr "[已标记为完成]"
+
+msgid "eders.completion_done"
+msgstr "已在 Eders 中标记为完成。"
+
+msgid "eders.completion_undone"
+msgstr "已在 Eders 中标记为未完成。"
+
+msgid "eders.completion_failed"
+msgstr "无法更新 Eders 中的任务，请重试。"
+
+msgid "eders.completion_unavailable"
+msgstr "此任务已无法手动标记，请在 Eders 中查看。"

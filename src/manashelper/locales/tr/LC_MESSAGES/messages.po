@@ -1144,3 +1144,24 @@ msgstr "Başarımlar açıldı. Kullanıcı ana menüyü yeniden açmalıdır."
 
 msgid "gamification.access_disabled"
 msgstr "Başarımlar kapatıldı. İlerleme ve ödüller korundu."
+
+msgid "eders.mark_done"
+msgstr "Tamamlandı olarak işaretle"
+
+msgid "eders.mark_undone"
+msgstr "Tamamlanmadı olarak işaretle"
+
+msgid "eders.marked_done"
+msgstr "[tamamlandı olarak işaretlendi]"
+
+msgid "eders.completion_done"
+msgstr "Eders'te tamamlandı olarak işaretlendi."
+
+msgid "eders.completion_undone"
+msgstr "Eders'te tamamlanmadı olarak işaretlendi."
+
+msgid "eders.completion_failed"
+msgstr "Eders'teki görev güncellenemedi. Lütfen tekrar deneyin."
+
+msgid "eders.completion_unavailable"
+msgstr "Bu görev artık elle işaretlenemiyor. Eders'ten kontrol edin."

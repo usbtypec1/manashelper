@@ -1,7 +1,9 @@
+import logging
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 from aiogram import F, Router, flags
+from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, LinkPreviewOptions, Message
@@ -11,8 +13,10 @@ from dishka import FromDishka
 from manashelper.modules.eders.application.eders import EdersQuery, filter_activities
 from manashelper.modules.eders.application.models import DeadlineFilter, EdersSnapshot
 from manashelper.modules.eders.application.tracking import EdersTrackingService
+from manashelper.modules.eders.application.use_cases.set_activity_completion import SetActivityCompletionUseCase
 from manashelper.modules.eders.application.use_cases.toggle_eders_setting import ToggleEdersSettingUseCase
 from manashelper.modules.eders.errors import (
+    EdersCompletionUnavailableError,
     EdersFetchError,
     EdersParseError,
     EdersSnapshotNotReadyError,
@@ -20,12 +24,14 @@ from manashelper.modules.eders.errors import (
 )
 from manashelper.modules.eders.presentation.callbacks import (
     EdersAction,
+    EdersCompletionCallback,
     EdersMenuCallback,
     EdersPageCallback,
     EdersSettingCallback,
 )
-from manashelper.modules.eders.presentation.formatter import format_activity_page
+from manashelper.modules.eders.presentation.formatter import format_activity_page, format_completion_message
 from manashelper.modules.eders.presentation.keyboards import (
+    build_eders_completion_keyboard,
     build_eders_keyboard,
     build_eders_menu_keyboard,
     build_eders_settings_keyboard,
@@ -40,6 +46,50 @@ menu_router = Router(name="eders_menu")
 SNAPSHOT_KEY = "eders_snapshot"
 SNAPSHOT_OPENED_AT_KEY = "eders_snapshot_opened_at"
 SNAPSHOT_TTL = timedelta(minutes=15)
+
+
+@router.callback_query(EdersCompletionCallback.filter())
+@flags.private_chat_only
+async def on_eders_completion(
+    callback: CallbackQuery,
+    callback_data: EdersCompletionCallback,
+    set_completion: FromDishka[SetActivityCompletionUseCase],
+) -> None:
+    message = callback.message
+    if not isinstance(message, Message) or message.chat.id != callback.from_user.id or not message.text:
+        await callback.answer(_("eders.completion_unavailable"), show_alert=True)
+        return
+    try:
+        await set_completion.execute(callback.from_user.id, callback_data.activity_id, callback_data.completed)
+    except (EdersCompletionUnavailableError, EdersSnapshotNotReadyError):
+        await callback.answer(_("eders.completion_unavailable"), show_alert=True)
+        return
+    except UserNotFoundError:
+        await callback.answer(_("common.start_required"), show_alert=True)
+        return
+    except (UserHasNoCredentialsError, ObisLoginError):
+        await callback.answer(_("obis.credentials_missing"), show_alert=True)
+        return
+    except (EdersFetchError, EdersParseError, EdersUnsafeUrlError, ObisParseError):
+        await callback.answer(_("eders.completion_failed"), show_alert=True)
+        return
+
+    text = format_completion_message(message.html_text, callback_data.completed)
+    keyboard = build_eders_completion_keyboard(callback_data.activity_id, callback_data.completed)
+    # The upstream write succeeded. Telegram errors must not roll back its local mirror.
+    try:
+        await callback.answer(
+            _("eders.completion_done") if callback_data.completed else _("eders.completion_undone"), show_alert=True
+        )
+    except TelegramAPIError:
+        logging.getLogger(__name__).warning("Could not answer Eders completion callback")
+    if message.html_text != text or message.reply_markup != keyboard:
+        try:
+            await message.edit_text(
+                text, reply_markup=keyboard, link_preview_options=LinkPreviewOptions(is_disabled=True)
+            )
+        except TelegramAPIError:
+            logging.getLogger(__name__).warning("Could not edit Eders completion message")
 
 
 @menu_router.message(TranslatedText("menu.eders"))

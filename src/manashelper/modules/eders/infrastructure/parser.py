@@ -221,7 +221,7 @@ def _dates(node: Tag | BeautifulSoup, timezone: ZoneInfo | None) -> tuple[Activi
     return opens, closes
 
 
-def _completion(node: Tag | BeautifulSoup, activity_id: int) -> bool | None:
+def _manual_completion(node: Tag | BeautifulSoup, activity_id: int) -> bool | None:
     for button in node.select('[data-action="toggle-manual-completion"]'):
         if button.get("data-cmid") not in (None, str(activity_id)):
             continue
@@ -234,6 +234,13 @@ def _completion(node: Tag | BeautifulSoup, activity_id: int) -> bool | None:
         text = button.get_text(" ", strip=True).casefold()
         if text in {"done", "mark as done"}:
             return text == "done"
+    return None
+
+
+def _completion(node: Tag | BeautifulSoup, activity_id: int) -> bool | None:
+    manual = _manual_completion(node, activity_id)
+    if manual is not None:
+        return manual
     for block in node.select(".activity-completion"):
         text = block.get_text(" ", strip=True).casefold()
         if text in {"done", "mark as done"}:
@@ -296,6 +303,7 @@ def parse_course_activities(html: str, course: EdersCourse, timezone: ZoneInfo |
             section=section,
             description=description,
             completed=_completion(item, identifier) is True,
+            manual_completion=_manual_completion(item, identifier) is not None,
         )
     return list(activities.values())
 
@@ -415,4 +423,6 @@ def parse_activity_details(html: str, activity: EdersActivity, timezone: ZoneInf
         grading=grading,
         title_date_mismatch=mismatch,
         completed=activity.completed if completed is None else completed,
+        manual_completion=activity.manual_completion
+        or _manual_completion(soup.select_one("#region-main") or soup, activity.id) is not None,
     )

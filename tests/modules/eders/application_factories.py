@@ -23,6 +23,7 @@ def build_eders_tracking_service(eders_repository, users, outbox):
         get_snapshot=query.get_snapshot,
         lock=query.lock,
         observe=query.observe,
+        set_activity_completion=query.set_activity_completion,
         pending_events=query.pending_events,
         mark_sent=query.mark_sent,
         get_poll_user_ids=query.get_poll_user_ids,
