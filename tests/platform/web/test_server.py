@@ -48,7 +48,7 @@ def test_bad_init_data_rejected(case):
 @asynccontextmanager
 async def application():
     settings = get_settings().model_copy(
-        update={"public_url": "https://example.com", "webhook_secret": SecretStr(SECRET)}
+        update={"telegram_bot_token": TOKEN, "public_url": "https://example.com", "webhook_secret": SecretStr(SECRET)}
     )
     container = make_async_container(CoreProvider(), UsersProvider(), GamificationProvider())
     dispatcher = Dispatcher()
@@ -142,6 +142,23 @@ async def test_disabled_user_cannot_access_either_api_even_with_valid_init_data(
             response = await client.get(f"/api/gamification/{path}", headers={"Authorization": authorization()})
             assert response.status == 403
             assert response.headers["Cache-Control"] == "no-store"
+
+
+async def test_fixture_authorization_is_independent_of_environment_token(monkeypatch):
+    monkeypatch.setattr(get_settings(), "telegram_bot_token", "different-ci-token")
+    async with application() as (client, container, calls):
+        response = await client.get("/api/gamification/me", headers={"Authorization": authorization()})
+        assert response.status == 200
+
+
+async def test_browser_fixture_authorization_is_independent_of_environment_token(monkeypatch):
+    from tests.platform.web.preview import app
+
+    monkeypatch.setattr(get_settings(), "telegram_bot_token", "different-ci-token")
+    async with TestClient(TestServer(await app())) as client:
+        fixture = await (await client.get("/_fixture/init-data")).json()
+        response = await client.get("/api/gamification/me", headers={"Authorization": "tma " + fixture["initData"]})
+        assert response.status == 200
 
 
 async def test_concurrent_replay_is_not_acknowledged_before_processing():
