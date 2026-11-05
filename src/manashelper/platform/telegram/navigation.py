@@ -12,7 +12,7 @@ def build_main_keyboard(*, achievements_enabled: bool = False) -> ReplyKeyboardM
             [
                 KeyboardButton(text=_("menu.marketplace")),
                 *(
-                    [KeyboardButton(text=_("menu.achievements"))]
+                    [KeyboardButton(text=_("menu.achievements_button"))]
                     if achievements_enabled and get_settings().public_url
                     else []
                 ),

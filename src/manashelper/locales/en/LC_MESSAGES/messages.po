@@ -1021,7 +1021,7 @@ msgid "gamification.unavailable"
 msgstr "Achievements are available when the Mini App is enabled."
 
 msgid "gamification.open_prompt"
-msgstr "Your achievements, progress and leaderboard."
+msgstr "🏆 Earned: {score} / {total}\n🌍 Global rank: {rank}\n\nOpen your collection and the leaderboard using the button below."
 
 msgid "gamification.ui.collection"
 msgstr "My collection"
@@ -1111,7 +1111,7 @@ msgid "gamification.comeback.description"
 msgstr "Raise your cumulative GPA by at least 0.20 compared with the previous semester."
 
 msgid "gamification.fall.name"
-msgstr "The fall"
+msgstr "Negative growth"
 
 msgid "gamification.fall.description"
 msgstr "Lower your cumulative GPA by at least 0.20 compared with the previous semester."
@@ -1132,7 +1132,7 @@ msgid "gamification.eldin_balasy.description"
 msgstr "Earn at least three final AA grades in one semester."
 
 msgid "gamification.thin_ice.name"
-msgstr "On thin ice"
+msgstr "On the edge"
 
 msgid "gamification.thin_ice.description"
 msgstr "Reach at least 18.75% absence in theory or practice for five different subjects in one semester."
@@ -1152,3 +1152,15 @@ msgstr "Achievements disabled. Progress and awards are preserved."
 
 msgid "gamification.award_notification"
 msgstr "🏆 Achievement unlocked: <b>{name}</b>\n\n{description}"
+
+
+msgid "menu.achievements_button"
+msgstr "🏆 Achievements"
+
+
+msgid "gamification.rank_unassigned"
+msgstr "Not ranked yet"
+
+
+msgid "gamification.view_all"
+msgstr "View all achievements"

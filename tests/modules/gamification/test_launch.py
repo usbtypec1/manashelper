@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
@@ -15,15 +16,20 @@ from manashelper.platform.telegram.navigation import build_main_keyboard, build_
 
 
 @pytest.mark.parametrize("locale", list(Locale))
+@pytest.mark.parametrize("rank", [42, None])
+@pytest.mark.parametrize("label_key", ["menu.achievements_button", "menu.achievements"])
 @pytest.mark.parametrize(
     "enabled,public_url", [(True, "https://example.com"), (False, "https://example.com"), (True, None)]
 )
 async def test_reply_achievement_button_sends_separate_inline_launch_only_for_enabled_users(
-    monkeypatch, locale, enabled, public_url
+    monkeypatch, locale, enabled, public_url, rank, label_key
 ):
     settings = get_settings()
     monkeypatch.setattr(settings, "public_url", public_url)
-    query = AsyncMock(is_enabled=AsyncMock(return_value=enabled))
+    query = AsyncMock(
+        is_enabled=AsyncMock(return_value=enabled),
+        profile=AsyncMock(return_value=SimpleNamespace(score=3, total=10, rank=rank)),
+    )
     dispatcher = Dispatcher(query=query, settings=settings)
     # Reuse the real translated filter and handler without attaching the singleton router.
     handler = router.router.message.handlers[0]
@@ -45,8 +51,11 @@ async def test_reply_achievement_button_sends_separate_inline_launch_only_for_en
             assert isinstance(keyboard, ReplyKeyboardMarkup)
             assert isinstance(build_study_keyboard(), ReplyKeyboardMarkup)
             buttons = [button for row in keyboard.keyboard for button in row]
-            achievement_buttons = [button for button in buttons if button.text == i18n.gettext("menu.achievements")]
+            achievement_buttons = [
+                button for button in buttons if button.text == i18n.gettext("menu.achievements_button")
+            ]
             assert len(achievement_buttons) == int(enabled and bool(public_url))
+            assert all(button.text.startswith("🏆 ") for button in achievement_buttons)
             # The bottom button sends text; Telegram authorization starts only at the inline button.
             assert all(button.web_app is None for button in buttons)
             await dispatcher.feed_update(
@@ -58,21 +67,26 @@ async def test_reply_achievement_button_sends_separate_inline_launch_only_for_en
                         date=0,
                         chat=chat,
                         from_user=user,
-                        text=i18n.gettext("menu.achievements"),
+                        text=i18n.gettext(label_key),
                     ),
                 ),
             )
             [response] = [call.args[1] for call in request.await_args_list]
             assert isinstance(response, SendMessage)
             if enabled and public_url:
-                assert response.text == i18n.gettext("gamification.open_prompt")
+                assert response.text == i18n.gettext("gamification.open_prompt").format(
+                    score=3, total=10, rank=rank if rank is not None else i18n.gettext("gamification.rank_unassigned")
+                )
                 assert isinstance(response.reply_markup, InlineKeyboardMarkup)
                 [button] = [button for row in response.reply_markup.inline_keyboard for button in row]
                 assert button.web_app.url == "https://example.com/app/"
+                assert button.text == i18n.gettext("gamification.view_all")
                 query.is_enabled.assert_awaited_once_with(user.id)
+                query.profile.assert_awaited_once_with(user.id)
             else:
                 assert response.text == i18n.gettext("gamification.unavailable")
                 assert response.reply_markup is None
+                query.profile.assert_not_awaited()
         assert await state.get_state() is None
         assert await state.get_data() == {}
     await dispatcher.storage.close()

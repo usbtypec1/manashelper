@@ -1000,7 +1000,7 @@ msgid "gamification.unavailable"
 msgstr "Ачивки доступны при включённом Mini App."
 
 msgid "gamification.open_prompt"
-msgstr "Твои ачивки, прогресс и место в рейтинге."
+msgstr "🏆 Получено: {score} / {total}\n🌍 Место в общем рейтинге: {rank}\n\nОткрой коллекцию и лидерборд по кнопке ниже."
 
 msgid "gamification.ui.collection"
 msgstr "Моя коллекция"
@@ -1090,7 +1090,7 @@ msgid "gamification.comeback.description"
 msgstr "Подними орталама минимум на 0.20 относительно предыдущего семестра."
 
 msgid "gamification.fall.name"
-msgstr "Падение"
+msgstr "Отрицательный рост"
 
 msgid "gamification.fall.description"
 msgstr "Опусти орталама минимум на 0.20 относительно предыдущего семестра."
@@ -1111,7 +1111,7 @@ msgid "gamification.eldin_balasy.description"
 msgstr "Получи минимум три итоговые оценки AA за один семестр."
 
 msgid "gamification.thin_ice.name"
-msgstr "По тонкому льду"
+msgstr "На грани"
 
 msgid "gamification.thin_ice.description"
 msgstr "Набери минимум 18,75% пропусков по теории или практике у пяти разных предметов в одном семестре."
@@ -1152,3 +1152,15 @@ msgstr "Для этого задания больше недоступна ру�
 
 msgid "gamification.award_notification"
 msgstr "🏆 Получена ачивка: <b>{name}</b>\n\n{description}"
+
+
+msgid "menu.achievements_button"
+msgstr "🏆 Ачивки"
+
+
+msgid "gamification.rank_unassigned"
+msgstr "Пока нет"
+
+
+msgid "gamification.view_all"
+msgstr "Все ачивки"

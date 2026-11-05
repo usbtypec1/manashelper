@@ -1003,7 +1003,7 @@ msgid "gamification.unavailable"
 msgstr "Жетишкендиктер Mini App иштетилгенде жеткиликтүү."
 
 msgid "gamification.open_prompt"
-msgstr "Жетишкендиктериң, прогрессиң жана рейтингдеги ордуң."
+msgstr "🏆 Алынды: {score} / {total}\n🌍 Жалпы рейтингдеги орун: {rank}\n\nТөмөнкү баскыч менен коллекцияны жана лидерлер тизмесин ач."
 
 msgid "gamification.ui.collection"
 msgstr "Менин жыйнагым"
@@ -1093,7 +1093,7 @@ msgid "gamification.comeback.description"
 msgstr "Орточо бааңды мурунку семестрге салыштырмалуу кеминде 0.20га көтөр."
 
 msgid "gamification.fall.name"
-msgstr "Төмөндөө"
+msgstr "Терс өсүш"
 
 msgid "gamification.fall.description"
 msgstr "Орточо бааңды мурунку семестрге салыштырмалуу кеминде 0.20га түшүр."
@@ -1114,7 +1114,7 @@ msgid "gamification.eldin_balasy.description"
 msgstr "Бир семестрде кеминде үч жыйынтык AA баасын ал."
 
 msgid "gamification.thin_ice.name"
-msgstr "Жука муз үстүндө"
+msgstr "Кыл учунда"
 
 msgid "gamification.thin_ice.description"
 msgstr "Бир семестрде беш башка сабактын теориясынан же практикасынан кеминде 18,75% калтыр."
@@ -1155,3 +1155,15 @@ msgstr "Бул тапшырманы кол менен белгилөө мынд�
 
 msgid "gamification.award_notification"
 msgstr "🏆 Жетишкендик алынды: <b>{name}</b>\n\n{description}"
+
+
+msgid "menu.achievements_button"
+msgstr "🏆 Жетишкендиктер"
+
+
+msgid "gamification.rank_unassigned"
+msgstr "Азырынча жок"
+
+
+msgid "gamification.view_all"
+msgstr "Бардык жетишкендиктер"
