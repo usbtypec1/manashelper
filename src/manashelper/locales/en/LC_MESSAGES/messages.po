@@ -1023,18 +1023,6 @@ msgstr "Achievements are available when the Mini App is enabled."
 msgid "gamification.open_prompt"
 msgstr "Your achievements, progress and leaderboard."
 
-msgid "gamification.grant_usage"
-msgstr "Usage: /grant_pokemon <Telegram user ID>"
-
-msgid "gamification.granted"
-msgstr "Achievement granted."
-
-msgid "gamification.already_granted"
-msgstr "This user already has the achievement."
-
-msgid "commands.grant_pokemon"
-msgstr "Grant the verified selfie achievement"
-
 msgid "gamification.ui.collection"
 msgstr "My collection"
 
@@ -1133,12 +1121,6 @@ msgstr "Junk dealer"
 
 msgid "gamification.seller.description"
 msgstr "Publish your first approved marketplace advertisement."
-
-msgid "gamification.pokemon.name"
-msgstr "Pokémon"
-
-msgid "gamification.pokemon.description"
-msgstr "Take a selfie with Adilet (@yunbae) and send it to bot support for manual verification."
 
 msgid "gamification.ui.baseline_missing"
 msgstr "No previous semester GPA is available yet."

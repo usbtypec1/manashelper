@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from manashelper.modules.gamification.application.catalog import ACHIEVEMENT_KEYS
 from manashelper.modules.gamification.infrastructure.models.achievement import GamificationProgress, UserAchievement
 from manashelper.modules.users.infrastructure.models.user import User
 
@@ -42,12 +43,12 @@ class AchievementRepository:
         progress.enabled = enabled
         await self.session.flush()
 
-    async def award(self, user_id: int, key: str, now: datetime, granted_by: int | None = None) -> bool:
-        if await self.lock_progress(user_id) is None:
+    async def award(self, user_id: int, key: str, now: datetime) -> bool:
+        if key not in ACHIEVEMENT_KEYS or await self.lock_progress(user_id) is None:
             return False
         result = await self.session.scalar(
             insert(UserAchievement)
-            .values(user_id=user_id, achievement_key=key, earned_at=now, granted_by=granted_by)
+            .values(user_id=user_id, achievement_key=key, earned_at=now)
             .on_conflict_do_nothing()
             .returning(UserAchievement.achievement_key)
         )
@@ -59,7 +60,9 @@ class AchievementRepository:
 
     async def get_awards(self, user_id: int) -> dict[str, datetime]:
         rows = await self.session.execute(
-            select(UserAchievement.achievement_key, UserAchievement.earned_at).where(UserAchievement.user_id == user_id)
+            select(UserAchievement.achievement_key, UserAchievement.earned_at).where(
+                UserAchievement.user_id == user_id, UserAchievement.achievement_key.in_(ACHIEVEMENT_KEYS)
+            )
         )
         return {key: earned_at for key, earned_at in rows}
 
@@ -93,6 +96,7 @@ class AchievementRepository:
                 func.count().label("score"),
                 func.max(UserAchievement.earned_at).label("reached_at"),
             )
+            .where(UserAchievement.achievement_key.in_(ACHIEVEMENT_KEYS))
             .group_by(UserAchievement.user_id)
             .subquery()
         )

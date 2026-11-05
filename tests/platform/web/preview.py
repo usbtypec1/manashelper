@@ -58,7 +58,7 @@ async def app() -> web.Application:
             progress = await repo.lock_progress(PREVIEW_USER)
             assert progress is not None
             progress.food_views = 63
-            for key in ("foodie", "seller", "pokemon"):
+            for key in ("foodie", "seller", "eldin_balasy"):
                 await repo.award(PREVIEW_USER, key, datetime.now(UTC))
         try:
             yield
