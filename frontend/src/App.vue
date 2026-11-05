@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import messages from './messages.json'
+import AchievementBadge from './AchievementBadge.vue'
+import { achievementArt } from './achievementArt'
 
 type Card = {
-  key: string; name: string; description: string; emoji: string
-  current: number; target: number; earned_at: string | null; available: boolean; blocked_reason: string | null
+  key: string; name: string; description: string; earned_at: string | null
 }
 type Profile = { score: number; total: number; rank: number | null; locale: string; achievements: Card[] }
 type Entry = { full_name: string; score: number; rank: number; is_self: boolean }
@@ -57,6 +58,10 @@ async function open(card: Card, event: MouseEvent) {
   telegram?.BackButton?.show()
 }
 function close() { dialog.value?.close() }
+function selectTab(value: 'collection' | 'leaderboard') {
+  tab.value = value
+}
+const selectedTone = computed(() => achievementArt[selected.value?.key ?? '']?.color ?? '#d2c5eb')
 function afterClose() {
   selected.value = undefined
   telegram?.BackButton?.hide()
@@ -81,52 +86,97 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <main>
-    <header class="masthead"><span class="brand-mark">m<span>✦</span></span><span>MANASHELPER</span><span class="edition">STUDENT CLUB</span></header>
-    <section v-if="!telegram?.initData" class="notice" role="status"><span class="notice-icon">✦</span><p>{{ copy.open_telegram }}</p></section>
-    <section v-else-if="loading" class="notice" role="status" aria-live="polite"><span class="spinner"></span><p>{{ copy.loading }}</p></section>
-    <section v-else-if="error" class="notice" role="alert"><p>{{ copy.error }}</p><button class="primary" @click="load">{{ copy.retry }}</button></section>
+  <main class="app-shell">
+    <header class="app-header">
+      <a class="wordmark" href="#" @click.prevent="selectTab('collection')" aria-label="Manashelper">
+        <span class="wordmark-symbol" aria-hidden="true">m<span>✦</span></span>
+        <span>MANASHELPER</span>
+      </a>
+      <span class="header-stars" aria-hidden="true">✧ · ✧</span>
+    </header>
+
+    <section v-if="!telegram?.initData" class="notice" role="status">
+      <span class="notice-icon" aria-hidden="true">✧</span><p>{{ copy.open_telegram }}</p>
+    </section>
+    <section v-else-if="loading" class="notice" role="status" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span><p>{{ copy.loading }}</p>
+    </section>
+    <section v-else-if="error" class="notice" role="alert">
+      <p>{{ copy.error }}</p><button class="primary" @click="load">{{ copy.retry }}</button>
+    </section>
+
     <template v-else-if="profile">
-      <section class="hero">
-        <span class="eyebrow">{{ copy.collection }}</span>
-        <h1>{{ title }}<span class="spark">✦</span></h1>
-        <p class="subtitle">{{ copy.subtitle }}</p>
-        <div class="stats">
-          <div><span class="stat-label">{{ copy.earned }}</span><strong>{{ profile.score }}<small>/ {{ profile.total }}</small></strong><div class="overall-track"><span :style="{ width: `${profile.score / profile.total * 100}%` }"></span></div></div>
-          <div><span class="stat-label">{{ copy.rank }}</span><strong v-if="profile.rank">#{{ profile.rank }}</strong><span v-else class="unranked">{{ copy.unranked }}</span></div>
-        </div>
-      </section>
-      <nav class="tabs" :aria-label="copy.collection">
-        <button :aria-pressed="tab === 'collection'" :class="{ active: tab === 'collection' }" @click="tab = 'collection'">{{ copy.collection }} <span>{{ profile.score }}</span></button>
-        <button :aria-pressed="tab === 'leaderboard'" :class="{ active: tab === 'leaderboard' }" @click="tab = 'leaderboard'">{{ copy.leaderboard }} ↗</button>
+      <nav class="view-switch" :aria-label="title">
+        <button :aria-pressed="tab === 'collection'" @click="selectTab('collection')">{{ copy.collection }}</button>
+        <button :aria-pressed="tab === 'leaderboard'" @click="selectTab('leaderboard')">{{ copy.leaderboard }}</button>
       </nav>
-      <section v-if="tab === 'collection'" class="collection" :aria-label="copy.collection">
-        <button v-for="card in profile.achievements" :key="card.key" class="achievement" :class="{ earned: card.earned_at, pending: !card.available && !card.earned_at }" @click="open(card, $event)">
-          <span class="card-top"><span class="badge">{{ card.emoji }}</span><span class="status" :aria-label="card.earned_at ? copy.earned : copy.locked">{{ card.earned_at ? '✓' : '↗' }}</span></span>
-          <span class="card-name">{{ card.name }}</span>
-          <span class="card-state">{{ card.earned_at ? copy.earned : !card.available ? (card.blocked_reason === 'baseline' ? copy.baseline_missing : copy.source_pending) : `${card.current} / ${card.target}` }}</span>
-          <span class="track"><span :style="{ width: `${card.current / card.target * 100}%` }"></span></span>
-        </button>
-      </section>
+
+      <template v-if="tab === 'collection'">
+        <section class="collection-intro">
+          <span class="intro-spark" aria-hidden="true">✧</span>
+          <h1>{{ title }}</h1>
+          <p class="collection-count">{{ copy.earned }} <strong>{{ profile.score }}</strong> / {{ profile.total }}</p>
+          <button class="rank-link" @click="selectTab('leaderboard')">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 3h8v6a4 4 0 0 1-8 0V3Z"/><path d="M8 5H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4m-4 2v5m-4 3h8m-6-3h4"/></svg>
+            <span>{{ profile.rank ? `${copy.rank} · ${profile.rank}` : copy.unranked }}</span>
+            <span class="chevron" aria-hidden="true">›</span>
+          </button>
+        </section>
+        <section class="collection" :aria-label="copy.collection">
+          <button
+            v-for="card in profile.achievements" :key="card.key"
+            class="achievement" :class="{ earned: card.earned_at }"
+            :aria-label="`${card.name}. ${card.earned_at ? copy.earned : copy.locked}`"
+            @click="open(card, $event)"
+          >
+            <span class="medal-wrap">
+              <AchievementBadge :achievement-key="card.key" :earned="!!card.earned_at" />
+              <span v-if="card.earned_at" class="earned-check" aria-hidden="true">✓</span>
+            </span>
+            <span class="card-name">{{ card.name }}</span>
+          </button>
+        </section>
+      </template>
+
       <section v-else class="leaderboard" :aria-label="copy.leaderboard">
-        <p class="eyebrow">{{ copy.top_ten }}</p>
+        <header class="leaderboard-heading">
+          <h1>{{ copy.leaderboard }}</h1>
+          <p>{{ copy.rank }} <strong>{{ profile.rank ? `#${profile.rank}` : '—' }}</strong></p>
+        </header>
+        <p class="section-label">{{ copy.top_ten }}</p>
         <p v-if="!entries.length" class="empty">{{ copy.empty }}</p>
-        <ol v-else>
-          <li v-for="(entry, index) in entries" :key="index" :class="{ self: entry.is_self }"><span class="place">{{ entry.rank }}</span><span class="avatar">{{ entry.full_name.charAt(0) }}</span><span class="person">{{ entry.full_name }}<small v-if="entry.is_self">{{ copy.you }}</small></span><strong>{{ entry.score }} <span>✦</span></strong></li>
+        <ol v-else class="ranking-list">
+          <li v-for="(entry, index) in entries" :key="index" :class="{ self: entry.is_self }">
+            <span class="place" :class="{ 'podium-place': entry.rank <= 3 }">
+              <svg v-if="entry.rank <= 3" class="podium-medal" :class="`podium-${entry.rank}`" viewBox="0 0 32 42" aria-hidden="true">
+                <path d="M7 1h8l4 14-8 3Z" fill="#c995ed"/><path d="M17 1h8l-5 17-8-3Z" fill="#7cc8f5"/>
+                <circle cx="16" cy="26" r="13" fill="currentColor"/><circle cx="16" cy="26" r="10" fill="none" stroke="white" stroke-opacity=".5"/>
+              </svg>
+              <span>{{ entry.rank }}</span>
+            </span>
+            <span class="avatar" :class="`avatar-${index % 5}`" aria-hidden="true">{{ entry.full_name.trim().charAt(0).toUpperCase() }}</span>
+            <span class="person">{{ entry.full_name }}<small v-if="entry.is_self">{{ copy.you }}</small></span>
+            <strong class="score-pill">{{ entry.score }}</strong>
+          </li>
         </ol>
-        <div class="your-place"><span>{{ copy.rank }}</span><strong>{{ profile.rank ? `#${profile.rank}` : '—' }}</strong><span>{{ profile.score }} / {{ profile.total }}</span></div>
+        <div class="your-place"><span>{{ copy.you }}</span><strong>{{ profile.rank ? `#${profile.rank}` : '—' }}</strong><span>{{ copy.earned }} {{ profile.score }}</span></div>
       </section>
     </template>
-    <footer>MANAS UNIVERSITY <span>✦</span> MANASHELPER</footer>
-    <dialog ref="dialog" aria-labelledby="achievement-title" @close="afterClose" @click="($event.target === dialog) && close()">
+    <footer>MANAS UNIVERSITY <span aria-hidden="true">✧</span> MANASHELPER</footer>
+
+    <dialog ref="dialog" class="achievement-sheet" :style="{ '--medal-tone': selectedTone }"
+      aria-labelledby="achievement-title" aria-describedby="achievement-description"
+      @close="afterClose" @click="($event.target === dialog) && close()"
+    >
       <template v-if="selected">
+        <span class="sheet-handle" aria-hidden="true"></span>
         <button class="close" :aria-label="copy.close" @click="close">×</button>
-        <div class="detail-badge">{{ selected.emoji }}</div><p class="eyebrow">{{ selected.earned_at ? copy.earned : copy.locked }}</p>
-        <h2 id="achievement-title">{{ selected.name }}</h2><p class="description">{{ selected.description }}</p>
-        <div class="detail-progress"><span>{{ copy.progress }}</span><strong>{{ selected.current }} / {{ selected.target }}</strong></div>
-        <div class="track"><span :style="{ width: `${selected.current / selected.target * 100}%` }"></span></div>
-        <p v-if="!selected.available && !selected.earned_at" class="source-note">{{ selected.blocked_reason === 'baseline' ? copy.baseline_missing : copy.source_pending }}</p>
+        <div class="sheet-art"><AchievementBadge :achievement-key="selected.key" :earned="!!selected.earned_at" reveal /></div>
+        <p class="achievement-status" :class="{ 'status-earned': selected.earned_at }">{{ selected.earned_at ? copy.earned : copy.locked }}</p>
+        <h2 id="achievement-title">{{ selected.name }}</h2>
+        <p id="achievement-description" class="description">{{ selected.description }}</p>
         <p v-if="selected.earned_at" class="earned-date">{{ new Date(selected.earned_at).toLocaleDateString(profile?.locale, { dateStyle: 'long' }) }}</p>
+        <button class="sheet-dismiss" @click="close">{{ copy.close }}</button>
       </template>
     </dialog>
   </main>

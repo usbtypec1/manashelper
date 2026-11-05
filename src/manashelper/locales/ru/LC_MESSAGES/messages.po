@@ -1002,18 +1002,6 @@ msgstr "Ачивки доступны при включённом Mini App."
 msgid "gamification.open_prompt"
 msgstr "Твои ачивки, прогресс и место в рейтинге."
 
-msgid "gamification.grant_usage"
-msgstr "Использование: /grant_pokemon <Telegram ID пользователя>"
-
-msgid "gamification.granted"
-msgstr "Ачивка выдана."
-
-msgid "gamification.already_granted"
-msgstr "У пользователя уже есть эта ачивка."
-
-msgid "commands.grant_pokemon"
-msgstr "Выдать ачивку за проверенное селфи"
-
 msgid "gamification.ui.collection"
 msgstr "Моя коллекция"
 
@@ -1112,12 +1100,6 @@ msgstr "Продавец говна"
 
 msgid "gamification.seller.description"
 msgstr "Опубликуй первое прошедшее модерацию объявление."
-
-msgid "gamification.pokemon.name"
-msgstr "Покемон"
-
-msgid "gamification.pokemon.description"
-msgstr "Сделай селфи с Адилетом (@yunbae) и пришли в техподдержку бота для ручной проверки."
 
 msgid "gamification.ui.baseline_missing"
 msgstr "Пока нет орталама за предыдущий семестр."

@@ -1005,18 +1005,6 @@ msgstr "Жетишкендиктер Mini App иштетилгенде жетк�
 msgid "gamification.open_prompt"
 msgstr "Жетишкендиктериң, прогрессиң жана рейтингдеги ордуң."
 
-msgid "gamification.grant_usage"
-msgstr "Колдонуу: /grant_pokemon <колдонуучунун Telegram ID номери>"
-
-msgid "gamification.granted"
-msgstr "Жетишкендик берилди."
-
-msgid "gamification.already_granted"
-msgstr "Колдонуучуда бул жетишкендик мурунтан бар."
-
-msgid "commands.grant_pokemon"
-msgstr "Текшерилген селфи үчүн жетишкендик берүү"
-
 msgid "gamification.ui.collection"
 msgstr "Менин жыйнагым"
 
@@ -1115,12 +1103,6 @@ msgstr "Керексиз буюм сатуучу"
 
 msgid "gamification.seller.description"
 msgstr "Текшерүүдөн өткөн биринчи жарыяңды чыгар."
-
-msgid "gamification.pokemon.name"
-msgstr "Покемон"
-
-msgid "gamification.pokemon.description"
-msgstr "Адилет (@yunbae) менен селфи жасап, кол менен текшерүү үчүн боттун колдоосуна жөнөт."
 
 msgid "gamification.ui.baseline_missing"
 msgstr "Мурунку семестрдин орточо баасы азырынча жок."

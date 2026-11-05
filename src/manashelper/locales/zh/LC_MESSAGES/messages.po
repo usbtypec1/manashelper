@@ -994,18 +994,6 @@ msgstr "启用迷你应用后即可查看成就。"
 msgid "gamification.open_prompt"
 msgstr "查看你的成就、进度和排名。"
 
-msgid "gamification.grant_usage"
-msgstr "用法：/grant_pokemon <Telegram 用户 ID>"
-
-msgid "gamification.granted"
-msgstr "成就已授予。"
-
-msgid "gamification.already_granted"
-msgstr "该用户已获得此成就。"
-
-msgid "commands.grant_pokemon"
-msgstr "授予已审核的自拍成就"
-
 msgid "gamification.ui.collection"
 msgstr "我的收藏"
 
@@ -1104,12 +1092,6 @@ msgstr "杂货卖家"
 
 msgid "gamification.seller.description"
 msgstr "发布第一条审核通过的市场广告。"
-
-msgid "gamification.pokemon.name"
-msgstr "宝可梦"
-
-msgid "gamification.pokemon.description"
-msgstr "与 Adilet（@yunbae）合影，并发送给机器人客服进行人工审核。"
 
 msgid "gamification.ui.baseline_missing"
 msgstr "尚无上学期的平均绩点。"

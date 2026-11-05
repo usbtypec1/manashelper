@@ -1,7 +1,6 @@
 from dishka import Provider, Scope, provide
 
 from manashelper.modules.gamification.application.queries import GamificationQuery
-from manashelper.modules.gamification.application.use_cases.grant_pokemon import GrantPokemonUseCase
 from manashelper.modules.gamification.application.use_cases.record_activity import RecordActivityUseCase
 from manashelper.modules.gamification.application.use_cases.record_attendance import RecordAttendanceUseCase
 from manashelper.modules.gamification.application.use_cases.record_transcript import RecordTranscriptUseCase
@@ -19,5 +18,4 @@ class GamificationProvider(Provider):
     attendance = provide(RecordAttendanceUseCase)
     access = provide(SetGamificationEnabledUseCase)
     transcript = provide(RecordTranscriptUseCase)
-    pokemon = provide(GrantPokemonUseCase)
     query = provide(GamificationQuery)

@@ -6,14 +6,17 @@ Node is needed only for building the Vue/Vite frontend.
 
 ## Rules and persistence
 
+Pokemon is temporarily retired: its collection card and grant command are removed. Historical award
+rows remain stored, but only keys in the active achievement catalog contribute to scores, ranks and tie order.
+
 - Access is opt-in per user: `gamification_progress.enabled` defaults to false, including existing rows.
   A missing progress row is disabled. Only the configured admin chat can run
   `/gamification <Telegram user ID> on|off` for a registered user. Reopen the main menu afterward.
   Disabled users have no achievements button, receive 403 from both Mini App APIs, and are excluded from ranking.
-  No activity progress or awards (including manual grants) are recorded, and the transcript-only HTTP refresh is skipped.
+  No activity progress or awards (including temporarily retired achievements) are recorded, and the transcript-only HTTP refresh is skipped.
   Regular OBIS synchronization continues. Disabling preserves awards/progress; enabling resumes them without
   backfilling missed activity. Academic history can qualify on the next successful refresh.
-- The collection contains eleven achievements. One achievement = one point. Awards are permanent and unique per Telegram user/key.
+- The collection contains ten achievements. One achievement = one point. Awards are permanent and unique per Telegram user/key.
 - Equal scores share competition ranks (1, 1, 3). Display ties by the time the score was reached, then user ID.
   Top ten contains only users with at least one award. The profile includes the user's rank outside that list.
 - Food has one counter for both thresholds (50 and 100); ten minutes since the last counted view.
@@ -21,8 +24,6 @@ Node is needed only for building the Vue/Vite frontend.
 - Night grades count successful initial displays, not pagination or polling: `[02:00, 05:00)` in Bishkek,
   once per date, three consecutive dates. A missing date resets the current streak.
 - Seller is awarded when successful channel publication message IDs are recorded, not at approval time.
-- `/grant_pokemon <Telegram user ID>` is authorized only in the configured admin chat, after manual selfie
-  verification through existing support. It stores actor ID/time and tolerates repeated grants.
 - Eldin balasy requires at least three final AA grades in one transcript semester; progress is the best
   per-semester AA count, including historical semesters. Counts never sum across semesters.
 - Thin ice requires five distinct subject codes in one current attendance snapshot, each with theory OR practice
@@ -42,6 +43,28 @@ previous successful progress. Mini App reads never call OBIS.
 OBIS may revise historical totals after retakes: we cannot reconstruct a value it no longer supplies before
 the first observation. Afterward the frozen baseline is retained. The supplied `trans.html` was inspected
 locally; committed tests use a synthetic structural fixture, without its profile/CSRF token/course history.
+
+## Mini App artwork and editable copy
+
+The collection uses illustrated round medals featuring the human mascot from `reference/mascot.JPG` and a locked medal for unearned achievements.
+Opening an achievement reveals its illustration, description, status and earned date.
+Intermediate progress counters, bars and source-readiness messages are hidden in the UI;
+server-side counters and award conditions are preserved. The collection total and rank remain visible.
+
+Names and descriptions come from `src/manashelper/locales/<locale>/LC_MESSAGES/messages.po`:
+
+- `gamification.<key>.name` — achievement name.
+- `gamification.<key>.description` — achievement condition/description.
+- Example: `gamification.cafeteria_boss.name` and `gamification.cafeteria_boss.description`.
+- Edit the corresponding `msgstr`; keep stable msgids and formatting placeholders.
+- Available locales: `ru`, `ky`, `en`, `tr`, `zh`. Compile catalogs and restart the bot after editing.
+  Docker builds compile them automatically. Editing copy does not change award rules.
+
+Shared interface copy uses `gamification.ui.*` in the same catalogs. After changing UI copy,
+export messages and rebuild the frontend using the commands below.
+The medal sprite atlas is `frontend/src/assets/achievement-medals.png`; cell order and
+sheet colors are mapped by stable achievement key in `frontend/src/achievementArt.ts`.
+Reference screenshots/video under `reference/` are design inputs only, never served to clients.
 
 ## Build and verify locally
 

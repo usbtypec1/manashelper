@@ -17,7 +17,8 @@ ACHIEVEMENTS = (
     Achievement("comeback", "📈", 0.2),
     Achievement("fall", "📉", 0.2),
     Achievement("seller", "💩", 1),
-    Achievement("pokemon", "🐱", 1),
     Achievement("eldin_balasy", "🤓", 3),
     Achievement("thin_ice", "🥶", 5),
 )
+
+ACHIEVEMENT_KEYS = tuple(achievement.key for achievement in ACHIEVEMENTS)

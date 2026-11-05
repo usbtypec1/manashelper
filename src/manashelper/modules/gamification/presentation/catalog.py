@@ -18,7 +18,6 @@ def achievement_strings() -> dict[str, tuple[str, str]]:
         "comeback": (_("gamification.comeback.name"), _("gamification.comeback.description")),
         "fall": (_("gamification.fall.name"), _("gamification.fall.description")),
         "seller": (_("gamification.seller.name"), _("gamification.seller.description")),
-        "pokemon": (_("gamification.pokemon.name"), _("gamification.pokemon.description")),
         "eldin_balasy": (_("gamification.eldin_balasy.name"), _("gamification.eldin_balasy.description")),
         "thin_ice": (_("gamification.thin_ice.name"), _("gamification.thin_ice.description")),
     }

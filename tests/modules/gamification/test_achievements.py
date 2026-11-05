@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.core.config import get_settings
 from manashelper.modules.gamification.application.queries import GamificationQuery
-from manashelper.modules.gamification.application.use_cases.grant_pokemon import GrantPokemonUseCase
 from manashelper.modules.gamification.application.use_cases.record_activity import RecordActivityUseCase
 from manashelper.modules.gamification.application.use_cases.record_attendance import RecordAttendanceUseCase
 from manashelper.modules.gamification.application.use_cases.record_transcript import RecordTranscriptUseCase
@@ -63,15 +62,6 @@ async def test_night_window_bishkek_dates_duplicates_and_gaps(session):
     assert "night_owl" in await repo.get_awards(991001)
 
 
-async def test_manual_award_authorization_and_idempotency(session):
-    repo = await seed(session)
-    grant = GrantPokemonUseCase(repo, get_settings())
-    with pytest.raises(PermissionError):
-        await grant.execute(991001, admin_chat_id=1, actor_id=5)
-    assert await grant.execute(991001, admin_chat_id=get_settings().admin_chat_id, actor_id=5)
-    assert not await grant.execute(991001, admin_chat_id=get_settings().admin_chat_id, actor_id=5)
-
-
 @pytest.mark.parametrize("gpa,award", [("3.20", "comeback"), ("2.80", "fall")])
 async def test_official_transcript_thresholds_decimal_and_account_marker(session, gpa, award):
     repo = await seed(session)
@@ -112,12 +102,38 @@ async def test_ranking_ties_top_ten_and_own_position(session):
         await seed(session, user_id)
         await repo.award(user_id, "seller", now + timedelta(seconds=index))
     await repo.award(991001, "seller", now)
-    await repo.award(991001, "pokemon", now)
+    await repo.award(991001, "formula_one", now)
     rows = await repo.ranking()
     assert len(rows) == 10
     assert rows[0][0] == 991001 and rows[0][3] == 1
     assert all(row[3] == 2 for row in rows[1:])
     assert (await repo.ranking(991013))[0][3] == 2
+
+
+async def test_retired_awards_are_preserved_but_excluded_from_collection_and_ranking(session):
+    await session.execute(delete(UserAchievement))
+    repo = await seed(session)
+    await seed(session, 991002)
+    await seed(session, 991003)
+    now = datetime.now(UTC)
+    await repo.award(991001, "seller", now)
+    await repo.award(991002, "seller", now + timedelta(minutes=1))
+    # Retired awards must not affect score, eligibility or the tie-breaking time.
+    session.add_all(
+        [
+            UserAchievement(user_id=991001, achievement_key="pokemon", earned_at=now + timedelta(days=1), granted_by=5),
+            UserAchievement(user_id=991003, achievement_key="pokemon", earned_at=now, granted_by=5),
+        ]
+    )
+    await session.flush()
+    assert not await repo.award(991002, "pokemon", now)
+    assert list(await repo.get_awards(991001)) == ["seller"]
+    assert await repo.ranking() == [(991001, "Synthetic achiever", 1, 1), (991002, "Synthetic achiever", 1, 1)]
+    profile = await GamificationQuery(repo).profile(991003)
+    assert (profile.score, profile.total, profile.rank) == (0, 10, None)
+    assert "pokemon" not in {card.key for card in profile.achievements}
+    stored = await session.get(UserAchievement, (991001, "pokemon"))
+    assert stored is not None and stored.granted_by == 5 and stored.earned_at == now + timedelta(days=1)
 
 
 async def test_default_off_blocks_all_writers_and_opt_out_preserves_progress(session):
@@ -134,14 +150,10 @@ async def test_default_off_blocks_all_writers_and_opt_out_preserves_progress(ses
     await activity.execute(991001, "published")
     await RecordTranscriptUseCase(repo).execute(991001, "fixture-student", transcript)
     await RecordAttendanceUseCase(repo).execute(991001, "fixture-student", [])
-    assert not await repo.award(991001, "pokemon", datetime.now(UTC))
+    assert not await repo.award(991001, "seller", datetime.now(UTC))
     assert await repo.get_progress(991001) == (0, 0, None)
     assert not await repo.get_awards(991001)
     assert not (await repo.academic_progress(991001))[0]
-    with pytest.raises(LookupError):
-        await GrantPokemonUseCase(repo, get_settings()).execute(
-            991001, admin_chat_id=get_settings().admin_chat_id, actor_id=5
-        )
     with pytest.raises(PermissionError):
         await access.execute(991001, True, admin_chat_id=0)
     with pytest.raises(LookupError):

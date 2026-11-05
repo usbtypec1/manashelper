@@ -7,7 +7,6 @@ from dishka import FromDishka
 
 from manashelper.core.config import Settings
 from manashelper.modules.gamification.application.queries import GamificationQuery
-from manashelper.modules.gamification.application.use_cases.grant_pokemon import GrantPokemonUseCase
 from manashelper.modules.gamification.application.use_cases.set_gamification_enabled import (
     SetGamificationEnabledUseCase,
 )
@@ -37,23 +36,6 @@ async def on_achievements(
             ]
         ),
     )
-
-
-@router.message(Command("grant_pokemon"))
-async def grant_pokemon(
-    message: Message, command: CommandObject, grant: FromDishka[GrantPokemonUseCase], settings: FromDishka[Settings]
-) -> None:
-    if message.chat.id != settings.admin_chat_id or message.from_user is None:
-        return
-    if not command.args or not command.args.isdecimal() or not 0 < int(command.args) < 2**63:
-        await message.answer(_("gamification.grant_usage"), parse_mode=None)
-        return
-    try:
-        added = await grant.execute(int(command.args), admin_chat_id=message.chat.id, actor_id=message.from_user.id)
-    except LookupError:
-        await message.answer(_("gamification.unavailable"))
-        return
-    await message.answer(_("gamification.granted") if added else _("gamification.already_granted"))
 
 
 @router.message(Command("gamification"))

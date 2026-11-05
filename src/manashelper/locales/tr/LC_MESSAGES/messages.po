@@ -1001,18 +1001,6 @@ msgstr "Başarımlar Mini App etkinleştirildiğinde kullanılabilir."
 msgid "gamification.open_prompt"
 msgstr "Başarımların, ilerlemen ve sıralamadaki yerin."
 
-msgid "gamification.grant_usage"
-msgstr "Kullanım: /grant_pokemon <Telegram kullanıcı kimliği>"
-
-msgid "gamification.granted"
-msgstr "Başarım verildi."
-
-msgid "gamification.already_granted"
-msgstr "Kullanıcı bu başarımı zaten kazanmış."
-
-msgid "commands.grant_pokemon"
-msgstr "Doğrulanmış selfie başarımını ver"
-
 msgid "gamification.ui.collection"
 msgstr "Koleksiyonum"
 
@@ -1111,12 +1099,6 @@ msgstr "Ivır zıvır satıcısı"
 
 msgid "gamification.seller.description"
 msgstr "İlk onaylanmış ilanını yayınla."
-
-msgid "gamification.pokemon.name"
-msgstr "Pokémon"
-
-msgid "gamification.pokemon.description"
-msgstr "Adilet (@yunbae) ile selfie çek ve doğrulama için bot desteğine gönder."
 
 msgid "gamification.ui.baseline_missing"
 msgstr "Önceki döneme ait ortalama henüz yok."
