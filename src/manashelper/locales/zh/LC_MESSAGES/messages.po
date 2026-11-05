@@ -992,7 +992,7 @@ msgid "gamification.unavailable"
 msgstr "启用迷你应用后即可查看成就。"
 
 msgid "gamification.open_prompt"
-msgstr "查看你的成就、进度和排名。"
+msgstr "🏆 已获得：{score} / {total}\n🌍 全球排名：{rank}\n\n点击下方按钮打开成就收藏和排行榜。"
 
 msgid "gamification.ui.collection"
 msgstr "我的收藏"
@@ -1082,7 +1082,7 @@ msgid "gamification.comeback.description"
 msgstr "与上学期相比，累计平均绩点至少提高 0.20。"
 
 msgid "gamification.fall.name"
-msgstr "下滑"
+msgstr "负增长"
 
 msgid "gamification.fall.description"
 msgstr "与上学期相比，累计平均绩点至少下降 0.20。"
@@ -1103,7 +1103,7 @@ msgid "gamification.eldin_balasy.description"
 msgstr "在同一学期获得至少三门课程的最终 AA 成绩。"
 
 msgid "gamification.thin_ice.name"
-msgstr "如履薄冰"
+msgstr "岌岌可危"
 
 msgid "gamification.thin_ice.description"
 msgstr "在同一学期的五门不同课程中，理论课或实践课的缺勤率达到至少 18.75%。"
@@ -1144,3 +1144,15 @@ msgstr "此任务已无法手动标记，请在 Eders 中查看。"
 
 msgid "gamification.award_notification"
 msgstr "🏆 解锁成就：<b>{name}</b>\n\n{description}"
+
+
+msgid "menu.achievements_button"
+msgstr "🏆 成就"
+
+
+msgid "gamification.rank_unassigned"
+msgstr "暂无排名"
+
+
+msgid "gamification.view_all"
+msgstr "查看所有成就"

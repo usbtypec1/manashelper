@@ -999,7 +999,7 @@ msgid "gamification.unavailable"
 msgstr "Başarımlar Mini App etkinleştirildiğinde kullanılabilir."
 
 msgid "gamification.open_prompt"
-msgstr "Başarımların, ilerlemen ve sıralamadaki yerin."
+msgstr "🏆 Kazanılan: {score} / {total}\n🌍 Genel sıralama: {rank}\n\nKoleksiyonunu ve liderlik tablosunu aşağıdaki düğmeyle aç."
 
 msgid "gamification.ui.collection"
 msgstr "Koleksiyonum"
@@ -1089,7 +1089,7 @@ msgid "gamification.comeback.description"
 msgstr "Genel not ortalamanı önceki döneme göre en az 0.20 artır."
 
 msgid "gamification.fall.name"
-msgstr "Düşüş"
+msgstr "Negatif büyüme"
 
 msgid "gamification.fall.description"
 msgstr "Genel not ortalamanı önceki döneme göre en az 0.20 düşür."
@@ -1110,7 +1110,7 @@ msgid "gamification.eldin_balasy.description"
 msgstr "Bir yarıyılda en az üç AA harf notu al."
 
 msgid "gamification.thin_ice.name"
-msgstr "İnce buz üstünde"
+msgstr "Sınırda"
 
 msgid "gamification.thin_ice.description"
 msgstr "Bir yarıyılda beş farklı dersin teori veya uygulama kısmında en az %18,75 devamsızlığa ulaş."
@@ -1151,3 +1151,15 @@ msgstr "Bu görev artık elle işaretlenemiyor. Eders'ten kontrol edin."
 
 msgid "gamification.award_notification"
 msgstr "🏆 Başarım kazanıldı: <b>{name}</b>\n\n{description}"
+
+
+msgid "menu.achievements_button"
+msgstr "🏆 Başarımlar"
+
+
+msgid "gamification.rank_unassigned"
+msgstr "Henüz sıralamada değil"
+
+
+msgid "gamification.view_all"
+msgstr "Tüm başarımlar"

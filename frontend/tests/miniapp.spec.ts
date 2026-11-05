@@ -19,7 +19,7 @@ test('collection, detail, keyboard close and leaderboard use real authenticated 
   await expect(page.locator('.collection')).toHaveCSS('display', 'grid')
   for (const [name, description] of [
     ['Элдин баласы', 'три итоговые оценки AA'],
-    ['По тонкому льду', 'теории или практике'],
+    ['На грани', 'теории или практике'],
   ]) {
     await page.getByRole('button', { name: new RegExp(name) }).click()
     await expect(page.getByRole('dialog')).toContainText(description)

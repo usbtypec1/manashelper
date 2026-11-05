@@ -21,6 +21,8 @@ rows remain stored, but only keys in the active achievement catalog contribute t
   `telegram_outbox` (category `achievement`, 24-hour TTL). The award and queue entry commit together;
   failures roll both back. Repeated observations and existing awards do not enqueue again.
   Delivery uses the recipient's locale/theme and the shared stopped-user, retry and night-silence policy.
+  When the public URL is configured, each notification includes a localized View all achievements
+  inline Web App button. The keyboard is persisted with the message and reused on delivery retries.
   Existing awards are not backfilled with notifications. Outbox delivery remains at least once.
 - Equal scores share competition ranks (1, 1, 3). Display ties by the time the score was reached, then user ID.
   Top ten contains only users with at least one award. The profile includes the user's rank outside that list.
@@ -31,7 +33,7 @@ rows remain stored, but only keys in the active achievement catalog contribute t
 - Seller is awarded when successful channel publication message IDs are recorded, not at approval time.
 - Eldin balasy requires at least three final AA grades in one transcript semester; progress is the best
   per-semester AA count, including historical semesters. Counts never sum across semesters.
-- Thin ice requires five distinct subject codes in one current attendance snapshot, each with theory OR practice
+- On the edge requires five distinct subject codes in one current attendance snapshot, each with theory OR practice
   absence >= 18.75%. Both parts of one subject count once. Use OBIS's percentages, not a reconstructed denominator;
   do not accumulate subjects across refreshes. Account markers hide progress from a previous linked account.
 - Existing food/night views and publications are not backfilled. Historical F1/FF in the transcript are eligible.
@@ -69,10 +71,13 @@ Shared interface copy uses `gamification.ui.*` in the same catalogs. After chang
 export messages and rebuild the frontend using the commands below.
 The medal sprite atlas is `frontend/src/assets/achievement-medals.png`; cell order and
 sheet colors are mapped by stable achievement key in `frontend/src/achievementArt.ts`.
-Seller, Formula One and Champion use individual `achievement-seller.png`,
-`achievement-formula-one.png` and `achievement-champion.png` assets in the same directory.
-They depict the mascot in the supplied suit meme, racing-driver portrait and military salute scenes.
+Individual `achievement-<name>.png` assets in the same directory override all ten medals:
+Seller (suit meme), Formula One (racing-driver portrait), Champion (military salute),
+Comeback/Negative growth (contrasting smiling and grim meme portraits), Cafeteria boss (chubby mascot
+with a fried-chicken bucket), Night owl (Anxiety character fusion), Eldin balasy (GigaChad fusion),
+Foodie (Naruto at Ichiraku with ramen and stacked bowls), and On the edge (tightrope between skyscrapers).
 The key mapping selects these images for earned medals and detail sheets; locked medals still use the atlas.
+Display names retain stable storage keys: `fall` is Negative growth, and `thin_ice` is On the edge.
 Reference screenshots/video under `reference/` are design inputs only, never served to clients.
 
 ## Build and verify locally
@@ -98,9 +103,23 @@ bot and Mini App. Generated bundles, message exports and screenshots are ignored
 
 ## Enable webhook and Mini App
 
-The main reply keyboard has an ordinary text Achievements button. Its handler sends a separate inline
+The main reply keyboard has an ordinary text 🏆 Achievements button. Its handler shows the earned count
+out of the active total and the user's global rank (or an unranked label), then sends a separate inline
 Web App button that opens the Mini App with signed initData. Never set web_app on the reply-keyboard
-button: Telegram does not supply initData for that launch mode. Other navigation menus are unchanged.
+button: Telegram does not supply initData for that launch mode. Old text labels without the trophy remain accepted.
+Other navigation menus are unchanged.
+
+To enable access for all users registered at the time of execution, run this SQL against the intended database:
+
+```sql
+INSERT INTO gamification_progress (user_id, enabled)
+SELECT id, TRUE FROM users
+ON CONFLICT (user_id) DO UPDATE SET enabled = TRUE;
+```
+
+Existing progress and awards are preserved. Future registrations still default to disabled; repeat the SQL
+or use the per-user admin command for them. Users must refresh the main menu (for example with `/start`)
+to see the button. A configured public URL remains required.
 
 
 1. Provide an HTTPS origin with a valid certificate; set `MANASHELPER_PUBLIC_URL=https://bot.example.com`.

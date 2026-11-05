@@ -242,12 +242,12 @@ async def test_admin_command_and_hidden_keyboard_for_disabled_user(session, monk
         await router.set_gamification(message, command, access, settings)
         assert not await repo.is_enabled(991001)
         labels = [button.text for row in build_main_keyboard().keyboard for button in row]
-        assert i18n.gettext("menu.achievements") not in labels
+        assert i18n.gettext("menu.achievements_button") not in labels
         command = CommandObject(command="gamification", args="991001 on")
         await router.set_gamification(message, command, access, settings)
         assert await repo.is_enabled(991001)
         labels = [button.text for row in build_main_keyboard(achievements_enabled=True).keyboard for button in row]
-        assert i18n.gettext("menu.achievements") in labels
+        assert i18n.gettext("menu.achievements_button") in labels
 
 
 async def test_transcript_fetch_is_skipped_for_disabled_users(session):

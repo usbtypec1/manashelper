@@ -3,8 +3,10 @@ from decimal import Decimal
 from unittest.mock import AsyncMock
 
 import pytest
+from aiogram.methods import SendMessage
 from sqlalchemy import select
 
+from manashelper.core.config import get_settings
 from manashelper.localization.theme import Theme
 from manashelper.modules.gamification.application.catalog import ACHIEVEMENT_KEYS
 from manashelper.modules.gamification.application.use_cases.record_activity import RecordActivityUseCase
@@ -143,3 +145,22 @@ async def test_notification_escapes_catalog_values_before_html_interpolation(ses
     text = (await queued(session))[0].methods[0]["data"]["text"]
     assert "<b>&lt;seller&gt;</b>" in text
     assert "A &amp; B &lt;condition&gt;" in text
+
+
+@pytest.mark.parametrize("locale", ["en", "ru", "ky", "tr", "zh"])
+@pytest.mark.parametrize("public_url", ["https://example.com", None])
+async def test_notification_persists_localized_web_app_button_in_outbox(session, monkeypatch, locale, public_url):
+    monkeypatch.setattr(get_settings(), "public_url", public_url)
+    await setup_user(session, locale=locale)
+    await build_awards(session).execute(991101, "seller", datetime.now(UTC))
+    # Recreate the Telegram method from persisted JSON, as the outbox worker does.
+    method = SendMessage.model_validate((await queued(session))[0].methods[0]["data"])
+    if public_url:
+        assert method.reply_markup is not None
+        [button] = [button for row in method.reply_markup.inline_keyboard for button in row]
+        assert button.web_app.url == "https://example.com/app/"
+        with i18n.context(), i18n.use_locale(locale):
+            assert button.text == i18n.gettext("gamification.view_all")
+        assert button.url is None and button.callback_data is None
+    else:
+        assert method.reply_markup is None
