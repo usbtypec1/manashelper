@@ -2,6 +2,7 @@ import hashlib
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
+from manashelper.modules.gamification.application.use_cases.award_achievement import AwardAchievementUseCase
 from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
 from manashelper.modules.obis.application.models import LessonAttendanceModel
 
@@ -9,6 +10,7 @@ from manashelper.modules.obis.application.models import LessonAttendanceModel
 @dataclass(frozen=True, slots=True)
 class RecordAttendanceUseCase:
     repository: AchievementRepository
+    awards: AwardAchievementUseCase
 
     async def execute(self, user_id: int, student_number: str, lessons: list[LessonAttendanceModel]) -> None:
         progress = await self.repository.lock_progress(user_id)
@@ -27,4 +29,4 @@ class RecordAttendanceUseCase:
         progress.attendance_marker = hashlib.sha256(student_number.encode()).hexdigest()
         progress.attendance_count = len(qualifying)
         if len(qualifying) >= 5:
-            await self.repository.award(user_id, "thin_ice", datetime.now(UTC))
+            await self.awards.execute(user_id, "thin_ice", datetime.now(UTC))

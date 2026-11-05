@@ -1151,3 +1151,7 @@ msgstr "Eders ичиндеги тапшырманы жаңыртуу мүмкү�
 
 msgid "eders.completion_unavailable"
 msgstr "Бул тапшырманы кол менен белгилөө мындан ары жеткиликсиз. Eders ичинен текшериңиз."
+
+
+msgid "gamification.award_notification"
+msgstr "🏆 Жетишкендик алынды: <b>{name}</b>\n\n{description}"

@@ -1140,3 +1140,7 @@ msgstr "无法更新 Eders 中的任务，请重试。"
 
 msgid "eders.completion_unavailable"
 msgstr "此任务已无法手动标记，请在 Eders 中查看。"
+
+
+msgid "gamification.award_notification"
+msgstr "🏆 解锁成就：<b>{name}</b>\n\n{description}"

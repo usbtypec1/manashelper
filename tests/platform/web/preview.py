@@ -15,8 +15,10 @@ from manashelper.core.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
 from manashelper.modules.gamification.provider import GamificationProvider
+from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.provider import UsersProvider
+from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.web.server import create_web_app
 from tests.platform.web.factories import TOKEN, authorization
 
@@ -42,7 +44,14 @@ async def app() -> web.Application:
         def engine(self) -> AsyncEngine:
             return preview_engine
 
-    container = make_async_container(CoreProvider(), PreviewProvider(), UsersProvider(), GamificationProvider())
+    container = make_async_container(
+        CoreProvider(),
+        PreviewProvider(),
+        UsersProvider(),
+        GamificationProvider(),
+        OutboxProvider(),
+        NotificationsProvider(),
+    )
     application = create_web_app(bot, Dispatcher(), container, settings)
 
     async def fixture(request: web.Request) -> web.Response:

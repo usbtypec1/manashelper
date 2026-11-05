@@ -19,6 +19,7 @@ from manashelper.jobs.scheduler import create_scheduler
 from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme
 from manashelper.modules.gamification.provider import GamificationProvider
+from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis import jobs
 from manashelper.modules.obis.application.credentials import ObisCredentialsQuery
 from manashelper.modules.obis.application.models import (
@@ -66,7 +67,9 @@ from manashelper.modules.obis.presentation.formatter import format_exam_grade_ch
 from manashelper.modules.obis.presentation.sender import TelegramObisNotificationSender
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.users.infrastructure.models.user import User as DbUser
+from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from tests.modules.eders.application_factories import build_eders_service
 from tests.modules.obis.factories import build_obis
 
@@ -401,7 +404,14 @@ async def test_obis_provider_preserves_app_request_scopes_and_model_registry():
         ExamGradeStore,
         AttendanceStore,
     )
-    async with make_async_container(CoreProvider(), ObisProvider(), GamificationProvider()) as container:
+    async with make_async_container(
+        CoreProvider(),
+        ObisProvider(),
+        GamificationProvider(),
+        UsersProvider(),
+        OutboxProvider(),
+        NotificationsProvider(),
+    ) as container:
         client, crypto = await container.get(ObisClient), await container.get(CryptoService)
         source = await container.get(ResultsSource)
         async with container() as request:

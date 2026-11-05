@@ -23,6 +23,7 @@ from manashelper.modules.users.infrastructure.repositories.user import UserRepos
 from manashelper.modules.users.queries import UsersQuery
 from tests.modules.eders.application_factories import build_eders_service, build_eders_tracking_service
 from tests.modules.eders.factories import make_eders_client
+from tests.modules.gamification.factories import build_awards
 from tests.modules.obis.factories import build_obis
 
 PORT = os.environ.get("MANASHELPER_EDERS_SIMULATION_PORT")
@@ -222,7 +223,7 @@ async def test_obis_transcript_http_awards_and_failed_refresh_preserves_progress
         ObisCredentialsQuery(credentials, crypto),
         credentials,
         ObisResultsSource(ObisClient()),
-        RecordTranscriptUseCase(repo),
+        RecordTranscriptUseCase(repo, build_awards(session)),
         GamificationQuery(repo),
     )
     await refresh.execute(user.id)
@@ -288,7 +289,7 @@ async def test_new_achievements_through_real_http_refresh_with_opt_in_and_failur
         ObisCredentialsQuery(credentials, crypto),
         credentials,
         ObisResultsSource(client),
-        RecordTranscriptUseCase(repo),
+        RecordTranscriptUseCase(repo, build_awards(session)),
         GamificationQuery(repo),
     )
     await refresh.execute(user.id)

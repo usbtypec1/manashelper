@@ -1148,3 +1148,7 @@ msgstr "Achievements enabled. The user needs to reopen the main menu."
 
 msgid "gamification.access_disabled"
 msgstr "Achievements disabled. Progress and awards are preserved."
+
+
+msgid "gamification.award_notification"
+msgstr "🏆 Achievement unlocked: <b>{name}</b>\n\n{description}"

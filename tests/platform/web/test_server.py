@@ -21,9 +21,11 @@ from manashelper.core.provider import CoreProvider
 from manashelper.modules.gamification.application.use_cases.record_activity import RecordActivityUseCase
 from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
 from manashelper.modules.gamification.provider import GamificationProvider
+from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.telegram.dispatcher import on_error
+from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.telegram.webhook_models import ProcessedTelegramUpdate
 from manashelper.platform.web.auth import authenticate
 from manashelper.platform.web.server import create_web_app
@@ -50,7 +52,9 @@ async def application():
     settings = get_settings().model_copy(
         update={"telegram_bot_token": TOKEN, "public_url": "https://example.com", "webhook_secret": SecretStr(SECRET)}
     )
-    container = make_async_container(CoreProvider(), UsersProvider(), GamificationProvider())
+    container = make_async_container(
+        CoreProvider(), UsersProvider(), GamificationProvider(), OutboxProvider(), NotificationsProvider()
+    )
     dispatcher = Dispatcher()
     calls = []
 

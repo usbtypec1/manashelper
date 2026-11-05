@@ -15,6 +15,7 @@ from manashelper.modules.obis.infrastructure.repositories.snapshot import ObisSn
 from manashelper.modules.obis.infrastructure.repositories.user_exam_grade import UserExamGradeRepository
 from manashelper.modules.obis.infrastructure.repositories.user_lesson_attendance import UserLessonAttendanceRepository
 from manashelper.modules.obis.infrastructure.results_source import ObisResultsSource
+from tests.modules.gamification.factories import build_awards
 
 
 def build_obis(session, client, crypto):
@@ -29,7 +30,7 @@ def build_obis(session, client, crypto):
         source,
         snapshots,
         UserLessonAttendanceRepository(session),
-        RecordAttendanceUseCase(AchievementRepository(session)),
+        RecordAttendanceUseCase(AchievementRepository(session), build_awards(session)),
     )
     return SimpleNamespace(
         client=client,
