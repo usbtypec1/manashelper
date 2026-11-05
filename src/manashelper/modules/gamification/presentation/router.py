@@ -46,7 +46,7 @@ async def grant_pokemon(
     if message.chat.id != settings.admin_chat_id or message.from_user is None:
         return
     if not command.args or not command.args.isdecimal() or not 0 < int(command.args) < 2**63:
-        await message.answer(_("gamification.grant_usage"))
+        await message.answer(_("gamification.grant_usage"), parse_mode=None)
         return
     try:
         added = await grant.execute(int(command.args), admin_chat_id=message.chat.id, actor_id=message.from_user.id)
@@ -67,7 +67,7 @@ async def set_gamification(
         return
     args = (command.args or "").split()
     if len(args) != 2 or not args[0].isdecimal() or not 0 < int(args[0]) < 2**63 or args[1] not in {"on", "off"}:
-        await message.answer(_("gamification.access_usage"))
+        await message.answer(_("gamification.access_usage"), parse_mode=None)
         return
     try:
         await access.execute(int(args[0]), args[1] == "on", admin_chat_id=message.chat.id)
