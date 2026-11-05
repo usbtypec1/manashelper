@@ -26,7 +26,7 @@ PREVIEW_USER = 999_999_991_001
 async def app() -> web.Application:
     load_models()
     bot = Bot(TOKEN)
-    settings = get_settings()
+    settings = get_settings().model_copy(update={"telegram_bot_token": TOKEN})
     schema = "miniapp_preview_" + uuid4().hex
     admin_engine = create_async_engine(settings.database_url)
     async with admin_engine.begin() as connection:
@@ -43,7 +43,7 @@ async def app() -> web.Application:
             return preview_engine
 
     container = make_async_container(CoreProvider(), PreviewProvider(), UsersProvider(), GamificationProvider())
-    application = create_web_app(bot, Dispatcher(), container, get_settings())
+    application = create_web_app(bot, Dispatcher(), container, settings)
 
     async def fixture(request: web.Request) -> web.Response:
         return web.json_response({"initData": authorization(PREVIEW_USER).removeprefix("tma ")})
