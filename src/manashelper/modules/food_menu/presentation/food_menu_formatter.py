@@ -22,7 +22,8 @@ from aiogram.types import (
 from aiogram.utils.i18n import gettext as _
 
 from manashelper.localization.weekdays import weekday_full
-from manashelper.modules.food_menu.application.daily_menu import DailyMenuModel
+from manashelper.modules.food_menu.application.daily_menu import DailyMenuModel, localized_dish_name
+from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.html import escape_html
 
 MediaGroupItem = InputMediaAudio | InputMediaDocument | InputMediaLivePhoto | InputMediaPhoto | InputMediaVideo
@@ -37,7 +38,11 @@ def format_daily_menu(daily_menu: DailyMenuModel) -> str:
 
     total_calories = 0
     for index, dish in enumerate(daily_menu.dishes, start=1):
-        lines.append(_("food.dish").format(index=index, name=escape_html(dish.name), calories=dish.calories))
+        lines.append(
+            _("food.dish").format(
+                index=index, name=escape_html(localized_dish_name(dish, i18n.current_locale)), calories=dish.calories
+            )
+        )
         total_calories += dish.calories
 
     lines.append("")
@@ -114,7 +119,11 @@ def build_daily_menu_rich_message(
         blocks.append(photos[0])
     dish_lines = []
     for index, dish in enumerate(daily_menu.dishes, start=1):
-        dish_lines.append(_("food.rich_dish").format(index=index, name=dish.name, calories=dish.calories))
+        dish_lines.append(
+            _("food.rich_dish").format(
+                index=index, name=localized_dish_name(dish, i18n.current_locale), calories=dish.calories
+            )
+        )
     blocks.append(InputRichBlockParagraph(text="\n".join(dish_lines)))
     blocks.extend(
         [

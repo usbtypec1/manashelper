@@ -21,6 +21,7 @@ class ToggleFoodMenuMealForWeekUseCase:
 
     async def execute(self, user_id: int, meal: FoodMenuMeal) -> FoodMenuNotificationSettingsSummary:
         await ensure_food_menu_user_exists(self.users, user_id)
+        await self.food_menu_notification_settings_repository.lock_user(user_id)
         rows = await self.food_menu_notification_settings_repository.get_all_by_user_id(user_id)
         by_weekday = {row.weekday: row for row in rows}
         all_enabled = all(is_meal_enabled(by_weekday, weekday, meal) for weekday in WEEKDAYS)

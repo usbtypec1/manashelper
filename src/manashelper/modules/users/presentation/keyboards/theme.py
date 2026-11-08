@@ -5,6 +5,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from manashelper.localization.theme import Theme
 from manashelper.modules.users.presentation.callbacks import ThemeCallback
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
+from manashelper.platform.telegram.navigation import build_navigation_keyboard
 
 
 def theme_name(theme: Theme) -> str:
@@ -20,4 +21,5 @@ def build_theme_keyboard(selected: Theme) -> InlineKeyboardMarkup:
         builder.button(text=f"✅ {label}" if theme == selected else label, callback_data=ThemeCallback(theme=theme))
     builder.button(text=_("common.back"), callback_data=SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS))
     builder.adjust(1)
+    builder.attach(build_navigation_keyboard())
     return builder.as_markup()

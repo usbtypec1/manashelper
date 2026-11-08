@@ -5,7 +5,7 @@ from aiogram import Router
 from aiogram.enums import ChatMemberStatus, ChatType
 from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 from aiogram.filters import Command, CommandObject
-from aiogram.types import CallbackQuery, EphemeralMessageParameters, Message, ReplyParameters
+from aiogram.types import CallbackQuery, EphemeralMessageParameters, InputRichBlockButtons, Message, ReplyParameters
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
@@ -29,6 +29,7 @@ from manashelper.modules.food_menu.presentation.food_menu_formatter import (
     refresh_daily_menu_rating,
 )
 from manashelper.modules.food_menu.presentation.keyboards.food_menu import (
+    build_food_navigation_buttons,
     build_menu_day_buttons,
     build_menu_open_button,
     build_menu_rating_buttons,
@@ -84,10 +85,12 @@ async def _show_day_prompt(
         await _send_menu_launcher(message)
         return
     availability = await daily_menu_query.get_available_dates()
+    day_buttons = build_menu_day_buttons(availability.dates, availability.today)
+    rich_message = build_menu_day_selection(day_buttons, show_usage=show_usage)
+    if message.chat.type == ChatType.PRIVATE and rich_message.blocks is not None:
+        rich_message.blocks.append(InputRichBlockButtons(buttons=build_food_navigation_buttons(private_chat=True)[1:]))
     await message.answer_rich(
-        rich_message=build_menu_day_selection(
-            build_menu_day_buttons(availability.dates, availability.today), show_usage=show_usage
-        ),
+        rich_message=rich_message,
         ephemeral_message_parameters=parameters,
         reply_parameters=reply_parameters,
     )
@@ -134,7 +137,7 @@ async def send_daily_menu(
         rich_message=build_daily_menu_rich_message(
             daily_menu,
             build_menu_rating_buttons(daily_menu.id, daily_menu.user_rating),
-            [],
+            build_food_navigation_buttons(private_chat=message.chat.type == ChatType.PRIVATE),
         ),
         ephemeral_message_parameters=parameters,
         reply_parameters=reply_parameters,

@@ -1,8 +1,37 @@
 from aiogram.enums import ChatType
-from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from aiogram.filters.callback_data import CallbackData
+from aiogram.types import (
+    InlineKeyboardButton,
+    KeyboardButton,
+    Message,
+    ReplyKeyboardMarkup,
+    ReplyKeyboardRemove,
+    WebAppInfo,
+)
 from aiogram.utils.i18n import gettext as _
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from manashelper.core.config import get_settings
+from manashelper.platform.telegram.callbacks import NavigationAction, NavigationCallback
+
+
+def build_mini_app_button(*, courses: bool = False) -> InlineKeyboardButton | None:
+    public_url = get_settings().public_url
+    if not public_url:
+        return None
+    return InlineKeyboardButton(
+        text=_("schedule.mini_app") if courses else _("settings.mini_app"),
+        web_app=WebAppInfo(url=f"{public_url}/app/?view={'courses' if courses else 'settings'}"),
+    )
+
+
+def build_navigation_keyboard(back: CallbackData | None = None) -> InlineKeyboardBuilder:
+    builder = InlineKeyboardBuilder()
+    if back is not None:
+        builder.button(text=_("common.back"), callback_data=back)
+    builder.button(text=_("common.back_to_menu"), callback_data=NavigationCallback(action=NavigationAction.MAIN))
+    builder.adjust(1)
+    return builder
 
 
 def build_main_keyboard(*, achievements_enabled: bool = False) -> ReplyKeyboardMarkup:
@@ -33,6 +62,7 @@ def build_study_keyboard() -> ReplyKeyboardMarkup:
         keyboard=[
             schedule_row,
             services_row,
+            [KeyboardButton(text=_("schedule.search_subject"))],
             [KeyboardButton(text=_("common.back_to_menu"))],
         ],
         resize_keyboard=True,

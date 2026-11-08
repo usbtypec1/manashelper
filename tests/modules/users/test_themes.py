@@ -90,7 +90,7 @@ async def test_theme_picker_selection_refreshes_menu_in_selected_theme(context, 
         ] == list(Theme)
         assert picker.reply_markup.inline_keyboard[0][0].text.startswith("✅ ")
         assert (
-            picker.reply_markup.inline_keyboard[-1][0].callback_data
+            picker.reply_markup.inline_keyboard[-2][0].callback_data
             == SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS).pack()
         )
         context.request.reset_mock()

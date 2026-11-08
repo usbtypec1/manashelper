@@ -13,7 +13,7 @@ from aiogram.types import CallbackQuery, Chat, Message, User
 
 from manashelper.modules.obis.application.models import ExamModel, LessonAttendanceModel, LessonExamsModel
 from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
-from manashelper.modules.obis.presentation.callbacks import ObisResultsPageCallback
+from manashelper.modules.obis.presentation.callbacks import ObisAction, ObisCallback, ObisResultsPageCallback
 from manashelper.modules.obis.presentation.router import (
     MAX_SAVED_RESULTS,
     RESULTS_KEY,
@@ -120,7 +120,7 @@ async def test_loading_message_appears_before_fetch_and_is_replaced_with_compact
 
 @pytest.mark.parametrize("kind", ["grades", "attendance"])
 @pytest.mark.parametrize("count", [0, 1, 2])
-async def test_single_page_and_empty_results_have_no_navigation(monkeypatch, kind, count) -> None:
+async def test_single_page_and_empty_results_keep_menu_buttons_without_pagination(monkeypatch, kind, count) -> None:
     message, state, request = _context(monkeypatch)
     service = AsyncMock()
     handler, fetch = _handler_and_fetch(service, kind)
@@ -131,7 +131,10 @@ async def test_single_page_and_empty_results_have_no_navigation(monkeypatch, kin
         if count == 0:
             empty_key = "obis.no_grades" if kind == "grades" else "obis.no_subjects"
             assert i18n.gettext(empty_key) in final.text
-    assert final.reply_markup is None
+    assert [button.callback_data for row in final.reply_markup.inline_keyboard for button in row] == [
+        ObisCallback(action=ObisAction.MENU).pack(),
+        "navigation:main",
+    ]
     assert RESULTS_KEY not in await state.get_data()
 
 
@@ -158,7 +161,10 @@ async def test_fetch_error_replaces_loading_message_with_actionable_error(
         final = _methods(request, EditMessageText)[0]
         assert final.text == i18n.gettext(text_key)
     assert final.message_id == 41
-    assert (final.reply_markup is not None) is credentials_keyboard
+    assert (final.reply_markup is not None) is (not isinstance(error, UserNotFoundError))
+    if final.reply_markup is not None:
+        expected = ObisAction.START_CREDENTIALS if credentials_keyboard else ObisAction.MENU
+        assert final.reply_markup.inline_keyboard[0][0].callback_data == ObisCallback(action=expected).pack()
     assert len(_methods(request, SendMessage)) == 1
     assert RESULTS_KEY not in await state.get_data()
 

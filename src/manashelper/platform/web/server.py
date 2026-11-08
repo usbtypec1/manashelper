@@ -17,6 +17,7 @@ from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.telegram.webhook_context import webhook_processing
 from manashelper.platform.telegram.webhook_middleware import ConcurrentWebhookUpdateError, WebhookReceiptMiddleware
 from manashelper.platform.web.auth import authenticate
+from manashelper.platform.web.preferences import register_preferences_routes
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
@@ -103,6 +104,7 @@ def create_web_app(bot: Bot, dispatcher: Dispatcher, container: AsyncContainer, 
     app.router.add_post("/telegram/webhook", webhook)
     app.router.add_get("/api/gamification/me", gamification)
     app.router.add_get("/api/gamification/leaderboard", gamification)
+    register_preferences_routes(app, container, settings)
     app.router.add_get("/app", index)
     app.router.add_get("/app/", index)
     if (STATIC_DIR / "assets").is_dir():

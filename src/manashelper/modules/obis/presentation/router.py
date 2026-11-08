@@ -135,7 +135,7 @@ async def _show_obis_results[T](
         await sent.edit_text(_("common.start_required"))
         return False
     except ObisSnapshotNotReadyError:
-        await sent.edit_text(_("data.preparing"))
+        await sent.edit_text(_("data.preparing"), reply_markup=build_obis_results_keyboard(0, 1))
         return False
     except UserHasNoCredentialsError:
         await sent.edit_text(
@@ -151,10 +151,10 @@ async def _show_obis_results[T](
         return False
     except (ObisParseError, httpx.HTTPError):
         logger.warning("Failed to load requested OBIS data", exc_info=True)
-        await sent.edit_text(_("obis.fetch_failed"))
+        await sent.edit_text(_("obis.fetch_failed"), reply_markup=build_obis_results_keyboard(0, 1))
         return False
     except Exception:
-        await sent.edit_text(_("obis.fetch_failed"))
+        await sent.edit_text(_("obis.fetch_failed"), reply_markup=build_obis_results_keyboard(0, 1))
         raise
     pages = format_results(lessons)
     if len(pages) > 1:

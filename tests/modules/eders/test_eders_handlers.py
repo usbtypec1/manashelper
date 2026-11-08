@@ -306,7 +306,12 @@ async def test_job_groups_new_materials_and_acknowledges_all_events_only_on_succ
     assert [call.args[1] for call in tracking.mark_sent.await_args_list] == ["first", "second"]
 
 
-async def test_eders_settings_open_from_eders_menu_and_keep_return_path_after_toggle() -> None:
+async def test_eders_settings_open_from_general_settings_and_keep_return_path_after_toggle(monkeypatch) -> None:
+    from pydantic import SecretStr
+
+    from manashelper.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "eders_password", SecretStr("fixture-password"))
     from manashelper.modules.eders.application.tracking import EdersSetting, EdersSettings
     from manashelper.modules.eders.presentation.callbacks import EdersAction, EdersMenuCallback, EdersSettingCallback
     from manashelper.modules.eders.presentation.keyboards import build_eders_menu_keyboard
@@ -323,19 +328,24 @@ async def test_eders_settings_open_from_eders_menu_and_keep_return_path_after_to
         for button in row
     )
     notifications = build_notifications_keyboard(NotificationSettingsSummary(True, True, True))
-    assert all(
-        button.callback_data != SettingsCallback(action=SettingsAction.OPEN_EDERS_NOTIFICATIONS).pack()
+    assert any(
+        button.callback_data == SettingsCallback(action=SettingsAction.OPEN_EDERS_NOTIFICATIONS).pack()
         for row in notifications.inline_keyboard
         for button in row
     )
     menu = build_eders_menu_keyboard()
-    entry = next(
-        button
+    assert all(
+        button.callback_data != EdersMenuCallback(action=EdersAction.NOTIFICATIONS).pack()
         for row in menu.inline_keyboard
         for button in row
-        if button.callback_data == EdersMenuCallback(action=EdersAction.NOTIFICATIONS).pack()
     )
-    assert entry.text == i18n.gettext("settings.notifications")
+    entry = next(
+        button
+        for row in notifications.inline_keyboard
+        for button in row
+        if button.callback_data == SettingsCallback(action=SettingsAction.OPEN_EDERS_NOTIFICATIONS).pack()
+    )
+    assert entry.text == i18n.gettext("notifications.eders")
     callback = AsyncMock(spec=CallbackQuery)
     callback.from_user = SimpleNamespace(id=42)
     callback.message = AsyncMock(spec=Message)
@@ -352,8 +362,12 @@ async def test_eders_settings_open_from_eders_menu_and_keep_return_path_after_to
                 callback, EdersSettingCallback(setting=selected), SimpleNamespace(execute=tracking.toggle)
             )
         keyboard = callback.message.edit_text.call_args.kwargs["reply_markup"]
-        assert keyboard.inline_keyboard[-1][0].callback_data == EdersMenuCallback(action=EdersAction.MENU).pack()
-        assert len(keyboard.inline_keyboard) == len(EdersSetting) + 1
+        assert (
+            keyboard.inline_keyboard[-2][0].callback_data
+            == SettingsCallback(action=SettingsAction.BACK_TO_NOTIFICATIONS).pack()
+        )
+        assert keyboard.inline_keyboard[-1][0].callback_data == "navigation:main"
+        assert len(keyboard.inline_keyboard) == len(EdersSetting) + 2
     tracking.toggle.assert_awaited_once_with(42, EdersSetting.DAY_BEFORE)
     assert callback.message.edit_text.call_args.kwargs["reply_markup"].inline_keyboard[0][0].text.startswith("⬜")
 

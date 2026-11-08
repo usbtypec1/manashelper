@@ -21,12 +21,19 @@ class FoodMenuNotificationSettingsRepository:
         )
         return list(result.scalars().all())
 
-    async def get_or_create(self, user_id: int, weekday: int) -> FoodMenuNotificationSettings:
+    async def lock_user(self, user_id: int) -> None:
+        await self._session.execute(select(User.id).where(User.id == user_id).with_for_update())
+
+    async def get_or_create(self, user_id: int, weekday: int, *, lock: bool = True) -> FoodMenuNotificationSettings:
+        if lock:
+            await self.lock_user(user_id)
         result = await self._session.execute(
-            select(FoodMenuNotificationSettings).where(
+            select(FoodMenuNotificationSettings)
+            .where(
                 FoodMenuNotificationSettings.user_id == user_id,
                 FoodMenuNotificationSettings.weekday == weekday,
             )
+            .execution_options(populate_existing=lock)
         )
         settings = result.scalar_one_or_none()
         if settings is None:
@@ -37,6 +44,7 @@ class FoodMenuNotificationSettingsRepository:
         return settings
 
     async def reset_to_default(self, user_id: int) -> None:
+        await self.lock_user(user_id)
         await self._session.execute(
             delete(FoodMenuNotificationSettings).where(FoodMenuNotificationSettings.user_id == user_id)
         )

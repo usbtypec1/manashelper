@@ -87,7 +87,10 @@ async def test_unknown_user_cannot_create_mute_settings(session, muted):
     assert await session.get(NotificationSettings, 972199) is None
 
 
-async def test_callbacks_mute_actor_show_alert_and_reset_from_settings(session):
+@pytest.mark.parametrize("from_settings", [False, True])
+async def test_callbacks_mute_actor_show_alert_and_reset_from_settings(session, from_settings):
+    from manashelper.modules.notifications.keyboards import build_notifications_keyboard
+
     session.add(User(id=972120, full_name="Recipient"))
     await session.flush()
     callback = AsyncMock(spec=CallbackQuery)
@@ -95,12 +98,18 @@ async def test_callbacks_mute_actor_show_alert_and_reset_from_settings(session):
     callback.from_user = SimpleNamespace(id=972120)
     callback.message = AsyncMock(spec=Message)
     callback.message.edit_text = AsyncMock()
+    callback.message.reply_markup = None
     with i18n.context(), i18n.use_locale("ru"):
+        if from_settings:
+            callback.message.reply_markup = build_notifications_keyboard(await service(session).get_settings(972120))
         await router.on_broadcast_mute(
             callback, BroadcastMuteCallback(muted=True), SimpleNamespace(execute=service(session).set_broadcast_mute)
         )
         callback.answer.assert_awaited_once_with("Вы отписались от рассылок на 14 дней", show_alert=True)
-        callback.message.edit_text.assert_not_awaited()
+        if from_settings:
+            callback.message.edit_text.assert_awaited_once()
+        else:
+            callback.message.edit_text.assert_not_awaited()
         await router.on_open_notifications(callback, SimpleNamespace(execute=service(session).get_settings))
         assert "Рассылки отключены до" in callback.message.edit_text.await_args.args[0]
         await router.on_broadcast_mute(

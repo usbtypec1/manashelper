@@ -11,14 +11,21 @@ from manashelper.modules.eders.presentation.callbacks import (
     EdersPageCallback,
     EdersSettingCallback,
 )
+from manashelper.platform.telegram.callbacks import (
+    NavigationAction,
+    NavigationCallback,
+    SettingsAction,
+    SettingsCallback,
+)
+from manashelper.platform.telegram.navigation import build_navigation_keyboard
 
 
 def build_eders_menu_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text=_("eders.filter_materials"), callback_data=EdersMenuCallback(action=EdersAction.MATERIALS))
     builder.button(text=_("eders.deadlines"), callback_data=EdersMenuCallback(action=EdersAction.DEADLINES))
-    builder.button(text=_("settings.notifications"), callback_data=EdersMenuCallback(action=EdersAction.NOTIFICATIONS))
     builder.adjust(1)
+    builder.attach(build_navigation_keyboard(NavigationCallback(action=NavigationAction.STUDY)))
     return builder.as_markup()
 
 
@@ -55,6 +62,7 @@ def build_eders_keyboard(selected: DeadlineFilter, page: int, count: int) -> Inl
     if page + 1 < count:
         navigation.button(text="▶", callback_data=EdersPageCallback(selected=selected, page=page + 1))
     builder.attach(navigation)
+    builder.attach(build_navigation_keyboard(EdersMenuCallback(action=EdersAction.MENU)))
     return builder.as_markup()
 
 
@@ -70,6 +78,7 @@ def build_eders_settings_keyboard(settings: EdersSettings) -> InlineKeyboardMark
     ):
         marker = "✅" if getattr(settings, setting.value) else "⬜"
         builder.button(text=f"{marker} {label}", callback_data=EdersSettingCallback(setting=setting))
-    builder.button(text=_("common.back"), callback_data=EdersMenuCallback(action=EdersAction.MENU))
+    builder.button(text=_("common.back"), callback_data=SettingsCallback(action=SettingsAction.BACK_TO_NOTIFICATIONS))
     builder.adjust(1)
+    builder.attach(build_navigation_keyboard())
     return builder.as_markup()

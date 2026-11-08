@@ -1,6 +1,5 @@
 import logging
 
-from aiogram import Bot
 from dishka import AsyncContainer
 
 from manashelper.modules.schedule.application.course import CourseQuery
@@ -14,7 +13,7 @@ from manashelper.platform.telegram.outbox.service import OutboxService
 logger = logging.getLogger(__name__)
 
 
-async def sync_timetable_job(container: AsyncContainer, bot: Bot) -> None:
+async def sync_timetable_job(container: AsyncContainer) -> None:
     try:
         async with container() as request_container:
             courses = await request_container.get(CourseQuery)
@@ -24,10 +23,10 @@ async def sync_timetable_job(container: AsyncContainer, bot: Bot) -> None:
         return
 
     for course_id in course_ids:
-        await _sync_course_timetable(container, bot, course_id)
+        await _sync_course_timetable(container, course_id)
 
 
-async def _sync_course_timetable(container: AsyncContainer, bot: Bot, course_id: int) -> None:
+async def _sync_course_timetable(container: AsyncContainer, course_id: int) -> None:
     try:
         async with container() as request_container:
             sync_course_timetable = await request_container.get(SyncCourseTimetableUseCase)

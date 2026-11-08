@@ -78,19 +78,19 @@ msgid "eders.title_date_mismatch"
 msgstr "Дата в названии отличается от установленного срока."
 
 msgid "eders.filter_all"
-msgstr "Недавние и предстоящие"
+msgstr "📋 Недавние и предстоящие"
 
 msgid "eders.filter_week"
-msgstr "Ближайшие семь дней"
+msgstr "🗓️ Ближайшие семь дней"
 
 msgid "eders.filter_available"
-msgstr "Доступные сейчас"
+msgstr "🟢 Доступные сейчас"
 
 msgid "eders.filter_awaiting"
-msgstr "Ожидают оценки"
+msgstr "⏳ Ожидают оценки"
 
 msgid "eders.filter_unknown"
-msgstr "Без точного срока"
+msgstr "❓ Без точного срока"
 
 msgid "eders.reminder_day"
 msgstr "Напоминание eders: за сутки до срока"
@@ -108,19 +108,19 @@ msgid "eders.previous_deadline"
 msgstr "Прежний срок: {value}"
 
 msgid "eders.setting_day"
-msgstr "За сутки"
+msgstr "📅 За сутки"
 
 msgid "eders.setting_two_hours"
-msgstr "За два часа"
+msgstr "⏰ За два часа"
 
 msgid "eders.setting_openings"
-msgstr "Открытие заданий и тестов"
+msgstr "🔓 Открытие заданий и тестов"
 
 msgid "eders.setting_changes"
-msgstr "Изменения сроков"
+msgstr "🔄 Изменения сроков"
 
 msgid "eders.setting_archived"
-msgstr "Скрывать сроки старше 180 дней"
+msgstr "🗄️ Скрывать сроки старше 180 дней"
 
 msgid "eders.settings_header"
 msgstr "Напоминания eders. Кнопки включают и отключают настройки. /eders — задания, /week — ближайшие семь дней."
@@ -150,22 +150,22 @@ msgid "common.cancel"
 msgstr "❌ Отмена"
 
 msgid "common.skip"
-msgstr "Пропустить"
+msgstr "⏭️ Пропустить"
 
 msgid "common.done"
 msgstr "✅ Готово"
 
 msgid "common.duration.minutes_45"
-msgstr "45 минут"
+msgstr "⏱️ 45 минут"
 
 msgid "common.duration.hours_6"
-msgstr "6 часов"
+msgstr "⏱️ 6 часов"
 
 msgid "common.duration.hours_24"
-msgstr "24 часа"
+msgstr "⏱️ 24 часа"
 
 msgid "common.duration.days_7"
-msgstr "7 дней"
+msgstr "🗓️ 7 дней"
 
 msgid "ads.no_expiration"
 msgstr "♾️ Без срока действия"
@@ -216,10 +216,10 @@ msgid "food.day_after_tomorrow"
 msgstr "🗓 Послезавтра"
 
 msgid "food.lunch"
-msgstr "Обед"
+msgstr "🍽️ Обед"
 
 msgid "food.dinner"
-msgstr "Ужин"
+msgstr "🌙 Ужин"
 
 msgid "common.enable_all"
 msgstr "✅ Все"
@@ -250,9 +250,6 @@ msgstr "🗑 Очистить данные"
 
 msgid "settings.notifications"
 msgstr "🔔 Уведомления"
-
-msgid "settings.my_lessons"
-msgstr "📚 Мои уроки"
 
 msgid "settings.obis_credentials"
 msgstr "🔑 Данные OBIS"
@@ -583,9 +580,6 @@ msgstr "Список направлений"
 msgid "schedule.courses"
 msgstr "Список курсов"
 
-msgid "schedule.no_longer_tracked"
-msgstr "У вас больше нет отслеживаемых курсов"
-
 msgid "schedule.course_not_found"
 msgstr "Курс не найден"
 
@@ -846,19 +840,19 @@ msgid "obis.result_expired"
 msgstr "Этот результат больше недоступен. Запросите оценки или пропуски заново через меню."
 
 msgid "eders.filter_today"
-msgstr "Сегодня"
+msgstr "📅 Сегодня"
 
 msgid "eders.filter_not_submitted"
-msgstr "Не сдано"
+msgstr "📥 Не сдано"
 
 msgid "eders.filter_materials"
-msgstr "Материалы курсов"
+msgstr "📚 Материалы курсов"
 
 msgid "eders.filter_new_materials"
-msgstr "Новые материалы"
+msgstr "🆕 Новые материалы"
 
 msgid "eders.setting_materials"
-msgstr "Новые и изменённые материалы"
+msgstr "📚 Новые и изменённые материалы"
 
 msgid "eders.material_new"
 msgstr "Новый материал"
@@ -870,13 +864,13 @@ msgid "eders.materials_help"
 msgstr "Поиск по курсу, разделу или названию: /materials текст. Новые — впервые обнаруженные после начальной синхронизации."
 
 msgid "menu.eders"
-msgstr "Eders"
+msgstr "💻 Eders"
 
 msgid "menu.eders_materials"
-msgstr "Материалы Eders"
+msgstr "📚 Материалы Eders"
 
 msgid "menu.study_week"
-msgstr "Учебная неделя"
+msgstr "🗓️ Учебная неделя"
 
 msgid "data.preparing"
 msgstr "Данные готовятся в фоне. Попробуйте после следующего обновления (каждые 15 минут)."
@@ -939,10 +933,10 @@ msgid "halloween.food_no_available_menus"
 msgstr "🕸️ Книга угощений пока пуста: меню на ближайшие 7 дней ещё не опубликовано."
 
 msgid "broadcast.edit_buttons"
-msgstr "Кнопки"
+msgstr "🔘 Кнопки"
 
 msgid "broadcast.without_buttons"
-msgstr "Без кнопок"
+msgstr "🚫 Без кнопок"
 
 msgid "broadcast.buttons_prompt"
 msgstr "Пришлите по одной кнопке в строке:\nНазвание | https://example.com\nНазвание | callback:your_action\nИспользуйте существующие callback_data бота: от 1 до 64 байт UTF-8. Не более 100 кнопок."
@@ -962,7 +956,6 @@ msgstr "Отправить эту рассылку?"
 msgid "menu.study"
 msgstr "📚 Учёба"
 
-
 msgid "ads.invalid_phone"
 msgstr "Введите корректный номер телефона, например +996700123456."
 
@@ -970,13 +963,13 @@ msgid "ads.phone_required"
 msgstr "Введите номер телефона или установите Telegram username, чтобы пропустить этот шаг."
 
 msgid "notifications.mute_broadcasts"
-msgstr "Не присылать рассылки"
+msgstr "🔕 Не присылать рассылки"
 
 msgid "notifications.broadcast_muted"
 msgstr "Вы отписались от рассылок на 14 дней"
 
 msgid "notifications.resume_broadcasts"
-msgstr "Возобновить рассылки"
+msgstr "🔔 Возобновить рассылки"
 
 msgid "notifications.broadcast_muted_until"
 msgstr "Рассылки отключены до {until} (время Бишкека)."
@@ -985,16 +978,16 @@ msgid "notifications.broadcast_resumed"
 msgstr "Рассылки возобновлены"
 
 msgid "menu.obis"
-msgstr "OBIS"
+msgstr "🎓 OBIS"
 
 msgid "eders.deadlines"
-msgstr "Дедлайны"
+msgstr "⏳ Дедлайны"
 
 msgid "obis.notifications_header"
 msgstr "Уведомления OBIS"
 
 msgid "menu.achievements"
-msgstr "Ачивки"
+msgstr "🏆 Ачивки"
 
 msgid "gamification.unavailable"
 msgstr "Ачивки доступны при включённом Mini App."
@@ -1129,10 +1122,10 @@ msgid "gamification.access_disabled"
 msgstr "Ачивки выключены. Прогресс и награды сохранены."
 
 msgid "eders.mark_done"
-msgstr "Отметить выполненным"
+msgstr "✅ Отметить выполненным"
 
 msgid "eders.mark_undone"
-msgstr "Отметить невыполненным"
+msgstr "↩️ Отметить невыполненным"
 
 msgid "eders.marked_done"
 msgstr "[отмечено выполненным]"
@@ -1149,18 +1142,152 @@ msgstr "Не удалось обновить задание в Eders. Попро
 msgid "eders.completion_unavailable"
 msgstr "Для этого задания больше недоступна ручная отметка. Проверьте его в Eders."
 
-
 msgid "gamification.award_notification"
 msgstr "🏆 Получена ачивка: <b>{name}</b>\n\n{description}"
-
 
 msgid "menu.achievements_button"
 msgstr "🏆 Ачивки"
 
-
 msgid "gamification.rank_unassigned"
 msgstr "Пока нет"
 
-
 msgid "gamification.view_all"
-msgstr "Все ачивки"
+msgstr "🏆 Все ачивки"
+
+msgid "notifications.eders"
+msgstr "📜 Eders"
+
+msgid "schedule.change_courses"
+msgstr "📚 Изменить уроки"
+
+msgid "schedule.mini_app"
+msgstr "📱 Выбрать уроки в Mini App"
+
+msgid "settings.mini_app"
+msgstr "📱 Настройки в Mini App"
+
+msgid "miniapp.ui.title"
+msgstr "Настройки"
+
+msgid "miniapp.ui.achievements"
+msgstr "Ачивки"
+
+msgid "miniapp.ui.notifications"
+msgstr "Уведомления"
+
+msgid "miniapp.ui.courses"
+msgstr "Уроки"
+
+msgid "miniapp.ui.note"
+msgstr "Выберите, о чём сообщать. Изменения сохраняются сразу."
+
+msgid "miniapp.ui.loading"
+msgstr "Загрузка…"
+
+msgid "miniapp.ui.saving"
+msgstr "Сохранение…"
+
+msgid "miniapp.ui.saved"
+msgstr "Сохранено"
+
+msgid "miniapp.ui.error"
+msgstr "Не удалось выполнить действие. Попробуйте ещё раз."
+
+msgid "miniapp.ui.retry"
+msgstr "Повторить"
+
+msgid "miniapp.ui.open_telegram"
+msgstr "Откройте Mini App по кнопке в боте Manashelper в Telegram."
+
+msgid "miniapp.ui.session_expired"
+msgstr "Заново откройте Mini App по кнопке в боте."
+
+msgid "miniapp.ui.choose_faculty"
+msgstr "Выберите факультет"
+
+msgid "miniapp.ui.choose_department"
+msgstr "Выберите отделение"
+
+msgid "miniapp.ui.course_number"
+msgstr "Курс {number}"
+
+msgid "miniapp.ui.selected_courses"
+msgstr "Выбранные курсы"
+
+msgid "miniapp.ui.none_selected"
+msgstr "Курсы пока не выбраны. Выберите факультет и отделение ниже."
+
+msgid "miniapp.ui.no_courses"
+msgstr "Здесь пока нет доступных курсов."
+
+msgid "miniapp.ui.remove"
+msgstr "Убрать"
+
+msgid "miniapp.ui.schedule_changes"
+msgstr "Изменения расписания"
+
+msgid "miniapp.ui.exam_grades"
+msgstr "Оценки за экзамены"
+
+msgid "miniapp.ui.lesson_skips"
+msgstr "Посещаемость"
+
+msgid "miniapp.ui.food"
+msgstr "Йемек"
+
+msgid "miniapp.ui.lunch"
+msgstr "Обед"
+
+msgid "miniapp.ui.dinner"
+msgstr "Ужин"
+
+msgid "miniapp.ui.eders"
+msgstr "Eders"
+
+msgid "miniapp.ui.day_before"
+msgstr "За сутки до дедлайна"
+
+msgid "miniapp.ui.two_hours_before"
+msgstr "За два часа до дедлайна"
+
+msgid "miniapp.ui.openings"
+msgstr "Открытие заданий и тестов"
+
+msgid "miniapp.ui.deadline_changes"
+msgstr "Изменения дедлайнов"
+
+msgid "miniapp.ui.hide_archived"
+msgstr "Скрывать дедлайны старше 180 дней"
+
+msgid "miniapp.ui.new_materials"
+msgstr "Новые и изменённые материалы"
+
+msgid "miniapp.ui.broadcast"
+msgstr "Сообщения администрации"
+
+msgid "miniapp.ui.broadcast_note"
+msgstr "При отключении рассылки приостанавливаются на 14 дней."
+
+msgid "miniapp.ui.muted_until"
+msgstr "Рассылки отключены до {until}."
+
+msgid "miniapp.ui.monday"
+msgstr "Понедельник"
+
+msgid "miniapp.ui.tuesday"
+msgstr "Вторник"
+
+msgid "miniapp.ui.wednesday"
+msgstr "Среда"
+
+msgid "miniapp.ui.thursday"
+msgstr "Четверг"
+
+msgid "miniapp.ui.friday"
+msgstr "Пятница"
+
+msgid "miniapp.ui.saturday"
+msgstr "Суббота"
+
+msgid "miniapp.ui.sunday"
+msgstr "Воскресенье"

@@ -15,11 +15,13 @@ You just chat with it on Telegram like you would with a friend, tapping buttons 
   everyone tracking that course automatically (checked every hour).
 - 🍉 **Cafeteria menu** — see today's, tomorrow's, or any other day's menu, complete with dish photos and
   calorie counts, and rate the food with a star rating. The bot can also ping you automatically shortly before
-  lunch and dinner.
+  lunch and dinner. Dish names follow your selected language, falling back to the original Turkish name
+  when a translation is missing. Menus prefer an upscaled photo when one is configured.
 - 🎓 **Grades & attendance (OBIS)** — securely link your OBIS account once, then check your exam grades and
   lesson-attendance/skip budget straight from the chat. The bot can also notify you as soon as a new grade is
   posted or an absence is recorded, without you needing to check manually.
-- ⚙️ **Notification settings** — turn any of the above notifications on or off individually, whenever you like.
+- ⚙️ **Notification settings** — configure Schedule, OBIS, Food menu, Eders and broadcast notifications under
+  **Settings → Notifications**, or in the Mini App. Both interfaces share the same saved preferences.
 - 📚 **Eders** — buttons in **Studies** open deadlines, course materials and the study week. Notification settings
   configure reminders one day and two hours before a deadline, activity openings and deadline changes. The study week combines
   the next seven days of classes, activity dates and newly discovered materials. Eders is checked every 15 minutes
@@ -31,8 +33,12 @@ You just chat with it on Telegram like you would with a friend, tapping buttons 
 - 🌐 **Multiple languages** — the bot speaks Kyrgyz, Russian, Turkish, English and simplified Chinese, and picks a language
   automatically based on your Telegram app's language (you can also switch manually at any time).
 
-The main menu's **Studies** button groups Schedule, Study week, attendance, grades, Eders deadlines and materials.
+The main menu's **Studies** button groups Schedule, Study week, OBIS, Eders and subject search.
+Schedule opens the timetable immediately, with **Change courses** in its first button row. With no selected
+courses, it offers a course-selection button instead. Subject search opens directly from Studies.
 Study week and Eders entries appear when Eders is enabled. **Back to menu** returns to the main keyboard.
+Inline screens also provide back/menu buttons, and leaving a form through shared navigation clears its unfinished draft.
+Administrators answer feedback using Telegram's Reply action in the configured admin chat, including private chats.
 
 Everything happens directly in the Telegram chat — there's no separate app or website to install.
 
@@ -41,7 +47,17 @@ Everything happens directly in the Telegram chat — there's no separate app or 
 Built with Python 3.13, [aiogram 3](https://docs.aiogram.dev/) for the Telegram bot layer, SQLAlchemy 2 (async)
 + Postgres for storage, and [Dishka](https://github.com/reagento/dishka) for dependency injection. There is no
 public general-purpose API. With `MANASHELPER_PUBLIC_URL`, one aiohttp process serves Telegram webhooks,
-the achievements Mini App and its authenticated API alongside background jobs. Without it, local polling is used.
+the Mini App and its authenticated API alongside background jobs. The Mini App includes notification settings
+and course selection for all registered users, plus achievements for users with achievement access enabled.
+See [Mini App settings and course selection](docs/miniapp-settings.md) for the HTTP contract.
+Without `MANASHELPER_PUBLIC_URL`, local polling and the bot's native settings and course picker remain available.
+
+Food dishes store `name_tr` (the renamed original `name`), optional `name_en`, `name_ru`, `name_ky`, `name_zh`,
+and optional `upscaled_photo_url`. Empty translations fall back to `name_tr`; an empty upscale link falls back
+to `photo_url`. Menu synchronization matches Turkish names and preserves curated translations and photo links.
+Migration V30 fills translations for 68 existing dish names. Deploy the matching application version together
+with V30 while older bot processes are stopped, since they still expect the old `name` column.
+
 See [achievements and webhook setup](docs/gamification.md) and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 for the current package layout, [`docs/MIGRATION.md`](docs/MIGRATION.md) for the completed refactor and
 [`docs/BACKLOG.md`](docs/BACKLOG.md) for deferred fixes and verification.
