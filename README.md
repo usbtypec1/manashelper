@@ -55,8 +55,7 @@ Without `MANASHELPER_PUBLIC_URL`, local polling and the bot's native settings an
 Food dishes store `name_tr` (the renamed original `name`), optional `name_en`, `name_ru`, `name_ky`, `name_zh`,
 and optional `upscaled_photo_url`. Empty translations fall back to `name_tr`; an empty upscale link falls back
 to `photo_url`. Menu synchronization matches Turkish names and preserves curated translations and photo links.
-Migration V30 adds optional translations and a photo link, preserving original dish names.
-Deploy the matching application version together
+Migration V30 fills translations for 68 existing dish names. Deploy the matching application version together
 with V30 while older bot processes are stopped, since they still expect the old `name` column.
 
 See [achievements and webhook setup](docs/gamification.md) and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
