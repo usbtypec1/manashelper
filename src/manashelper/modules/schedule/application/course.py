@@ -26,6 +26,14 @@ class CourseSummary:
     is_tracked: bool
 
 
+@dataclass(frozen=True, slots=True)
+class TrackedCourseSummary:
+    id: int
+    number: int
+    department_name: str
+    faculty_name: str
+
+
 def to_summaries(courses: Sequence[Course], tracked_course_ids: set[int]) -> list[CourseSummary]:
     return [
         CourseSummary(id=course.id, number=course.number, is_tracked=course.id in tracked_course_ids)
@@ -37,6 +45,12 @@ def to_summaries(courses: Sequence[Course], tracked_course_ids: set[int]) -> lis
 class CourseQuery:
     course_repository: CourseRepository
     tracking_repository: CourseTrackingRepository
+
+    async def get_tracked_courses(self, user_id: int) -> list[TrackedCourseSummary]:
+        return [
+            TrackedCourseSummary(course.id, course.number, course.department.name, course.department.faculty.name)
+            for course in await self.tracking_repository.get_tracked_courses(user_id)
+        ]
 
     async def get_courses_by_department(self, department_id: uuid.UUID, user_id: int) -> list[CourseSummary]:
         courses = await self.course_repository.get_all_by_department_id(department_id)

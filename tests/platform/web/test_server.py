@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 from contextlib import asynccontextmanager
+from uuid import uuid4
 
 import pytest
 from aiogram import Bot, Dispatcher
@@ -18,10 +19,27 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.core.config import get_settings
 from manashelper.core.provider import CoreProvider
+from manashelper.modules.eders.provider import EdersProvider
+from manashelper.modules.food_menu.infrastructure.models.food_menu_notification_settings import (
+    FoodMenuNotificationSettings,
+)
+from manashelper.modules.food_menu.provider import FoodMenuProvider
 from manashelper.modules.gamification.application.use_cases.record_activity import RecordActivityUseCase
 from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
 from manashelper.modules.gamification.provider import GamificationProvider
+from manashelper.modules.notifications.application.use_cases.get_notification_settings import (
+    GetNotificationSettingsUseCase,
+)
+from manashelper.modules.notifications.orm import NotificationSettings
 from manashelper.modules.notifications.provider import NotificationsProvider
+from manashelper.modules.notifications.queries import NotificationRecipientsQuery
+from manashelper.modules.obis.provider import ObisProvider
+from manashelper.modules.schedule.application.course import CourseQuery
+from manashelper.modules.schedule.infrastructure.models.associations import user_courses
+from manashelper.modules.schedule.infrastructure.models.course import Course
+from manashelper.modules.schedule.infrastructure.models.department import Department
+from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
+from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.telegram.dispatcher import on_error
@@ -48,12 +66,22 @@ def test_bad_init_data_rejected(case):
 
 
 @asynccontextmanager
-async def application():
+async def application(*, eders_enabled: bool | None = None):
     settings = get_settings().model_copy(
         update={"telegram_bot_token": TOKEN, "public_url": "https://example.com", "webhook_secret": SecretStr(SECRET)}
     )
+    if eders_enabled is not None:
+        settings.eders_password = SecretStr("fixture-eders-password") if eders_enabled else None
     container = make_async_container(
-        CoreProvider(), UsersProvider(), GamificationProvider(), OutboxProvider(), NotificationsProvider()
+        CoreProvider(),
+        UsersProvider(),
+        GamificationProvider(),
+        OutboxProvider(),
+        NotificationsProvider(),
+        ObisProvider(),
+        EdersProvider(),
+        ScheduleProvider(),
+        FoodMenuProvider(),
     )
     dispatcher = Dispatcher()
     calls = []
@@ -73,6 +101,7 @@ async def application():
     async with Bot(TOKEN) as bot:
         async with container() as scope:
             session = await scope.get(AsyncSession)
+            await clear_fixture_user(session)
             session.add(User(id=USER_ID, full_name="<script>Fixture</script>", locale="ru"))
             await (await scope.get(AchievementRepository)).set_enabled(USER_ID, True)
         try:
@@ -81,12 +110,173 @@ async def application():
         finally:
             async with container() as scope:
                 session = await scope.get(AsyncSession)
-                await session.execute(delete(User).where(User.id == USER_ID))
+                await clear_fixture_user(session)
                 await session.execute(
                     delete(ProcessedTelegramUpdate).where(ProcessedTelegramUpdate.update_id.between(992000, 992099))
                 )
             await container.close()
             await dispatcher.storage.close()
+
+
+async def clear_fixture_user(session):
+    existing = await session.get(User, USER_ID)
+    if existing is not None:
+        assert existing.full_name == "<script>Fixture</script>"
+    await session.execute(delete(user_courses).where(user_courses.c.user_id == USER_ID))
+    await session.execute(delete(FoodMenuNotificationSettings).where(FoodMenuNotificationSettings.user_id == USER_ID))
+    await session.execute(delete(NotificationSettings).where(NotificationSettings.user_id == USER_ID))
+    await session.execute(delete(User).where(User.id == USER_ID))
+
+
+@asynccontextmanager
+async def course_catalog(container):
+    faculty_id, department_id = uuid4(), uuid4()
+    course_ids = [992001, 992002]
+    async with container() as scope:
+        session = await scope.get(AsyncSession)
+        faculty = Faculty(id=faculty_id, name="Faculty <test>")
+        department = Department(id=department_id, name="Department <test>", faculty=faculty)
+        session.add_all(
+            [Course(id=course_id, number=index, department=department) for index, course_id in enumerate(course_ids, 1)]
+        )
+    try:
+        yield faculty_id, department_id, course_ids
+    finally:
+        async with container() as scope:
+            session = await scope.get(AsyncSession)
+            await session.execute(delete(user_courses).where(user_courses.c.course_id.in_(course_ids)))
+            await session.execute(delete(Course).where(Course.id.in_(course_ids)))
+            await session.execute(delete(Department).where(Department.id == department_id))
+            await session.execute(delete(Faculty).where(Faculty.id == faculty_id))
+
+
+async def test_preferences_are_available_without_achievement_access_and_keep_defaults():
+    async with application(eders_enabled=True) as (client, container, _):
+        async with container() as scope:
+            await (await scope.get(AchievementRepository)).set_enabled(USER_ID, False)
+        headers = {"Authorization": authorization()}
+        assert (await client.get("/api/gamification/me", headers=headers)).status == 403
+        response = await client.get("/api/settings", headers=headers)
+        assert response.status == 200 and response.headers["Cache-Control"] == "no-store"
+        data = await response.json()
+        assert data["locale"] == "ru" and data["ui"]["title"] == "Настройки"
+        assert all(value for key, value in data["notifications"].items() if key.endswith("_enabled"))
+        assert len(data["food"]) == 7 and all(day["lunch_enabled"] and day["dinner_enabled"] for day in data["food"])
+        assert all(data["eders"].values()) and data["tracked_courses"] == []
+        assert "student_number" not in json.dumps(data) and "encrypted_password" not in json.dumps(data)
+
+
+async def test_preference_writes_set_values_idempotently_and_are_shared_with_native_settings():
+    async with application(eders_enabled=True) as (client, container, _):
+        headers = {"Authorization": authorization()}
+        for _ in range(2):
+            response = await client.put(
+                "/api/settings/notifications", headers=headers, json={"setting": "exam_grades", "enabled": False}
+            )
+            assert response.status == 200
+            data = await response.json()
+            assert not data["notifications"]["exam_grades_enabled"]
+            assert data["notifications"]["lesson_skips_enabled"]
+        async with container() as scope:
+            native = await (await scope.get(GetNotificationSettingsUseCase)).execute(USER_ID)
+            assert not native.exam_grades_enabled and native.schedule_changes_enabled
+        for _ in range(2):
+            response = await client.put(
+                "/api/settings/food", headers=headers, json={"weekday": 0, "meal": "lunch", "enabled": False}
+            )
+            assert response.status == 200
+            food = (await response.json())["food"]
+            assert not food[0]["lunch_enabled"] and food[0]["dinner_enabled"]
+            assert all(day["lunch_enabled"] for day in food[1:])
+            response = await client.put(
+                "/api/settings/eders", headers=headers, json={"setting": "new_materials", "enabled": False}
+            )
+            assert response.status == 200 and not (await response.json())["eders"]["new_materials"]
+        response = await client.put("/api/settings/broadcast", headers=headers, json={"muted": True})
+        until = (await response.json())["notifications"]["broadcast_muted_until"]
+        response = await client.put("/api/settings/broadcast", headers=headers, json={"muted": True})
+        assert (await response.json())["notifications"]["broadcast_muted_until"] == until
+        response = await client.put("/api/settings/broadcast", headers=headers, json={"muted": False})
+        assert (await response.json())["notifications"]["broadcast_muted_until"] is None
+
+
+async def test_course_catalog_concurrent_selection_retries_and_removal_share_bot_tracking():
+    async with (
+        application() as (client, container, _),
+        course_catalog(container) as (faculty_id, department_id, course_ids),
+    ):
+        headers = {"Authorization": authorization()}
+        faculties = await (await client.get("/api/studies/faculties", headers=headers)).json()
+        assert {"id": str(faculty_id), "name": "Faculty <test>"} in faculties["faculties"]
+        departments = await (
+            await client.get(f"/api/studies/departments?faculty_id={faculty_id}", headers=headers)
+        ).json()
+        assert departments["departments"] == [{"id": str(department_id), "name": "Department <test>"}]
+        responses = await asyncio.gather(
+            *(
+                client.put(f"/api/studies/courses/{course_id}", headers=headers, json={"tracked": True})
+                for course_id in course_ids
+            )
+        )
+        assert all(response.status == 200 for response in responses)
+        response = await client.put(f"/api/studies/courses/{course_ids[0]}", headers=headers, json={"tracked": True})
+        assert response.status == 200
+        assert {course["id"] for course in (await response.json())["tracked_courses"]} == set(course_ids)
+        async with container() as scope:
+            native = await (await scope.get(CourseQuery)).get_courses_by_department(department_id, USER_ID)
+            assert all(course.is_tracked for course in native)
+            recipients = await (await scope.get(NotificationRecipientsQuery)).for_schedule_changes(course_ids[0])
+            assert USER_ID in recipients
+        response = await client.put(f"/api/studies/courses/{course_ids[0]}", headers=headers, json={"tracked": False})
+        assert [course["id"] for course in (await response.json())["tracked_courses"]] == [course_ids[1]]
+        courses = await (
+            await client.get(f"/api/studies/courses?department_id={department_id}", headers=headers)
+        ).json()
+        assert [course["is_tracked"] for course in courses["courses"]] == [False, True]
+
+
+@pytest.mark.parametrize(
+    "path,body",
+    [
+        ("settings/notifications", {"setting": "exam_grades", "enabled": "false"}),
+        ("settings/notifications", {"setting": "invalid", "enabled": False}),
+        ("settings/notifications", {"setting": "exam_grades", "enabled": False, "user_id": 1}),
+        ("settings/food", {"weekday": 7, "meal": "lunch", "enabled": False}),
+        ("settings/food", {"weekday": True, "meal": "lunch", "enabled": False}),
+        ("settings/eders", {"setting": "invalid", "enabled": False}),
+        ("settings/broadcast", {"muted": 1}),
+        ("studies/courses/invalid", {"tracked": True}),
+    ],
+)
+async def test_preference_validation_rejects_invalid_or_cross_user_inputs_without_changing_values(path, body):
+    async with application(eders_enabled=True) as (client, _, __):
+        headers = {"Authorization": authorization()}
+        before = await (await client.get("/api/settings", headers=headers)).json()
+        response = await client.put(f"/api/{path}", headers=headers, json=body)
+        assert response.status == 400 and response.headers["Cache-Control"] == "no-store"
+        assert await (await client.get("/api/settings", headers=headers)).json() == before
+
+
+async def test_preferences_authentication_disabled_eders_and_invalid_catalog_ids():
+    async with application(eders_enabled=False) as (client, _, __):
+        for path in ("settings", "studies/faculties", "studies/departments", "studies/courses"):
+            assert (await client.get(f"/api/{path}")).status == 401
+            assert (await client.get(f"/api/{path}", headers={"Authorization": authorization(992099)})).status == 403
+        for path, body in (("settings/broadcast", {"muted": True}), ("studies/courses/1", {"tracked": True})):
+            assert (await client.put(f"/api/{path}", json=body)).status == 401
+        headers = {"Authorization": authorization()}
+        data = await (await client.get("/api/settings", headers=headers)).json()
+        assert data["eders"] is None
+        assert (
+            await client.put(
+                "/api/settings/eders", headers=headers, json={"setting": "new_materials", "enabled": False}
+            )
+        ).status == 404
+        assert (await client.get("/api/studies/departments?faculty_id=invalid", headers=headers)).status == 400
+        assert (await client.get("/api/studies/courses", headers=headers)).status == 400
+        assert (
+            await client.put("/api/studies/courses/2147483647", headers=headers, json={"tracked": True})
+        ).status == 404
 
 
 def update(update_id, text="okay"):

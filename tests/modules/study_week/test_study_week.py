@@ -176,10 +176,10 @@ def message():
             True,
         ),
         (ObisLoginError(), "Your OBIS credentials are invalid. Enter them again using the button below.", True),
-        (EdersFetchError(), "Could not load eders. Try again later.", False),
-        (EdersParseError(), "Could not load eders. Try again later.", False),
-        (EdersUnsafeUrlError(), "Could not load eders. Try again later.", False),
-        (ObisParseError(), "Could not load eders. Try again later.", False),
+        (EdersFetchError(), "Could not load eders. Try again later.", True),
+        (EdersParseError(), "Could not load eders. Try again later.", True),
+        (EdersUnsafeUrlError(), "Could not load eders. Try again later.", True),
+        (ObisParseError(), "Could not load eders. Try again later.", True),
     ],
 )
 async def test_week_handler_returns_expected_errors_without_loading_message(error, text, keyboard):
@@ -190,6 +190,9 @@ async def test_week_handler_returns_expected_errors_without_loading_message(erro
     assert incoming.answer.await_count == 1
     response = incoming.answer.await_args_list[0]
     assert bool(response.kwargs.get("reply_markup")) is keyboard
+    if isinstance(error, (EdersFetchError, EdersParseError, EdersUnsafeUrlError, ObisParseError)):
+        buttons = response.kwargs["reply_markup"].inline_keyboard
+        assert [button.callback_data for row in buttons for button in row] == ["navigation:study", "navigation:main"]
     assert response.args == (text,)
 
 

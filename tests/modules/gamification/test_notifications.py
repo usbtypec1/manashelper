@@ -157,10 +157,14 @@ async def test_notification_persists_localized_web_app_button_in_outbox(session,
     method = SendMessage.model_validate((await queued(session))[0].methods[0]["data"])
     if public_url:
         assert method.reply_markup is not None
-        [button] = [button for row in method.reply_markup.inline_keyboard for button in row]
+        buttons = [button for row in method.reply_markup.inline_keyboard for button in row]
+        [button] = [button for button in buttons if button.web_app is not None]
         assert button.web_app.url == "https://example.com/app/"
         with i18n.context(), i18n.use_locale(locale):
             assert button.text == i18n.gettext("gamification.view_all")
+            [menu] = [button for button in buttons if button.callback_data is not None]
+            assert menu.text == i18n.gettext("common.back_to_menu")
+            assert menu.callback_data == "navigation:main"
         assert button.url is None and button.callback_data is None
     else:
         assert method.reply_markup is None

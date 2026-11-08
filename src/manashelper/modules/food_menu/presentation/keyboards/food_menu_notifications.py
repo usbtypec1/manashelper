@@ -15,6 +15,7 @@ from manashelper.modules.food_menu.presentation.callbacks import (
     FoodMenuNotificationWeekdayCallback,
 )
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
+from manashelper.platform.telegram.navigation import build_navigation_keyboard
 
 
 def _mark(is_enabled: bool) -> str:
@@ -46,8 +47,8 @@ def build_food_menu_notifications_keyboard(summary: FoodMenuNotificationSettings
     builder.button(text=_("common.enable_all"), callback_data=FoodMenuNotificationBulkCallback(enable=True))
     builder.button(text=_("common.disable_all"), callback_data=FoodMenuNotificationBulkCallback(enable=False))
     builder.button(text=_("common.back"), callback_data=SettingsCallback(action=SettingsAction.BACK_TO_NOTIFICATIONS))
-
     builder.adjust(3, 3, 3, 3, 3, 3, 3, 3, 2, 1)
+    builder.attach(build_navigation_keyboard())
     return builder.as_markup()
 
 

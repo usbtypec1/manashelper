@@ -109,7 +109,12 @@ def test_language_detection(language_code: str | None, expected: Locale) -> None
 def test_language_picker_shows_native_names_in_every_locale() -> None:
     for locale in Locale:
         with i18n.context(), i18n.use_locale(locale.value):
-            buttons = [button for row in build_locale_keyboard().inline_keyboard for button in row]
+            buttons = [
+                button
+                for row in build_locale_keyboard().inline_keyboard
+                for button in row
+                if button.callback_data.startswith("locale:")
+            ]
             assert [button.text for button in buttons] == [
                 "🇰🇬 Кыргызча",
                 "🇷🇺 Русский",
@@ -134,10 +139,10 @@ async def test_translated_reply_keyboard_buttons_match_filters(
 
     monkeypatch.setattr(get_settings(), "eders_password", SecretStr("fake-password") if eders_enabled else None)
     main_keys = ["menu.food", "menu.study", "menu.marketplace", "menu.settings"]
-    study_keys = ["menu.schedule", "menu.obis", "common.back_to_menu"]
+    study_keys = ["menu.schedule", "menu.obis", "schedule.search_subject", "common.back_to_menu"]
     if eders_enabled:
         study_keys.insert(1, "menu.study_week")
-        study_keys[-1:-1] = ["menu.eders"]
+        study_keys.insert(3, "menu.eders")
     with i18n.context(), i18n.use_locale(locale.value), i18n.use_theme(theme):
         main_labels = [button.text for row in build_main_keyboard().keyboard for button in row]
         study_labels = [button.text for row in build_study_keyboard().keyboard for button in row]

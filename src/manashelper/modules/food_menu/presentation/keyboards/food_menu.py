@@ -13,7 +13,12 @@ from manashelper.modules.food_menu.presentation.callbacks import (
     FoodMenuRatingCallback,
 )
 from manashelper.platform.i18n.catalog import i18n
-from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
+from manashelper.platform.telegram.callbacks import (
+    NavigationAction,
+    NavigationCallback,
+    SettingsAction,
+    SettingsCallback,
+)
 
 _RATING_LABELS = {1: "1️⃣", 2: "2️⃣", 3: "3️⃣", 4: "4️⃣", 5: "5️⃣"}
 
@@ -55,11 +60,23 @@ def build_menu_open_button() -> InputRichBlockButtons:
     )
 
 
+def build_food_navigation_buttons(*, private_chat: bool) -> list[RichMessageButton]:
+    buttons = [RichMessageButton(text=_("common.back"), callback_data=FoodMenuOpenCallback().pack())]
+    if private_chat:
+        buttons.extend(build_food_menu_settings_buttons())
+        buttons.append(
+            RichMessageButton(
+                text=_("common.back_to_menu"), callback_data=NavigationCallback(action=NavigationAction.MAIN).pack()
+            )
+        )
+    return buttons
+
+
 def build_food_menu_settings_buttons() -> list[RichMessageButton]:
     return [
         RichMessageButton(
-            text=_("notifications.configure"),
-            callback_data=SettingsCallback(action=SettingsAction.OPEN_FOOD_MENU_NOTIFICATIONS).pack(),
+            text=_("menu.settings"),
+            callback_data=SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS).pack(),
         )
     ]
 

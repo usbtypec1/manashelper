@@ -13,8 +13,14 @@ class NotificationSettingsRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def get_or_create(self, user_id: int) -> NotificationSettings:
-        settings = await self._session.get(NotificationSettings, user_id)
+    async def get_or_create(self, user_id: int, *, lock: bool = False) -> NotificationSettings:
+        if lock:
+            await self._session.execute(select(User.id).where(User.id == user_id).with_for_update())
+        settings = await self._session.get(NotificationSettings, user_id, populate_existing=lock)
+        if settings is None and not lock:
+            # Serialize creation from simultaneous Mini App loads without locking existing reads.
+            await self._session.execute(select(User.id).where(User.id == user_id).with_for_update())
+            settings = await self._session.get(NotificationSettings, user_id, populate_existing=True)
         if settings is None:
             settings = NotificationSettings(
                 user_id=user_id,

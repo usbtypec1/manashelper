@@ -1,6 +1,5 @@
 import logging
 
-from aiogram import Bot
 from dishka import AsyncContainer
 
 from manashelper.modules.eders.application.tracking import EdersTrackingService
@@ -14,7 +13,7 @@ from manashelper.platform.telegram.outbox.service import OutboxService
 logger = logging.getLogger(__name__)
 
 
-async def poll_eders_job(container: AsyncContainer, bot: Bot) -> None:
+async def poll_eders_job(container: AsyncContainer) -> None:
     try:
         async with container() as request:
             tracking = await request.get(EdersTrackingService)

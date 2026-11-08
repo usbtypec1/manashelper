@@ -1,4 +1,5 @@
 from aiogram import F, Router, flags
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
@@ -6,8 +7,6 @@ from dishka import FromDishka
 from manashelper.modules.obis.application.credentials import ObisCredentialsQuery
 from manashelper.modules.obis.errors import UserNotFoundError as ObisUserNotFoundError
 from manashelper.modules.obis.presentation.keyboards import build_obis_settings_keyboard
-from manashelper.modules.schedule.application.faculty import FacultyQuery
-from manashelper.modules.schedule.presentation.keyboards.timetable import build_faculty_keyboard
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
 from manashelper.platform.telegram.keyboards.settings import build_settings_keyboard
@@ -17,27 +16,17 @@ router = Router(name="settings")
 
 @router.message(TranslatedText("menu.settings"))
 @flags.private_chat_only
-async def on_settings_button(message: Message) -> None:
+async def on_settings_button(message: Message, state: FSMContext) -> None:
+    await state.clear()
     await message.answer(_("settings.title"), reply_markup=build_settings_keyboard())
 
 
 @router.callback_query(SettingsCallback.filter(F.action == SettingsAction.BACK_TO_SETTINGS))
 @flags.private_chat_only
-async def on_back_to_settings(callback_query: CallbackQuery) -> None:
+async def on_back_to_settings(callback_query: CallbackQuery, state: FSMContext) -> None:
+    await state.clear()
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(_("settings.title"), reply_markup=build_settings_keyboard())
-    await callback_query.answer()
-
-
-@router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_COURSE_TRACKING))
-@flags.private_chat_only
-async def on_open_course_tracking(
-    callback_query: CallbackQuery,
-    faculty_query: FromDishka[FacultyQuery],
-) -> None:
-    faculties = await faculty_query.get_all_faculties()
-    if isinstance(callback_query.message, Message):
-        await callback_query.message.edit_text(_("schedule.faculties"), reply_markup=build_faculty_keyboard(faculties))
     await callback_query.answer()
 
 

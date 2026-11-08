@@ -127,14 +127,13 @@ async def test_poll_failure_aborts_only_current_user_and_preserves_call_order(fa
         finally:
             scopes.append("exit")
 
-    bot = AsyncMock()
-    await poll_eders_job(container, bot)
+    await poll_eders_job(container)
     operations = ["refresh", "locale", "pending"]
     assert calls == [(name, 1) for name in operations[: operations.index(failure) + 1]] + [
         (name, 2) for name in operations
     ]
     assert scopes == ["enter", "exit"] * 3
-    bot.send_message.assert_not_awaited()
+    dependencies[OutboxService].enqueue.assert_not_awaited()
     tracking.mark_sent.assert_not_awaited()
 
 
@@ -268,7 +267,5 @@ async def test_recipient_load_failure_does_not_open_user_scope():
     async def container():
         yield SimpleNamespace(get=get)
 
-    bot = AsyncMock()
-    await poll_eders_job(container, bot)
+    await poll_eders_job(container)
     get.assert_awaited_once_with(EdersTrackingService)
-    bot.send_message.assert_not_awaited()

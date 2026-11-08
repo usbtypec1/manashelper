@@ -9,7 +9,13 @@ from manashelper.modules.obis.presentation.callbacks import (
     ObisNotificationSettingCallback,
     ObisResultsPageCallback,
 )
-from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
+from manashelper.platform.telegram.callbacks import (
+    NavigationAction,
+    NavigationCallback,
+    SettingsAction,
+    SettingsCallback,
+)
+from manashelper.platform.telegram.navigation import build_navigation_keyboard
 
 TERMS_URL = "https://telegra.ph/Polzovatelskoe-soglashenie-manas-helper-bot-01-13"
 
@@ -18,8 +24,8 @@ def build_obis_menu_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text=_("menu.attendance"), callback_data=ObisCallback(action=ObisAction.ATTENDANCE))
     builder.button(text=_("menu.grades"), callback_data=ObisCallback(action=ObisAction.GRADES))
-    builder.button(text=_("settings.notifications"), callback_data=ObisCallback(action=ObisAction.NOTIFICATIONS))
     builder.adjust(1)
+    builder.attach(build_navigation_keyboard(NavigationCallback(action=NavigationAction.STUDY)))
     return builder.as_markup()
 
 
@@ -31,20 +37,20 @@ def build_obis_notifications_keyboard(settings: NotificationSettingsSummary) -> 
     ):
         marker = "✅" if enabled else "❌"
         builder.button(text=f"{marker} {label}", callback_data=ObisNotificationSettingCallback(setting=setting))
-    builder.button(text=_("common.back"), callback_data=ObisCallback(action=ObisAction.MENU))
+    builder.button(text=_("common.back"), callback_data=SettingsCallback(action=SettingsAction.BACK_TO_NOTIFICATIONS))
     builder.adjust(1)
+    builder.attach(build_navigation_keyboard())
     return builder.as_markup()
 
 
-def build_obis_results_keyboard(page: int, total_pages: int) -> InlineKeyboardMarkup | None:
-    if total_pages <= 1:
-        return None
+def build_obis_results_keyboard(page: int, total_pages: int) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     if page > 0:
         builder.button(text="⬅️", callback_data=ObisResultsPageCallback(page=page - 1))
     if page < total_pages - 1:
         builder.button(text="➡️", callback_data=ObisResultsPageCallback(page=page + 1))
     builder.adjust(2)
+    builder.attach(build_navigation_keyboard(ObisCallback(action=ObisAction.MENU)))
     return builder.as_markup()
 
 
@@ -58,6 +64,7 @@ def build_obis_settings_keyboard(has_credentials: bool) -> InlineKeyboardMarkup:
         )
     builder.button(text=_("common.back"), callback_data=SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS))
     builder.adjust(1)
+    builder.attach(build_navigation_keyboard())
     return builder.as_markup()
 
 
@@ -65,6 +72,7 @@ def build_no_credentials_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text=_("obis.enter_credentials"), callback_data=ObisCallback(action=ObisAction.START_CREDENTIALS))
     builder.adjust(1)
+    builder.attach(build_navigation_keyboard(NavigationCallback(action=NavigationAction.STUDY)))
     return builder.as_markup()
 
 
@@ -82,6 +90,7 @@ def build_terms_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text=_("obis.terms"), url=TERMS_URL)
     builder.button(text=_("obis.accept_terms"), callback_data=ObisCallback(action=ObisAction.ACCEPT_TERMS))
+    builder.button(text=_("common.cancel"), callback_data=ObisCallback(action=ObisAction.CANCEL_CREDENTIALS))
     builder.adjust(1)
     return builder.as_markup()
 

@@ -15,13 +15,19 @@ class ToggleNotificationSettingUseCase:
     notification_settings_repository: NotificationSettingsRepository
     users: UsersQuery
 
-    async def execute(self, user_id: int, setting: NotificationSetting) -> NotificationSettingsSummary:
-        settings = await get_or_create_notification_settings(self.notification_settings_repository, self.users, user_id)
+    async def execute(
+        self, user_id: int, setting: NotificationSetting, *, enabled: bool | None = None
+    ) -> NotificationSettingsSummary:
+        settings = await get_or_create_notification_settings(
+            self.notification_settings_repository, self.users, user_id, lock=True
+        )
         match setting:
             case NotificationSetting.SCHEDULE_CHANGES:
-                settings.schedule_changes_enabled = not settings.schedule_changes_enabled
+                settings.schedule_changes_enabled = (
+                    not settings.schedule_changes_enabled if enabled is None else enabled
+                )
             case NotificationSetting.EXAM_GRADES:
-                settings.exam_grades_enabled = not settings.exam_grades_enabled
+                settings.exam_grades_enabled = not settings.exam_grades_enabled if enabled is None else enabled
             case NotificationSetting.LESSON_SKIPS:
-                settings.lesson_skips_enabled = not settings.lesson_skips_enabled
+                settings.lesson_skips_enabled = not settings.lesson_skips_enabled if enabled is None else enabled
         return to_summary(settings)

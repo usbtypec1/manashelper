@@ -4,6 +4,10 @@ from enum import StrEnum
 from aiogram.filters.callback_data import CallbackData
 
 
+class AdvertisementMenuCallback(CallbackData, prefix="ad_menu"):
+    pass
+
+
 class AdvertisementFormAction(StrEnum):
     SKIP_PHONE = "skip_phone"
     SKIP_PRICE = "skip_price"

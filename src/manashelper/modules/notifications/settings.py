@@ -37,8 +37,12 @@ def to_summary(settings: NotificationSettings) -> NotificationSettingsSummary:
 
 
 async def get_or_create_notification_settings(
-    notification_settings_repository: NotificationSettingsRepository, users: UsersQuery, user_id: int
+    notification_settings_repository: NotificationSettingsRepository,
+    users: UsersQuery,
+    user_id: int,
+    *,
+    lock: bool = False,
 ) -> NotificationSettings:
     if not await users.exists(user_id):
         raise UserNotFoundError(user_id)
-    return await notification_settings_repository.get_or_create(user_id)
+    return await notification_settings_repository.get_or_create(user_id, lock=lock)

@@ -67,10 +67,16 @@ EdersQuery and RefreshEdersSnapshotUseCase read the student number without decry
 Only a failed direct login triggers OBIS credential decryption and the legacy OBIS SSO fallback.
 Eders tracking checks existence through UsersQuery; its repository owns credential eligibility SQL and the user-row lock.
 Shared Telegram navigation lives in `platform/telegram/navigation.py`; feature routers must not import the start router for it.
-The main keyboard groups academic features under Studies. Its reply submenu opens OBIS and Eders inline menus:
-OBIS has Attendance, Grades and Notifications; Eders has Materials, Deadlines and Notifications.
-Each feature owns its notification screen and returns to its own menu; the general notification screen keeps
-Schedule, Food menu and broadcast controls. OBIS credentials remain in general Settings.
+The main keyboard groups academic features under Studies. Its reply submenu opens the timetable directly,
+with Change courses in the first button row; subject search is a separate Studies entry. An untracked user
+gets an explanation with a course-selection button. OBIS has Attendance and Grades; Eders has Materials
+and Deadlines. Settings has no My lessons entry. All notification controls live under Settings → Notifications:
+Schedule, OBIS, Food menu, Eders (when enabled) and broadcasts. Feature notification submenus return there.
+OBIS credentials remain in general Settings. Settings navigation precedes feature FSM handlers and clears drafts.
+The authenticated Mini App provides the same notification preferences and course selection to every registered
+user, independently of gamification. Launch it using inline Web App buttons at `/app/?view=settings` or
+`/app/?view=courses`. Its idempotent API reuses owning use cases and serializes mutations on the user's database row.
+See `docs/miniapp-settings.md` for the contract. Never accept a client-provided user ID for these operations.
 Eders/Study week stay hidden when disabled. Platform navigation and feature menu routers precede feature FSM handlers,
 clearing unfinished forms on menu entry; the shared Back handler also serves Marketplace.
 Keep feature code with its owner and limit changes to the requested scope. See `docs/ARCHITECTURE.md`
@@ -185,7 +191,8 @@ revision flags; omit `--autogenerate` for a handwritten migration. Never rewrite
 
 - Gamification access is per-user and defaults off (`gamification_progress.enabled`; missing row means off).
   Only the configured admin chat can use `/gamification <Telegram user ID> on|off`.
-  Disabled users must not accrue progress/awards, appear in ranking or access either Mini App API.
+  Disabled users must not accrue progress/awards, appear in ranking or access either gamification Mini App API.
+  Authenticated settings and course-selection APIs remain available to registered users regardless of gamification access.
   The main reply-keyboard achievement button sends plain text; its handler replies with an inline Web App button
   so Telegram supplies signed initData. Never launch this authenticated Mini App from a reply-keyboard Web App button.
   Preserve their earned awards and progress. The extra transcript fetch is skipped while disabled.

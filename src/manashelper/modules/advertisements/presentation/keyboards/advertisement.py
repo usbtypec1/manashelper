@@ -14,8 +14,10 @@ from manashelper.modules.advertisements.presentation.callbacks import (
     AdvertisementExpiryOption,
     AdvertisementFormAction,
     AdvertisementFormCallback,
+    AdvertisementMenuCallback,
     AdvertisementsPageCallback,
 )
+from manashelper.platform.telegram.navigation import build_navigation_keyboard
 
 ADS_PER_ROW = 1
 
@@ -134,6 +136,7 @@ def build_my_ads_keyboard(items: list[AdvertisementSummary], page: int, total_pa
         nav_builder.adjust(2)
         builder.attach(nav_builder)
 
+    builder.attach(build_navigation_keyboard(AdvertisementMenuCallback()))
     return builder.as_markup()
 
 

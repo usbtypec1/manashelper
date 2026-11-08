@@ -17,6 +17,9 @@ from manashelper.modules.schedule.presentation.lesson_search_formatter import (
     format_lesson_search_page,
     total_page_count,
 )
+from manashelper.platform.telegram.callbacks import NavigationAction, NavigationCallback
+from manashelper.platform.telegram.filters.translated_text import TranslatedText
+from manashelper.platform.telegram.navigation import build_navigation_keyboard
 
 router = Router(name="lesson_search")
 
@@ -28,12 +31,27 @@ class LessonSearchForm(StatesGroup):
     query = State()
 
 
+@router.message(TranslatedText("schedule.search_subject"))
+@flags.private_chat_only
+async def on_search_button(message: Message, state: FSMContext) -> None:
+    await state.clear()
+    await state.set_state(LessonSearchForm.query)
+    await message.answer(
+        _("schedule.search_prompt"),
+        reply_markup=build_navigation_keyboard(NavigationCallback(action=NavigationAction.STUDY)).as_markup(),
+    )
+
+
 @router.callback_query(TimetableMenuCallback.filter(F.action == TimetableMenuAction.OPEN_LESSON_SEARCH))
 @flags.private_chat_only
 async def on_search_selected(callback_query: CallbackQuery, state: FSMContext) -> None:
+    await state.clear()
     await state.set_state(LessonSearchForm.query)
     if isinstance(callback_query.message, Message):
-        await callback_query.message.edit_text(_("schedule.search_prompt"))
+        await callback_query.message.edit_text(
+            _("schedule.search_prompt"),
+            reply_markup=build_navigation_keyboard(NavigationCallback(action=NavigationAction.STUDY)).as_markup(),
+        )
     await callback_query.answer()
 
 
@@ -48,12 +66,12 @@ async def on_search_query_entered(
 
     query = message.text.strip() if message.text else ""
     if len(query) < MIN_QUERY_LENGTH:
-        await message.answer(_("schedule.query_too_short"))
+        await message.answer(_("schedule.query_too_short"), reply_markup=build_lesson_search_keyboard(0, 0))
         return
 
     results = await lesson_search_query.search(query)
     if not results:
-        await message.answer(_("schedule.no_results"))
+        await message.answer(_("schedule.no_results"), reply_markup=build_lesson_search_keyboard(0, 0))
         return
 
     await state.update_data({RESULTS_KEY: results})

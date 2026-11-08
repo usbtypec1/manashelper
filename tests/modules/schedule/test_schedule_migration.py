@@ -79,11 +79,11 @@ def test_current_schedule_day_maps_weekend_to_monday(day, expected):
     assert timetable._current_weekday(datetime(2026, 10, day)) == expected
 
 
-async def test_search_entry_retains_cache_until_query_is_received(context):
+async def test_search_entry_clears_previous_form_data(context):
     await context.state.update_data(old="kept")
     await lesson_search.on_search_selected(context.callback, context.state)
     assert await context.state.get_state() == "LessonSearchForm:query"
-    assert await context.state.get_data() == {"old": "kept"}
+    assert await context.state.get_data() == {}
 
 
 @pytest.mark.parametrize("query", [None, "", " x ", "  "])
@@ -121,11 +121,11 @@ async def test_schedule_menu_keeps_missing_user_untracked_and_unloaded_paths(con
         service.get_user_schedule.side_effect = NoTrackedCoursesError(961001)
     else:
         service.get_user_schedule.return_value = []
-    await timetable.on_my_schedule_selected(context.callback, service)
+    await timetable.on_my_schedule_selected(context.callback, service, context.state)
     methods = [call.args[1] for call in context.request.await_args_list]
     assert methods[-1].__class__.__name__ == "AnswerCallbackQuery"
-    assert methods[-1].show_alert == (True if failure != "tracking" else None)
-    assert len(methods) == (2 if failure == "tracking" else 1)
+    assert methods[-1].show_alert == (True if failure == "user" else None)
+    assert len(methods) == (1 if failure == "user" else 2)
 
 
 async def test_schedule_query_sorts_by_weekday_and_numeric_start_time():
@@ -143,7 +143,7 @@ async def test_schedule_query_sorts_by_weekday_and_numeric_start_time():
 
 @pytest.mark.parametrize("failure", ["sync", "telegram", "transport", "locale", "unchanged", "recipients"])
 async def test_sync_job_keeps_course_scopes_and_failure_isolation(failure):
-    courses, sync, notifications, users, bot = (AsyncMock() for _ in range(5))
+    courses, sync, notifications, users = (AsyncMock() for _ in range(4))
     courses.get_all_ids.return_value = [1, 2]
     changes = [LessonChange(1, "09:00-09:50", "Old", "New")]
     sync.execute.side_effect = [
@@ -183,7 +183,7 @@ async def test_sync_job_keeps_course_scopes_and_failure_isolation(failure):
         scopes.append(object())
         yield SimpleNamespace(get=AsyncMock(side_effect=dependencies.__getitem__))
 
-    await jobs.sync_timetable_job(container, bot)
+    await jobs.sync_timetable_job(container)
     assert len(scopes) == 3
     assert [call.args[0] for call in sync.execute.await_args_list] == [1, 2]
     expected = [10, 11, 20] if failure == "telegram" else ([10, 20] if failure == "transport" else [20])
@@ -237,4 +237,4 @@ async def test_schedule_provider_scopes_and_hourly_job_contract():
     scheduler = create_scheduler("container", "bot")
     registered = [job for job in scheduler.get_jobs() if job.func == jobs.sync_timetable_job]
     assert len(registered) == 1 and registered[0].trigger.interval.total_seconds() == 3600
-    assert registered[0].args == ("container", "bot")
+    assert registered[0].args == ("container",)

@@ -1,0 +1,51 @@
+from aiogram.utils.i18n import gettext as _
+
+from manashelper.platform.i18n.catalog import i18n
+
+
+def ui_strings(locale: str) -> dict[str, str]:
+    with i18n.context(), i18n.use_locale(locale):
+        return {
+            "title": _("miniapp.ui.title"),
+            "achievements": _("miniapp.ui.achievements"),
+            "notifications": _("miniapp.ui.notifications"),
+            "courses": _("miniapp.ui.courses"),
+            "note": _("miniapp.ui.note"),
+            "loading": _("miniapp.ui.loading"),
+            "saving": _("miniapp.ui.saving"),
+            "saved": _("miniapp.ui.saved"),
+            "error": _("miniapp.ui.error"),
+            "retry": _("miniapp.ui.retry"),
+            "open_telegram": _("miniapp.ui.open_telegram"),
+            "session_expired": _("miniapp.ui.session_expired"),
+            "choose_faculty": _("miniapp.ui.choose_faculty"),
+            "choose_department": _("miniapp.ui.choose_department"),
+            "course_number": _("miniapp.ui.course_number"),
+            "selected_courses": _("miniapp.ui.selected_courses"),
+            "none_selected": _("miniapp.ui.none_selected"),
+            "no_courses": _("miniapp.ui.no_courses"),
+            "remove": _("miniapp.ui.remove"),
+            "schedule_changes": _("miniapp.ui.schedule_changes"),
+            "exam_grades": _("miniapp.ui.exam_grades"),
+            "lesson_skips": _("miniapp.ui.lesson_skips"),
+            "food": _("miniapp.ui.food"),
+            "lunch": _("miniapp.ui.lunch"),
+            "dinner": _("miniapp.ui.dinner"),
+            "eders": _("miniapp.ui.eders"),
+            "day_before": _("miniapp.ui.day_before"),
+            "two_hours_before": _("miniapp.ui.two_hours_before"),
+            "openings": _("miniapp.ui.openings"),
+            "deadline_changes": _("miniapp.ui.deadline_changes"),
+            "hide_archived": _("miniapp.ui.hide_archived"),
+            "new_materials": _("miniapp.ui.new_materials"),
+            "broadcast": _("miniapp.ui.broadcast"),
+            "broadcast_note": _("miniapp.ui.broadcast_note"),
+            "muted_until": _("miniapp.ui.muted_until"),
+            "monday": _("miniapp.ui.monday"),
+            "tuesday": _("miniapp.ui.tuesday"),
+            "wednesday": _("miniapp.ui.wednesday"),
+            "thursday": _("miniapp.ui.thursday"),
+            "friday": _("miniapp.ui.friday"),
+            "saturday": _("miniapp.ui.saturday"),
+            "sunday": _("miniapp.ui.sunday"),
+        }

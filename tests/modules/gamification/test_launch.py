@@ -78,7 +78,7 @@ async def test_reply_achievement_button_sends_separate_inline_launch_only_for_en
                     score=3, total=10, rank=rank if rank is not None else i18n.gettext("gamification.rank_unassigned")
                 )
                 assert isinstance(response.reply_markup, InlineKeyboardMarkup)
-                [button] = [button for row in response.reply_markup.inline_keyboard for button in row]
+                [button] = [button for row in response.reply_markup.inline_keyboard for button in row if button.web_app]
                 assert button.web_app.url == "https://example.com/app/"
                 assert button.text == i18n.gettext("gamification.view_all")
                 query.is_enabled.assert_awaited_once_with(user.id)

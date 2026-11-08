@@ -144,7 +144,9 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry(monkeypa
                 assert "food_menu_cleanup" not in names
                 assert names.index("food_menu") < names.index("obis") < names.index("eders")
                 assert names.index("study_week") == names.index("eders") + 1
-                assert names.index("study_week") < names.index("settings")
+                assert names.index("settings") < names.index("timetable")
+                assert names.index("settings") < names.index("obis")
+                assert names.index("settings") < names.index("eders")
                 assert names.index("start") < names.index("locale") < names.index("timetable")
                 assert names.index("notifications") < names.index("advertisement")
                 assert names.index("settings") < names.index("notifications")

@@ -193,7 +193,7 @@ def _verify_migration(connection):
 
         # Apply later additions before executing current ORM mappings, then prove
         # their downgrade preserves the data under this historical migration.
-        later_revisions = [scripts.get_revision(name) for name in ("V26", "V27", "V28", "V29")]
+        later_revisions = [scripts.get_revision(name) for name in ("V26", "V27", "V28", "V29", "V30")]
         for later in later_revisions:
             later.module.upgrade()
         after = _snapshot(connection)

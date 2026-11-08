@@ -21,6 +21,7 @@ class ScheduleDayCallback(CallbackData, prefix="schedule_day"):
 
 
 class TimetableMenuAction(StrEnum):
+    MENU = "menu"
     OPEN_MY_SCHEDULE = "open_my_schedule"
     OPEN_LESSON_SEARCH = "open_lesson_search"
 

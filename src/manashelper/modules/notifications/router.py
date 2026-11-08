@@ -15,7 +15,11 @@ from manashelper.modules.notifications.application.use_cases.toggle_notification
 )
 from manashelper.modules.notifications.callbacks import BroadcastMuteCallback, NotificationSettingCallback
 from manashelper.modules.notifications.keyboards import build_notifications_keyboard
-from manashelper.modules.notifications.settings import NotificationSettingsSummary, UserNotFoundError
+from manashelper.modules.notifications.settings import (
+    NotificationSetting,
+    NotificationSettingsSummary,
+    UserNotFoundError,
+)
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 
 router = Router(name="notifications")
@@ -85,6 +89,14 @@ async def on_broadcast_mute(
         await callback_query.answer(_("common.start_required"), show_alert=True)
         return
     if callback_data.muted:
+        if isinstance(callback_query.message, Message) and callback_query.message.reply_markup is not None:
+            settings_button = NotificationSettingCallback(setting=NotificationSetting.SCHEDULE_CHANGES).pack()
+            if any(
+                button.callback_data == settings_button
+                for row in callback_query.message.reply_markup.inline_keyboard
+                for button in row
+            ):
+                await _show_notifications_menu(callback_query, settings)
         await callback_query.answer(_("notifications.broadcast_muted"), show_alert=True)
     else:
         await _show_notifications_menu(callback_query, settings)
