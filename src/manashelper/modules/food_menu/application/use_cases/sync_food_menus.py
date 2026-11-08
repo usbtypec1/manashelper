@@ -26,7 +26,7 @@ class SyncFoodMenusUseCase:
     async def _synchronize_daily_menu(self, scraped_daily_menu: ScrapedDailyMenu) -> None:
         daily_menu = await self.daily_menu_repository.get_by_date(scraped_daily_menu.date)
 
-        existing_names = {normalize_dish_name(dish.name) for dish in daily_menu.dishes} if daily_menu else set()
+        existing_names = {normalize_dish_name(dish.name_tr) for dish in daily_menu.dishes} if daily_menu else set()
         scraped_names = {normalize_dish_name(dish.name) for dish in scraped_daily_menu.dishes}
         if daily_menu is not None and existing_names == scraped_names:
             return
@@ -37,7 +37,7 @@ class SyncFoodMenusUseCase:
             if dish is None:
                 dish = Dish(
                     id=uuid.uuid4(),
-                    name=scraped_dish.name,
+                    name_tr=scraped_dish.name,
                     photo_url=scraped_dish.photo_url,
                     calories=scraped_dish.calories,
                 )

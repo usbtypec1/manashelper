@@ -22,15 +22,25 @@ from manashelper.modules.eders.presentation.callbacks import (
     EdersSettingCallback,
 )
 from manashelper.modules.eders.presentation.keyboards import build_eders_menu_keyboard
+from manashelper.modules.notifications import router as notification_routes
+from manashelper.modules.notifications.callbacks import NotificationSettingCallback
 from manashelper.modules.notifications.keyboards import build_notifications_keyboard
 from manashelper.modules.notifications.settings import NotificationSetting, NotificationSettingsSummary
 from manashelper.modules.obis.presentation import router as obis
-from manashelper.modules.obis.presentation.callbacks import ObisAction, ObisCallback, ObisNotificationSettingCallback
+from manashelper.modules.obis.presentation.callbacks import ObisAction, ObisCallback
 from manashelper.modules.obis.presentation.keyboards import build_obis_menu_keyboard
 from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.callbacks import (
+    NavigationAction,
+    NavigationCallback,
+    SettingsAction,
+    SettingsCallback,
+)
+from manashelper.platform.telegram.keyboards.settings import build_settings_keyboard
 from manashelper.platform.telegram.middlewares.private_chat_only import PrivateChatOnlyMiddleware
 from manashelper.platform.telegram.navigation import build_study_keyboard
 from manashelper.platform.telegram.routers import navigation
+from manashelper.platform.telegram.routers import settings as settings_routes
 
 
 def register_handlers(dispatcher, router):
@@ -48,8 +58,17 @@ def register_handlers(dispatcher, router):
 @pytest.mark.parametrize("feature", ["eders", "obis"])
 async def test_study_feature_menu_views_notifications_and_back(monkeypatch, locale, feature):
     monkeypatch.setattr(get_settings(), "eders_password", SecretStr("fake-password"))
+    monkeypatch.setattr(get_settings(), "public_url", None)
     dispatcher = Dispatcher()
-    for router in (navigation.router, obis.menu_router, eders.menu_router, obis.router, eders.router):
+    for router in (
+        navigation.router,
+        obis.menu_router,
+        eders.menu_router,
+        obis.router,
+        eders.router,
+        notification_routes.router,
+        settings_routes.router,
+    ):
         register_handlers(dispatcher, router)
     for event in (dispatcher.message, dispatcher.callback_query):
         event.middleware(PrivateChatOnlyMiddleware())
@@ -111,7 +130,7 @@ async def test_study_feature_menu_views_notifications_and_back(monkeypatch, loca
             ]
             menu = build_eders_menu_keyboard() if feature == "eders" else build_obis_menu_keyboard()
             assert sent[-1].reply_markup == menu
-            assert sum(map(len, menu.inline_keyboard)) == 3
+            assert sum(map(len, menu.inline_keyboard)) == 4
             payloads = [button.callback_data for row in menu.inline_keyboard for button in row]
 
             async def click(payload):
@@ -153,30 +172,47 @@ async def test_study_feature_menu_views_notifications_and_back(monkeypatch, loca
                     )
                     fetch.assert_awaited_once_with(user.id)
 
-            methods = await click(payloads[2])
+            entry = (
+                SettingsCallback(action=SettingsAction.OPEN_EDERS_NOTIFICATIONS).pack()
+                if feature == "eders"
+                else SettingsCallback(action=SettingsAction.OPEN_NOTIFICATIONS).pack()
+            )
+            methods = await click(entry)
             keyboard = next(method.reply_markup for method in methods if hasattr(method, "reply_markup"))
             if feature == "eders":
-                assert len(keyboard.inline_keyboard) == len(EdersSetting) + 1
+                assert len(keyboard.inline_keyboard) == len(EdersSetting) + 2
                 toggle = EdersSettingCallback(setting=EdersSetting.DAY_BEFORE).pack()
-                back = EdersMenuCallback(action=EdersAction.MENU).pack()
+                back = SettingsCallback(action=SettingsAction.BACK_TO_NOTIFICATIONS).pack()
             else:
-                assert len(keyboard.inline_keyboard) == 3
-                toggle = ObisNotificationSettingCallback(setting=NotificationSetting.EXAM_GRADES).pack()
-                back = ObisCallback(action=ObisAction.MENU).pack()
-            assert keyboard.inline_keyboard[-1][0].callback_data == back
+                toggle = NotificationSettingCallback(setting=NotificationSetting.EXAM_GRADES).pack()
+                back = SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS).pack()
+            assert keyboard.inline_keyboard[-2][0].callback_data == back
+            assert (
+                keyboard.inline_keyboard[-1][0].callback_data == NavigationCallback(action=NavigationAction.MAIN).pack()
+            )
             methods = await click(toggle)
             keyboard = next(method.reply_markup for method in methods if hasattr(method, "reply_markup"))
-            assert keyboard.inline_keyboard[-1][0].callback_data == back
+            assert keyboard.inline_keyboard[-2][0].callback_data == back
             if feature == "eders":
                 tracking.toggle.assert_awaited_once_with(user.id, EdersSetting.DAY_BEFORE)
             else:
                 settings_service.toggle_setting.assert_awaited_once_with(user.id, NotificationSetting.EXAM_GRADES)
             methods = await click(back)
-            assert next(method.reply_markup for method in methods if hasattr(method, "reply_markup")) == menu
+            expected = (
+                build_notifications_keyboard(NotificationSettingsSummary(True, True, True))
+                if feature == "eders"
+                else build_settings_keyboard()
+            )
+            assert next(method.reply_markup for method in methods if hasattr(method, "reply_markup")) == expected
             general = build_notifications_keyboard(NotificationSettingsSummary(True, True, True))
             assert {button.callback_data for row in general.inline_keyboard for button in row} == {
                 "notification_setting:schedule_changes",
+                "notification_setting:exam_grades",
+                "notification_setting:lesson_skips",
                 "settings:open_food_menu_notifications",
+                "settings:open_eders_notifications",
+                "broadcast_mute:1",
                 "settings:back_to_settings",
+                "navigation:main",
             }
     await dispatcher.storage.close()

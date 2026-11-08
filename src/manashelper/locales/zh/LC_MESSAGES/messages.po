@@ -76,19 +76,19 @@ msgid "eders.title_date_mismatch"
 msgstr "标题中的日期与设置的截止日期不同。"
 
 msgid "eders.filter_all"
-msgstr "近期项目"
+msgstr "📋 近期项目"
 
 msgid "eders.filter_week"
-msgstr "未来七天"
+msgstr "🗓️ 未来七天"
 
 msgid "eders.filter_available"
-msgstr "当前开放"
+msgstr "🟢 当前开放"
 
 msgid "eders.filter_awaiting"
-msgstr "待评分"
+msgstr "⏳ 待评分"
 
 msgid "eders.filter_unknown"
-msgstr "截止时间未知"
+msgstr "❓ 截止时间未知"
 
 msgid "eders.reminder_day"
 msgstr "eders 截止提醒：提前一天"
@@ -106,19 +106,19 @@ msgid "eders.previous_deadline"
 msgstr "原截止时间：{value}"
 
 msgid "eders.setting_day"
-msgstr "提前一天"
+msgstr "📅 提前一天"
 
 msgid "eders.setting_two_hours"
-msgstr "提前两小时"
+msgstr "⏰ 提前两小时"
 
 msgid "eders.setting_openings"
-msgstr "作业和测验开放"
+msgstr "🔓 作业和测验开放"
 
 msgid "eders.setting_changes"
-msgstr "截止时间更改"
+msgstr "🔄 截止时间更改"
 
 msgid "eders.setting_archived"
-msgstr "隐藏超过 180 天的截止项目"
+msgstr "🗄️ 隐藏超过 180 天的截止项目"
 
 msgid "eders.settings_header"
 msgstr "eders 提醒。点击按钮可切换设置。/eders 查看作业，/week 查看未来七天。"
@@ -148,22 +148,22 @@ msgid "common.cancel"
 msgstr "❌ 取消"
 
 msgid "common.skip"
-msgstr "跳过"
+msgstr "⏭️ 跳过"
 
 msgid "common.done"
 msgstr "✅ 完成"
 
 msgid "common.duration.minutes_45"
-msgstr "45 分钟"
+msgstr "⏱️ 45 分钟"
 
 msgid "common.duration.hours_6"
-msgstr "6 小时"
+msgstr "⏱️ 6 小时"
 
 msgid "common.duration.hours_24"
-msgstr "24 小时"
+msgstr "⏱️ 24 小时"
 
 msgid "common.duration.days_7"
-msgstr "7 天"
+msgstr "🗓️ 7 天"
 
 msgid "ads.no_expiration"
 msgstr "♾️ 永不过期"
@@ -214,10 +214,10 @@ msgid "food.day_after_tomorrow"
 msgstr "🗓 后天"
 
 msgid "food.lunch"
-msgstr "午餐"
+msgstr "🍽️ 午餐"
 
 msgid "food.dinner"
-msgstr "晚餐"
+msgstr "🌙 晚餐"
 
 msgid "common.enable_all"
 msgstr "✅ 全部开启"
@@ -248,9 +248,6 @@ msgstr "🗑 清除登录信息"
 
 msgid "settings.notifications"
 msgstr "🔔 通知"
-
-msgid "settings.my_lessons"
-msgstr "📚 我的课程"
 
 msgid "settings.obis_credentials"
 msgstr "🔑 OBIS 登录信息"
@@ -579,9 +576,6 @@ msgstr "专业列表"
 msgid "schedule.courses"
 msgstr "年级列表"
 
-msgid "schedule.no_longer_tracked"
-msgstr "你已没有关注的课程"
-
 msgid "schedule.course_not_found"
 msgstr "未找到课程"
 
@@ -838,19 +832,19 @@ msgid "obis.result_expired"
 msgstr "此结果已失效。请通过菜单重新查询成绩或缺勤信息。"
 
 msgid "eders.filter_today"
-msgstr "今天"
+msgstr "📅 今天"
 
 msgid "eders.filter_not_submitted"
-msgstr "未提交"
+msgstr "📥 未提交"
 
 msgid "eders.filter_materials"
-msgstr "课程资料"
+msgstr "📚 课程资料"
 
 msgid "eders.filter_new_materials"
-msgstr "新发现的资料"
+msgstr "🆕 新发现的资料"
 
 msgid "eders.setting_materials"
-msgstr "新增和更改的资料"
+msgstr "📚 新增和更改的资料"
 
 msgid "eders.material_new"
 msgstr "新增资料"
@@ -862,13 +856,13 @@ msgid "eders.materials_help"
 msgstr "按课程、章节或标题搜索：/materials 文本。新增是指首次同步后发现的资料。"
 
 msgid "menu.eders"
-msgstr "Eders"
+msgstr "💻 Eders"
 
 msgid "menu.eders_materials"
-msgstr "Eders 课程资料"
+msgstr "📚 Eders 课程资料"
 
 msgid "menu.study_week"
-msgstr "学习周"
+msgstr "🗓️ 学习周"
 
 msgid "data.preparing"
 msgstr "数据正在后台准备中。请在下次更新后重试（每15分钟更新一次）。"
@@ -931,10 +925,10 @@ msgid "halloween.food_no_available_menus"
 msgstr "🕸️ 美食之书暂时为空：未来7天的菜单尚未发布。"
 
 msgid "broadcast.edit_buttons"
-msgstr "按钮"
+msgstr "🔘 按钮"
 
 msgid "broadcast.without_buttons"
-msgstr "不添加按钮"
+msgstr "🚫 不添加按钮"
 
 msgid "broadcast.buttons_prompt"
 msgstr "每行输入一个按钮：\n名称 | https://example.com\n名称 | callback:your_action\n请使用机器人已有的 callback_data，长度为 1–64 个 UTF-8 字节。最多 100 个按钮。"
@@ -954,7 +948,6 @@ msgstr "发送这条广播吗？"
 msgid "menu.study"
 msgstr "📚 学习"
 
-
 msgid "ads.invalid_phone"
 msgstr "请输入有效的电话号码，例如 +996700123456。"
 
@@ -962,13 +955,13 @@ msgid "ads.phone_required"
 msgstr "请输入电话号码，或设置 Telegram 用户名以跳过此步骤。"
 
 msgid "notifications.mute_broadcasts"
-msgstr "不接收群发消息"
+msgstr "🔕 不接收群发消息"
 
 msgid "notifications.broadcast_muted"
 msgstr "您已退订群发消息14天"
 
 msgid "notifications.resume_broadcasts"
-msgstr "恢复群发消息"
+msgstr "🔔 恢复群发消息"
 
 msgid "notifications.broadcast_muted_until"
 msgstr "群发消息已暂停至 {until}（比什凯克时间）。"
@@ -977,16 +970,16 @@ msgid "notifications.broadcast_resumed"
 msgstr "已恢复群发消息"
 
 msgid "menu.obis"
-msgstr "OBIS"
+msgstr "🎓 OBIS"
 
 msgid "eders.deadlines"
-msgstr "截止日期"
+msgstr "⏳ 截止日期"
 
 msgid "obis.notifications_header"
 msgstr "OBIS 通知"
 
 msgid "menu.achievements"
-msgstr "成就"
+msgstr "🏆 成就"
 
 msgid "gamification.unavailable"
 msgstr "启用迷你应用后即可查看成就。"
@@ -1121,10 +1114,10 @@ msgid "gamification.access_disabled"
 msgstr "已关闭成就功能。进度和奖励已保留。"
 
 msgid "eders.mark_done"
-msgstr "标记为已完成"
+msgstr "✅ 标记为已完成"
 
 msgid "eders.mark_undone"
-msgstr "标记为未完成"
+msgstr "↩️ 标记为未完成"
 
 msgid "eders.marked_done"
 msgstr "[已标记为完成]"
@@ -1141,18 +1134,152 @@ msgstr "无法更新 Eders 中的任务，请重试。"
 msgid "eders.completion_unavailable"
 msgstr "此任务已无法手动标记，请在 Eders 中查看。"
 
-
 msgid "gamification.award_notification"
 msgstr "🏆 解锁成就：<b>{name}</b>\n\n{description}"
-
 
 msgid "menu.achievements_button"
 msgstr "🏆 成就"
 
-
 msgid "gamification.rank_unassigned"
 msgstr "暂无排名"
 
-
 msgid "gamification.view_all"
-msgstr "查看所有成就"
+msgstr "🏆 查看所有成就"
+
+msgid "notifications.eders"
+msgstr "📜 Eders"
+
+msgid "schedule.change_courses"
+msgstr "📚 更改课程"
+
+msgid "schedule.mini_app"
+msgstr "📱 在小程序中选课"
+
+msgid "settings.mini_app"
+msgstr "📱 在小程序中设置"
+
+msgid "miniapp.ui.title"
+msgstr "设置"
+
+msgid "miniapp.ui.achievements"
+msgstr "成就"
+
+msgid "miniapp.ui.notifications"
+msgstr "通知"
+
+msgid "miniapp.ui.courses"
+msgstr "课程"
+
+msgid "miniapp.ui.note"
+msgstr "选择要接收的通知。更改会立即保存。"
+
+msgid "miniapp.ui.loading"
+msgstr "加载中…"
+
+msgid "miniapp.ui.saving"
+msgstr "保存中…"
+
+msgid "miniapp.ui.saved"
+msgstr "已保存"
+
+msgid "miniapp.ui.error"
+msgstr "操作未完成，请重试。"
+
+msgid "miniapp.ui.retry"
+msgstr "重试"
+
+msgid "miniapp.ui.open_telegram"
+msgstr "请通过 Telegram 中 Manashelper 机器人的按钮打开此小程序。"
+
+msgid "miniapp.ui.session_expired"
+msgstr "请通过机器人的按钮重新打开小程序。"
+
+msgid "miniapp.ui.choose_faculty"
+msgstr "选择学院"
+
+msgid "miniapp.ui.choose_department"
+msgstr "选择专业"
+
+msgid "miniapp.ui.course_number"
+msgstr "{number} 年级"
+
+msgid "miniapp.ui.selected_courses"
+msgstr "已选课程"
+
+msgid "miniapp.ui.none_selected"
+msgstr "尚未选择课程。请在下方选择学院和专业。"
+
+msgid "miniapp.ui.no_courses"
+msgstr "此处暂无可选课程。"
+
+msgid "miniapp.ui.remove"
+msgstr "移除"
+
+msgid "miniapp.ui.schedule_changes"
+msgstr "课表变更"
+
+msgid "miniapp.ui.exam_grades"
+msgstr "考试成绩"
+
+msgid "miniapp.ui.lesson_skips"
+msgstr "出勤情况"
+
+msgid "miniapp.ui.food"
+msgstr "食堂"
+
+msgid "miniapp.ui.lunch"
+msgstr "午餐"
+
+msgid "miniapp.ui.dinner"
+msgstr "晚餐"
+
+msgid "miniapp.ui.eders"
+msgstr "Eders"
+
+msgid "miniapp.ui.day_before"
+msgstr "截止前一天"
+
+msgid "miniapp.ui.two_hours_before"
+msgstr "截止前两小时"
+
+msgid "miniapp.ui.openings"
+msgstr "作业和测验开放"
+
+msgid "miniapp.ui.deadline_changes"
+msgstr "截止时间变更"
+
+msgid "miniapp.ui.hide_archived"
+msgstr "隐藏超过 180 天的截止时间"
+
+msgid "miniapp.ui.new_materials"
+msgstr "新增和更新的资料"
+
+msgid "miniapp.ui.broadcast"
+msgstr "管理方消息"
+
+msgid "miniapp.ui.broadcast_note"
+msgstr "关闭后将暂停接收群发消息 14 天。"
+
+msgid "miniapp.ui.muted_until"
+msgstr "群发消息已暂停至 {until}。"
+
+msgid "miniapp.ui.monday"
+msgstr "星期一"
+
+msgid "miniapp.ui.tuesday"
+msgstr "星期二"
+
+msgid "miniapp.ui.wednesday"
+msgstr "星期三"
+
+msgid "miniapp.ui.thursday"
+msgstr "星期四"
+
+msgid "miniapp.ui.friday"
+msgstr "星期五"
+
+msgid "miniapp.ui.saturday"
+msgstr "星期六"
+
+msgid "miniapp.ui.sunday"
+msgstr "星期日"

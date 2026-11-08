@@ -26,9 +26,18 @@ class DailyMenuAvailability:
 @dataclass(frozen=True, slots=True)
 class DishModel:
     id: uuid.UUID
-    name: str
+    name_tr: str
     photo_url: str
     calories: int
+    name_en: str | None = None
+    name_ru: str | None = None
+    name_ky: str | None = None
+    name_zh: str | None = None
+
+
+def localized_dish_name(dish: DishModel, locale: str) -> str:
+    name = {"en": dish.name_en, "ru": dish.name_ru, "ky": dish.name_ky, "zh": dish.name_zh}.get(locale)
+    return name.strip() if name and name.strip() else dish.name_tr
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,7 +56,16 @@ def to_model(daily_menu: DailyMenu, ratings: Sequence[DailyMenuRating], user_id:
         id=daily_menu.id,
         date=daily_menu.date,
         dishes=[
-            DishModel(id=dish.id, name=dish.name, photo_url=dish.photo_url, calories=dish.calories)
+            DishModel(
+                id=dish.id,
+                name_tr=dish.name_tr,
+                name_en=dish.name_en,
+                name_ru=dish.name_ru,
+                name_ky=dish.name_ky,
+                name_zh=dish.name_zh,
+                photo_url=(dish.upscaled_photo_url or "").strip() or dish.photo_url,
+                calories=dish.calories,
+            )
             for dish in daily_menu.dishes
         ],
         average_rating=sum(rating.score for rating in ratings) / len(ratings) if ratings else 0.0,

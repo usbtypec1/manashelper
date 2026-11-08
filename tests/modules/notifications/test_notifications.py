@@ -158,14 +158,22 @@ async def test_recipients_include_missing_settings_and_filter_flags_independentl
     assert set(await recipients.for_lesson_skips()) & ids == {972001, 972002}
 
 
-def test_notification_payload_keyboard_order_and_private_flags():
+def test_notification_payload_keyboard_order_and_private_flags(monkeypatch):
+    from manashelper.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "public_url", None)
+    monkeypatch.setattr(get_settings(), "eders_password", None)
     with i18n.context(), i18n.use_locale("ru"):
         keyboard = build_notifications_keyboard(NotificationSettingsSummary(True, False, True))
     buttons = [row[0] for row in keyboard.inline_keyboard]
     assert [button.callback_data for button in buttons] == [
         "notification_setting:schedule_changes",
+        "notification_setting:exam_grades",
+        "notification_setting:lesson_skips",
         "settings:open_food_menu_notifications",
+        "broadcast_mute:1",
         "settings:back_to_settings",
+        "navigation:main",
     ]
     assert buttons[0].text.startswith("✅")
     names = {"on_open_notifications", "on_back_to_notifications", "on_toggle_notification_setting"}

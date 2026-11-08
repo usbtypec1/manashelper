@@ -16,6 +16,12 @@ class SetBroadcastMuteUseCase:
     users: UsersQuery
 
     async def execute(self, user_id: int, muted: bool) -> NotificationSettingsSummary:
-        settings = await get_or_create_notification_settings(self.notification_settings_repository, self.users, user_id)
-        settings.broadcast_muted_until = datetime.now(UTC) + timedelta(days=14) if muted else None
+        settings = await get_or_create_notification_settings(
+            self.notification_settings_repository, self.users, user_id, lock=True
+        )
+        now = datetime.now(UTC)
+        if not muted:
+            settings.broadcast_muted_until = None
+        elif settings.broadcast_muted_until is None or settings.broadcast_muted_until <= now:
+            settings.broadcast_muted_until = now + timedelta(days=14)
         return to_summary(settings)

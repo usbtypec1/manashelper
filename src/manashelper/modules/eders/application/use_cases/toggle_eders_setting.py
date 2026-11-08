@@ -16,10 +16,10 @@ class ToggleEdersSettingUseCase:
     users: UsersQuery
     outbox: OutboxService
 
-    async def execute(self, user_id: int, setting: EdersSetting) -> EdersSettings:
+    async def execute(self, user_id: int, setting: EdersSetting, *, enabled: bool | None = None) -> EdersSettings:
         await get_eders_settings(self.eders_repository, self.users, user_id)
         state = await self.eders_repository.get_state(user_id)
-        setattr(state, setting.value, not getattr(state, setting.value))
+        setattr(state, setting.value, not getattr(state, setting.value) if enabled is None else enabled)
         if not getattr(state, setting.value):
             event_types = {
                 EdersSetting.DAY_BEFORE: {"before_24"},

@@ -53,12 +53,12 @@ def create_scheduler(container: AsyncContainer, bot: Bot) -> AsyncIOScheduler:
             poll_eders_job,
             "interval",
             minutes=eders_minutes,
-            args=[container, bot],
+            args=[container],
             next_run_time=now,
             max_instances=1,
             coalesce=True,
         )
-    scheduler.add_job(sync_timetable_job, "interval", hours=1, args=[container, bot], next_run_time=now)
+    scheduler.add_job(sync_timetable_job, "interval", hours=1, args=[container], next_run_time=now)
     scheduler.add_job(cleanup_expired_advertisements_job, "interval", hours=1, args=[container, bot], next_run_time=now)
 
     return scheduler

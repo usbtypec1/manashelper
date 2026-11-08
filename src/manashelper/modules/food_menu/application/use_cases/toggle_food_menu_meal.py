@@ -17,11 +17,13 @@ class ToggleFoodMenuMealUseCase:
     food_menu_notification_settings_repository: FoodMenuNotificationSettingsRepository
     users: UsersQuery
 
-    async def execute(self, user_id: int, weekday: int, meal: FoodMenuMeal) -> FoodMenuNotificationSettingsSummary:
+    async def execute(
+        self, user_id: int, weekday: int, meal: FoodMenuMeal, *, enabled: bool | None = None
+    ) -> FoodMenuNotificationSettingsSummary:
         await ensure_food_menu_user_exists(self.users, user_id)
-        settings = await self.food_menu_notification_settings_repository.get_or_create(user_id, weekday)
+        settings = await self.food_menu_notification_settings_repository.get_or_create(user_id, weekday, lock=True)
         if meal is FoodMenuMeal.LUNCH:
-            settings.lunch_enabled = not settings.lunch_enabled
+            settings.lunch_enabled = not settings.lunch_enabled if enabled is None else enabled
         else:
-            settings.dinner_enabled = not settings.dinner_enabled
+            settings.dinner_enabled = not settings.dinner_enabled if enabled is None else enabled
         return await build_food_menu_settings_summary(self.food_menu_notification_settings_repository, user_id)

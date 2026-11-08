@@ -30,7 +30,7 @@ from manashelper.modules.food_menu.infrastructure.repositories.daily_menu import
 from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_rating import (
     DailyMenuRatingRepository,
 )
-from manashelper.modules.food_menu.presentation.callbacks import FoodMenuRatingCallback
+from manashelper.modules.food_menu.presentation.callbacks import FoodMenuOpenCallback, FoodMenuRatingCallback
 from manashelper.modules.food_menu.presentation.food_menu_formatter import (
     build_daily_menu_rich_message,
     refresh_daily_menu_rating,
@@ -54,7 +54,7 @@ def _service(session: AsyncSession) -> DailyMenuQuery:
 
 async def _seed(session: AsyncSession) -> tuple[DailyMenu, DailyMenu]:
     dishes = [
-        Dish(id=uuid.uuid4(), name=f"dish-{uuid.uuid4()}", calories=200, photo_url="https://example.com/dish.jpg")
+        Dish(id=uuid.uuid4(), name_tr=f"dish-{uuid.uuid4()}", calories=200, photo_url="https://example.com/dish.jpg")
         for _ in range(2)
     ]
     menus = [
@@ -268,7 +268,11 @@ async def test_menu_delivery_and_broadcast_keep_ratings_without_auto_delete_cont
     requested_settings = [
         block for block in requested_rich.blocks if block.type == "buttons" and len(block.buttons) != 5
     ]
-    assert requested_settings == []
+    assert [row.buttons[0].callback_data for row in requested_settings] == [
+        FoodMenuOpenCallback().pack(),
+        SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS).pack(),
+        "navigation:main",
+    ]
 
     bot = AsyncMock()
     bot.enqueue.return_value = True
@@ -288,5 +292,5 @@ async def test_menu_delivery_and_broadcast_keep_ratings_without_auto_delete_cont
     assert [len(row.buttons) for row in broadcast_settings] == [1]
     assert (
         broadcast_settings[0].buttons[0].callback_data
-        == SettingsCallback(action=SettingsAction.OPEN_FOOD_MENU_NOTIFICATIONS).pack()
+        == SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS).pack()
     )

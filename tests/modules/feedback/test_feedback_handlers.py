@@ -74,14 +74,16 @@ def callback(context):
     ).as_(context.bot)
 
 
-def admin_message(context, *, chat_id=ADMIN_CHAT_ID, text="  <Answer> & details  ", caption=None):
+def admin_message(
+    context, *, chat_id=ADMIN_CHAT_ID, chat_type="supergroup", text="  <Answer> & details  ", caption=None
+):
     return Message(
         message_id=2,
         date=0,
-        chat=Chat(id=chat_id, type="supergroup"),
+        chat=Chat(id=chat_id, type=chat_type),
         text=text,
         caption=caption,
-        reply_to_message=Message(message_id=42, date=0, chat=Chat(id=chat_id, type="supergroup")),
+        reply_to_message=Message(message_id=42, date=0, chat=Chat(id=chat_id, type=chat_type)),
     ).as_(context.bot)
 
 
@@ -186,9 +188,13 @@ async def test_forward_failure_preserves_existing_acknowledgement_and_cleared_st
     assert sent_methods(context, SendMessage)[0].text == i18n.gettext("feedback.sent")
 
 
-@pytest.mark.parametrize("chat_id", [ADMIN_CHAT_ID, -100999999])
-async def test_router_restricts_admin_reply_to_configured_group(context, chat_id):
-    message = admin_message(context, chat_id=chat_id)
+@pytest.mark.parametrize("chat_type", ["private", "group", "supergroup"])
+@pytest.mark.parametrize("authorized", [False, True])
+async def test_router_accepts_admin_replies_only_in_configured_chat(context, chat_type, authorized):
+    admin_chat_id = 941_002 if chat_type == "private" else ADMIN_CHAT_ID
+    context.settings = SimpleNamespace(admin_chat_id=admin_chat_id)
+    chat_id = admin_chat_id if authorized else admin_chat_id + 1
+    message = admin_message(context, chat_id=chat_id, chat_type=chat_type)
     dependencies = {
         Settings: context.settings,
         FeedbackQuery: context.service,
@@ -202,18 +208,18 @@ async def test_router_restricts_admin_reply_to_configured_group(context, chat_id
         message,
         bot=context.bot,
         settings=context.settings,
-        feedback_service=context.service,
-        locale_service=context.locale_service,
+        feedback_query=context.service,
+        locale_query=context.locale_service,
         dishka_container=SimpleNamespace(get=resolve),
     )
-    if chat_id != ADMIN_CHAT_ID:
+    if not authorized:
         context.service.get_by_admin_chat_message_id.assert_not_awaited()
         assert not sent_methods(context, SendMessage)
         return
     context.service.get_by_admin_chat_message_id.assert_awaited_once_with(42)
     context.locale_service.get_locale.assert_awaited_once_with(USER_ID)
     messages = sent_methods(context, SendMessage)
-    assert [message.chat_id for message in messages] == [USER_ID, ADMIN_CHAT_ID]
+    assert [message.chat_id for message in messages] == [USER_ID, admin_chat_id]
     assert messages[0].text == i18n.gettext("feedback.admin_reply", locale="zh").format(
         text="  &lt;Answer&gt; &amp; details  "
     )

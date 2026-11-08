@@ -3,6 +3,15 @@ from enum import StrEnum
 from aiogram.filters.callback_data import CallbackData
 
 
+class NavigationAction(StrEnum):
+    MAIN = "main"
+    STUDY = "study"
+
+
+class NavigationCallback(CallbackData, prefix="navigation"):
+    action: NavigationAction
+
+
 class SettingsAction(StrEnum):
     OPEN_NOTIFICATIONS = "open_notifications"
     OPEN_EDERS_NOTIFICATIONS = "open_eders_notifications"

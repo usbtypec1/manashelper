@@ -79,19 +79,19 @@ msgid "eders.title_date_mismatch"
 msgstr "Başlıktaki tarih ayarlanan son tarihten farklı."
 
 msgid "eders.filter_all"
-msgstr "Güncel öğeler"
+msgstr "📋 Güncel öğeler"
 
 msgid "eders.filter_week"
-msgstr "Önümüzdeki yedi gün"
+msgstr "🗓️ Önümüzdeki yedi gün"
 
 msgid "eders.filter_available"
-msgstr "Şimdi açık"
+msgstr "🟢 Şimdi açık"
 
 msgid "eders.filter_awaiting"
-msgstr "Not bekleyenler"
+msgstr "⏳ Not bekleyenler"
 
 msgid "eders.filter_unknown"
-msgstr "Kesin tarihi yok"
+msgstr "❓ Kesin tarihi yok"
 
 msgid "eders.reminder_day"
 msgstr "eders hatırlatıcısı: son tarihten bir gün önce"
@@ -109,19 +109,19 @@ msgid "eders.previous_deadline"
 msgstr "Önceki son tarih: {value}"
 
 msgid "eders.setting_day"
-msgstr "Bir gün önce"
+msgstr "📅 Bir gün önce"
 
 msgid "eders.setting_two_hours"
-msgstr "İki saat önce"
+msgstr "⏰ İki saat önce"
 
 msgid "eders.setting_openings"
-msgstr "Ödev ve sınav açılışları"
+msgstr "🔓 Ödev ve sınav açılışları"
 
 msgid "eders.setting_changes"
-msgstr "Son tarih değişiklikleri"
+msgstr "🔄 Son tarih değişiklikleri"
 
 msgid "eders.setting_archived"
-msgstr "180 günden eski tarihleri gizle"
+msgstr "🗄️ 180 günden eski tarihleri gizle"
 
 msgid "eders.settings_header"
 msgstr ""
@@ -153,22 +153,22 @@ msgid "common.cancel"
 msgstr "❌ İptal"
 
 msgid "common.skip"
-msgstr "Atla"
+msgstr "⏭️ Atla"
 
 msgid "common.done"
 msgstr "✅ Tamam"
 
 msgid "common.duration.minutes_45"
-msgstr "45 dakika"
+msgstr "⏱️ 45 dakika"
 
 msgid "common.duration.hours_6"
-msgstr "6 saat"
+msgstr "⏱️ 6 saat"
 
 msgid "common.duration.hours_24"
-msgstr "24 saat"
+msgstr "⏱️ 24 saat"
 
 msgid "common.duration.days_7"
-msgstr "7 gün"
+msgstr "🗓️ 7 gün"
 
 msgid "ads.no_expiration"
 msgstr "♾️ Süresiz"
@@ -219,10 +219,10 @@ msgid "food.day_after_tomorrow"
 msgstr "🗓 Öbür gün"
 
 msgid "food.lunch"
-msgstr "Öğle"
+msgstr "🍽️ Öğle"
 
 msgid "food.dinner"
-msgstr "Akşam"
+msgstr "🌙 Akşam"
 
 msgid "common.enable_all"
 msgstr "✅ Hepsi"
@@ -253,9 +253,6 @@ msgstr "🗑 Bilgileri sil"
 
 msgid "settings.notifications"
 msgstr "🔔 Bildirimler"
-
-msgid "settings.my_lessons"
-msgstr "📚 Derslerim"
 
 msgid "settings.obis_credentials"
 msgstr "🔑 OBIS bilgileri"
@@ -586,9 +583,6 @@ msgstr "Bölümler listesi"
 msgid "schedule.courses"
 msgstr "Ders listesi"
 
-msgid "schedule.no_longer_tracked"
-msgstr "Artık takip ettiğiniz bir ders kalmadı"
-
 msgid "schedule.course_not_found"
 msgstr "Ders bulunamadı"
 
@@ -845,19 +839,19 @@ msgid "obis.result_expired"
 msgstr "Bu sonuç artık mevcut değil. Menüden notları veya devamsızlık bilgilerini yeniden isteyin."
 
 msgid "eders.filter_today"
-msgstr "Bugün"
+msgstr "📅 Bugün"
 
 msgid "eders.filter_not_submitted"
-msgstr "Teslim edilmedi"
+msgstr "📥 Teslim edilmedi"
 
 msgid "eders.filter_materials"
-msgstr "Ders materyalleri"
+msgstr "📚 Ders materyalleri"
 
 msgid "eders.filter_new_materials"
-msgstr "Yeni materyaller"
+msgstr "🆕 Yeni materyaller"
 
 msgid "eders.setting_materials"
-msgstr "Yeni ve değişen materyaller"
+msgstr "📚 Yeni ve değişen materyaller"
 
 msgid "eders.material_new"
 msgstr "Yeni materyal"
@@ -869,13 +863,13 @@ msgid "eders.materials_help"
 msgstr "Ders, bölüm veya başlığa göre arama: /materials metin. Yeni, ilk eşitlemeden sonra keşfedilen demektir."
 
 msgid "menu.eders"
-msgstr "Eders"
+msgstr "💻 Eders"
 
 msgid "menu.eders_materials"
-msgstr "Eders materyalleri"
+msgstr "📚 Eders materyalleri"
 
 msgid "menu.study_week"
-msgstr "Ders haftası"
+msgstr "🗓️ Ders haftası"
 
 msgid "data.preparing"
 msgstr "Veriler arka planda hazırlanıyor. Sonraki güncellemeden sonra tekrar deneyin (her 15 dakikada bir)."
@@ -938,10 +932,10 @@ msgid "halloween.food_no_available_menus"
 msgstr "🕸️ İkram defteri şimdilik boş: önümüzdeki 7 günün menüleri henüz yayımlanmadı."
 
 msgid "broadcast.edit_buttons"
-msgstr "Düğmeler"
+msgstr "🔘 Düğmeler"
 
 msgid "broadcast.without_buttons"
-msgstr "Düğmesiz"
+msgstr "🚫 Düğmesiz"
 
 msgid "broadcast.buttons_prompt"
 msgstr "Her satıra bir düğme yazın:\nAd | https://example.com\nAd | callback:your_action\nBotun mevcut callback_data değerlerini kullanın: UTF-8 olarak 1–64 bayt. En fazla 100 düğme."
@@ -961,7 +955,6 @@ msgstr "Bu duyuru gönderilsin mi?"
 msgid "menu.study"
 msgstr "📚 Eğitim"
 
-
 msgid "ads.invalid_phone"
 msgstr "Geçerli bir telefon numarası girin, örneğin +996700123456."
 
@@ -969,13 +962,13 @@ msgid "ads.phone_required"
 msgstr "Bu adımı atlamak için telefon numarası girin veya Telegram kullanıcı adı belirleyin."
 
 msgid "notifications.mute_broadcasts"
-msgstr "Toplu mesaj gönderme"
+msgstr "🔕 Toplu mesaj gönderme"
 
 msgid "notifications.broadcast_muted"
 msgstr "14 gün boyunca toplu mesaj aboneliğinden çıktınız"
 
 msgid "notifications.resume_broadcasts"
-msgstr "Toplu mesajları yeniden aç"
+msgstr "🔔 Toplu mesajları yeniden aç"
 
 msgid "notifications.broadcast_muted_until"
 msgstr "Toplu mesajlar {until} tarihine kadar kapalı (Bişkek saati)."
@@ -984,16 +977,16 @@ msgid "notifications.broadcast_resumed"
 msgstr "Toplu mesajlar yeniden açıldı"
 
 msgid "menu.obis"
-msgstr "OBIS"
+msgstr "🎓 OBIS"
 
 msgid "eders.deadlines"
-msgstr "Son tarihler"
+msgstr "⏳ Son tarihler"
 
 msgid "obis.notifications_header"
 msgstr "OBIS bildirimleri"
 
 msgid "menu.achievements"
-msgstr "Başarımlar"
+msgstr "🏆 Başarımlar"
 
 msgid "gamification.unavailable"
 msgstr "Başarımlar Mini App etkinleştirildiğinde kullanılabilir."
@@ -1128,10 +1121,10 @@ msgid "gamification.access_disabled"
 msgstr "Başarımlar kapatıldı. İlerleme ve ödüller korundu."
 
 msgid "eders.mark_done"
-msgstr "Tamamlandı olarak işaretle"
+msgstr "✅ Tamamlandı olarak işaretle"
 
 msgid "eders.mark_undone"
-msgstr "Tamamlanmadı olarak işaretle"
+msgstr "↩️ Tamamlanmadı olarak işaretle"
 
 msgid "eders.marked_done"
 msgstr "[tamamlandı olarak işaretlendi]"
@@ -1148,18 +1141,152 @@ msgstr "Eders'teki görev güncellenemedi. Lütfen tekrar deneyin."
 msgid "eders.completion_unavailable"
 msgstr "Bu görev artık elle işaretlenemiyor. Eders'ten kontrol edin."
 
-
 msgid "gamification.award_notification"
 msgstr "🏆 Başarım kazanıldı: <b>{name}</b>\n\n{description}"
-
 
 msgid "menu.achievements_button"
 msgstr "🏆 Başarımlar"
 
-
 msgid "gamification.rank_unassigned"
 msgstr "Henüz sıralamada değil"
 
-
 msgid "gamification.view_all"
-msgstr "Tüm başarımlar"
+msgstr "🏆 Tüm başarımlar"
+
+msgid "notifications.eders"
+msgstr "📜 Eders"
+
+msgid "schedule.change_courses"
+msgstr "📚 Dersleri değiştir"
+
+msgid "schedule.mini_app"
+msgstr "📱 Mini Appʼte ders seç"
+
+msgid "settings.mini_app"
+msgstr "📱 Mini App ayarları"
+
+msgid "miniapp.ui.title"
+msgstr "Ayarlar"
+
+msgid "miniapp.ui.achievements"
+msgstr "Başarımlar"
+
+msgid "miniapp.ui.notifications"
+msgstr "Bildirimler"
+
+msgid "miniapp.ui.courses"
+msgstr "Dersler"
+
+msgid "miniapp.ui.note"
+msgstr "Hangi bildirimleri alacağınızı seçin. Değişiklikler anında kaydedilir."
+
+msgid "miniapp.ui.loading"
+msgstr "Yükleniyor…"
+
+msgid "miniapp.ui.saving"
+msgstr "Kaydediliyor…"
+
+msgid "miniapp.ui.saved"
+msgstr "Kaydedildi"
+
+msgid "miniapp.ui.error"
+msgstr "İşlem tamamlanamadı. Lütfen tekrar deneyin."
+
+msgid "miniapp.ui.retry"
+msgstr "Tekrar dene"
+
+msgid "miniapp.ui.open_telegram"
+msgstr "Bu Mini Appʼi Telegramʼdaki Manashelper botunun düğmesinden açın."
+
+msgid "miniapp.ui.session_expired"
+msgstr "Mini Appʼi botun düğmesinden yeniden açın."
+
+msgid "miniapp.ui.choose_faculty"
+msgstr "Fakülte seçin"
+
+msgid "miniapp.ui.choose_department"
+msgstr "Bölüm seçin"
+
+msgid "miniapp.ui.course_number"
+msgstr "{number}. sınıf"
+
+msgid "miniapp.ui.selected_courses"
+msgstr "Seçili dersler"
+
+msgid "miniapp.ui.none_selected"
+msgstr "Henüz ders seçilmedi. Aşağıdan fakülte ve bölüm seçin."
+
+msgid "miniapp.ui.no_courses"
+msgstr "Burada kullanılabilir ders bulunmuyor."
+
+msgid "miniapp.ui.remove"
+msgstr "Kaldır"
+
+msgid "miniapp.ui.schedule_changes"
+msgstr "Ders programı değişiklikleri"
+
+msgid "miniapp.ui.exam_grades"
+msgstr "Sınav notları"
+
+msgid "miniapp.ui.lesson_skips"
+msgstr "Devam durumu"
+
+msgid "miniapp.ui.food"
+msgstr "Yemekhane"
+
+msgid "miniapp.ui.lunch"
+msgstr "Öğle yemeği"
+
+msgid "miniapp.ui.dinner"
+msgstr "Akşam yemeği"
+
+msgid "miniapp.ui.eders"
+msgstr "Eders"
+
+msgid "miniapp.ui.day_before"
+msgstr "Son tarihten bir gün önce"
+
+msgid "miniapp.ui.two_hours_before"
+msgstr "Son tarihten iki saat önce"
+
+msgid "miniapp.ui.openings"
+msgstr "Ödev ve sınavların açılması"
+
+msgid "miniapp.ui.deadline_changes"
+msgstr "Son tarih değişiklikleri"
+
+msgid "miniapp.ui.hide_archived"
+msgstr "180 günden eski son tarihleri gizle"
+
+msgid "miniapp.ui.new_materials"
+msgstr "Yeni ve güncellenen materyaller"
+
+msgid "miniapp.ui.broadcast"
+msgstr "Yönetim mesajları"
+
+msgid "miniapp.ui.broadcast_note"
+msgstr "Kapatıldığında toplu mesajlar 14 gün sessize alınır."
+
+msgid "miniapp.ui.muted_until"
+msgstr "Toplu mesajlar {until} tarihine kadar sessizde."
+
+msgid "miniapp.ui.monday"
+msgstr "Pazartesi"
+
+msgid "miniapp.ui.tuesday"
+msgstr "Salı"
+
+msgid "miniapp.ui.wednesday"
+msgstr "Çarşamba"
+
+msgid "miniapp.ui.thursday"
+msgstr "Perşembe"
+
+msgid "miniapp.ui.friday"
+msgstr "Cuma"
+
+msgid "miniapp.ui.saturday"
+msgstr "Cumartesi"
+
+msgid "miniapp.ui.sunday"
+msgstr "Pazar"

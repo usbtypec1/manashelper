@@ -40,6 +40,7 @@ from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, User
 from manashelper.modules.obis.presentation.keyboards import build_no_credentials_keyboard
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
+from manashelper.platform.telegram.navigation import build_navigation_keyboard
 
 router = Router(name="eders")
 menu_router = Router(name="eders_menu")
@@ -142,13 +143,14 @@ async def _show_eders_view(
     query: str = "",
 ) -> None:
     await state.update_data({SNAPSHOT_KEY: None})
+    keyboard = build_navigation_keyboard(EdersMenuCallback(action=EdersAction.MENU)).as_markup()
     try:
         snapshot = await eders_query.get_snapshot(user_id)
     except UserNotFoundError:
         await message.answer(_("common.start_required"))
         return
     except EdersSnapshotNotReadyError:
-        await message.answer(_("data.preparing"))
+        await message.answer(_("data.preparing"), reply_markup=keyboard)
         return
     except UserHasNoCredentialsError:
         await message.answer(_("obis.credentials_missing"), reply_markup=build_no_credentials_keyboard())
@@ -157,7 +159,7 @@ async def _show_eders_view(
         await message.answer(_("obis.credentials_invalid"), reply_markup=build_no_credentials_keyboard())
         return
     except (EdersFetchError, EdersParseError, EdersUnsafeUrlError, ObisParseError):
-        await message.answer(_("eders.fetch_failed"))
+        await message.answer(_("eders.fetch_failed"), reply_markup=keyboard)
         return
     if query.strip():
         search = query.strip().casefold()

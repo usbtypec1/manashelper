@@ -107,8 +107,9 @@ async def test_group_command_sends_private_menu(monkeypatch, chat_type, source, 
         assert sent.reply_parameters is None
     if found:
         rows = [block for block in sent.rich_message.blocks if block.type == "buttons"]
-        assert len(rows) == 1
+        assert len(rows) == 2
         assert rows[0].buttons[3].style == "success"
+        assert rows[1].buttons[0].callback_data == FoodMenuOpenCallback().pack()
 
 
 async def test_ordinary_group_command_uses_day_selector_when_bot_is_not_admin(monkeypatch) -> None:

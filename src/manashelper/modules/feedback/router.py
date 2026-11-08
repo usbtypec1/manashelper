@@ -1,7 +1,6 @@
 import logging
 
 from aiogram import Bot, F, Router, flags
-from aiogram.enums import ChatType
 from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
@@ -82,7 +81,7 @@ async def on_feedback_entered(
 
     await state.clear()
     summary = await submit_feedback.execute(message.from_user.id, body)
-    await message.answer(_("feedback.sent"))
+    await message.answer(_("feedback.sent"), reply_markup=build_settings_keyboard())
 
     sender = f"@{message.from_user.username}" if message.from_user.username else str(message.from_user.id)
     # A single shared destination, not a specific recipient's chat - always rendered in
@@ -98,7 +97,7 @@ async def on_feedback_entered(
     await record_feedback_admin_message.execute(summary.id, sent.message_id)
 
 
-@router.message(F.chat.type.in_({ChatType.GROUP, ChatType.SUPERGROUP}), F.reply_to_message)
+@router.message(F.reply_to_message)
 async def on_admin_reply(
     message: Message,
     bot: Bot,

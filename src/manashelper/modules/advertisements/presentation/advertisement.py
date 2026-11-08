@@ -44,6 +44,7 @@ from manashelper.modules.advertisements.presentation.callbacks import (
     AdvertisementExpiryOption,
     AdvertisementFormAction,
     AdvertisementFormCallback,
+    AdvertisementMenuCallback,
     AdvertisementsPageCallback,
 )
 from manashelper.modules.advertisements.presentation.keyboards.advertisement import (
@@ -124,8 +125,20 @@ async def send_marketplace_menu(message: Message, settings: Settings) -> None:
 
 @router.message(TranslatedText("menu.marketplace"))
 @flags.private_chat_only
-async def on_marketplace_button(message: Message, settings: FromDishka[Settings]) -> None:
+async def on_marketplace_button(message: Message, state: FSMContext, settings: FromDishka[Settings]) -> None:
+    await state.clear()
     await send_marketplace_menu(message, settings)
+
+
+@router.callback_query(AdvertisementMenuCallback.filter())
+@flags.private_chat_only
+async def on_marketplace_menu_callback(
+    callback: CallbackQuery, state: FSMContext, settings: FromDishka[Settings]
+) -> None:
+    await state.clear()
+    if isinstance(callback.message, Message):
+        await send_marketplace_menu(callback.message, settings)
+    await callback.answer()
 
 
 @router.message(TranslatedText("ads.post"))

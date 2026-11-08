@@ -1,13 +1,15 @@
 from datetime import datetime
 
 from aiogram import F, Router, flags
-from aiogram.types import CallbackQuery, Message
+from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
 from manashelper.core.time import BISHKEK_TZ
 from manashelper.modules.schedule.application.course import CourseNotFoundError, CourseQuery, UserNotFoundError
 from manashelper.modules.schedule.application.department import DepartmentQuery
+from manashelper.modules.schedule.application.faculty import FacultyQuery
 from manashelper.modules.schedule.application.schedule import NoTrackedCoursesError, ScheduleQuery
 from manashelper.modules.schedule.application.use_cases.toggle_tracked_course import ToggleTrackedCourseUseCase
 from manashelper.modules.schedule.presentation.callbacks import (
@@ -21,11 +23,12 @@ from manashelper.modules.schedule.presentation.callbacks import (
 from manashelper.modules.schedule.presentation.keyboards.timetable import (
     build_course_keyboard,
     build_department_keyboard,
+    build_faculty_keyboard,
     build_no_tracked_courses_keyboard,
     build_schedule_days_keyboard,
-    build_timetable_menu_keyboard,
 )
 from manashelper.modules.schedule.presentation.timetable_formatter import format_day_schedule
+from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
 
 router = Router(name="timetable")
@@ -41,43 +44,58 @@ def _current_weekday(now: datetime) -> int:
 
 @router.message(TranslatedText("menu.schedule"))
 @flags.private_chat_only
-async def on_timetable_menu_button(message: Message) -> None:
-    await message.answer(_("menu.schedule"), reply_markup=build_timetable_menu_keyboard())
+async def on_timetable_menu_button(
+    message: Message, state: FSMContext, schedule_query: FromDishka[ScheduleQuery]
+) -> None:
+    await state.clear()
+    if message.from_user is None:
+        return
+    try:
+        text, keyboard = await _schedule_view(schedule_query, message.from_user.id)
+    except UserNotFoundError:
+        await message.answer(_("common.start_required"))
+        return
+    await message.answer(text, reply_markup=keyboard)
 
 
-@router.callback_query(TimetableMenuCallback.filter(F.action == TimetableMenuAction.OPEN_MY_SCHEDULE))
+async def _schedule_view(schedule_query: ScheduleQuery, user_id: int) -> tuple[str, InlineKeyboardMarkup]:
+    try:
+        lessons = await schedule_query.get_user_schedule(user_id)
+    except NoTrackedCoursesError:
+        return _("schedule.no_tracked_courses"), build_no_tracked_courses_keyboard()
+    if not lessons:
+        return _("schedule.not_loaded"), build_no_tracked_courses_keyboard()
+    now = datetime.now(BISHKEK_TZ)
+    weekday = _current_weekday(now)
+    return format_day_schedule(weekday, lessons, now), build_schedule_days_keyboard(weekday)
+
+
+@router.callback_query(
+    TimetableMenuCallback.filter(F.action.in_({TimetableMenuAction.MENU, TimetableMenuAction.OPEN_MY_SCHEDULE}))
+)
 @flags.private_chat_only
 async def on_my_schedule_selected(
     callback_query: CallbackQuery,
     schedule_query: FromDishka[ScheduleQuery],
+    state: FSMContext,
 ) -> None:
+    await state.clear()
     try:
-        lessons = await schedule_query.get_user_schedule(callback_query.from_user.id)
+        text, keyboard = await _schedule_view(schedule_query, callback_query.from_user.id)
     except UserNotFoundError:
         await callback_query.answer(_("common.start_required"), show_alert=True)
         return
-    except NoTrackedCoursesError:
-        if isinstance(callback_query.message, Message):
-            await callback_query.message.edit_text(
-                _("schedule.no_tracked_courses"),
-                reply_markup=build_no_tracked_courses_keyboard(),
-            )
-        await callback_query.answer()
-        return
-
-    if not lessons:
-        await callback_query.answer(
-            _("schedule.not_loaded"),
-            show_alert=True,
-        )
-        return
-
-    weekday = _current_weekday(datetime.now(BISHKEK_TZ))
     if isinstance(callback_query.message, Message):
-        await callback_query.message.edit_text(
-            format_day_schedule(weekday, lessons, datetime.now(BISHKEK_TZ)),
-            reply_markup=build_schedule_days_keyboard(weekday),
-        )
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
+    await callback_query.answer()
+
+
+@router.callback_query(SettingsCallback.filter(F.action == SettingsAction.OPEN_COURSE_TRACKING))
+@flags.private_chat_only
+async def on_open_course_tracking(callback_query: CallbackQuery, faculty_query: FromDishka[FacultyQuery]) -> None:
+    faculties = await faculty_query.get_all_faculties()
+    if isinstance(callback_query.message, Message):
+        await callback_query.message.edit_text(_("schedule.faculties"), reply_markup=build_faculty_keyboard(faculties))
     await callback_query.answer()
 
 
@@ -94,7 +112,11 @@ async def on_schedule_day_selected(
         await callback_query.answer(_("common.start_required"), show_alert=True)
         return
     except NoTrackedCoursesError:
-        await callback_query.answer(_("schedule.no_longer_tracked"), show_alert=True)
+        if isinstance(callback_query.message, Message):
+            await callback_query.message.edit_text(
+                _("schedule.no_tracked_courses"), reply_markup=build_no_tracked_courses_keyboard()
+            )
+        await callback_query.answer()
         return
 
     if isinstance(callback_query.message, Message):

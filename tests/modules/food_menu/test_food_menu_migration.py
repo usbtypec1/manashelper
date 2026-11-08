@@ -265,10 +265,10 @@ async def test_sync_normalized_names_preserve_existing_dishes_and_replace_change
     original = await menus.get_by_date(day)
     original_id = original.id
     await service._synchronize_daily_menu(ScrapedDailyMenu(day, [ScrapedDish(" SOUP ", "https://example.com/b", 200)]))
-    assert original.dishes[0].name == "Soup" and original.dishes[0].calories == 100
+    assert original.dishes[0].name_tr == "Soup" and original.dishes[0].calories == 100
     await service._synchronize_daily_menu(ScrapedDailyMenu(day, [ScrapedDish("Rice", "https://example.com/c", 300)]))
     assert original.id == original_id and original.views_count == 0
-    assert [dish.name for dish in original.dishes] == ["Rice"]
+    assert [dish.name_tr for dish in original.dishes] == ["Rice"]
 
 
 async def test_food_menu_provider_preserves_app_and_request_lifetimes():

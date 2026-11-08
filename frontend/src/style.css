@@ -62,6 +62,7 @@ button:disabled { cursor: default; }
     max(24px, env(safe-area-inset-bottom))
     max(20px, env(safe-area-inset-left));
 }
+.mini-app-settings { display: block; width: fit-content; margin: 0 0 10px auto; padding: 12px 0 12px 16px; min-height: 44px; color: var(--accent); font-size: 13px; text-decoration: none; }
 .view-switch {
   display: flex;
   width: fit-content;
