@@ -1489,3 +1489,165 @@ msgstr "💗 Твои маленькие победы"
 
 msgid "pickme.miniapp.ui.achievements"
 msgstr "💗 Твои маленькие победы"
+
+msgid "theme.deadinside"
+msgstr "🖤 Дединсайд"
+
+msgid "deadinside.common.welcome"
+msgstr "🖤 Ты здесь. Семестр продолжается."
+
+msgid "deadinside.menu.food"
+msgstr "🥀 Йемек. Как обычно."
+
+msgid "deadinside.menu.study"
+msgstr "🖤 Учебная рутина"
+
+msgid "deadinside.menu.schedule"
+msgstr "🕰 Снова на пары"
+
+msgid "deadinside.menu.attendance"
+msgstr "🥀 Следы присутствия"
+
+msgid "deadinside.menu.grades"
+msgstr "🖤 Приговор в баллах"
+
+msgid "deadinside.menu.eders"
+msgstr "🌑 Eders во тьме"
+
+msgid "deadinside.menu.eders_materials"
+msgstr "📜 Конспекты из тени"
+
+msgid "deadinside.menu.study_week"
+msgstr "🕰 Семь дней рутины"
+
+msgid "deadinside.menu.marketplace"
+msgstr "🥀 Вещи ищут хозяина"
+
+msgid "deadinside.menu.settings"
+msgstr "⚙️ Настроить мрак"
+
+msgid "deadinside.menu.main"
+msgstr "🌑 Снова в начало"
+
+msgid "deadinside.menu.obis"
+msgstr "🖤 OBIS. Взглянуть на цифры."
+
+msgid "deadinside.menu.achievements"
+msgstr "🥀 Маленькие победы во мраке"
+
+msgid "deadinside.settings.title"
+msgstr "🌑 Твой уголок мрака"
+
+msgid "deadinside.theme.prompt"
+msgstr "🥀 Выбери оттенок мрака. Я запомню."
+
+msgid "deadinside.theme.selected"
+msgstr "🖤 Настроение сохранено: {theme}"
+
+msgid "deadinside.common.back"
+msgstr "← Обратно в тень"
+
+msgid "deadinside.common.back_to_menu"
+msgstr "🌑 Обратно в меню"
+
+msgid "deadinside.common.error_retry"
+msgstr "🥀 Не вышло. Попробуй ещё раз."
+
+msgid "deadinside.food.day_selection_title"
+msgstr "🥀 Хроники йемекханы"
+
+msgid "deadinside.food.choose_day"
+msgstr "🕰 На какой день меню?"
+
+msgid "deadinside.food.menu_header"
+msgstr "🥀 Меню рутины · {weekday}, {date}"
+
+msgid "deadinside.food.dish"
+msgstr "🖤 {index}. {name} — <b>{calories}</b> ккал"
+
+msgid "deadinside.food.rich_dish"
+msgstr "🖤 {index}. {name} — {calories} ккал"
+
+msgid "deadinside.food.total_calories"
+msgstr "🕰 Топливо на ещё один день: {calories} ккал"
+
+msgid "deadinside.food.rating"
+msgstr "🥀 Вердикт обеду: {average} ({count})"
+
+msgid "deadinside.food.no_ratings"
+msgstr "🥀 Вердикта пока нет. Оцени первым."
+
+msgid "deadinside.food.rate_prompt"
+msgstr "🖤 Оцени от 1 до 5. Передумать можно."
+
+msgid "deadinside.food.rating_thanks"
+msgstr "🖤 Вердикт записан."
+
+msgid "deadinside.food.enjoy_meal"
+msgstr "🥀 Поешь. Пары минуту подождут."
+
+msgid "deadinside.food.open_menu"
+msgstr "🥀 Открыть хроники йемека"
+
+msgid "deadinside.food.today_unpublished"
+msgstr "🌑 Сегодняшнее меню пока в тени. Загляни позже."
+
+msgid "deadinside.food.menu_unpublished"
+msgstr "🌑 На этот день меню пока нет. Загляни позже."
+
+msgid "deadinside.food.no_available_menus"
+msgstr "🌑 Меню пока не опубликовали. Загляни позже."
+
+msgid "deadinside.schedule.no_classes"
+msgstr "🌑 Пар нет. Пауза в рутине."
+
+msgid "deadinside.schedule.changes_header"
+msgstr "🥀 <b>Расписание изменилось. У рутины новый поворот.</b>"
+
+msgid "deadinside.obis.loading_grades"
+msgstr "🖤 Смотрим приговор в баллах…"
+
+msgid "deadinside.obis.loading_attendance"
+msgstr "🕰 Ищем следы присутствия…"
+
+msgid "deadinside.obis.new_grade"
+msgstr "🖤 Новый вердикт по «{lesson}»\n{exam}: {score}"
+
+msgid "deadinside.obis.skip_recorded"
+msgstr "🥀 В журнале ещё один пропуск по «{lesson}» ({skip_type})."
+
+msgid "deadinside.eders.reminder_day"
+msgstr "🕰 До дедлайна Eders сутки. Часы идут."
+
+msgid "deadinside.eders.reminder_two_hours"
+msgstr "🕰 До дедлайна Eders два часа. Время ещё есть."
+
+msgid "deadinside.eders.opened_notification"
+msgstr "🌑 Из тени вышла активность Eders"
+
+msgid "deadinside.eders.changed_notification"
+msgstr "🥀 Дедлайн Eders сдвинулся"
+
+msgid "deadinside.data.preparing"
+msgstr "🌑 Здесь пока тишина. Фоновое обновление — каждые 15 минут. Загляни после следующего."
+
+msgid "deadinside.gamification.ui.collection"
+msgstr "🖤 Мои тихие победы"
+
+msgid "deadinside.gamification.ui.leaderboard"
+msgstr "🥀 Те, кто смог"
+
+msgid "deadinside.gamification.ui.subtitle"
+msgstr "🖤 Даже во мраке победы считаются."
+
+msgid "deadinside.miniapp.ui.title"
+msgstr "🌑 Твой уголок мрака"
+
+msgid "deadinside.miniapp.ui.note"
+msgstr "🕰 Реши, что нарушит тишину. Каждое изменение сохраняется сразу."
+
+msgid "deadinside.miniapp.ui.saved"
+msgstr "🖤 Сохранено. Без лишних слов."
+
+msgid "deadinside.miniapp.ui.error"
+msgstr "🥀 Не сохранилось. Попробуй ещё раз."

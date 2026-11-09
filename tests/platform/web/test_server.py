@@ -172,7 +172,7 @@ async def test_preferences_are_available_without_achievement_access_and_keep_def
 async def test_saved_bot_theme_reaches_both_miniapps_and_resets_without_leaking_context():
     async with application() as (client, container, _):
         headers = {"Authorization": authorization()}
-        for selected in (Theme.PICKME, Theme.BASIC):
+        for selected in (Theme.PICKME, Theme.DEADINSIDE, Theme.BASIC):
             async with container() as scope:
                 await (await scope.get(SetUserThemeUseCase)).execute(USER_ID, selected)
             with i18n.use_theme(Theme.HALLOWEEN):
@@ -191,7 +191,10 @@ async def test_saved_bot_theme_reaches_both_miniapps_and_resets_without_leaking_
             with i18n.context(), i18n.use_locale("ru"), i18n.use_theme(selected):
                 assert preferences["ui"]["title"] == i18n.gettext("miniapp.ui.title")
                 assert achievements["ui"]["collection"] == i18n.gettext("gamification.ui.collection")
-            assert all("🎀" not in card["description"] for card in achievements["achievements"])
+            assert all(
+                all(icon not in card["description"] for icon in ("🎀", "🥀", "🖤"))
+                for card in achievements["achievements"]
+            )
 
 
 async def test_preference_writes_set_values_idempotently_and_are_shared_with_native_settings():

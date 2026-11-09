@@ -309,3 +309,54 @@ h1 { margin: 0; font-size: clamp(30px, 7vw, 38px); font-weight: 750; letter-spac
 :root[data-bot-theme='pickme'] .sheet-dismiss { background: #a92b60; }
 :root[data-bot-theme='pickme'] .close { color: #4a2136; }
 :root[data-bot-theme='pickme'] .achievement-sheet button:focus-visible { outline-color: #a92b60; }
+
+:root[data-bot-theme='deadinside'] {
+  color: #ede9ea;
+  background: #121214;
+  --text: #ede9ea;
+  --muted: #b9b0b4;
+  --faint: #a89ca2;
+  --accent: #d99aaa;
+  --accent-ink: #29131b;
+  --glass: rgb(220 200 210 / 7%);
+  --line: rgb(220 200 210 / 18%);
+  --avatar-text: #ede9ea;
+}
+:root[data-bot-theme='deadinside'][data-theme='light'] {
+  color: #292328;
+  background: #eeebec;
+  --text: #292328;
+  --muted: #655960;
+  --faint: #756770;
+  --accent: #843d55;
+  --accent-ink: #fff5f8;
+  --glass: rgb(255 255 255 / 65%);
+  --line: rgb(58 36 48 / 20%);
+  --avatar-text: #292328;
+}
+:root[data-bot-theme='deadinside'] body { background: none; }
+:root[data-bot-theme='deadinside'] .intro-spark,
+:root[data-bot-theme='deadinside'] .notice-icon,
+:root[data-bot-theme='deadinside'] .person small { color: var(--accent); }
+:root[data-bot-theme='deadinside'] .avatar {
+  background: var(--glass);
+  color: var(--avatar-text);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+:root[data-bot-theme='deadinside'] .rank-link { box-shadow: none; }
+:root[data-bot-theme='deadinside'] .achievement-sheet {
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 5%, #121214);
+  border: 1px solid var(--line);
+}
+:root[data-bot-theme='deadinside'][data-theme='light'] .achievement-sheet { background: #eeebec; }
+:root[data-bot-theme='deadinside'] .achievement-sheet::backdrop { background: rgb(10 8 10 / 78%); }
+:root[data-bot-theme='deadinside'] .achievement-sheet .description,
+:root[data-bot-theme='deadinside'] .achievement-status,
+:root[data-bot-theme='deadinside'] .earned-date { color: var(--muted); }
+:root[data-bot-theme='deadinside'] .achievement-status,
+:root[data-bot-theme='deadinside'] .close,
+:root[data-bot-theme='deadinside'] .sheet-handle { background: var(--glass); }
+:root[data-bot-theme='deadinside'] .close { color: var(--text); }
+:root[data-bot-theme='deadinside'] .sheet-dismiss { background: var(--accent); color: var(--accent-ink); }
+:root[data-bot-theme='deadinside'] .achievement-sheet button:focus-visible { outline-color: var(--accent); }

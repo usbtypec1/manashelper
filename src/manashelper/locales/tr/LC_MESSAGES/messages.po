@@ -1488,3 +1488,165 @@ msgstr "💗 Küçük zaferlerin"
 
 msgid "pickme.miniapp.ui.achievements"
 msgstr "💗 Küçük zaferlerin"
+
+msgid "theme.deadinside"
+msgstr "🖤 Dead inside"
+
+msgid "deadinside.common.welcome"
+msgstr "🖤 Geldin. Dönem devam ediyor."
+
+msgid "deadinside.menu.food"
+msgstr "🥀 Yemekhane. Her zamanki gibi."
+
+msgid "deadinside.menu.study"
+msgstr "🖤 Ders rutini"
+
+msgid "deadinside.menu.schedule"
+msgstr "🕰 Yine dersler"
+
+msgid "deadinside.menu.attendance"
+msgstr "🥀 Yoklama izleri"
+
+msgid "deadinside.menu.grades"
+msgstr "🖤 Notların hükmü"
+
+msgid "deadinside.menu.eders"
+msgstr "🌑 Karanlıkta Eders"
+
+msgid "deadinside.menu.eders_materials"
+msgstr "📜 Gölgelerden notlar"
+
+msgid "deadinside.menu.study_week"
+msgstr "🕰 Yedi günlük rutin"
+
+msgid "deadinside.menu.marketplace"
+msgstr "🥀 Sahibini arayan eşyalar"
+
+msgid "deadinside.menu.settings"
+msgstr "⚙️ Karanlığı ayarla"
+
+msgid "deadinside.menu.main"
+msgstr "🌑 Yine başa dön"
+
+msgid "deadinside.menu.obis"
+msgstr "🖤 OBIS. Sayılarla yüzleş."
+
+msgid "deadinside.menu.achievements"
+msgstr "🥀 Karanlıktaki küçük zaferler"
+
+msgid "deadinside.settings.title"
+msgstr "🌑 Karanlık köşen"
+
+msgid "deadinside.theme.prompt"
+msgstr "🥀 Karanlığın tonunu seç. Hatırlayacağım."
+
+msgid "deadinside.theme.selected"
+msgstr "🖤 Ruh hâli kaydedildi: {theme}"
+
+msgid "deadinside.common.back"
+msgstr "← Gölgelere dön"
+
+msgid "deadinside.common.back_to_menu"
+msgstr "🌑 Menüye dön"
+
+msgid "deadinside.common.error_retry"
+msgstr "🥀 Olmadı. Tekrar dene."
+
+msgid "deadinside.food.day_selection_title"
+msgstr "🥀 Yemekhane günlükleri"
+
+msgid "deadinside.food.choose_day"
+msgstr "🕰 Hangi günün menüsü?"
+
+msgid "deadinside.food.menu_header"
+msgstr "🥀 Rutinin menüsü · {weekday}, {date}"
+
+msgid "deadinside.food.dish"
+msgstr "🖤 {index}. {name} — <b>{calories}</b> kcal"
+
+msgid "deadinside.food.rich_dish"
+msgstr "🖤 {index}. {name} — {calories} kcal"
+
+msgid "deadinside.food.total_calories"
+msgstr "🕰 Bir gün daha için yakıt: {calories} kcal"
+
+msgid "deadinside.food.rating"
+msgstr "🥀 Yemeğin hükmü: {average} ({count})"
+
+msgid "deadinside.food.no_ratings"
+msgstr "🥀 Henüz bir hüküm yok. İlk puanı sen ver."
+
+msgid "deadinside.food.rate_prompt"
+msgstr "🖤 1 ile 5 arası puan ver. Fikrini değiştirebilirsin."
+
+msgid "deadinside.food.rating_thanks"
+msgstr "🖤 Hüküm kaydedildi."
+
+msgid "deadinside.food.enjoy_meal"
+msgstr "🥀 Yemeğini ye. Dersler biraz beklesin."
+
+msgid "deadinside.food.open_menu"
+msgstr "🥀 Yemekhane günlüklerini aç"
+
+msgid "deadinside.food.today_unpublished"
+msgstr "🌑 Bugünün menüsü hâlâ gölgelerde. Sonra tekrar bak."
+
+msgid "deadinside.food.menu_unpublished"
+msgstr "🌑 Bu günün menüsü henüz yok. Sonra tekrar bak."
+
+msgid "deadinside.food.no_available_menus"
+msgstr "🌑 Henüz menü yayımlanmadı. Sonra tekrar bak."
+
+msgid "deadinside.schedule.no_classes"
+msgstr "🌑 Ders yok. Rutine bir ara."
+
+msgid "deadinside.schedule.changes_header"
+msgstr "🥀 <b>Program değişti. Rutinde yeni bir dönemeç.</b>"
+
+msgid "deadinside.obis.loading_grades"
+msgstr "🖤 Notların hükmüne bakıyoruz…"
+
+msgid "deadinside.obis.loading_attendance"
+msgstr "🕰 Yoklama izlerini arıyoruz…"
+
+msgid "deadinside.obis.new_grade"
+msgstr "🖤 «{lesson}» için yeni hüküm\n{exam}: {score}"
+
+msgid "deadinside.obis.skip_recorded"
+msgstr "🥀 «{lesson}» için bir devamsızlık daha kaydedildi ({skip_type})."
+
+msgid "deadinside.eders.reminder_day"
+msgstr "🕰 Eders teslimine bir gün kaldı. Saat işliyor."
+
+msgid "deadinside.eders.reminder_two_hours"
+msgstr "🕰 Eders teslimine iki saat kaldı. Hâlâ vakit var."
+
+msgid "deadinside.eders.opened_notification"
+msgstr "🌑 Gölgelerden bir Eders etkinliği çıktı"
+
+msgid "deadinside.eders.changed_notification"
+msgstr "🥀 Eders teslim tarihi değişti"
+
+msgid "deadinside.data.preparing"
+msgstr "🌑 Şimdilik sessizlik. Arka plan güncellemesi 15 dakikada bir. Bir sonrakinden sonra tekrar bak."
+
+msgid "deadinside.gamification.ui.collection"
+msgstr "🖤 Sessiz zaferlerim"
+
+msgid "deadinside.gamification.ui.leaderboard"
+msgstr "🥀 Başaranlar"
+
+msgid "deadinside.gamification.ui.subtitle"
+msgstr "🖤 Karanlıkta da zaferler sayılır."
+
+msgid "deadinside.miniapp.ui.title"
+msgstr "🌑 Karanlık köşen"
+
+msgid "deadinside.miniapp.ui.note"
+msgstr "🕰 Sessizliği neyin bozacağını seç. Her değişiklik anında kaydedilir."
+
+msgid "deadinside.miniapp.ui.saved"
+msgstr "🖤 Kaydedildi. Sessizce."
+
+msgid "deadinside.miniapp.ui.error"
+msgstr "🥀 Kaydedilemedi. Tekrar dene."

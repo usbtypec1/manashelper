@@ -30,7 +30,7 @@ Writes reuse the owning feature's use cases and serialize on the user's database
 They set explicit values, so retries do not toggle values again. Repeating an active
 broadcast mute preserves its existing deadline; a new mute lasts 14 days.
 The bot and Mini App share saved preferences and tracked courses.
-The Mini App uses the saved bot theme for copy and the Pick me colour palette;
+The Mini App uses the saved bot theme for copy and the Pick me or Dead inside colour palette;
 Telegram's light/dark preference remains independent. Choose the bot theme under Settings → Theme.
 
 Missing or invalid authentication returns 401; an unregistered user returns 403.

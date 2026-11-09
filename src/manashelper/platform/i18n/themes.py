@@ -74,7 +74,7 @@ def decorate_translation(key: str, text: str, theme: Theme) -> str:
     # Keep factual fragments (dates, grades, submission states, achievement rules)
     # readable; theme all other interface copy, including validation and empty states.
     if (
-        theme == Theme.PICKME
+        theme in {Theme.PICKME, Theme.DEADINSIDE}
         and key.startswith(
             (
                 "common.",
@@ -105,6 +105,7 @@ def decorate_translation(key: str, text: str, theme: Theme) -> str:
             "theme.basic",
             "theme.halloween",
             "theme.pickme",
+            "theme.deadinside",
             "schedule.course_year",
             "schedule.search_course",
             "schedule.search_weekday",
@@ -154,7 +155,7 @@ def decorate_translation(key: str, text: str, theme: Theme) -> str:
             "miniapp.ui.sunday",
         }
     ):
-        return f"{text} 🎀"
+        return f"{text} {'🥀' if theme == Theme.DEADINSIDE else '🎀'}"
     if theme == Theme.HALLOWEEN and key in _HALLOWEEN_ICONS:
         original, replacement = _HALLOWEEN_ICONS[key]
         if original:

@@ -86,7 +86,7 @@ components:
         total: { type: integer, const: 10 }
         rank: { type: [integer, 'null'], minimum: 1 }
         locale: { type: string, enum: [en, ru, ky, tr, zh] }
-        theme: { type: string, enum: [basic, halloween, pickme] }
+        theme: { type: string, enum: [basic, halloween, pickme, deadinside] }
         ui: { type: object, additionalProperties: { type: string } }
         achievements:
           type: array

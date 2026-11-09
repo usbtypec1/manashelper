@@ -9,6 +9,8 @@ from manashelper.platform.telegram.navigation import build_navigation_keyboard
 
 
 def theme_name(theme: Theme) -> str:
+    if theme == Theme.DEADINSIDE:
+        return _("theme.deadinside")
     if theme == Theme.PICKME:
         return _("theme.pickme")
     if theme == Theme.HALLOWEEN:

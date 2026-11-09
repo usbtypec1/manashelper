@@ -1492,3 +1492,165 @@ msgstr "💗 Сенин кичинекей жеңиштериң"
 
 msgid "pickme.miniapp.ui.achievements"
 msgstr "💗 Сенин кичинекей жеңиштериң"
+
+msgid "theme.deadinside"
+msgstr "🖤 Дединсайд"
+
+msgid "deadinside.common.welcome"
+msgstr "🖤 Сен келдиң. Семестр уланууда."
+
+msgid "deadinside.menu.food"
+msgstr "🥀 Йемек. Адаттагыдай."
+
+msgid "deadinside.menu.study"
+msgstr "🖤 Окуу күнүмдүгү"
+
+msgid "deadinside.menu.schedule"
+msgstr "🕰 Кайра сабакка"
+
+msgid "deadinside.menu.attendance"
+msgstr "🥀 Катышуунун издери"
+
+msgid "deadinside.menu.grades"
+msgstr "🖤 Баалардын өкүмү"
+
+msgid "deadinside.menu.eders"
+msgstr "🌑 Караңгыдагы Eders"
+
+msgid "deadinside.menu.eders_materials"
+msgstr "📜 Көлөкөдөгү конспекттер"
+
+msgid "deadinside.menu.study_week"
+msgstr "🕰 Жети күндүк күнүмдүк иштер"
+
+msgid "deadinside.menu.marketplace"
+msgstr "🥀 Буюмдар ээсин издейт"
+
+msgid "deadinside.menu.settings"
+msgstr "⚙️ Караңгылыкты жөндөө"
+
+msgid "deadinside.menu.main"
+msgstr "🌑 Кайра башына"
+
+msgid "deadinside.menu.obis"
+msgstr "🖤 OBIS. Сандарды карап көр."
+
+msgid "deadinside.menu.achievements"
+msgstr "🥀 Караңгыдагы кичинекей жеңиштер"
+
+msgid "deadinside.settings.title"
+msgstr "🌑 Сенин караңгы бурчуң"
+
+msgid "deadinside.theme.prompt"
+msgstr "🥀 Караңгылыктын өңүн танда. Эсимде сактайм."
+
+msgid "deadinside.theme.selected"
+msgstr "🖤 Маанай сакталды: {theme}"
+
+msgid "deadinside.common.back"
+msgstr "← Кайра көлөкөгө"
+
+msgid "deadinside.common.back_to_menu"
+msgstr "🌑 Кайра менюга"
+
+msgid "deadinside.common.error_retry"
+msgstr "🥀 Болбой калды. Кайра аракет кыл."
+
+msgid "deadinside.food.day_selection_title"
+msgstr "🥀 Йемекхананын баяны"
+
+msgid "deadinside.food.choose_day"
+msgstr "🕰 Кайсы күндүн менюсу?"
+
+msgid "deadinside.food.menu_header"
+msgstr "🥀 Күнүмдүк меню · {weekday}, {date}"
+
+msgid "deadinside.food.dish"
+msgstr "🖤 {index}. {name} — <b>{calories}</b> ккал"
+
+msgid "deadinside.food.rich_dish"
+msgstr "🖤 {index}. {name} — {calories} ккал"
+
+msgid "deadinside.food.total_calories"
+msgstr "🕰 Дагы бир күнгө кубат: {calories} ккал"
+
+msgid "deadinside.food.rating"
+msgstr "🥀 Тамакка баа: {average} ({count})"
+
+msgid "deadinside.food.no_ratings"
+msgstr "🥀 Азырынча баа жок. Биринчи баа бер."
+
+msgid "deadinside.food.rate_prompt"
+msgstr "🖤 1ден 5ке чейин баала. Бааны өзгөртсөң болот."
+
+msgid "deadinside.food.rating_thanks"
+msgstr "🖤 Баа жазылды."
+
+msgid "deadinside.food.enjoy_meal"
+msgstr "🥀 Тамактанып ал. Сабактар бир аз күтө турсун."
+
+msgid "deadinside.food.open_menu"
+msgstr "🥀 Йемектин баянын ачуу"
+
+msgid "deadinside.food.today_unpublished"
+msgstr "🌑 Бүгүнкү меню азырынча көлөкөдө. Кийин карап көр."
+
+msgid "deadinside.food.menu_unpublished"
+msgstr "🌑 Бул күндүн менюсу азырынча жок. Кийин карап көр."
+
+msgid "deadinside.food.no_available_menus"
+msgstr "🌑 Меню азырынча жарыялана элек. Кийин карап көр."
+
+msgid "deadinside.schedule.no_classes"
+msgstr "🌑 Сабак жок. Күнүмдүк иштерден тыныгуу."
+
+msgid "deadinside.schedule.changes_header"
+msgstr "🥀 <b>Жадыбал өзгөрдү. Күнүмдүк иштерде жаңы бурулуш.</b>"
+
+msgid "deadinside.obis.loading_grades"
+msgstr "🖤 Баалардын өкүмүн карайбыз…"
+
+msgid "deadinside.obis.loading_attendance"
+msgstr "🕰 Катышуунун издерин издейбиз…"
+
+msgid "deadinside.obis.new_grade"
+msgstr "🖤 «{lesson}» боюнча жаңы баа\n{exam}: {score}"
+
+msgid "deadinside.obis.skip_recorded"
+msgstr "🥀 Журналда «{lesson}» боюнча дагы бир калтыруу ({skip_type})."
+
+msgid "deadinside.eders.reminder_day"
+msgstr "🕰 Eders мөөнөтүнө бир күн калды. Саат жүрүп жатат."
+
+msgid "deadinside.eders.reminder_two_hours"
+msgstr "🕰 Eders мөөнөтүнө эки саат калды. Дагы убакыт бар."
+
+msgid "deadinside.eders.opened_notification"
+msgstr "🌑 Көлөкөдөн Eders тапшырмасы чыкты"
+
+msgid "deadinside.eders.changed_notification"
+msgstr "🥀 Eders мөөнөтү өзгөрдү"
+
+msgid "deadinside.data.preparing"
+msgstr "🌑 Бул жерде азырынча тынч. Фондук жаңыртуу ар 15 мүнөттө жүрөт. Кийинкисинен кийин карап көр."
+
+msgid "deadinside.gamification.ui.collection"
+msgstr "🖤 Менин тынч жеңиштерим"
+
+msgid "deadinside.gamification.ui.leaderboard"
+msgstr "🥀 Колунан келгендер"
+
+msgid "deadinside.gamification.ui.subtitle"
+msgstr "🖤 Караңгыда да жеңиштер эсептелет."
+
+msgid "deadinside.miniapp.ui.title"
+msgstr "🌑 Сенин караңгы бурчуң"
+
+msgid "deadinside.miniapp.ui.note"
+msgstr "🕰 Тынчтыкты эмне бузсун, өзүң чеч. Ар бир өзгөртүү дароо сакталат."
+
+msgid "deadinside.miniapp.ui.saved"
+msgstr "🖤 Сакталды. Ашыкча сөзсүз."
+
+msgid "deadinside.miniapp.ui.error"
+msgstr "🥀 Сакталган жок. Кайра аракет кыл."

@@ -1489,3 +1489,165 @@ msgstr "💗 Your little victories"
 
 msgid "pickme.miniapp.ui.achievements"
 msgstr "💗 Your little victories"
+
+msgid "theme.deadinside"
+msgstr "🖤 Dead inside"
+
+msgid "deadinside.common.welcome"
+msgstr "🖤 You're here. The semester goes on."
+
+msgid "deadinside.menu.food"
+msgstr "🥀 Cafeteria. As usual."
+
+msgid "deadinside.menu.study"
+msgstr "🖤 Academic routine"
+
+msgid "deadinside.menu.schedule"
+msgstr "🕰 Another day of classes"
+
+msgid "deadinside.menu.attendance"
+msgstr "🥀 Attendance. The evidence."
+
+msgid "deadinside.menu.grades"
+msgstr "🖤 The verdict: grades"
+
+msgid "deadinside.menu.eders"
+msgstr "🌑 Eders after dark"
+
+msgid "deadinside.menu.eders_materials"
+msgstr "📜 Notes from the shadows"
+
+msgid "deadinside.menu.study_week"
+msgstr "🕰 Seven days of routine"
+
+msgid "deadinside.menu.marketplace"
+msgstr "🥀 Things looking for an owner"
+
+msgid "deadinside.menu.settings"
+msgstr "⚙️ Adjust the gloom"
+
+msgid "deadinside.menu.main"
+msgstr "🌑 Back to the beginning"
+
+msgid "deadinside.menu.obis"
+msgstr "🖤 OBIS. Face the numbers."
+
+msgid "deadinside.menu.achievements"
+msgstr "🥀 Small victories in the gloom"
+
+msgid "deadinside.settings.title"
+msgstr "🌑 Your corner of the gloom"
+
+msgid "deadinside.theme.prompt"
+msgstr "🥀 Pick a shade of gloom. I'll remember."
+
+msgid "deadinside.theme.selected"
+msgstr "🖤 Mood saved: {theme}"
+
+msgid "deadinside.common.back"
+msgstr "← Back into the shadows"
+
+msgid "deadinside.common.back_to_menu"
+msgstr "🌑 Back to the menu"
+
+msgid "deadinside.common.error_retry"
+msgstr "🥀 Didn't work. Try again."
+
+msgid "deadinside.food.day_selection_title"
+msgstr "🥀 Cafeteria chronicles"
+
+msgid "deadinside.food.choose_day"
+msgstr "🕰 Which day's menu?"
+
+msgid "deadinside.food.menu_header"
+msgstr "🥀 Menu of the routine · {weekday}, {date}"
+
+msgid "deadinside.food.dish"
+msgstr "🖤 {index}. {name} — <b>{calories}</b> kcal"
+
+msgid "deadinside.food.rich_dish"
+msgstr "🖤 {index}. {name} — {calories} kcal"
+
+msgid "deadinside.food.total_calories"
+msgstr "🕰 Fuel for another day: {calories} kcal"
+
+msgid "deadinside.food.rating"
+msgstr "🥀 Verdict on lunch: {average} ({count})"
+
+msgid "deadinside.food.no_ratings"
+msgstr "🥀 No verdict yet. Be the first to rate."
+
+msgid "deadinside.food.rate_prompt"
+msgstr "🖤 Rate it from 1 to 5. You can change your mind."
+
+msgid "deadinside.food.rating_thanks"
+msgstr "🖤 Verdict recorded."
+
+msgid "deadinside.food.enjoy_meal"
+msgstr "🥀 Eat. The classes can wait a moment."
+
+msgid "deadinside.food.open_menu"
+msgstr "🥀 Open the cafeteria chronicles"
+
+msgid "deadinside.food.today_unpublished"
+msgstr "🌑 Today's menu is still in the shadows. Check back later."
+
+msgid "deadinside.food.menu_unpublished"
+msgstr "🌑 No menu for this day yet. Check back later."
+
+msgid "deadinside.food.no_available_menus"
+msgstr "🌑 No menus published yet. Check back later."
+
+msgid "deadinside.schedule.no_classes"
+msgstr "🌑 No classes. A pause in the routine."
+
+msgid "deadinside.schedule.changes_header"
+msgstr "🥀 <b>The timetable changed. Routine has a twist.</b>"
+
+msgid "deadinside.obis.loading_grades"
+msgstr "🖤 Looking up the verdict…"
+
+msgid "deadinside.obis.loading_attendance"
+msgstr "🕰 Looking for traces of attendance…"
+
+msgid "deadinside.obis.new_grade"
+msgstr "🖤 A new verdict for «{lesson}»\n{exam}: {score}"
+
+msgid "deadinside.obis.skip_recorded"
+msgstr "🥀 An absence was recorded for «{lesson}» ({skip_type})."
+
+msgid "deadinside.eders.reminder_day"
+msgstr "🕰 One day until the Eders deadline. The clock keeps going."
+
+msgid "deadinside.eders.reminder_two_hours"
+msgstr "🕰 Two hours until the Eders deadline. Still time."
+
+msgid "deadinside.eders.opened_notification"
+msgstr "🌑 An Eders activity emerged from the shadows"
+
+msgid "deadinside.eders.changed_notification"
+msgstr "🥀 The Eders deadline shifted"
+
+msgid "deadinside.data.preparing"
+msgstr "🌑 Nothing here yet. Background updates run every 15 minutes. Check back after the next one."
+
+msgid "deadinside.gamification.ui.collection"
+msgstr "🖤 My quiet victories"
+
+msgid "deadinside.gamification.ui.leaderboard"
+msgstr "🥀 Those who made it"
+
+msgid "deadinside.gamification.ui.subtitle"
+msgstr "🖤 Even in the gloom, victories count."
+
+msgid "deadinside.miniapp.ui.title"
+msgstr "🌑 Your corner of the gloom"
+
+msgid "deadinside.miniapp.ui.note"
+msgstr "🕰 Decide what breaks the silence. Each change saves immediately."
+
+msgid "deadinside.miniapp.ui.saved"
+msgstr "🖤 Saved. Quietly."
+
+msgid "deadinside.miniapp.ui.error"
+msgstr "🥀 Couldn't save. Try again."

@@ -1481,3 +1481,165 @@ msgstr "💗 你的小小成就"
 
 msgid "pickme.miniapp.ui.achievements"
 msgstr "💗 你的小小成就"
+
+msgid "theme.deadinside"
+msgstr "🖤 暗夜心境"
+
+msgid "deadinside.common.welcome"
+msgstr "🖤 你来了。学期还在继续。"
+
+msgid "deadinside.menu.food"
+msgstr "🥀 食堂。照旧。"
+
+msgid "deadinside.menu.study"
+msgstr "🖤 学业日常"
+
+msgid "deadinside.menu.schedule"
+msgstr "🕰 又要上课"
+
+msgid "deadinside.menu.attendance"
+msgstr "🥀 出勤的痕迹"
+
+msgid "deadinside.menu.grades"
+msgstr "🖤 成绩的判决"
+
+msgid "deadinside.menu.eders"
+msgstr "🌑 暗夜 Eders"
+
+msgid "deadinside.menu.eders_materials"
+msgstr "📜 阴影中的笔记"
+
+msgid "deadinside.menu.study_week"
+msgstr "🕰 七天的日常"
+
+msgid "deadinside.menu.marketplace"
+msgstr "🥀 等待主人的物品"
+
+msgid "deadinside.menu.settings"
+msgstr "⚙️ 调整暗色"
+
+msgid "deadinside.menu.main"
+msgstr "🌑 又回到起点"
+
+msgid "deadinside.menu.obis"
+msgstr "🖤 OBIS。直面数字。"
+
+msgid "deadinside.menu.achievements"
+msgstr "🥀 暗夜中的小小胜利"
+
+msgid "deadinside.settings.title"
+msgstr "🌑 你的暗色角落"
+
+msgid "deadinside.theme.prompt"
+msgstr "🥀 选一种暗色。我会记住。"
+
+msgid "deadinside.theme.selected"
+msgstr "🖤 心情已保存：{theme}"
+
+msgid "deadinside.common.back"
+msgstr "← 回到阴影"
+
+msgid "deadinside.common.back_to_menu"
+msgstr "🌑 返回菜单"
+
+msgid "deadinside.common.error_retry"
+msgstr "🥀 没成功。再试一次。"
+
+msgid "deadinside.food.day_selection_title"
+msgstr "🥀 食堂纪事"
+
+msgid "deadinside.food.choose_day"
+msgstr "🕰 看哪天的菜单？"
+
+msgid "deadinside.food.menu_header"
+msgstr "🥀 日常菜单 · {weekday}，{date}"
+
+msgid "deadinside.food.dish"
+msgstr "🖤 {index}. {name} — <b>{calories}</b> 千卡"
+
+msgid "deadinside.food.rich_dish"
+msgstr "🖤 {index}. {name} — {calories} 千卡"
+
+msgid "deadinside.food.total_calories"
+msgstr "🕰 又一天的能量：{calories} 千卡"
+
+msgid "deadinside.food.rating"
+msgstr "🥀 餐点评分：{average}（{count}）"
+
+msgid "deadinside.food.no_ratings"
+msgstr "🥀 还没有评分。来做第一个吧。"
+
+msgid "deadinside.food.rate_prompt"
+msgstr "🖤 打个 1 到 5 分。之后也能修改。"
+
+msgid "deadinside.food.rating_thanks"
+msgstr "🖤 评分已记录。"
+
+msgid "deadinside.food.enjoy_meal"
+msgstr "🥀 吃点东西。课可以等一会儿。"
+
+msgid "deadinside.food.open_menu"
+msgstr "🥀 打开食堂纪事"
+
+msgid "deadinside.food.today_unpublished"
+msgstr "🌑 今天的菜单还在阴影中。稍后再来看看。"
+
+msgid "deadinside.food.menu_unpublished"
+msgstr "🌑 这一天的菜单还没发布。稍后再来看看。"
+
+msgid "deadinside.food.no_available_menus"
+msgstr "🌑 暂时没有已发布的菜单。稍后再来看看。"
+
+msgid "deadinside.schedule.no_classes"
+msgstr "🌑 没课。日常暂停片刻。"
+
+msgid "deadinside.schedule.changes_header"
+msgstr "🥀 <b>课表变了。日常又有了转折。</b>"
+
+msgid "deadinside.obis.loading_grades"
+msgstr "🖤 正在查看成绩的判决…"
+
+msgid "deadinside.obis.loading_attendance"
+msgstr "🕰 正在寻找出勤的痕迹…"
+
+msgid "deadinside.obis.new_grade"
+msgstr "🖤 «{lesson}» 的新成绩\n{exam}：{score}"
+
+msgid "deadinside.obis.skip_recorded"
+msgstr "🥀 «{lesson}» 又记录了一次缺勤（{skip_type}）。"
+
+msgid "deadinside.eders.reminder_day"
+msgstr "🕰 距 Eders 截止还有一天。时钟还在走。"
+
+msgid "deadinside.eders.reminder_two_hours"
+msgstr "🕰 距 Eders 截止还有两小时。还有时间。"
+
+msgid "deadinside.eders.opened_notification"
+msgstr "🌑 Eders 活动从阴影中出现"
+
+msgid "deadinside.eders.changed_notification"
+msgstr "🥀 Eders 截止时间变了"
+
+msgid "deadinside.data.preparing"
+msgstr "🌑 这里暂时很安静。后台每 15 分钟更新一次，下次更新后再来看看。"
+
+msgid "deadinside.gamification.ui.collection"
+msgstr "🖤 我的无声胜利"
+
+msgid "deadinside.gamification.ui.leaderboard"
+msgstr "🥀 做到的人"
+
+msgid "deadinside.gamification.ui.subtitle"
+msgstr "🖤 暗夜中的胜利也值得记录。"
+
+msgid "deadinside.miniapp.ui.title"
+msgstr "🌑 你的暗色角落"
+
+msgid "deadinside.miniapp.ui.note"
+msgstr "🕰 决定让哪些消息打破安静。每次更改都会立即保存。"
+
+msgid "deadinside.miniapp.ui.saved"
+msgstr "🖤 已保存。无需多言。"
+
+msgid "deadinside.miniapp.ui.error"
+msgstr "🥀 未能保存。请重试。"

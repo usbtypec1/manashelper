@@ -5,3 +5,4 @@ class Theme(StrEnum):
     BASIC = "basic"
     HALLOWEEN = "halloween"
     PICKME = "pickme"
+    DEADINSIDE = "deadinside"

@@ -41,7 +41,7 @@ def context(monkeypatch):
         yield SimpleNamespace(message=message, callback=callback, request=request)
 
 
-@pytest.mark.parametrize("selected", [Theme.HALLOWEEN, Theme.PICKME])
+@pytest.mark.parametrize("selected", [Theme.HALLOWEEN, Theme.PICKME, Theme.DEADINSIDE])
 async def test_theme_defaults_persists_and_profile_refresh_preserves_other_preferences(session, selected):
     repository = UserRepository(session)
     service = build_theme_service(repository)
@@ -148,7 +148,7 @@ def test_theme_callbacks_reject_unknown_values_and_handlers_are_private():
 
 
 @pytest.mark.parametrize("fails", [False, True])
-@pytest.mark.parametrize("selected", [Theme.HALLOWEEN, Theme.PICKME])
+@pytest.mark.parametrize("selected", [Theme.HALLOWEEN, Theme.PICKME, Theme.DEADINSIDE])
 async def test_middleware_reads_saved_theme_and_restores_context(session, context, fails, selected):
     repository = UserRepository(session)
     await repository.upsert(976001, "Student", None)
@@ -193,10 +193,11 @@ async def test_theme_context_is_isolated_between_concurrent_users():
             await asyncio.sleep(0)
             return i18n.gettext("common.welcome", locale="en")
 
-    themed, basic, pickme = await asyncio.gather(render(Theme.HALLOWEEN), render(Theme.BASIC), render(Theme.PICKME))
+    basic, themed, pickme, deadinside = await asyncio.gather(*(render(theme) for theme in Theme))
     assert themed == "🎃 " + basic
     assert basic == "Welcome to Manashelper!"
     assert pickme.startswith("🎀 You picked me!")
+    assert deadinside == "🖤 You're here. The semester goes on."
 
 
 async def test_theme_migration_preserves_existing_profile_on_upgrade_and_downgrade(session):
