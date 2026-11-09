@@ -71,6 +71,90 @@ _HALLOWEEN_ICONS = {
 
 
 def decorate_translation(key: str, text: str, theme: Theme) -> str:
+    # Keep factual fragments (dates, grades, submission states, achievement rules)
+    # readable; theme all other interface copy, including validation and empty states.
+    if (
+        theme == Theme.PICKME
+        and key.startswith(
+            (
+                "common.",
+                "menu.",
+                "settings.",
+                "theme.",
+                "food.",
+                "schedule.",
+                "obis.",
+                "eders.",
+                "notifications.",
+                "ads.",
+                "feedback.",
+                "broadcast.",
+                "language.prompt",
+                "language.selected",
+                "data.",
+                "miniapp.ui.",
+                "gamification.ui.",
+                "gamification.open_prompt",
+                "gamification.view_all",
+                "gamification.award_notification",
+                "gamification.unavailable",
+            )
+        )
+        and key
+        not in {
+            "theme.basic",
+            "theme.halloween",
+            "theme.pickme",
+            "schedule.course_year",
+            "schedule.search_course",
+            "schedule.search_weekday",
+            "schedule.change_updated",
+            "schedule.change_added",
+            "schedule.change_cancelled",
+            "obis.subject",
+            "obis.exam",
+            "obis.theory",
+            "obis.practice",
+            "obis.theory_lower",
+            "obis.practice_lower",
+            "obis.missed_percentage",
+            "obis.skips_left.one",
+            "obis.remaining_skips.one",
+            "eders.unknown",
+            "eders.date_conflict",
+            "eders.date_unverified",
+            "eders.not_submitted",
+            "eders.draft",
+            "eders.submitted",
+            "eders.in_progress",
+            "eders.not_graded",
+            "eders.graded",
+            "eders.opens",
+            "eders.closes",
+            "eders.submission",
+            "eders.grading",
+            "eders.previous_deadline",
+            "eders.week_opens",
+            "eders.week_due",
+            "eders.marked_done",
+            "ads.status_pending",
+            "ads.status_published",
+            "ads.status_rejected",
+            "ads.price",
+            "ads.valid_until",
+            "ads.reason",
+            "ads.rejection_reason",
+            "miniapp.ui.course_number",
+            "miniapp.ui.monday",
+            "miniapp.ui.tuesday",
+            "miniapp.ui.wednesday",
+            "miniapp.ui.thursday",
+            "miniapp.ui.friday",
+            "miniapp.ui.saturday",
+            "miniapp.ui.sunday",
+        }
+    ):
+        return f"{text} 🎀"
     if theme == Theme.HALLOWEEN and key in _HALLOWEEN_ICONS:
         original, replacement = _HALLOWEEN_ICONS[key]
         if original:

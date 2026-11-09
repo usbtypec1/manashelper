@@ -88,6 +88,66 @@ def test_babel_extracts_all_catalog_keys_including_command_descriptions() -> Non
     assert extracted == {message.id for message in _catalog(Locale.EN) if message.id}
 
 
+@pytest.mark.parametrize("locale", list(Locale))
+def test_pickme_templates_preserve_source_fields_and_theme_all_interface_sections(locale):
+    catalog = _catalog(locale)
+    for message in catalog:
+        if isinstance(message.id, str) and message.id.startswith("pickme."):
+            source = catalog.get(message.id.removeprefix("pickme."))
+            assert source is not None
+            assert _placeholders(message.string) == _placeholders(source.string)
+    with i18n.context(), i18n.use_locale(locale.value):
+        for key in (
+            "common.welcome",
+            "menu.food",
+            "menu.settings",
+            "theme.prompt",
+            "food.rich_menu_header",
+            "food.rating_unavailable",
+            "schedule.search_prompt",
+            "schedule.no_classes",
+            "obis.password_prompt",
+            "obis.new_grade",
+            "eders.reminder_day",
+            "eders.completion_failed",
+            "notifications.title",
+            "ads.title_prompt",
+            "ads.invalid_phone",
+            "feedback.message_prompt",
+            "broadcast.confirm_prompt",
+            "miniapp.ui.title",
+            "miniapp.ui.saved",
+            "gamification.ui.collection",
+            "gamification.award_notification",
+        ):
+            with i18n.use_theme(Theme.BASIC):
+                basic = i18n.gettext(key)
+            with i18n.use_theme(Theme.PICKME):
+                assert i18n.gettext(key) != basic
+        for key in (
+            "eders.submitted",
+            "eders.draft",
+            "eders.in_progress",
+            "eders.marked_done",
+            "ads.status_pending",
+            "ads.status_rejected",
+            "obis.missed_percentage",
+            "weekday.monday",
+            "gamification.thin_ice.description",
+        ):
+            with i18n.use_theme(Theme.BASIC):
+                basic = i18n.gettext(key)
+            with i18n.use_theme(Theme.PICKME):
+                assert i18n.gettext(key) == basic
+
+
+def test_pickme_respects_explicit_locale_and_unknown_locale_fallback():
+    with i18n.context(), i18n.use_locale("ru"), i18n.use_theme(Theme.PICKME):
+        assert i18n.gettext("food.day_selection_title", locale="en") == "🍓 A little lunch date"
+        assert i18n.gettext("food.day_selection_title", locale="zh") == "🍓 食堂小约会"
+        assert i18n.gettext("food.day_selection_title", locale="unknown") == "🍓 A little lunch date"
+
+
 @pytest.mark.parametrize(
     ("language_code", "expected"),
     [

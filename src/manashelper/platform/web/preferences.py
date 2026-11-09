@@ -33,7 +33,9 @@ from manashelper.modules.schedule.application.department import DepartmentQuery
 from manashelper.modules.schedule.application.faculty import FacultyQuery
 from manashelper.modules.schedule.application.use_cases.toggle_tracked_course import ToggleTrackedCourseUseCase
 from manashelper.modules.users.application.locale import LocaleQuery
+from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.modules.users.queries import UsersQuery
+from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.web.auth import authenticate
 from manashelper.platform.web.preferences_catalog import ui_strings
 
@@ -86,13 +88,17 @@ def _json(payload: dict[str, Any]) -> web.Response:
 
 async def _settings(scope: AsyncContainer, user_id: int, settings: Settings) -> dict[str, Any]:
     locale = await (await scope.get(LocaleQuery)).get_locale(user_id)
+    theme = await (await scope.get(ThemeQuery)).get_theme(user_id)
     notifications = await (await scope.get(GetNotificationSettingsUseCase)).execute(user_id)
     food = await (await scope.get(FoodMenuSettingsQuery)).get_settings(user_id)
     eders = await (await scope.get(EdersTrackingService)).get_settings(user_id) if settings.eders_enabled else None
     courses = await (await scope.get(CourseQuery)).get_tracked_courses(user_id)
+    with i18n.use_theme(theme):
+        ui = ui_strings(locale.value)
     return {
         "locale": locale.value,
-        "ui": ui_strings(locale.value),
+        "theme": theme.value,
+        "ui": ui,
         "notifications": asdict(notifications),
         "food": [asdict(day) for day in food.days],
         "eders": asdict(eders) if eders is not None else None,

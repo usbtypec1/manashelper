@@ -13,7 +13,9 @@ from manashelper.core.config import Settings
 from manashelper.modules.gamification.application.queries import GamificationQuery
 from manashelper.modules.gamification.presentation.catalog import localize_profile, ui_strings
 from manashelper.modules.users.application.locale import LocaleQuery
+from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.modules.users.queries import UsersQuery
+from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.webhook_context import webhook_processing
 from manashelper.platform.telegram.webhook_middleware import ConcurrentWebhookUpdateError, WebhookReceiptMiddleware
 from manashelper.platform.web.auth import authenticate
@@ -89,8 +91,11 @@ def create_web_app(bot: Bot, dispatcher: Dispatcher, container: AsyncContainer, 
                 }
             else:
                 locale = await (await scope.get(LocaleQuery)).get_locale(user_id)
-                payload = localize_profile(await query.profile(user_id), locale.value)
-                payload["ui"] = ui_strings(locale.value)
+                theme = await (await scope.get(ThemeQuery)).get_theme(user_id)
+                with i18n.use_theme(theme):
+                    payload = localize_profile(await query.profile(user_id), locale.value)
+                    payload["ui"] = ui_strings(locale.value)
+                payload["theme"] = theme.value
         return web.json_response(payload)
 
     async def index(request: web.Request) -> web.FileResponse:

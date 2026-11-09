@@ -260,3 +260,52 @@ h1 { margin: 0; font-size: clamp(30px, 7vw, 38px); font-weight: 750; letter-spac
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* Bot personality and Telegram light/dark appearance are independent choices. */
+:root[data-bot-theme='pickme'] {
+  color: #ffedf4;
+  background: #24121d;
+  --text: #ffedf4;
+  --muted: #d5b0c2;
+  --faint: #b991a6;
+  --accent: #ffaccb;
+  --accent-ink: #4a1730;
+  --glass: rgb(255 195 219 / 9%);
+  --line: rgb(255 195 219 / 20%);
+  --avatar-text: #ffedf4;
+}
+:root[data-bot-theme='pickme'][data-theme='light'] {
+  color: #4a2136;
+  background: #fff4f7;
+  --text: #4a2136;
+  --muted: #80556a;
+  --faint: #8a5d73;
+  --accent: #a92b60;
+  --accent-ink: #fff4f7;
+  --glass: rgb(255 255 255 / 72%);
+  --line: rgb(143 50 91 / 20%);
+  --avatar-text: #4a2136;
+}
+:root[data-bot-theme='pickme'] body {
+  background: radial-gradient(ellipse at 90% 0%, rgb(237 106 158 / 13%), transparent 65%);
+}
+:root[data-bot-theme='pickme'] .intro-spark,
+:root[data-bot-theme='pickme'] .notice-icon,
+:root[data-bot-theme='pickme'] .person small { color: var(--accent); }
+:root[data-bot-theme='pickme'] .avatar {
+  background: var(--glass);
+  color: var(--avatar-text);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+:root[data-bot-theme='pickme'] .achievement-sheet {
+  color: #4a2136;
+  background: #ffe7f0;
+  border: 1px solid #f1b6ce;
+}
+:root[data-bot-theme='pickme'] .achievement-sheet::backdrop { background: rgb(39 12 26 / 70%); }
+:root[data-bot-theme='pickme'] .achievement-sheet .description,
+:root[data-bot-theme='pickme'] .achievement-status,
+:root[data-bot-theme='pickme'] .earned-date { color: #754057; }
+:root[data-bot-theme='pickme'] .sheet-dismiss { background: #a92b60; }
+:root[data-bot-theme='pickme'] .close { color: #4a2136; }
+:root[data-bot-theme='pickme'] .achievement-sheet button:focus-visible { outline-color: #a92b60; }

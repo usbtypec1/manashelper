@@ -1291,3 +1291,201 @@ msgstr "Суббота"
 
 msgid "miniapp.ui.sunday"
 msgstr "Воскресенье"
+
+msgid "theme.pickme"
+msgstr "🎀 Пикми"
+
+msgid "pickme.common.welcome"
+msgstr "🎀 Ты выбрал меня! Давай переживём универ вместе, ну пожалуйста 🥺"
+
+msgid "pickme.menu.food"
+msgstr "🍓 На йемек со мной?"
+
+msgid "pickme.menu.study"
+msgstr "🎀 Учиться со мной"
+
+msgid "pickme.menu.schedule"
+msgstr "🗓 Наши планы на пары"
+
+msgid "pickme.menu.attendance"
+msgstr "🥺 Ты же ходишь на пары?"
+
+msgid "pickme.menu.grades"
+msgstr "💗 Покажешь оценки?"
+
+msgid "pickme.menu.eders"
+msgstr "🎀 Твой уголок Eders"
+
+msgid "pickme.menu.eders_materials"
+msgstr "📚 Конспектики для тебя"
+
+msgid "pickme.menu.study_week"
+msgstr "🗓 Наша неделька"
+
+msgid "pickme.menu.marketplace"
+msgstr "🛍 Пойдём на барахолку?"
+
+msgid "pickme.menu.settings"
+msgstr "🎀 Настрой меня под себя"
+
+msgid "pickme.menu.main"
+msgstr "🏡 В наш уютный уголок"
+
+msgid "pickme.menu.obis"
+msgstr "🎓 В OBIS вместе?"
+
+msgid "pickme.menu.achievements"
+msgstr "💗 Твои маленькие победы"
+
+msgid "pickme.settings.title"
+msgstr "🎀 Хочу быть твоим любимым помощником"
+
+msgid "pickme.theme.prompt"
+msgstr "🎀 Выбери мне образ! Я запомню, обещаю 🥺"
+
+msgid "pickme.theme.selected"
+msgstr "💗 Теперь я в образе: {theme}"
+
+msgid "pickme.common.back"
+msgstr "🎀 Верни меня назад"
+
+msgid "pickme.common.back_to_menu"
+msgstr "🏡 В наше меню"
+
+msgid "pickme.common.error_retry"
+msgstr "🥺 Не получилось. Попробуешь со мной ещё раз?"
+
+msgid "pickme.food.day_selection_title"
+msgstr "🍓 Свидание в йемекхане"
+
+msgid "pickme.food.choose_day"
+msgstr "🎀 На какой день планируем наш йемек?"
+
+msgid "pickme.food.menu_header"
+msgstr "🍓 Наше меню · {weekday}, {date}"
+
+msgid "pickme.food.dish"
+msgstr "🎀 {index}. {name} — {calories} ккал"
+
+msgid "pickme.food.total_calories"
+msgstr "💗 Силы на твой день: {calories} ккал"
+
+msgid "pickme.food.rating"
+msgstr "💗 Оценка нашего йемека: {average} ({count})"
+
+msgid "pickme.food.no_ratings"
+msgstr "🥺 Оценишь наше меню первым?"
+
+msgid "pickme.food.rate_prompt"
+msgstr "💗 Поставишь меню от 1 до 5? Оценку можно поменять."
+
+msgid "pickme.food.rating_thanks"
+msgstr "💗 Ты оценил! Спасибо, мне приятно 🥺"
+
+msgid "pickme.food.enjoy_meal"
+msgstr "🍓 Приятного аппетита! Оставишь мне местечко?"
+
+msgid "pickme.food.open_menu"
+msgstr "🍓 Покажи наше меню"
+
+msgid "pickme.food.today_unpublished"
+msgstr "🥺 Меню на сегодня ещё не выложили. Я жду вместе с тобой."
+
+msgid "pickme.food.menu_unpublished"
+msgstr "🥺 На этот день меню ещё не выложили. Заглянешь попозже?"
+
+msgid "pickme.schedule.search_prompt"
+msgstr "🎀 Скажи, какой предмет ищем? Турецкие буквы можно заменить латинскими: s вместо ş, i вместо ı."
+
+msgid "pickme.schedule.no_tracked_courses"
+msgstr "🥺 Ты ещё не выбрал курсы. Выбери их ниже, и я покажу твоё расписание."
+
+msgid "pickme.schedule.no_classes"
+msgstr "🎀 Пар нет. Немножко времени для себя?"
+
+msgid "pickme.schedule.changes_header"
+msgstr "💌 <b>В расписании изменения — я принесла новости</b>"
+
+msgid "pickme.obis.student_number_prompt"
+msgstr "🎀 Напиши свой студенческий номер, и заглянем в OBIS."
+
+msgid "pickme.obis.password_prompt"
+msgstr "🎀 Теперь введи пароль от OBIS."
+
+msgid "pickme.obis.loading_grades"
+msgstr "💗 Достаю твои оценки. Побудешь со мной секунду?"
+
+msgid "pickme.obis.loading_attendance"
+msgstr "🥺 Проверяем посещаемость вместе…"
+
+msgid "pickme.obis.new_grade"
+msgstr "💌 Новая оценка по «{lesson}» — я сразу к тебе!\n{exam}: {score}"
+
+msgid "pickme.obis.skip_recorded"
+msgstr "⚠️ По «{lesson}» записали пропуск ({skip_type}). Береги себя 💗"
+
+msgid "pickme.eders.reminder_day"
+msgstr "💌 До дедлайна Eders сутки. Я помню о тебе."
+
+msgid "pickme.eders.reminder_two_hours"
+msgstr "💌 До дедлайна Eders два часа. Маленькое напоминание от меня."
+
+msgid "pickme.eders.empty"
+msgstr "🎀 По этому фильтру пусто. Посмотрим другой?"
+
+msgid "pickme.notifications.title"
+msgstr "💌 Скажи, когда мне можно тебе писать"
+
+msgid "pickme.feedback.message_prompt"
+msgstr "💌 Напиши, что хочешь сказать администрации. Ответ придёт сюда."
+
+msgid "pickme.feedback.sent"
+msgstr "💗 Передала твоё сообщение администрации. Спасибо, что написал!"
+
+msgid "pickme.ads.review_prompt"
+msgstr "🎀 Ещё разочек посмотрим объявление?"
+
+msgid "pickme.ads.title_prompt"
+msgstr "🎀 Давай сделаем твоё объявление заметным. Напиши <b>заголовок</b> до {max} символов."
+
+msgid "pickme.data.preparing"
+msgstr "🎀 Готовлю всё для тебя. Загляни после следующего фонового обновления — они каждые 15 минут."
+
+msgid "pickme.gamification.ui.collection"
+msgstr "💗 Мои маленькие победы"
+
+msgid "pickme.gamification.ui.leaderboard"
+msgstr "🎀 Звёздочки кампуса"
+
+msgid "pickme.gamification.ui.subtitle"
+msgstr "🎀 Я замечаю твои маленькие победы."
+
+msgid "pickme.miniapp.ui.title"
+msgstr "🎀 Твой уютный уголок"
+
+msgid "pickme.miniapp.ui.note"
+msgstr "💌 Выбери, о чём мне тебе писать. Каждое изменение сохраняется сразу."
+
+msgid "pickme.miniapp.ui.saved"
+msgstr "💗 Сохранила для тебя"
+
+msgid "pickme.miniapp.ui.error"
+msgstr "🥺 Не сохранилось. Попробуем ещё разочек?"
+
+msgid "pickme.food.rich_menu_header"
+msgstr "🍓 Наше меню · {weekday}, {date}"
+
+msgid "pickme.food.rich_dish"
+msgstr "🎀 {index}. {name} — {calories} ккал"
+
+msgid "pickme.food.rich_total_calories"
+msgstr "💗 Силы на твой день: {calories} ккал"
+
+msgid "pickme.food.rich_rating"
+msgstr "💗 Оценка нашего йемека: {average} ({count})"
+
+msgid "pickme.menu.achievements_button"
+msgstr "💗 Твои маленькие победы"
+
+msgid "pickme.miniapp.ui.achievements"
+msgstr "💗 Твои маленькие победы"

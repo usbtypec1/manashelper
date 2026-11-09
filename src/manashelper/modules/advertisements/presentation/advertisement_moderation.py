@@ -13,6 +13,7 @@ from dishka import FromDishka
 
 from manashelper.core.config import Settings
 from manashelper.localization.locale import DEFAULT_LOCALE
+from manashelper.localization.theme import Theme
 from manashelper.modules.advertisements.application.advertisement import (
     AdvertisementNotFoundError,
     AdvertisementSummary,
@@ -37,6 +38,7 @@ from manashelper.modules.advertisements.presentation.keyboards.advertisement_mod
     build_reject_comment_choice_keyboard,
 )
 from manashelper.modules.users.application.locale import LocaleQuery
+from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.html import escape_html
 
@@ -59,11 +61,14 @@ def _is_moderation_chat(callback_query: CallbackQuery, settings: Settings) -> bo
     return isinstance(callback_query.message, Message) and callback_query.message.chat.id == settings.moderation_chat_id
 
 
-async def _notify_owner(bot: Bot, locale_query: LocaleQuery, owner_id: int, build_text: Callable[[], str]) -> None:
+async def _notify_owner(
+    bot: Bot, locale_query: LocaleQuery, theme_query: ThemeQuery, owner_id: int, build_text: Callable[[], str]
+) -> None:
     """`build_text` is called *inside* the owner's own locale context, not the caller's - a plain
     pre-built string would be resolved under whichever moderator's locale triggered the action."""
     locale = await locale_query.get_locale(owner_id)
-    with i18n.context(), i18n.use_locale(locale.value):
+    theme = await theme_query.get_theme(owner_id)
+    with i18n.context(), i18n.use_locale(locale.value), i18n.use_theme(theme):
         message = build_text()
     try:
         await bot.send_message(chat_id=owner_id, text=message)
@@ -80,6 +85,7 @@ async def on_approve(
     record_advertisement_publications: FromDishka[RecordAdvertisementPublicationsUseCase],
     approve_advertisement: FromDishka[ApproveAdvertisementUseCase],
     locale_query: FromDishka[LocaleQuery],
+    theme_query: FromDishka[ThemeQuery],
 ) -> None:
     if not _is_moderation_chat(callback_query, settings):
         await callback_query.answer(_("common.permission_denied"), show_alert=True)
@@ -102,7 +108,7 @@ async def on_approve(
     # The channel is a single shared, public place - its posts always render in `DEFAULT_LOCALE`,
     # regardless of which moderator's own locale approved the ad (unlike every other message this
     # handler sends, which is scoped to a specific recipient's locale).
-    with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):
+    with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value), i18n.use_theme(Theme.BASIC):
         caption = format_advertisement(summary, contact_deep_link=deep_link)
     try:
         if summary.media:
@@ -127,6 +133,7 @@ async def on_approve(
     await _notify_owner(
         bot,
         locale_query,
+        theme_query,
         summary.user_id,
         lambda: _("ads.owner_approved").format(title=escape_html(summary.title)),
     )
@@ -163,6 +170,7 @@ async def on_reject_without_comment(
     settings: FromDishka[Settings],
     reject_advertisement: FromDishka[RejectAdvertisementUseCase],
     locale_query: FromDishka[LocaleQuery],
+    theme_query: FromDishka[ThemeQuery],
 ) -> None:
     if not _is_moderation_chat(callback_query, settings):
         await callback_query.answer(_("common.permission_denied"), show_alert=True)
@@ -181,7 +189,9 @@ async def on_reject_without_comment(
         await callback_query.message.edit_text(_("ads.rejected_notice"))
     await callback_query.answer()
 
-    await _notify_owner(bot, locale_query, summary.user_id, lambda: _build_owner_rejection_text(summary, None))
+    await _notify_owner(
+        bot, locale_query, theme_query, summary.user_id, lambda: _build_owner_rejection_text(summary, None)
+    )
 
 
 @router.callback_query(AdvertisementModerationCallback.filter(F.action == AdvertisementModerationAction.ADD_COMMENT))
@@ -215,6 +225,7 @@ async def on_reject_comment_entered(
     bot: Bot,
     reject_advertisement: FromDishka[RejectAdvertisementUseCase],
     locale_query: FromDishka[LocaleQuery],
+    theme_query: FromDishka[ThemeQuery],
 ) -> None:
     comment = message.text.strip() if message.text else ""
     if not comment:
@@ -249,4 +260,6 @@ async def on_reject_comment_entered(
         logger.warning("Failed to edit moderation message for advertisement %s", advertisement_id, exc_info=True)
 
     await message.answer(_("ads.rejection_sent"))
-    await _notify_owner(bot, locale_query, summary.user_id, lambda: _build_owner_rejection_text(summary, comment))
+    await _notify_owner(
+        bot, locale_query, theme_query, summary.user_id, lambda: _build_owner_rejection_text(summary, comment)
+    )

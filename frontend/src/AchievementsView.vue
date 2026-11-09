@@ -7,7 +7,7 @@ import { achievementArt } from './achievementArt'
 type Card = {
   key: string; name: string; description: string; earned_at: string | null
 }
-type Profile = { score: number; total: number; rank: number | null; locale: string; achievements: Card[] }
+type Profile = { score: number; total: number; rank: number | null; locale: string; theme: string; ui: Record<string, string>; achievements: Card[] }
 type Entry = { full_name: string; score: number; rank: number; is_self: boolean }
 type TelegramApp = {
   initData: string; colorScheme?: 'light' | 'dark'; initDataUnsafe?: { user?: { language_code?: string } }
@@ -18,7 +18,14 @@ type TelegramApp = {
 const telegram = (window as Window & { Telegram?: { WebApp?: TelegramApp } }).Telegram?.WebApp
 const detected = telegram?.initDataUnsafe?.user?.language_code?.split('-')[0] ?? 'en'
 const locale = ref(detected in messages ? detected : 'en')
-const copy = computed(() => messages[locale.value as keyof typeof messages])
+const copy = computed(() => {
+  const fallback = messages[locale.value as keyof typeof messages]
+  const ui = profile.value?.ui
+  if (!ui) return fallback
+  return { ...fallback, ...ui, source_pending: ui.sourcePending ?? fallback.source_pending,
+    baseline_missing: ui.baselineMissing ?? fallback.baseline_missing,
+    open_telegram: ui.openTelegram ?? fallback.open_telegram, top_ten: ui.topTen ?? fallback.top_ten }
+})
 const title = ref('Manashelper')
 const profile = ref<Profile>()
 const entries = ref<Entry[]>([])
@@ -42,6 +49,7 @@ async function load() {
   try {
     const [me, leaderboard] = await Promise.all([api('me'), api('leaderboard')])
     profile.value = me
+    document.documentElement.dataset.botTheme = me.theme
     entries.value = leaderboard.entries
     locale.value = me.locale in messages ? me.locale : 'en'
     document.documentElement.lang = locale.value

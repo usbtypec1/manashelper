@@ -15,6 +15,7 @@ from aiogram.methods import AnswerCallbackQuery, DeleteMessages, EditMessageText
 from aiogram.types import CallbackQuery, Chat, Message, User
 
 from manashelper.localization.locale import Locale
+from manashelper.localization.theme import Theme
 from manashelper.modules.advertisements.application.advertisement import (
     AdvertisementDeletionResult,
     AdvertisementMediaItem,
@@ -121,6 +122,7 @@ def context(monkeypatch):
             contacts=contacts,
             reveal=reveal,
             locale=SimpleNamespace(get_locale=AsyncMock(return_value=Locale.ZH)),
+            themes=SimpleNamespace(get_theme=AsyncMock(return_value=Theme.BASIC)),
             settings=SimpleNamespace(
                 moderation_chat_id=MODERATION_CHAT_ID,
                 advertisement_channel_id=CHANNEL_ID,
@@ -234,7 +236,9 @@ async def test_new_draft_requires_phone_again_and_invalid_input_does_not_advance
 
 
 @pytest.mark.parametrize("media", [False, True])
-async def test_approval_preserves_channel_locale_hidden_contacts_and_message_ids(context, media):
+@pytest.mark.parametrize("selected", list(Theme))
+async def test_approval_preserves_channel_locale_hidden_contacts_and_message_ids(context, media, selected):
+    context.themes.get_theme.return_value = selected
     if media:
         context.moderation.approve.return_value = replace(
             context.moderation.approve.return_value,
@@ -243,18 +247,22 @@ async def test_approval_preserves_channel_locale_hidden_contacts_and_message_ids
                 AdvertisementMediaItem("video", AdvertisementMediaType.VIDEO),
             ],
         )
-    await on_approve(
-        callback(context, MODERATION_CHAT_ID),
-        AdvertisementModerationCallback(id=AD_ID, action=AdvertisementModerationAction.APPROVE),
-        context.bot,
-        context.settings,
-        SimpleNamespace(execute=context.service.record_channel_messages),
-        SimpleNamespace(execute=context.moderation.approve),
-        context.locale,
-    )
+    with i18n.use_theme(Theme.PICKME):
+        await on_approve(
+            callback(context, MODERATION_CHAT_ID),
+            AdvertisementModerationCallback(id=AD_ID, action=AdvertisementModerationAction.APPROVE),
+            context.bot,
+            context.settings,
+            SimpleNamespace(execute=context.service.record_channel_messages),
+            SimpleNamespace(execute=context.moderation.approve),
+            context.locale,
+            context.themes,
+        )
+        assert i18n.current_theme == Theme.PICKME
     publication = methods(context, SendMediaGroup if media else SendMessage)[0]
     caption = publication.media[0].caption if media else publication.text
     assert publication.chat_id == CHANNEL_ID
+    assert "🎀" not in caption
     assert f"https://t.me/manas_test?start=ad_{AD_ID}" in caption
     assert "&lt;Book&gt;" in caption and "@seller" not in caption and "+996" not in caption
     assert i18n.gettext("ads.price", locale="ru").format(price=100) in caption
@@ -262,7 +270,8 @@ async def test_approval_preserves_channel_locale_hidden_contacts_and_message_ids
         assert publication.media[1].caption is None
     context.service.record_channel_messages.assert_awaited_once_with(AD_ID, [100, 101] if media else [42])
     owner = [message for message in methods(context, SendMessage) if message.chat_id == USER_ID][0]
-    assert owner.text == i18n.gettext("ads.owner_approved", locale="zh").format(title="&lt;Book&gt;")
+    with i18n.use_theme(selected):
+        assert owner.text == i18n.gettext("ads.owner_approved", locale="zh").format(title="&lt;Book&gt;")
 
 
 async def test_moderation_from_other_chat_is_rejected_before_service_call(context):
@@ -274,6 +283,7 @@ async def test_moderation_from_other_chat_is_rejected_before_service_call(contex
         SimpleNamespace(execute=context.service.record_channel_messages),
         SimpleNamespace(execute=context.moderation.approve),
         context.locale,
+        context.themes,
     )
     context.moderation.approve.assert_not_awaited()
     assert not methods(context, SendMessage)
@@ -297,6 +307,7 @@ async def test_publication_failure_does_not_record_message_ids_or_notify_owner(c
         SimpleNamespace(execute=context.service.record_channel_messages),
         SimpleNamespace(execute=context.moderation.approve),
         context.locale,
+        context.themes,
     )
     # Existing behavior: approve runs before publication. No compensation is performed here.
     context.moderation.approve.assert_awaited_once_with(AD_ID)
@@ -318,7 +329,12 @@ async def test_rejection_comment_keeps_fsm_and_existing_storage_truncation(conte
         update={"text": " " + raw + " ", "chat": Chat(id=MODERATION_CHAT_ID, type="supergroup")}
     )
     await on_reject_comment_entered(
-        message, context.state, context.bot, SimpleNamespace(execute=context.moderation.reject), context.locale
+        message,
+        context.state,
+        context.bot,
+        SimpleNamespace(execute=context.moderation.reject),
+        context.locale,
+        context.themes,
     )
     context.moderation.reject.assert_awaited_once_with(AD_ID, raw[:512])
     assert await context.state.get_state() is None

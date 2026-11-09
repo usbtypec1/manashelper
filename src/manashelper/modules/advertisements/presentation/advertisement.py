@@ -14,6 +14,7 @@ from dishka import FromDishka
 
 from manashelper.core.config import Settings
 from manashelper.localization.locale import DEFAULT_LOCALE
+from manashelper.localization.theme import Theme
 from manashelper.modules.advertisements.application.advertisement import (
     AdvertisementForbiddenError,
     AdvertisementMediaItem,
@@ -455,7 +456,7 @@ async def _notify_moderation_chat(
     """Sent to the single shared `Settings.moderation_chat_id`, not to individual moderators - there
     is no per-user moderator role, so (like the channel) this always renders in `DEFAULT_LOCALE`
     rather than any one recipient's locale."""
-    with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):
+    with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value), i18n.use_theme(Theme.BASIC):
         caption = _("ads.new_review") + "\n\n" + format_advertisement(summary, contact=contact)
         keyboard = build_moderation_keyboard(summary.id)
         review_text = _("ads.review_prompt")

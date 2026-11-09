@@ -13,7 +13,7 @@ type Course = { id: number; number: number; is_tracked: boolean }
 type TrackedCourse = { id: number; number: number; department_name: string; faculty_name: string }
 type CatalogItem = { id: string; name: string }
 type Settings = {
-  locale: string; ui: Record<string, string>
+  locale: string; theme: string; ui: Record<string, string>
   notifications: { schedule_changes_enabled: boolean; exam_grades_enabled: boolean; lesson_skips_enabled: boolean; broadcast_muted_until: string | null }
   food: { weekday: number; lunch_enabled: boolean; dinner_enabled: boolean }[]
   eders: Record<string, boolean> | null; tracked_courses: TrackedCourse[]
@@ -54,6 +54,7 @@ async function api<T>(path: string, body?: object): Promise<T> {
 }
 function apply(settings: Settings) {
   data.value = settings
+  document.documentElement.dataset.botTheme = settings.theme
   locale.value = settings.locale in messages ? settings.locale : 'en'
   document.documentElement.lang = locale.value
   document.title = settings.ui.title ?? ''

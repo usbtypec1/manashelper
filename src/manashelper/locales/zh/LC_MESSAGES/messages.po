@@ -1283,3 +1283,201 @@ msgstr "星期六"
 
 msgid "miniapp.ui.sunday"
 msgstr "星期日"
+
+msgid "theme.pickme"
+msgstr "🎀 选我嘛"
+
+msgid "pickme.common.welcome"
+msgstr "🎀 你选了我！一起度过大学生活，好不好嘛 🥺"
+
+msgid "pickme.menu.food"
+msgstr "🍓 一起吃饭嘛？"
+
+msgid "pickme.menu.study"
+msgstr "🎀 陪我学习"
+
+msgid "pickme.menu.schedule"
+msgstr "🗓 我们的课表"
+
+msgid "pickme.menu.attendance"
+msgstr "🥺 有好好上课吧？"
+
+msgid "pickme.menu.grades"
+msgstr "💗 给我看看成绩嘛"
+
+msgid "pickme.menu.eders"
+msgstr "🎀 你的 Eders 小天地"
+
+msgid "pickme.menu.eders_materials"
+msgstr "📚 给你的小笔记"
+
+msgid "pickme.menu.study_week"
+msgstr "🗓 我们的一周"
+
+msgid "pickme.menu.marketplace"
+msgstr "🛍 逛逛二手市场嘛？"
+
+msgid "pickme.menu.settings"
+msgstr "🎀 把我设成你喜欢的样子"
+
+msgid "pickme.menu.main"
+msgstr "🏡 回我们的小窝"
+
+msgid "pickme.menu.obis"
+msgstr "🎓 一起看 OBIS？"
+
+msgid "pickme.menu.achievements"
+msgstr "💗 你的小小成就"
+
+msgid "pickme.settings.title"
+msgstr "🎀 想当你最喜欢的小帮手"
+
+msgid "pickme.theme.prompt"
+msgstr "🎀 给我挑个样子嘛！我会记住的 🥺"
+
+msgid "pickme.theme.selected"
+msgstr "💗 我的新样子：{theme}"
+
+msgid "pickme.common.back"
+msgstr "🎀 带我回去嘛"
+
+msgid "pickme.common.back_to_menu"
+msgstr "🏡 回我们的小菜单"
+
+msgid "pickme.common.error_retry"
+msgstr "🥺 没成功。陪我再试一次嘛？"
+
+msgid "pickme.food.day_selection_title"
+msgstr "🍓 食堂小约会"
+
+msgid "pickme.food.choose_day"
+msgstr "🎀 哪天一起吃嘛？"
+
+msgid "pickme.food.menu_header"
+msgstr "🍓 我们的菜单 · {weekday}，{date}"
+
+msgid "pickme.food.dish"
+msgstr "🎀 {index}. {name} — {calories} 千卡"
+
+msgid "pickme.food.total_calories"
+msgstr "💗 给你一天的能量：{calories} 千卡"
+
+msgid "pickme.food.rating"
+msgstr "💗 这顿饭的评分：{average}（{count}）"
+
+msgid "pickme.food.no_ratings"
+msgstr "🥺 第一个给菜单打分嘛？"
+
+msgid "pickme.food.rate_prompt"
+msgstr "💗 给菜单打个 1 到 5 分嘛？评分可以修改。"
+
+msgid "pickme.food.rating_thanks"
+msgstr "💗 你打分啦！谢谢，我看到了 🥺"
+
+msgid "pickme.food.enjoy_meal"
+msgstr "🍓 好好吃饭！给我留个位子嘛？"
+
+msgid "pickme.food.open_menu"
+msgstr "🍓 看看我们的菜单"
+
+msgid "pickme.food.today_unpublished"
+msgstr "🥺 今天的菜单还没发布。我陪你等。"
+
+msgid "pickme.food.menu_unpublished"
+msgstr "🥺 那天的菜单还没发布。晚点再来看看嘛？"
+
+msgid "pickme.schedule.search_prompt"
+msgstr "🎀 告诉我课程名嘛。土耳其字母也能用普通拉丁字母代替：ş 用 s，ı 用 i。"
+
+msgid "pickme.schedule.no_tracked_courses"
+msgstr "🥺 你还没选年级。点下面选好，我就能给你看课表啦。"
+
+msgid "pickme.schedule.no_classes"
+msgstr "🎀 没课啦。给自己留点时间嘛？"
+
+msgid "pickme.schedule.changes_header"
+msgstr "💌 <b>课表有变化——我来报信啦</b>"
+
+msgid "pickme.obis.student_number_prompt"
+msgstr "🎀 写下学号嘛，我们一起看 OBIS。"
+
+msgid "pickme.obis.password_prompt"
+msgstr "🎀 接着输入 OBIS 密码。"
+
+msgid "pickme.obis.loading_grades"
+msgstr "💗 正在找你的成绩。陪我等一下嘛？"
+
+msgid "pickme.obis.loading_attendance"
+msgstr "🥺 一起看看出勤情况…"
+
+msgid "pickme.obis.new_grade"
+msgstr "💌 “{lesson}”有新成绩——马上来告诉你！\n{exam}：{score}"
+
+msgid "pickme.obis.skip_recorded"
+msgstr "⚠️ “{lesson}”记录了缺勤（{skip_type}）。照顾好自己 💗"
+
+msgid "pickme.eders.reminder_day"
+msgstr "💌 Eders 截止还有一天。我帮你记着呢。"
+
+msgid "pickme.eders.reminder_two_hours"
+msgstr "💌 Eders 截止还有两小时。我的小小提醒。"
+
+msgid "pickme.eders.empty"
+msgstr "🎀 这个筛选下没有内容。换一个看看嘛？"
+
+msgid "pickme.notifications.title"
+msgstr "💌 告诉我什么时候可以给你发消息"
+
+msgid "pickme.feedback.message_prompt"
+msgstr "💌 把想说的话写给管理员。回复会发到这里。"
+
+msgid "pickme.feedback.sent"
+msgstr "💗 已把你的消息交给管理员。谢谢你写信！"
+
+msgid "pickme.ads.review_prompt"
+msgstr "🎀 再看一眼你的小广告嘛？"
+
+msgid "pickme.ads.title_prompt"
+msgstr "🎀 让你的小广告被看见。发个 <b>标题</b>嘛，最多 {max} 个字符。"
+
+msgid "pickme.data.preparing"
+msgstr "🎀 正在为你准备。下次后台更新后再看看嘛（每 15 分钟更新）。"
+
+msgid "pickme.gamification.ui.collection"
+msgstr "💗 我的小小成就"
+
+msgid "pickme.gamification.ui.leaderboard"
+msgstr "🎀 校园小明星"
+
+msgid "pickme.gamification.ui.subtitle"
+msgstr "🎀 你的小小进步，我都看见啦。"
+
+msgid "pickme.miniapp.ui.title"
+msgstr "🎀 你的温馨小窝"
+
+msgid "pickme.miniapp.ui.note"
+msgstr "💌 选好想让我告诉你的事嘛。每次修改都会立即保存。"
+
+msgid "pickme.miniapp.ui.saved"
+msgstr "💗 为你保存好啦"
+
+msgid "pickme.miniapp.ui.error"
+msgstr "🥺 没保存成功。再试一次嘛？"
+
+msgid "pickme.food.rich_menu_header"
+msgstr "🍓 我们的菜单 · {weekday}，{date}"
+
+msgid "pickme.food.rich_dish"
+msgstr "🎀 {index}. {name} — {calories} 千卡"
+
+msgid "pickme.food.rich_total_calories"
+msgstr "💗 给你一天的能量：{calories} 千卡"
+
+msgid "pickme.food.rich_rating"
+msgstr "💗 这顿饭的评分：{average}（{count}）"
+
+msgid "pickme.menu.achievements_button"
+msgstr "💗 你的小小成就"
+
+msgid "pickme.miniapp.ui.achievements"
+msgstr "💗 你的小小成就"

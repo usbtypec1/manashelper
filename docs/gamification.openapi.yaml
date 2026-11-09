@@ -80,12 +80,13 @@ components:
   schemas:
     Profile:
       type: object
-      required: [score, total, rank, achievements, locale, ui]
+      required: [score, total, rank, achievements, locale, theme, ui]
       properties:
         score: { type: integer, minimum: 0 }
         total: { type: integer, const: 10 }
         rank: { type: [integer, 'null'], minimum: 1 }
         locale: { type: string, enum: [en, ru, ky, tr, zh] }
+        theme: { type: string, enum: [basic, halloween, pickme] }
         ui: { type: object, additionalProperties: { type: string } }
         achievements:
           type: array

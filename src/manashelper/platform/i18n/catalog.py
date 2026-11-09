@@ -9,6 +9,7 @@ from aiogram.utils.i18n import I18n
 
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale
 from manashelper.localization.theme import Theme
+from manashelper.platform.i18n.pickme import pickme_translation
 from manashelper.platform.i18n.themes import decorate_translation, halloween_translation
 
 
@@ -53,6 +54,10 @@ class CatalogI18n(I18n):
             resolved_locale = Locale.EN.value
         if self.current_theme == Theme.HALLOWEEN:
             themed = halloween_translation(singular, partial(super().gettext, locale=resolved_locale))
+            if themed is not None:
+                return themed
+        if self.current_theme == Theme.PICKME:
+            themed = pickme_translation(singular, partial(super().gettext, locale=resolved_locale))
             if themed is not None:
                 return themed
         text = super().gettext(singular, plural, n, resolved_locale)

@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.core.config import get_settings
 from manashelper.core.provider import CoreProvider
+from manashelper.localization.theme import Theme
 from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.food_menu.infrastructure.models.food_menu_notification_settings import (
     FoodMenuNotificationSettings,
@@ -40,8 +41,10 @@ from manashelper.modules.schedule.infrastructure.models.course import Course
 from manashelper.modules.schedule.infrastructure.models.department import Department
 from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
 from manashelper.modules.schedule.provider import ScheduleProvider
+from manashelper.modules.users.application.use_cases.set_user_theme import SetUserThemeUseCase
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.provider import UsersProvider
+from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.dispatcher import on_error
 from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.telegram.webhook_models import ProcessedTelegramUpdate
@@ -164,6 +167,31 @@ async def test_preferences_are_available_without_achievement_access_and_keep_def
         assert len(data["food"]) == 7 and all(day["lunch_enabled"] and day["dinner_enabled"] for day in data["food"])
         assert all(data["eders"].values()) and data["tracked_courses"] == []
         assert "student_number" not in json.dumps(data) and "encrypted_password" not in json.dumps(data)
+
+
+async def test_saved_bot_theme_reaches_both_miniapps_and_resets_without_leaking_context():
+    async with application() as (client, container, _):
+        headers = {"Authorization": authorization()}
+        for selected in (Theme.PICKME, Theme.BASIC):
+            async with container() as scope:
+                await (await scope.get(SetUserThemeUseCase)).execute(USER_ID, selected)
+            with i18n.use_theme(Theme.HALLOWEEN):
+                preferences = await (await client.get("/api/settings", headers=headers)).json()
+                achievements = await (await client.get("/api/gamification/me", headers=headers)).json()
+                updated = await (
+                    await client.put(
+                        "/api/settings/notifications",
+                        headers=headers,
+                        json={"setting": "exam_grades", "enabled": False},
+                    )
+                ).json()
+                assert i18n.current_theme == Theme.HALLOWEEN
+            assert preferences["theme"] == achievements["theme"] == updated["theme"] == selected.value
+            assert preferences["ui"] == updated["ui"]
+            with i18n.context(), i18n.use_locale("ru"), i18n.use_theme(selected):
+                assert preferences["ui"]["title"] == i18n.gettext("miniapp.ui.title")
+                assert achievements["ui"]["collection"] == i18n.gettext("gamification.ui.collection")
+            assert all("🎀" not in card["description"] for card in achievements["achievements"])
 
 
 async def test_preference_writes_set_values_idempotently_and_are_shared_with_native_settings():

@@ -1290,3 +1290,201 @@ msgstr "Cumartesi"
 
 msgid "miniapp.ui.sunday"
 msgstr "Pazar"
+
+msgid "theme.pickme"
+msgstr "🎀 Pick me"
+
+msgid "pickme.common.welcome"
+msgstr "🎀 Beni seçtin! Üniversiteyi birlikte atlatalım, olur mu? 🥺"
+
+msgid "pickme.menu.food"
+msgstr "🍓 Birlikte yemek?"
+
+msgid "pickme.menu.study"
+msgstr "🎀 Benimle çalış"
+
+msgid "pickme.menu.schedule"
+msgstr "🗓 Ders planlarımız"
+
+msgid "pickme.menu.attendance"
+msgstr "🥺 Derslere gidiyorsun, değil mi?"
+
+msgid "pickme.menu.grades"
+msgstr "💗 Notlarını gösterir misin?"
+
+msgid "pickme.menu.eders"
+msgstr "🎀 Eders köşen"
+
+msgid "pickme.menu.eders_materials"
+msgstr "📚 Sana özel ders notları"
+
+msgid "pickme.menu.study_week"
+msgstr "🗓 Birlikte haftamız"
+
+msgid "pickme.menu.marketplace"
+msgstr "🛍 Biraz alışveriş?"
+
+msgid "pickme.menu.settings"
+msgstr "🎀 Beni kendine göre ayarla"
+
+msgid "pickme.menu.main"
+msgstr "🏡 Bizim köşemize dön"
+
+msgid "pickme.menu.obis"
+msgstr "🎓 Birlikte OBIS’e?"
+
+msgid "pickme.menu.achievements"
+msgstr "💗 Küçük zaferlerin"
+
+msgid "pickme.settings.title"
+msgstr "🎀 En sevdiğin yardımcın olayım"
+
+msgid "pickme.theme.prompt"
+msgstr "🎀 Görünüşümü seç! Seçimini hatırlayacağım 🥺"
+
+msgid "pickme.theme.selected"
+msgstr "💗 Yeni görünüşüm: {theme}"
+
+msgid "pickme.common.back"
+msgstr "🎀 Beni geri götür"
+
+msgid "pickme.common.back_to_menu"
+msgstr "🏡 Menümüze dön"
+
+msgid "pickme.common.error_retry"
+msgstr "🥺 Olmadı. Benimle tekrar dener misin?"
+
+msgid "pickme.food.day_selection_title"
+msgstr "🍓 Yemekhanede bir buluşma"
+
+msgid "pickme.food.choose_day"
+msgstr "🎀 Hangi gün birlikte yiyoruz?"
+
+msgid "pickme.food.menu_header"
+msgstr "🍓 Menümüz · {weekday}, {date}"
+
+msgid "pickme.food.dish"
+msgstr "🎀 {index}. {name} — {calories} kcal"
+
+msgid "pickme.food.total_calories"
+msgstr "💗 Günün için enerji: {calories} kcal"
+
+msgid "pickme.food.rating"
+msgstr "💗 Yemeğimizin puanı: {average} ({count})"
+
+msgid "pickme.food.no_ratings"
+msgstr "🥺 Menümüze ilk puanı sen verir misin?"
+
+msgid "pickme.food.rate_prompt"
+msgstr "💗 Menüye 1 ile 5 arası puan verir misin? Puanını değiştirebilirsin."
+
+msgid "pickme.food.rating_thanks"
+msgstr "💗 Puan verdin! Teşekkürler, fark ettim 🥺"
+
+msgid "pickme.food.enjoy_meal"
+msgstr "🍓 Afiyet olsun! Bana da yer ayırır mısın?"
+
+msgid "pickme.food.open_menu"
+msgstr "🍓 Menümüzü göster"
+
+msgid "pickme.food.today_unpublished"
+msgstr "🥺 Bugünün menüsü henüz yayımlanmadı. Seninle bekliyorum."
+
+msgid "pickme.food.menu_unpublished"
+msgstr "🥺 O günün menüsü henüz yayımlanmadı. Sonra tekrar bakar mısın?"
+
+msgid "pickme.schedule.search_prompt"
+msgstr "🎀 Hangi dersi arıyoruz? Türkçe harfler yerine Latin harfleri de olur: ş için s, ı için i."
+
+msgid "pickme.schedule.no_tracked_courses"
+msgstr "🥺 Henüz sınıf seçmedin. Aşağıdan seç, ders programını göstereyim."
+
+msgid "pickme.schedule.no_classes"
+msgstr "🎀 Ders yok. Kendine biraz zaman?"
+
+msgid "pickme.schedule.changes_header"
+msgstr "💌 <b>Ders programın değişti — haberleri getirdim</b>"
+
+msgid "pickme.obis.student_number_prompt"
+msgstr "🎀 Öğrenci numaranı yaz, OBIS’e bakalım."
+
+msgid "pickme.obis.password_prompt"
+msgstr "🎀 Şimdi OBIS şifreni gir."
+
+msgid "pickme.obis.loading_grades"
+msgstr "💗 Notlarını getiriyorum. Biraz benimle kalır mısın?"
+
+msgid "pickme.obis.loading_attendance"
+msgstr "🥺 Devam durumuna birlikte bakalım…"
+
+msgid "pickme.obis.new_grade"
+msgstr "💌 “{lesson}” için yeni not — hemen sana geldim!\n{exam}: {score}"
+
+msgid "pickme.obis.skip_recorded"
+msgstr "⚠️ “{lesson}” için devamsızlık kaydedildi ({skip_type}). Kendine iyi bak 💗"
+
+msgid "pickme.eders.reminder_day"
+msgstr "💌 Eders son teslimine bir gün kaldı. Senin için hatırladım."
+
+msgid "pickme.eders.reminder_two_hours"
+msgstr "💌 Eders son teslimine iki saat kaldı. Benden küçük bir hatırlatma."
+
+msgid "pickme.eders.empty"
+msgstr "🎀 Bu filtrede bir şey yok. Başkasına bakalım mı?"
+
+msgid "pickme.notifications.title"
+msgstr "💌 Sana ne zaman yazabilirim?"
+
+msgid "pickme.feedback.message_prompt"
+msgstr "💌 Yönetime söylemek istediğini yaz. Yanıt buraya gelecek."
+
+msgid "pickme.feedback.sent"
+msgstr "💗 Mesajını yönetime ilettim. Yazdığın için teşekkürler!"
+
+msgid "pickme.ads.review_prompt"
+msgstr "🎀 İlanına son bir kez bakalım mı?"
+
+msgid "pickme.ads.title_prompt"
+msgstr "🎀 İlanını öne çıkaralım. En fazla {max} karakterlik bir <b>başlık</b> gönder."
+
+msgid "pickme.data.preparing"
+msgstr "🎀 Senin için hazırlanıyorum. Sonraki arka plan güncellemesinden sonra bak (15 dakikada bir)."
+
+msgid "pickme.gamification.ui.collection"
+msgstr "💗 Küçük zaferlerim"
+
+msgid "pickme.gamification.ui.leaderboard"
+msgstr "🎀 Kampüsün yıldızları"
+
+msgid "pickme.gamification.ui.subtitle"
+msgstr "🎀 Küçük zaferlerini fark ediyorum."
+
+msgid "pickme.miniapp.ui.title"
+msgstr "🎀 Sıcacık köşen"
+
+msgid "pickme.miniapp.ui.note"
+msgstr "💌 Sana nelerden haber vereyim? Her değişiklik hemen kaydedilir."
+
+msgid "pickme.miniapp.ui.saved"
+msgstr "💗 Senin için kaydettim"
+
+msgid "pickme.miniapp.ui.error"
+msgstr "🥺 Kaydedilemedi. Tekrar deneyelim mi?"
+
+msgid "pickme.food.rich_menu_header"
+msgstr "🍓 Menümüz · {weekday}, {date}"
+
+msgid "pickme.food.rich_dish"
+msgstr "🎀 {index}. {name} — {calories} kcal"
+
+msgid "pickme.food.rich_total_calories"
+msgstr "💗 Günün için enerji: {calories} kcal"
+
+msgid "pickme.food.rich_rating"
+msgstr "💗 Yemeğimizin puanı: {average} ({count})"
+
+msgid "pickme.menu.achievements_button"
+msgstr "💗 Küçük zaferlerin"
+
+msgid "pickme.miniapp.ui.achievements"
+msgstr "💗 Küçük zaferlerin"

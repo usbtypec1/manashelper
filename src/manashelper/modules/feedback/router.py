@@ -11,6 +11,7 @@ from dishka import FromDishka
 
 from manashelper.core.config import Settings
 from manashelper.localization.locale import DEFAULT_LOCALE
+from manashelper.localization.theme import Theme
 from manashelper.modules.feedback.application.use_cases.record_feedback_admin_message import (
     RecordFeedbackAdminMessageUseCase,
 )
@@ -19,6 +20,7 @@ from manashelper.modules.feedback.callbacks import FeedbackAction, FeedbackCallb
 from manashelper.modules.feedback.keyboards import build_feedback_cancel_keyboard
 from manashelper.modules.feedback.service import BODY_MAX_LENGTH, FeedbackQuery
 from manashelper.modules.users.application.locale import LocaleQuery
+from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from manashelper.platform.telegram.html import escape_html
@@ -86,7 +88,7 @@ async def on_feedback_entered(
     sender = f"@{message.from_user.username}" if message.from_user.username else str(message.from_user.id)
     # A single shared destination, not a specific recipient's chat - always rendered in
     # `DEFAULT_LOCALE`, mirroring `advertisement.py::_notify_moderation_chat`.
-    with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):
+    with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value), i18n.use_theme(Theme.BASIC):
         text = _("feedback.admin_message").format(sender=escape_html(sender), body=escape_html(body))
     try:
         sent = await bot.send_message(chat_id=settings.admin_chat_id, text=text)
@@ -104,6 +106,7 @@ async def on_admin_reply(
     settings: FromDishka[Settings],
     feedback_query: FromDishka[FeedbackQuery],
     locale_query: FromDishka[LocaleQuery],
+    theme_query: FromDishka[ThemeQuery],
 ) -> None:
     if not _is_admin_chat(message, settings) or message.reply_to_message is None:
         return
@@ -117,7 +120,8 @@ async def on_admin_reply(
         return
 
     locale = await locale_query.get_locale(feedback.user_id)
-    with i18n.context(), i18n.use_locale(locale.value):
+    theme = await theme_query.get_theme(feedback.user_id)
+    with i18n.context(), i18n.use_locale(locale.value), i18n.use_theme(theme):
         text = _("feedback.admin_reply").format(text=escape_html(reply_text))
 
     try:

@@ -12,6 +12,7 @@ from aiogram.methods import AnswerCallbackQuery, EditMessageText, SendMessage
 from aiogram.types import CallbackQuery, Chat, Message, User
 
 from manashelper.core.config import Settings
+from manashelper.localization.theme import Theme
 from manashelper.modules.feedback.callbacks import FeedbackAction, FeedbackCallback
 from manashelper.modules.feedback.router import (
     FeedbackForm,
@@ -23,6 +24,7 @@ from manashelper.modules.feedback.router import (
 )
 from manashelper.modules.feedback.service import BODY_MAX_LENGTH, FeedbackQuery, FeedbackSummary
 from manashelper.modules.users.application.locale import LocaleQuery
+from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.platform.i18n.catalog import i18n
 from tests.modules.feedback.application_factories import build_feedback_service
 
@@ -60,6 +62,7 @@ def context(monkeypatch):
             service=service,
             summary=summary,
             locale_service=locale_service,
+            themes=SimpleNamespace(get_theme=AsyncMock(return_value=Theme.BASIC)),
             settings=SimpleNamespace(admin_chat_id=ADMIN_CHAT_ID),
         )
 
@@ -163,6 +166,25 @@ async def test_boundary_body_length_is_accepted(context):
     context.service.submit.assert_awaited_once_with(USER_ID, "x" * 2000)
 
 
+async def test_user_theme_does_not_leak_into_shared_feedback_chat(context):
+    with i18n.use_theme(Theme.PICKME):
+        await on_feedback_entered(
+            context.message,
+            context.state,
+            context.bot,
+            context.settings,
+            context.service,
+            record_feedback_admin_message=SimpleNamespace(execute=context.service.record_admin_chat_message),
+            submit_feedback=SimpleNamespace(execute=context.service.submit),
+        )
+        assert i18n.current_theme == Theme.PICKME
+        user_message, admin_forward = sent_methods(context, SendMessage)
+        assert user_message.text == i18n.gettext("feedback.sent")
+    assert admin_forward.text == i18n.gettext("feedback.admin_message", locale="ru").format(
+        sender="@tester", body="A &lt;question&gt; &amp; idea"
+    )
+
+
 async def test_forward_failure_preserves_existing_acknowledgement_and_cleared_state(context):
     respond = context.request.side_effect
 
@@ -199,6 +221,7 @@ async def test_router_accepts_admin_replies_only_in_configured_chat(context, cha
         Settings: context.settings,
         FeedbackQuery: context.service,
         LocaleQuery: context.locale_service,
+        ThemeQuery: context.themes,
     }
 
     async def resolve(dependency, component=""):
@@ -210,6 +233,7 @@ async def test_router_accepts_admin_replies_only_in_configured_chat(context, cha
         settings=context.settings,
         feedback_query=context.service,
         locale_query=context.locale_service,
+        theme_query=context.themes,
         dishka_container=SimpleNamespace(get=resolve),
     )
     if not authorized:
@@ -231,7 +255,12 @@ async def test_unmatched_or_empty_admin_reply_sends_nothing(context, has_feedbac
     if not has_feedback:
         context.service.get_by_admin_chat_message_id.return_value = None
     await on_admin_reply(
-        admin_message(context, text=text), context.bot, context.settings, context.service, context.locale_service
+        admin_message(context, text=text),
+        context.bot,
+        context.settings,
+        context.service,
+        context.locale_service,
+        context.themes,
     )
     assert not sent_methods(context, SendMessage)
     context.locale_service.get_locale.assert_not_awaited()
@@ -244,6 +273,7 @@ async def test_admin_caption_is_relayed_when_text_is_absent(context):
         context.settings,
         context.service,
         context.locale_service,
+        context.themes,
     )
     assert sent_methods(context, SendMessage)[0].text == i18n.gettext("feedback.admin_reply", locale="zh").format(
         text="Caption &lt;reply&gt;"
@@ -259,7 +289,28 @@ async def test_failed_admin_reply_reports_failure_in_admin_locale(context):
         return await respond(_bot, method, **kwargs)
 
     context.request.side_effect = fail_recipient
-    await on_admin_reply(admin_message(context), context.bot, context.settings, context.service, context.locale_service)
+    await on_admin_reply(
+        admin_message(context), context.bot, context.settings, context.service, context.locale_service, context.themes
+    )
     messages = sent_methods(context, SendMessage)
     assert messages[-1].chat_id == ADMIN_CHAT_ID
     assert messages[-1].text == i18n.gettext("feedback.delivery_failed", locale="ru")
+
+
+@pytest.mark.parametrize("selected", list(Theme))
+async def test_admin_reply_uses_recipient_theme_and_restores_admin_context(context, selected):
+    context.themes.get_theme.return_value = selected
+    with i18n.use_theme(Theme.PICKME):
+        await on_admin_reply(
+            admin_message(context),
+            context.bot,
+            context.settings,
+            context.service,
+            context.locale_service,
+            context.themes,
+        )
+        assert i18n.current_theme == Theme.PICKME
+    context.themes.get_theme.assert_awaited_once_with(USER_ID)
+    with i18n.use_theme(selected):
+        expected = i18n.gettext("feedback.admin_reply", locale="zh").format(text="  &lt;Answer&gt; &amp; details  ")
+    assert sent_methods(context, SendMessage)[0].text == expected
