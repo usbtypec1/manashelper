@@ -610,8 +610,8 @@ msgstr "💵 Цена: <b>{price}</b> сом"
 msgid "ads.valid_until"
 msgstr "⏰ Действительно до: {date}"
 
-msgid "ads.contact_link"
-msgstr "📞 <a href=\"{link}\">Нажмите здесь, чтобы увидеть контакты продавца</a>"
+msgid "ads.contacts_button"
+msgstr "Контакты"
 
 msgid "ads.contacts"
 msgstr "📞 Контакты:"
@@ -1651,3 +1651,6 @@ msgstr "🖤 Сохранено. Без лишних слов."
 
 msgid "deadinside.miniapp.ui.error"
 msgstr "🥀 Не сохранилось. Попробуй ещё раз."
+
+msgid "ads.rich_price"
+msgstr "💵 Цена: {price} сом"

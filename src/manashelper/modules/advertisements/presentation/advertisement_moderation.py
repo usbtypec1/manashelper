@@ -27,8 +27,7 @@ from manashelper.modules.advertisements.application.use_cases.record_advertiseme
 )
 from manashelper.modules.advertisements.application.use_cases.reject_advertisement import RejectAdvertisementUseCase
 from manashelper.modules.advertisements.presentation.advertisement_formatter import (
-    build_media_group,
-    format_advertisement,
+    build_advertisement_rich_message,
 )
 from manashelper.modules.advertisements.presentation.callbacks import (
     AdvertisementModerationAction,
@@ -109,22 +108,15 @@ async def on_approve(
     # regardless of which moderator's own locale approved the ad (unlike every other message this
     # handler sends, which is scoped to a specific recipient's locale).
     with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value), i18n.use_theme(Theme.BASIC):
-        caption = format_advertisement(summary, contact_deep_link=deep_link)
+        publication = build_advertisement_rich_message(summary, deep_link)
     try:
-        if summary.media:
-            sent_media = await bot.send_media_group(
-                chat_id=settings.advertisement_channel_id, media=build_media_group(caption, summary.media)
-            )
-            message_ids = [sent.message_id for sent in sent_media]
-        else:
-            sent_message = await bot.send_message(chat_id=settings.advertisement_channel_id, text=caption)
-            message_ids = [sent_message.message_id]
+        sent_message = await bot.send_rich_message(chat_id=settings.advertisement_channel_id, rich_message=publication)
     except TelegramAPIError:
         logger.exception("Failed to publish advertisement %s to the channel", callback_data.id)
         await callback_query.answer(_("ads.publish_failed"), show_alert=True)
         return
 
-    await record_advertisement_publications.execute(callback_data.id, message_ids)
+    await record_advertisement_publications.execute(callback_data.id, [sent_message.message_id])
 
     if isinstance(callback_query.message, Message):
         await callback_query.message.edit_text(_("ads.approved_published"))

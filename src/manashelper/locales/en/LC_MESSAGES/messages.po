@@ -612,8 +612,8 @@ msgstr "💵 Price: <b>{price}</b> som"
 msgid "ads.valid_until"
 msgstr "⏰ Valid until: {date}"
 
-msgid "ads.contact_link"
-msgstr "📞 <a href=\"{link}\">Tap here to see the seller's contacts</a>"
+msgid "ads.contacts_button"
+msgstr "Contacts"
 
 msgid "ads.contacts"
 msgstr "📞 Contacts:"
@@ -1651,3 +1651,6 @@ msgstr "🖤 Saved. Quietly."
 
 msgid "deadinside.miniapp.ui.error"
 msgstr "🥀 Couldn't save. Try again."
+
+msgid "ads.rich_price"
+msgstr "💵 Price: {price} som"

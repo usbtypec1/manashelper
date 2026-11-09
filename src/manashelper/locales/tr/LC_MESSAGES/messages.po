@@ -613,8 +613,8 @@ msgstr "💵 Fiyat: <b>{price}</b> som"
 msgid "ads.valid_until"
 msgstr "⏰ Geçerlilik tarihi: {date}"
 
-msgid "ads.contact_link"
-msgstr "📞 <a href=\"{link}\">Satıcının iletişim bilgilerini görmek için buraya dokunun</a>"
+msgid "ads.contacts_button"
+msgstr "İletişim"
 
 msgid "ads.contacts"
 msgstr "📞 İletişim:"
@@ -1650,3 +1650,6 @@ msgstr "🖤 Kaydedildi. Sessizce."
 
 msgid "deadinside.miniapp.ui.error"
 msgstr "🥀 Kaydedilemedi. Tekrar dene."
+
+msgid "ads.rich_price"
+msgstr "💵 Fiyat: {price} som"

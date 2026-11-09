@@ -606,8 +606,8 @@ msgstr "💵 价格：<b>{price}</b> 索姆"
 msgid "ads.valid_until"
 msgstr "⏰ 有效期至：{date}"
 
-msgid "ads.contact_link"
-msgstr "📞 <a href=\"{link}\">点击查看卖家的联系方式</a>"
+msgid "ads.contacts_button"
+msgstr "联系方式"
 
 msgid "ads.contacts"
 msgstr "📞 联系方式："
@@ -1643,3 +1643,6 @@ msgstr "🖤 已保存。无需多言。"
 
 msgid "deadinside.miniapp.ui.error"
 msgstr "🥀 未能保存。请重试。"
+
+msgid "ads.rich_price"
+msgstr "💵 价格：{price} 索姆"

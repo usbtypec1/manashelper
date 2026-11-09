@@ -615,8 +615,8 @@ msgstr "💵 Баасы: <b>{price}</b> сом"
 msgid "ads.valid_until"
 msgstr "⏰ Мөөнөтү: {date}"
 
-msgid "ads.contact_link"
-msgstr "📞 <a href=\"{link}\">Сатуучунун байланыштарын көрүү үчүн бул жерди басыңыз</a>"
+msgid "ads.contacts_button"
+msgstr "Байланыштар"
 
 msgid "ads.contacts"
 msgstr "📞 Байланыш:"
@@ -1654,3 +1654,6 @@ msgstr "🖤 Сакталды. Ашыкча сөзсүз."
 
 msgid "deadinside.miniapp.ui.error"
 msgstr "🥀 Сакталган жок. Кайра аракет кыл."
+
+msgid "ads.rich_price"
+msgstr "💵 Баасы: {price} сом"
