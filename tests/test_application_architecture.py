@@ -14,7 +14,7 @@ def test_application_dependencies_are_frozen_slotted_dataclasses():
         relative = path.relative_to(MODULES)
         if "application" not in relative.parts and path.name not in {"service.py", "queries.py", "settings.py"}:
             continue
-        tree = ast.parse(path.read_text())
+        tree = ast.parse(path.read_text(encoding="utf-8"))
         names = [
             node.name
             for node in tree.body
@@ -40,7 +40,7 @@ def test_use_cases_follow_file_class_and_entry_point_conventions():
     for path in MODULES.glob("*/application/use_cases/*.py"):
         if path.name == "__init__.py":
             continue
-        classes = [node for node in ast.parse(path.read_text()).body if isinstance(node, ast.ClassDef)]
+        classes = [node for node in ast.parse(path.read_text(encoding="utf-8")).body if isinstance(node, ast.ClassDef)]
         assert len(classes) == 1, path
         cls = classes[0]
         assert cls.name.endswith("UseCase"), path
@@ -63,7 +63,7 @@ def test_internal_cross_module_imports_do_not_use_private_symbols():
     violations = []
     for root in (PROJECT_ROOT / "src/manashelper", PROJECT_ROOT / "tests"):
         for path in root.rglob("*.py"):
-            for node in ast.walk(ast.parse(path.read_text())):
+            for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
                 if not isinstance(node, ast.ImportFrom) or not node.module:
                     continue
                 if not node.module.startswith(("manashelper.", "tests.")):
@@ -102,7 +102,7 @@ async def test_all_use_cases_resolve_in_independent_request_scopes():
         module = importlib.import_module(module_name)
         cases.extend(
             getattr(module, node.name)
-            for node in ast.parse(path.read_text()).body
+            for node in ast.parse(path.read_text(encoding="utf-8")).body
             if isinstance(node, ast.ClassDef) and node.name.endswith("UseCase")
         )
     providers = (

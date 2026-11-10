@@ -82,7 +82,7 @@ def test_catalogs_cover_every_key_and_preserve_placeholders(locale: Locale) -> N
 
 
 def test_babel_extracts_all_catalog_keys_including_command_descriptions() -> None:
-    with (ROOT / "babel.cfg").open() as file:
+    with (ROOT / "babel.cfg").open(encoding="utf-8") as file:
         method_map, options_map = parse_mapping_cfg(file)
     extracted = {message for _, _, message, _, _ in extract_from_dir(ROOT, method_map, options_map)}
     assert extracted == {message.id for message in _catalog(Locale.EN) if message.id}

@@ -221,7 +221,9 @@ async def test_background_delivery_uses_each_recipients_saved_theme_and_restores
 
 @pytest.mark.parametrize("locale", list(Locale))
 def test_deadinside_catalogs_preserve_placeholders_and_factual_fragments(locale):
-    with (PROJECT_ROOT / f"src/manashelper/locales/{locale.value}/LC_MESSAGES/messages.po").open() as source:
+    with (PROJECT_ROOT / f"src/manashelper/locales/{locale.value}/LC_MESSAGES/messages.po").open(
+        encoding="utf-8"
+    ) as source:
         catalog = read_po(source)
     for message in catalog:
         if not isinstance(message.id, str) or not message.id.startswith("deadinside."):

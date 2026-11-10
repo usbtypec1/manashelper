@@ -1,4 +1,5 @@
 import asyncio
+import signal
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
 
@@ -124,6 +125,10 @@ async def test_webhook_registers_after_binding_and_drains_before_scope_shutdown(
     monkeypatch.setattr(app.web, "TCPSite", Mock(return_value=site))
     monkeypatch.setattr(app.asyncio, "Event", Mock(return_value=SimpleNamespace(wait=AsyncMock(), set=Mock())))
     loop = asyncio.get_running_loop()
+    # Windows event loops lack signal handlers; this test covers ordering, not OS signal delivery.
+    add_signal_handler, remove_signal_handler = Mock(), Mock()
+    monkeypatch.setattr(loop, "add_signal_handler", add_signal_handler)
+    monkeypatch.setattr(loop, "remove_signal_handler", remove_signal_handler)
     previous_handler = loop.get_exception_handler()
     try:
         if registration_fails:
@@ -143,3 +148,7 @@ async def test_webhook_registers_after_binding_and_drains_before_scope_shutdown(
     )
     dispatcher.start_polling.assert_not_awaited()
     assert events == ["server", "dispatcher", "container"]
+    if not registration_fails:
+        signals = [signal.SIGINT, signal.SIGTERM]
+        assert [call.args[0] for call in add_signal_handler.call_args_list] == signals
+        assert sorted(call.args[0] for call in remove_signal_handler.call_args_list) == sorted(signals)
