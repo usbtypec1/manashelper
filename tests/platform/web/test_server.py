@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -47,6 +48,8 @@ from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.dispatcher import on_error
 from manashelper.platform.telegram.outbox.provider import OutboxProvider
+from manashelper.platform.telegram.provider import TelegramPlatformProvider
+from manashelper.platform.telegram.webhook_jobs import cleanup_webhook_receipts_job
 from manashelper.platform.telegram.webhook_models import ProcessedTelegramUpdate
 from manashelper.platform.web.auth import authenticate
 from manashelper.platform.web.server import create_web_app
@@ -77,6 +80,7 @@ async def application(*, eders_enabled: bool | None = None):
         settings.eders_password = SecretStr("fixture-eders-password") if eders_enabled else None
     container = make_async_container(
         CoreProvider(),
+        TelegramPlatformProvider(),
         UsersProvider(),
         GamificationProvider(),
         OutboxProvider(),
@@ -342,6 +346,30 @@ async def test_webhook_secret_failure_rollback_success_commit_and_replay():
         assert data["score"] == 1 and data["locale"] == "ru"
         assert next(card for card in data["achievements"] if card["key"] == "seller")["earned_at"]
         assert "student_number" not in json.dumps(data)
+
+
+async def test_webhook_receipts_are_cleaned_by_background_job_only():
+    async with application() as (client, container, calls):
+        now = datetime.now(UTC)
+        async with container() as scope:
+            session = await scope.get(AsyncSession)
+            session.add_all(
+                [
+                    ProcessedTelegramUpdate(update_id=992020, processed_at=now - timedelta(days=3)),
+                    ProcessedTelegramUpdate(update_id=992021, processed_at=now - timedelta(days=1)),
+                ]
+            )
+        headers = {"X-Telegram-Bot-Api-Secret-Token": SECRET}
+        assert (await client.post("/telegram/webhook", headers=headers, json=update(992022))).status == 200
+        async with container() as scope:
+            session = await scope.get(AsyncSession)
+            assert await session.get(ProcessedTelegramUpdate, 992020) is not None
+        await cleanup_webhook_receipts_job(container)
+        async with container() as scope:
+            session = await scope.get(AsyncSession)
+            assert await session.get(ProcessedTelegramUpdate, 992020) is None
+            assert await session.get(ProcessedTelegramUpdate, 992021) is not None
+            assert await session.get(ProcessedTelegramUpdate, 992022) is not None
 
 
 async def test_api_authorization_unknown_user_and_leaderboard_privacy():

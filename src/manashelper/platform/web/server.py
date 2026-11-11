@@ -17,7 +17,8 @@ from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.webhook_context import webhook_processing
-from manashelper.platform.telegram.webhook_middleware import ConcurrentWebhookUpdateError, WebhookReceiptMiddleware
+from manashelper.platform.telegram.webhook_middleware import WebhookReceiptMiddleware
+from manashelper.platform.telegram.webhook_service import ConcurrentWebhookUpdateError
 from manashelper.platform.web.auth import authenticate
 from manashelper.platform.web.preferences import register_preferences_routes
 

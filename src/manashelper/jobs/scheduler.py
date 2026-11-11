@@ -12,6 +12,7 @@ from manashelper.modules.food_menu.jobs import broadcast_dinner_menu_job, broadc
 from manashelper.modules.obis.jobs import poll_obis_notifications_job
 from manashelper.modules.schedule.jobs import sync_timetable_job
 from manashelper.platform.telegram.outbox.jobs import cleanup_outbox_job, run_outbox_worker
+from manashelper.platform.telegram.webhook_jobs import cleanup_webhook_receipts_job
 
 
 def create_scheduler(container: AsyncContainer, bot: Bot) -> AsyncIOScheduler:
@@ -36,6 +37,15 @@ def create_scheduler(container: AsyncContainer, bot: Bot) -> AsyncIOScheduler:
         coalesce=True,
     )
     scheduler.add_job(sync_daily_menus_job, "interval", minutes=10, args=[container], next_run_time=now)
+    scheduler.add_job(
+        cleanup_webhook_receipts_job,
+        "interval",
+        days=1,
+        args=[container],
+        next_run_time=now,
+        max_instances=1,
+        coalesce=True,
+    )
     scheduler.add_job(broadcast_lunch_menu_job, "cron", hour=11, minute=0, timezone=BISHKEK_TZ, args=[container, bot])
     scheduler.add_job(broadcast_dinner_menu_job, "cron", hour=17, minute=0, timezone=BISHKEK_TZ, args=[container, bot])
     scheduler.add_job(

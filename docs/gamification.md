@@ -131,6 +131,11 @@ to see the button. A configured public URL remains required.
 5. Start one instance. It binds HTTP, initializes the dispatcher and registers `setWebhook` with resolved update
    types, ten connections and `drop_pending_updates=False`.
 
+Webhook receipts share the handler's request transaction to suppress completed duplicate updates.
+SQL persistence and transaction-scoped locking belong to `WebhookReceiptRepository`; middleware uses
+`WebhookReceiptService`. A separate cleanup job runs at startup and daily, deleting receipts older than
+two days. Webhook requests do not perform cleanup.
+
 Example Caddy configuration:
 
 ```caddy
