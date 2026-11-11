@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import messages from './messages.json'
-defineProps<{ locale: string; from: 'settings' | 'courses' | 'achievements' }>()
+import { RouterLink } from 'vue-router'
+defineProps<{ locale: string; from: 'settings' | 'courses' | 'achievements' | 'leaderboard' }>()
 </script>
 
 <template>
   <footer class="terms-link">
-    <a :href="`/app/?view=terms&lang=${locale}&from=${from}`">{{ messages[locale as keyof typeof messages]?.terms.title ?? messages.en.terms.title }}</a>
+    <RouterLink :to="{ name: 'terms', query: { lang: locale, from } }">{{ messages[locale as keyof typeof messages]?.terms.title ?? messages.en.terms.title }}</RouterLink>
   </footer>
 </template>

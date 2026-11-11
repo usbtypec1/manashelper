@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { mockTelegram } from './telegram'
 
 for (const theme of [
   {
@@ -14,16 +15,8 @@ for (const theme of [
 ]) {
   for (const view of ['settings', 'courses', 'achievements']) {
     test(`saved ${theme.key} theme reaches ${view} in both Telegram appearances`, async ({ page, request }) => {
-      await page.route('https://telegram.org/js/telegram-web-app.js', route => route.fulfill({ body: '', contentType: 'application/javascript' }))
       const fixture = await (await request.get(`/_fixture/init-data?theme=${theme.key}&locale=ru${view === 'achievements' ? '' : '&preferences=1'}`)).json()
-      await page.addInitScript(({ initData }) => {
-        Object.assign(window, { Telegram: { WebApp: {
-          initData, colorScheme: 'light', ready() {}, expand() {},
-          onEvent(event: string, callback: () => void) {
-            if (event === 'themeChanged') Object.assign(window, { changeTelegramTheme: callback })
-          },
-        } } })
-      }, fixture)
+      await mockTelegram(page, { ...fixture, colorScheme: 'light' })
       await page.goto(`/app/?view=${view}`)
       await expect(page.locator('html')).toHaveAttribute('data-bot-theme', theme.key)
       await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
@@ -55,11 +48,7 @@ for (const theme of [
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
       await page.screenshot({ animations: 'disabled', path: `test-results/${theme.key}-${view}-light-${test.info().project.name}.png`, fullPage: true })
-      await page.evaluate(() => {
-        const context = window as Window & { Telegram: { WebApp: { colorScheme: string } }; changeTelegramTheme: () => void }
-        context.Telegram.WebApp.colorScheme = 'dark'
-        context.changeTelegramTheme()
-      })
+      await page.evaluate(() => window.telegramTest.changeTheme('dark'))
       await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
       await expect(page.locator('html')).toHaveAttribute('data-bot-theme', theme.key)
       await expect(page.locator('html')).toHaveCSS('--accent', theme.darkAccent)

@@ -390,6 +390,34 @@ async def test_api_authorization_unknown_user_and_leaderboard_privacy():
         assert response.headers["Cache-Control"] == "no-store"
 
 
+async def test_miniapp_history_routes_serve_shell_but_assets_and_api_keep_their_handlers(monkeypatch, tmp_path):
+    from manashelper.platform.web import server
+
+    (tmp_path / "index.html").write_text("<html>Mini App shell</html>")
+    (tmp_path / "assets").mkdir()
+    (tmp_path / "assets" / "app.js").write_text("console.log('asset')")
+    monkeypatch.setattr(server, "STATIC_DIR", tmp_path)
+    async with application() as (client, _, __):
+        for path in (
+            "/app",
+            "/app/",
+            "/app/achievements",
+            "/app/leaderboard",
+            "/app/settings",
+            "/app/courses",
+            "/app/terms",
+        ):
+            response = await client.get(path)
+            assert response.status == 200
+            assert await response.text() == "<html>Mini App shell</html>"
+            assert response.headers["Cache-Control"] == "no-cache"
+        response = await client.get("/app/assets/app.js")
+        assert response.status == 200 and await response.text() == "console.log('asset')"
+        assert (await client.get("/app/assets/missing.js")).status == 404
+        assert (await client.get("/api/settings")).status == 401
+        assert (await client.get("/api/unknown")).status == 404
+
+
 async def test_leaderboard_exposes_only_earned_awards_of_enabled_participants():
     async with application() as (client, container, _):
         other_id = 992098

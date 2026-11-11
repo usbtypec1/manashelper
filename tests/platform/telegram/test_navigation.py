@@ -110,11 +110,11 @@ def test_mini_app_settings_and_course_launchers_use_inline_buttons_without_my_le
         settings_buttons = [button for row in build_settings_keyboard().inline_keyboard for button in row]
         assert all(button.callback_data != "settings:open_course_tracking" for button in settings_buttons)
         assert [button.web_app.url for button in settings_buttons if button.web_app] == [
-            "https://example.com/app/?view=settings"
+            "https://example.com/app/settings"
         ]
         course_buttons = [button for row in build_faculty_keyboard([]).inline_keyboard for button in row]
         assert [button.web_app.url for button in course_buttons if button.web_app] == [
-            "https://example.com/app/?view=courses"
+            "https://example.com/app/courses"
         ]
         assert all(button.web_app is None for row in build_study_keyboard().keyboard for button in row)
 

@@ -1,23 +1,22 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import messages from './messages.json'
 import AchievementBadge from './AchievementBadge.vue'
 import { achievementArt } from './achievementArt'
 import TermsLink from './TermsLink.vue'
+import { useTelegram, useTelegramDialogBack } from './shared/telegram/telegram'
+
+const props = defineProps<{ tab: 'collection' | 'leaderboard' }>()
+const router = useRouter()
 
 type Card = {
   key: string; name: string; description: string; earned_at: string | null
 }
 type Profile = { score: number; total: number; rank: number | null; locale: string; theme: string; ui: Record<string, string>; achievements: Card[] }
 type Entry = { full_name: string; score: number; rank: number; is_self: boolean; achievements: Card[] }
-type TelegramApp = {
-  initData: string; colorScheme?: 'light' | 'dark'; initDataUnsafe?: { user?: { language_code?: string } }
-  ready: () => void; expand: () => void
-  onEvent?: (name: string, cb: () => void) => void; offEvent?: (name: string, cb: () => void) => void
-  BackButton?: { show: () => void; hide: () => void; onClick: (cb: () => void) => void; offClick: (cb: () => void) => void }
-}
-const telegram = (window as Window & { Telegram?: { WebApp?: TelegramApp } }).Telegram?.WebApp
-const detected = telegram?.initDataUnsafe?.user?.language_code?.split('-')[0] ?? 'en'
+const { rawInitData, languageCode } = useTelegram()
+const detected = languageCode.value
 const locale = ref(detected in messages ? detected : 'en')
 const copy = computed(() => {
   const fallback = messages[locale.value as keyof typeof messages]
@@ -30,7 +29,7 @@ const copy = computed(() => {
 const title = ref('Manashelper')
 const profile = ref<Profile>()
 const entries = ref<Entry[]>([])
-const tab = ref<'collection' | 'leaderboard'>('collection')
+const tab = computed(() => props.tab)
 const loading = ref(true)
 const error = ref(false)
 const selected = ref<Card>()
@@ -40,7 +39,7 @@ let trigger: HTMLElement | null = null
 
 async function api(path: string) {
   const response = await fetch(`/api/gamification/${path}`, {
-    headers: { Authorization: `tma ${telegram?.initData ?? ''}` }, cache: 'no-store',
+    headers: { Authorization: `tma ${rawInitData.value ?? ''}` }, cache: 'no-store',
   })
   if (!response.ok) throw new Error('Request failed')
   return response.json()
@@ -65,39 +64,29 @@ async function open(card: Card, event: MouseEvent) {
   selected.value = card
   await nextTick()
   dialog.value?.showModal()
-  telegram?.BackButton?.show()
 }
-function close() { dialog.value?.close() }
+function close() {
+  selected.value = undefined
+  dialog.value?.close()
+}
 function selectTab(value: 'collection' | 'leaderboard') {
-  tab.value = value
+  void router.push({ name: value === 'collection' ? 'achievements' : 'leaderboard' })
 }
 const selectedTone = computed(() => achievementArt[selected.value?.key ?? '']?.color ?? '#d2c5eb')
 function afterClose() {
   selected.value = undefined
-  telegram?.BackButton?.hide()
   trigger?.focus()
 }
-function applyTheme() {
-  document.documentElement.dataset.theme = telegram?.colorScheme ?? 'dark'
-}
+useTelegramDialogBack(computed(() => !!selected.value), close)
 onMounted(() => {
-  applyTheme()
-  telegram?.onEvent?.('themeChanged', applyTheme)
-  telegram?.ready()
-  telegram?.expand()
-  telegram?.BackButton?.onClick(close)
-  if (telegram?.initData) void load()
+  if (rawInitData.value) void load()
   else loading.value = false
-})
-onUnmounted(() => {
-  telegram?.BackButton?.offClick(close)
-  telegram?.offEvent?.('themeChanged', applyTheme)
 })
 </script>
 
 <template>
   <main class="app-shell">
-    <section v-if="!telegram?.initData" class="notice" role="status">
+    <section v-if="!rawInitData" class="notice" role="status">
       <span class="notice-icon" aria-hidden="true">✧</span><p>{{ copy.open_telegram }}</p>
     </section>
     <section v-else-if="loading" class="notice" role="status" aria-live="polite">
@@ -180,7 +169,7 @@ onUnmounted(() => {
     </template>
     <dialog ref="dialog" class="achievement-sheet" :style="{ '--medal-tone': selectedTone }"
       aria-labelledby="achievement-title" aria-describedby="achievement-description"
-      @close="afterClose" @click="($event.target === dialog) && close()"
+      @close="afterClose" @cancel.prevent="close" @click="($event.target === dialog) && close()"
     >
       <template v-if="selected">
         <span class="sheet-handle" aria-hidden="true"></span>
@@ -193,6 +182,6 @@ onUnmounted(() => {
         <button class="sheet-dismiss" @click="close">{{ copy.close }}</button>
       </template>
     </dialog>
-    <TermsLink :locale="locale" from="achievements" />
+    <TermsLink :locale="locale" :from="tab === 'collection' ? 'achievements' : 'leaderboard'" />
   </main>
 </template>

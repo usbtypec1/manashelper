@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watchEffect } from 'vue'
+import { computed, ref, watchEffect } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import messages from './messages.json'
+import { useTelegram } from './shared/telegram/telegram'
 
-const params = new URLSearchParams(window.location.search)
-const telegram = (window as Window & { Telegram?: { WebApp?: {
-  colorScheme?: string; ready: () => void; expand: () => void
-  initDataUnsafe?: { user?: { language_code?: string } }
-  onEvent?: (event: string, cb: () => void) => void
-  offEvent?: (event: string, cb: () => void) => void
-} } }).Telegram?.WebApp
-const detected = params.get('lang') ?? telegram?.initDataUnsafe?.user?.language_code?.split('-')[0] ?? 'en'
+const route = useRoute()
+const { languageCode } = useTelegram()
+const detected = typeof route.query.lang === 'string' ? route.query.lang : languageCode.value
 const locale = ref(detected in messages ? detected as keyof typeof messages : 'en')
 const copy = computed(() => messages[locale.value].terms)
 const sectionKeys = ['services', 'data', 'obis', 'eders', 'sync', 'ranking', 'controls', 'limits'] as const
@@ -17,20 +14,14 @@ const sections = computed(() => sectionKeys.map(key => ({
   key, title: copy.value[`${key}.title`], body: copy.value[`${key}.body`],
   sources: key === 'obis' || key === 'eders' ? copy.value.sources[key] : [],
 })))
-const origin = params.get('from')
-const backView = origin === 'courses' || origin === 'achievements' ? origin : 'settings'
+const backView = computed(() => {
+  const backTo = route.meta.backTo
+  return typeof backTo === 'function' ? backTo(route) : backTo
+})
 watchEffect(() => {
   document.title = copy.value.title
   document.documentElement.lang = locale.value
 })
-function applyTheme() { document.documentElement.dataset.theme = telegram?.colorScheme ?? 'light' }
-onMounted(() => {
-  applyTheme()
-  telegram?.ready()
-  telegram?.expand()
-  telegram?.onEvent?.('themeChanged', applyTheme)
-})
-onUnmounted(() => telegram?.offEvent?.('themeChanged', applyTheme))
 </script>
 
 <template>
@@ -50,6 +41,6 @@ onUnmounted(() => telegram?.offEvent?.('themeChanged', applyTheme))
         <li v-for="source in section.sources" :key="source"><code>{{ source }}</code></li>
       </ul>
     </section>
-    <a :href="`/app/?view=${backView}`">{{ copy.back }}</a>
+    <RouterLink :to="{ name: backView }">{{ copy.back }}</RouterLink>
   </main>
 </template>

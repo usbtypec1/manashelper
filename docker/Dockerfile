@@ -23,14 +23,14 @@ RUN uv run pybabel compile -d src/manashelper/locales
 COPY frontend/scripts ./frontend/scripts
 RUN uv run python frontend/scripts/export_messages.py
 
-# The frontend is compiled once; Node does not run in the application container.
-FROM node:22-bookworm-slim AS frontend
+# The frontend is compiled once; Bun does not run in the application container.
+FROM oven/bun:1.4.3 AS frontend
 WORKDIR /frontend
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+COPY frontend/package.json frontend/bun.lock ./
+RUN bun install --frozen-lockfile
 COPY frontend ./
 COPY --from=build /app/frontend/src/messages.json ./src/messages.json
-RUN npm run build
+RUN bun run --bun build
 
 # ----------- Stage 2: Minimal Run -----------
 FROM python:3.13-slim-bookworm AS runtime

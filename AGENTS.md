@@ -74,8 +74,10 @@ and Deadlines. Settings has no My lessons entry. All notification controls live 
 Schedule, OBIS, Food menu, Eders (when enabled) and broadcasts. Feature notification submenus return there.
 OBIS credentials remain in general Settings. Settings navigation precedes feature FSM handlers and clears drafts.
 The authenticated Mini App provides the same notification preferences and course selection to every registered
-user, independently of gamification. Launch it using inline Web App buttons at `/app/?view=settings` or
-`/app/?view=courses`. Its idempotent API reuses owning use cases and serializes mutations on the user's database row.
+user, independently of gamification. Launch it using inline Web App buttons at `/app/settings` or
+`/app/courses`. Vue Router owns Mini App navigation; `App.vue` only renders `RouterView`.
+Legacy `/app/?view=...` links redirect to the corresponding route. Its idempotent API reuses owning use cases
+and serializes mutations on the user's database row.
 See `docs/miniapp-settings.md` for the contract. Never accept a client-provided user ID for these operations.
 Eders/Study week stay hidden when disabled. Platform navigation and feature menu routers precede feature FSM handlers,
 clearing unfinished forms on menu entry; the shared Back handler also serves Marketplace.
@@ -270,6 +272,10 @@ Check command definitions in `platform/telegram/command_catalog.py` and registra
 ## Run and verify
 
 Use `uv` for dependency management. From the repository root:
+
+The frontend uses Bun 1.4.3 and `frontend/bun.lock`; follow [frontend/AGENTS.md](frontend/AGENTS.md)
+for frontend conventions and verification. Use `bun install --cwd frontend --frozen-lockfile` to install
+dependencies and `bun run --cwd frontend --bun build` to type-check and build the Mini App.
 
 ```sh
 uv sync

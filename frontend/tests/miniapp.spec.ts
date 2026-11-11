@@ -1,17 +1,9 @@
 import { expect, test } from '@playwright/test'
-
-test.beforeEach(async ({ page }) => {
-  // The real API is used; only Telegram's native WebView bridge is simulated.
-  await page.route('https://telegram.org/js/telegram-web-app.js', route => route.fulfill({ body: '', contentType: 'application/javascript' }))
-})
+import { mockTelegram } from './telegram'
 
 test('collection, detail, keyboard close and leaderboard use real authenticated API', async ({ page, request }) => {
   const fixture = await (await request.get('/_fixture/init-data')).json()
-  await page.addInitScript(({ initData }) => {
-    Object.assign(window, { Telegram: { WebApp: {
-      initData, initDataUnsafe: { user: { language_code: 'ru' } }, ready() {}, expand() {},
-    } } })
-  }, fixture)
+  await mockTelegram(page, fixture)
   await page.goto('/app/')
   await expect(page.getByRole('heading', { name: 'Ачивки' })).toBeVisible()
   await expect(page.locator('button.achievement')).toHaveCount(10)
@@ -55,7 +47,7 @@ test('collection, detail, keyboard close and leaderboard use real authenticated 
   await page.getByRole('link', { name: 'Пользовательское соглашение и обработка данных' }).click()
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Пользовательское соглашение и обработка данных')
   await page.getByRole('link', { name: 'Назад', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Ачивки' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Лидерборд', exact: true })).toBeVisible()
 })
 
 test('terms are public, localized and list current academic access', async ({ page }) => {
@@ -85,14 +77,7 @@ test('a regular browser gets a Telegram entry prompt', async ({ page }) => {
 
 test('custom artwork loads and Telegram theme changes preserve the layout', async ({ page, request }) => {
   const fixture = await (await request.get('/_fixture/init-data')).json()
-  await page.addInitScript(({ initData }) => {
-    Object.assign(window, { Telegram: { WebApp: {
-      initData, colorScheme: 'light', ready() {}, expand() {},
-      onEvent(event: string, callback: () => void) {
-        if (event === 'themeChanged') Object.assign(window, { changeTelegramTheme: callback })
-      },
-    } } })
-  }, fixture)
+  await mockTelegram(page, { ...fixture, colorScheme: 'light' })
   await page.goto('/app/')
   await expect(page.getByRole('heading', { name: 'Ачивки' })).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
@@ -105,11 +90,7 @@ test('custom artwork loads and Telegram theme changes preserve the layout', asyn
   })).toBe(true)
   await page.screenshot({ path: `test-results/collection-light-${test.info().project.name}.png`, fullPage: true, animations: 'disabled' })
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  await page.evaluate(() => {
-    const context = window as Window & { Telegram: { WebApp: { colorScheme: string } }; changeTelegramTheme: () => void }
-    context.Telegram.WebApp.colorScheme = 'dark'
-    context.changeTelegramTheme()
-  })
+  await page.evaluate(() => window.telegramTest.changeTheme('dark'))
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
   await page.getByRole('button', { name: /Продавец говна/ }).click()
   await expect(page.getByRole('dialog')).toContainText('Получено')

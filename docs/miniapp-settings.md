@@ -1,6 +1,9 @@
 # Mini App settings and course selection
 
-Inline Telegram Web App buttons open `/app/?view=settings` or `/app/?view=courses`.
+Inline Telegram Web App buttons open `/app/settings` or `/app/courses`.
+Vue Router uses HTML5 history under `/app/`; direct requests and reloads serve the same application shell.
+Old `/app/?view=settings` and `/app/?view=courses` links redirect while preserving other query parameters.
+Settings/course navigation updates the URL, so browser Back/Forward restores the selected view.
 Both views are available to registered users regardless of achievement access.
 Without `MANASHELPER_PUBLIC_URL`, use the bot's native settings and course selection.
 

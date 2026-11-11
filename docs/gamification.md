@@ -88,18 +88,28 @@ Use the development PostgreSQL/settings described in AGENTS.md, never production
 uv sync --frozen
 .venv/bin/pybabel compile -d src/manashelper/locales
 .venv/bin/python frontend/scripts/export_messages.py
-npm --prefix frontend ci
-npm --prefix frontend run build
+bun install --cwd frontend --frozen-lockfile
+bun run --cwd frontend --bun build
 .venv/bin/alembic upgrade head
 .venv/bin/pytest tests/modules/gamification tests/modules/obis/test_transcript.py tests/platform/web
 cd frontend
-npx playwright install chromium
-npm run test:e2e
+bunx --bun --no-install playwright install chromium
+bun run --bun test:e2e
 ```
 
 Browser tests start a loopback-only fixture in a temporary PostgreSQL schema. Only Telegram's WebView bridge
 is simulated; requests use the real local API and database. Gettext catalogs are the text source for both
 bot and Mini App. Generated bundles, message exports and screenshots are ignored. Docker builds them automatically.
+Use Bun 1.4.3 for frontend installation and scripts; `frontend/bun.lock` pins dependency versions.
+
+Telegram integration uses stable `@tma.js/sdk-vue@1.0.23` through `shared/telegram/telegram.ts`.
+Bootstrap initializes the SDK once; Vue `useSignal` bindings drive appearance and the shared viewport CSS
+variables. One native BackButton handler closes an active achievement dialog first, otherwise navigates
+back within the Mini App, with parent-route fallback for direct entry. Public terms work outside Telegram.
+The official `telegram-web-app.js` script is not loaded in parallel. The SDK's standard tab-session launch
+cache retains raw initData for route reloads; server authentication still checks its HMAC and one-hour expiry.
+Browser fixtures provide synthetic signed launch data and emulate native bridge requests/events; they do not
+mock the SDK or the local application API.
 
 ## Enable webhook and Mini App
 
@@ -171,10 +181,14 @@ See [gamification.openapi.yaml](gamification.openapi.yaml).
   Expanding a participant shows their earned medals; selecting a medal opens its detail sheet.
   It never returns Telegram IDs, credentials, raw grades/GPA/attendance or unfinished progress.
   Award conditions can still reveal academic information; this visibility is disclosed in the terms.
-- `/app/?view=terms&lang=ru` is a public terms page, available before registration or account connection.
+- `/app/terms?lang=ru` is a public terms page, available before registration or account connection.
   It supports all five locales without calling private APIs. Links in both Mini Apps and the OBIS consent
   keyboard lead there. Polling without PUBLIC_URL shows the same localized content in Telegram instead.
   The source text lives in the `terms.*` gettext entries; `platform/legal.py` owns section order, date and source URLs.
+- Vue Router owns `/app/achievements`, `/app/leaderboard`, `/app/settings`, `/app/courses` and `/app/terms`.
+  `App.vue` only renders `RouterView`; page components load on demand. The server serves the application shell
+  for history routes, while `/app/assets/` keeps ordinary static-file handling. `/app/` defaults to achievements;
+  old `?view=...` links redirect to their corresponding route without discarding other query parameters or the hash.
 
 Outbound registration can be tested against the repository-owned synthetic Telegram mock:
 

@@ -37,5 +37,5 @@ def test_terms_web_app_link_uses_public_url_and_current_locale(monkeypatch):
         keyboard = build_terms_keyboard()
     button = keyboard.inline_keyboard[0][0]
     assert button.web_app is not None
-    assert button.web_app.url == "https://example.com/app/?view=terms&lang=ky"
+    assert button.web_app.url == "https://example.com/app/terms?lang=ky"
     assert keyboard.inline_keyboard[1][0].callback_data == "obis:accept_terms"

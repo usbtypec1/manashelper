@@ -92,7 +92,7 @@ def build_terms_keyboard() -> InlineKeyboardMarkup:
     if public_url:
         builder.button(
             text=_("obis.terms"),
-            web_app=WebAppInfo(url=f"{public_url.rstrip('/')}/app/?view=terms&lang={get_i18n().current_locale}"),
+            web_app=WebAppInfo(url=f"{public_url.rstrip('/')}/app/terms?lang={get_i18n().current_locale}"),
         )
     else:
         builder.button(text=_("obis.terms"), callback_data=ObisCallback(action=ObisAction.TERMS))

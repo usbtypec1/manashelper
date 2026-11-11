@@ -106,5 +106,7 @@ def create_web_app(bot: Bot, dispatcher: Dispatcher, container: AsyncContainer, 
     app.router.add_get("/app/", index)
     if (STATIC_DIR / "assets").is_dir():
         app.router.add_static("/app/assets", STATIC_DIR / "assets")
+    # History-mode routes must also work on direct navigation and reload.
+    app.router.add_get("/app/{path:.*}", index)
     app.router.add_get("/health", health)
     return app

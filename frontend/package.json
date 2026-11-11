@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "packageManager": "bun@1.4.3",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vue-tsc --noEmit && vite build",
@@ -10,7 +11,9 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "vue": "^3.5.0"
+    "@tma.js/sdk-vue": "1.0.23",
+    "vue": "^3.5.0",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
