@@ -161,13 +161,20 @@ See [gamification.openapi.yaml](gamification.openapi.yaml).
   never raw updates or passwords. A PostgreSQL advisory transaction lock serializes identical IDs.
 - Receipts and business changes share one Dishka REQUEST session and commit. Only then is 200 returned.
   Concurrent deliveries get 503; failures get 5xx and Telegram retries. Completed duplicates get 200 without
-  rerunning the handler. Receipts expire after seven days (Telegram stores pending updates for at most 24 hours).
+  rerunning the handler. Daily cleanup removes receipts older than two days.
 - Telegram sends and in-memory FSM changes are not transactional: a crash after a send but before DB commit
   can repeat that send. This is not exactly-once external delivery.
 - API requests use `Authorization: tma <raw initData>`. Verify Telegram's HMAC, reject duplicate fields,
   limit age to one hour (30 seconds forward-clock tolerance), and take identity only from the signed user.
   Reopen Mini App after expiration. Unknown or disabled users get 403; API reads have no-store responses.
-- Leaderboard returns names/counts/ranks/is_self, not Telegram IDs, credentials, GPA or other users' collections.
+- Leaderboard returns names/counts/ranks/is_self and earned awards (key, localized name/description and award date).
+  Expanding a participant shows their earned medals; selecting a medal opens its detail sheet.
+  It never returns Telegram IDs, credentials, raw grades/GPA/attendance or unfinished progress.
+  Award conditions can still reveal academic information; this visibility is disclosed in the terms.
+- `/app/?view=terms&lang=ru` is a public terms page, available before registration or account connection.
+  It supports all five locales without calling private APIs. Links in both Mini Apps and the OBIS consent
+  keyboard lead there. Polling without PUBLIC_URL shows the same localized content in Telegram instead.
+  The source text lives in the `terms.*` gettext entries; `platform/legal.py` owns section order, date and source URLs.
 
 Outbound registration can be tested against the repository-owned synthetic Telegram mock:
 

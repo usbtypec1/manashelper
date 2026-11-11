@@ -107,6 +107,10 @@ async def app() -> web.Application:
             progress.food_views = 63
             for key in ("foodie", "seller", "eldin_balasy"):
                 await repo.award(PREVIEW_USER, key, datetime.now(UTC))
+            session.add(User(id=PREVIEW_USER - 1, full_name="Участник <Manas>", locale="tr"))
+            await session.flush()
+            await repo.set_enabled(PREVIEW_USER - 1, True)
+            await repo.award(PREVIEW_USER - 1, "champion", datetime.now(UTC))
         try:
             yield
         finally:

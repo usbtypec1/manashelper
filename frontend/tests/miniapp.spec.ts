@@ -42,8 +42,39 @@ test('collection, detail, keyboard close and leaderboard use real authenticated 
   await page.getByRole('button', { name: /Лидерборд/ }).click()
   await expect(page.getByText('Студент <Manas>')).toBeVisible()
   await expect(page.locator('.person script')).toHaveCount(0)
+  const participant = page.getByRole('button', { name: /Участник <Manas>/ })
+  await participant.click()
+  await expect(participant).toHaveAttribute('aria-expanded', 'true')
+  await expect(page.locator('.ranking-awards button.achievement')).toHaveCount(1)
+  await page.locator('.ranking-awards button.achievement').click()
+  await expect(page.getByRole('dialog')).toContainText('Чемпион')
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.ranking-awards button.achievement')).toBeFocused()
   await page.screenshot({ path: `test-results/leaderboard-${test.info().project.name}.png`, fullPage: true, animations: 'disabled' })
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  await page.getByRole('link', { name: 'Пользовательское соглашение и обработка данных' }).click()
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Пользовательское соглашение и обработка данных')
+  await page.getByRole('link', { name: 'Назад', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Ачивки' })).toBeVisible()
+})
+
+test('terms are public, localized and list current academic access', async ({ page }) => {
+  await page.route('**/api/**', route => { throw new Error(`Terms must not access private APIs: ${route.request().url()}`) })
+  await page.goto('/app/?view=terms&lang=ru')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Пользовательское соглашение и обработка данных')
+  await expect(page.getByRole('heading', { level: 2 })).toHaveCount(8)
+  await expect(page.getByText('https://obistest.manas.edu.kg/vs-ders/transkript-detailed', { exact: true })).toBeVisible()
+  await expect(page.locator('.terms-page')).toContainText('core_completion_update_activity_completion_status_manually')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  await page.screenshot({ path: `test-results/terms-${test.info().project.name}.png`, fullPage: true, animations: 'disabled' })
+  for (const [locale, title] of [
+    ['en', 'Terms of use and data processing'], ['ky', 'Колдонуучу келишими жана маалыматтарды иштетүү'],
+    ['tr', 'Kullanım koşulları ve veri işleme'], ['zh', '用户协议与数据处理'],
+  ]) {
+    await page.locator('select').selectOption(locale!)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(title!)
+    await expect(page.locator('html')).toHaveAttribute('lang', locale!)
+  }
 })
 
 test('a regular browser gets a Telegram entry prompt', async ({ page }) => {

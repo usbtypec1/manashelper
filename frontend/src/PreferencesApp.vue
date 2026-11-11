@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import messages from './messages.json'
+import TermsLink from './TermsLink.vue'
 
 const props = defineProps<{ initialTab: 'settings' | 'courses' }>()
 type TelegramApp = {
@@ -202,6 +203,7 @@ onUnmounted(() => telegram?.offEvent?.('themeChanged', applyTheme))
         </fieldset>
       </template>
     </template>
+    <TermsLink :locale="locale" :from="tab" />
   </main>
 </template>
 

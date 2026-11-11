@@ -384,7 +384,40 @@ async def test_api_authorization_unknown_user_and_leaderboard_privacy():
         data = await response.json()
         mine = next(entry for entry in data["entries"] if entry["is_self"])
         assert mine["full_name"] == "<script>Fixture</script>"
-        assert set(mine) == {"full_name", "score", "rank", "is_self"}
+        assert set(mine) == {"full_name", "score", "rank", "is_self", "achievements"}
+        assert [award["key"] for award in mine["achievements"]] == ["seller"]
+        assert set(mine["achievements"][0]) == {"key", "name", "description", "earned_at"}
+        assert response.headers["Cache-Control"] == "no-store"
+
+
+async def test_leaderboard_exposes_only_earned_awards_of_enabled_participants():
+    async with application() as (client, container, _):
+        other_id = 992098
+        try:
+            async with container() as scope:
+                session = await scope.get(AsyncSession)
+                session.add(User(id=other_id, full_name="Another participant", locale="tr", student_number="private"))
+                await session.flush()
+                repository = await scope.get(AchievementRepository)
+                await repository.set_enabled(other_id, True)
+                await repository.award(other_id, "champion", datetime.now(UTC))
+            headers = {"Authorization": authorization()}
+            response = await client.get("/api/gamification/leaderboard", headers=headers)
+            entry = next(entry for entry in (await response.json())["entries"] if not entry["is_self"])
+            assert entry["score"] == len(entry["achievements"]) == 1
+            award = entry["achievements"][0]
+            assert award["key"] == "champion" and award["earned_at"]
+            with i18n.context(), i18n.use_locale("ru"):
+                assert award["name"] == i18n.gettext("gamification.champion.name")
+            assert set(award) == {"key", "name", "description", "earned_at"}
+            assert set(entry) == {"full_name", "score", "rank", "is_self", "achievements"}
+            async with container() as scope:
+                await (await scope.get(AchievementRepository)).set_enabled(other_id, False)
+            response = await client.get("/api/gamification/leaderboard", headers=headers)
+            assert not any(entry["full_name"] == "Another participant" for entry in (await response.json())["entries"])
+        finally:
+            async with container() as scope:
+                await (await scope.get(AsyncSession)).execute(delete(User).where(User.id == other_id))
 
 
 async def test_disabled_user_cannot_access_either_api_even_with_valid_init_data():

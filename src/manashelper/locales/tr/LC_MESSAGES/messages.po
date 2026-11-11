@@ -1653,3 +1653,64 @@ msgstr "🥀 Kaydedilemedi. Tekrar dene."
 
 msgid "ads.rich_price"
 msgstr "💵 Fiyat: {price} som"
+
+
+msgid "terms.title"
+msgstr "Kullanım koşulları ve veri işleme"
+
+msgid "terms.language"
+msgstr "Dil"
+
+msgid "terms.updated_label"
+msgstr "Güncelleme"
+
+msgid "terms.back"
+msgstr "Geri"
+
+msgid "terms.services.title"
+msgstr "1. Hizmet ve onay"
+
+msgid "terms.services.body"
+msgstr "Manashelper (@manas_helper_bot), üniversitenin resmî hizmeti olmayan bağımsız bir öğrenci projesidir. Ders programı ve ders seçimi, yemekhane menüsü, OBIS sonuçları, Eders materyalleri ve son tarihler, haftalık görünüm, bildirimler, ilanlar, geri bildirim ve başarımlar sunar. Öğrenci hesabını bağlamak isteğe bağlıdır. Bilgilerinizi girmeden önce koşulları kabul ederek aşağıda açıklanan erişim ve işlemeye izin verirsiniz. Yalnızca kendi hesabınızı kullanın."
+
+msgid "terms.data.title"
+msgstr "2. Veriler ve koruma"
+
+msgid "terms.data.body"
+msgstr "Hizmet Telegram kimliğinizi, adınızı, kullanıcı adınızı, dilinizi, temanızı, seçili dersleri, bildirim ayarlarını, öğrenci numarasını, şifrelenmiş OBIS parolasını, akademik veri kopyalarını, karşılaştırma durumlarını ve başarımları saklar. İlan metni, fotoğrafları ve iletişim bilgileri yayın ve moderasyon için işlenir; geri bildirim yöneticiye iletilir. İzin verilen özel sohbet eylemleri kaydedilir; parola metni günlükte maskelenir ve bot parola mesajını silmeye çalışır. OBIS parolası AES-GCM ile şifrelenir; profil, veri kopyaları, günlükler ve başarımlar uygulama tarafından ayrı ayrı şifrelenmez. Telegram ve üniversite sistemleri mesajlaşma ve giriş için gereken verileri alır. Mutlak güvenlik veya tüm verilerin hiçbir üçüncü tarafa aktarılmayacağı garantisi verilmez."
+
+msgid "terms.obis.title"
+msgstr "3. OBIS erişimi"
+
+msgid "terms.obis.body"
+msgstr "Bot /site/login üzerinden giriş yapar, /vs-ders/taken-lessons sayfasından devam durumunu ve /vs-ders/taken-grades sayfasından sınav notlarını okur. Başarımlar açıkken GPA ve dönem sonu notlarına dayalı ödüller için /vs-ders/transkript-detailed da okunur. /site/eders yalnızca doğrudan Eders girişi başarısız olursa tek oturum açmak için kullanılır. Bilgiler saklanmadan doğrulanır. OBIS notları ve devam durumu değiştirilmez. Kullanılan sayfalar aşağıdadır."
+
+msgid "terms.eders.title"
+msgstr "4. Eders erişimi ve tamamlama"
+
+msgid "terms.eders.body"
+msgstr "Eders etkinse bot önce kayıtlı öğrenci numarası ve hizmette yapılandırılmış Moodle parolasıyla giriş yapar; OBIS tek oturum açma yedek yoldur. Moodle AJAX üzerinden kayıtlı ders listesi, ders sayfaları, profil saat dilimi ve ödev/sınav özet sayfaları okunur. Ders ve etkinlik adları, açıklamalar, bağlantılar, açılış/son tarihler, teslim, değerlendirme ve tamamlama durumları saklanır. Dosya, dış bağlantı, klasör, etiket, forum ve geri bildirim bağlantıları ders sayfalarından alınır; içerikleri otomatik indirilmez. AJAX yöntemleri core_course_get_enrolled_courses_by_timeline_classification ve yalnızca açık tamamlama komutunuzla core_completion_update_activity_completion_status_manually yöntemidir. Tamamlandı işareti ve geri alınması Eders durumunu değiştirir; ödev teslim etmez, sınav başlatmaz veya göndermez, not değiştirmez. Sayfanın okunması Moodle tarafından kaydedilebilir. Aşağıdaki yer tutucular ders/etkinlik kimlikleridir."
+
+msgid "terms.sync.title"
+msgstr "5. Arka plan güncellemeleri ve bildirimler"
+
+msgid "terms.sync.body"
+msgstr "OBIS ve Eders verileri genellikle 15 dakikada bir arka planda güncellenir; Eders aralığı farklı olabilir. Ekranlar kayıtlı kopyaları gösterir ve kaynaktan geride kalabilir. Bildirimleri kapatmak veya Mini App uygulamasını kapatmak eşitlemeyi durdurmaz. Ayarlar ders programı, not, devam, menü ve Eders değişikliklerini, hatırlatmaları ve yönetici yayınlarını kontrol eder. Bazı mesajlar kuyruğa alınır ve hatada yeniden denenir. Tekrar işlemeyi önlemek için Telegram güncelleme kimliği ve işleme zamanı saklanır; günlük temizlik iki günden eski kayıtları siler."
+
+msgid "terms.ranking.title"
+msgstr "6. Başarımlar ve sıralama"
+
+msgid "terms.ranking.body"
+msgstr "Başarım erişimi açıkken uygun eylemler kaydedilir; menü görüntüleme, ilanlar ve akademik kopyalara göre ödüller hesaplanır. Ödüllü katılımcılar ilk ona girebilir. Diğer yetkili katılımcılar Telegram profil adını, sırayı, ödül sayısını, kazanılan ödülleri, açıklamalarını ve kazanılma tarihlerini görebilir. Ham notlar, GPA, devam ayrıntıları, öğrenci numarası, giriş bilgileri ve tamamlanmamış ilerleme sıralamada verilmez. Ancak akademik ödüller ve koşulları öğreniminiz hakkında dolaylı bilgi verebilir. Erişimi kapatmak kişiyi sıralamadan gizler ve yeni ilerlemeyi durdurur; eski ödüller korunur. Bunun için Geri bildirim üzerinden yöneticiye başvurun."
+
+msgid "terms.controls.title"
+msgstr "7. Kontroller ve veri talepleri"
+
+msgid "terms.controls.body"
+msgstr "Dil, tema, ders ve bildirim tercihlerini Ayarlar veya Mini App üzerinden değiştirebilirsiniz. Ayarlar → OBIS giriş bilgileri bölümünden öğrenci numarasını ve parolayı değiştirebilir veya silebilirsiniz; silme OBIS sonuç kopyalarını ve karşılaştırma durumlarını da temizler ve bu bilgilerle eşitlemeyi durdurur. Bu işlem diğer tüm kayıtları, Eders geçmişini veya ödülleri silmez. Botu engellemek teslimatı durdurur, verileri silmez. Veri silme, hesap erişimini geri çekme veya başarım erişimi değişikliği için Ayarlar → Geri bildirim ya da @usbtypec kullanın. Tüm profil, kopya, ilan ve ödüller için ortak otomatik silme süresi yoktur; kayıtlar değiştirilene, özellik içinde veya talep üzerine silinene kadar kalabilir."
+
+msgid "terms.limits.title"
+msgstr "8. Doğruluk ve sorumluluk"
+
+msgid "terms.limits.body"
+msgstr "Notları, devamı, son tarihleri ve teslim/tamamlama durumunu üniversitenin resmî sistemlerinden doğrulayın. Bildirimler ve hesaplamalar bilgi amaçlıdır; gecikebilir, eksik veya kullanılamaz olabilir. Hizmet akademik sonuçları veya kesintisiz teslimatı garanti etmez. Hesabınızı koruyun, yalnızca paylaşma hakkınız olan içerik ve iletişim bilgilerini yayınlayın. İlanlar moderasyona tabidir. Bu koşullar mevcut uygulamayı açıklar, yürürlükteki hukukun hak ve yükümlülüklerini kaldırmaz. Kod: https://github.com/usbtypec1/manashelper. Sorular: @usbtypec veya Ayarlar → Geri bildirim."

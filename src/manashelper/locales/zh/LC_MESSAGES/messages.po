@@ -1646,3 +1646,64 @@ msgstr "🥀 未能保存。请重试。"
 
 msgid "ads.rich_price"
 msgstr "💵 价格：{price} 索姆"
+
+
+msgid "terms.title"
+msgstr "用户协议与数据处理"
+
+msgid "terms.language"
+msgstr "语言"
+
+msgid "terms.updated_label"
+msgstr "更新日期"
+
+msgid "terms.back"
+msgstr "返回"
+
+msgid "terms.services.title"
+msgstr "1. 服务与同意"
+
+msgid "terms.services.body"
+msgstr "Manashelper（@manas_helper_bot）是独立学生项目，并非大学官方服务。功能包括课表与课程选择、食堂菜单、OBIS 成绩、Eders 资料与截止日期、学习周概览、通知、分类广告、反馈和成就。关联学习账户完全自愿。在输入凭据前接受本协议，即授权下述访问与处理。请仅关联自己的账户。"
+
+msgid "terms.data.title"
+msgstr "2. 数据与保护"
+
+msgid "terms.data.body"
+msgstr "服务保存 Telegram ID、姓名、用户名、语言、主题、所选课程、通知设置、学号、加密的 OBIS 密码、学习数据快照、比较基准和成就记录。广告文字、照片和联系方式用于发布及审核；反馈转发给管理员。允许的私聊操作会被记录；日志中的密码文字会被遮蔽，机器人会尝试删除密码消息。OBIS 密码使用 AES-GCM 加密，但资料、快照、日志和成就并未由应用逐项加密。Telegram 和大学系统会接收消息与登录所需的数据。不承诺绝对安全，也不承诺任何数据都不会传递给第三方。"
+
+msgid "terms.obis.title"
+msgstr "3. OBIS 访问"
+
+msgid "terms.obis.body"
+msgstr "机器人通过 /site/login 登录，从 /vs-ders/taken-lessons 读取出勤，从 /vs-ders/taken-grades 读取考试成绩。启用成就后，还会读取 /vs-ders/transkript-detailed，计算与 GPA 和期末成绩有关的成就。仅当 Eders 直接登录失败时，才通过 /site/eders 进行单点登录。凭据在保存前验证。不会修改 OBIS 成绩或出勤。所用页面见下方。"
+
+msgid "terms.eders.title"
+msgstr "4. Eders 访问与完成标记"
+
+msgid "terms.eders.body"
+msgstr "启用 Eders 时，机器人先用已保存学号和服务配置的 Moodle 密码登录，OBIS 单点登录作为备用。它通过 Moodle AJAX 读取已选课程列表，并读取课程页、个人资料时区、作业和测验概览页。缓存课程及活动名称、说明、链接、开放与截止时间、提交/评分状态和完成标记。文件、外部链接、文件夹、文本块、论坛及反馈链接取自课程页，其内容不会被自动下载。AJAX 方法为 core_course_get_enrolled_courses_by_timeline_classification，以及仅在您明确操作完成标记时调用的 core_completion_update_activity_completion_status_manually。标记完成或撤销会更改 Eders 的完成状态，但不会提交作业、开始或提交测验，也不会更改成绩。读取页面本身仍可能被 Moodle 记录。下方占位符表示课程或活动 ID。"
+
+msgid "terms.sync.title"
+msgstr "5. 后台更新与通知"
+
+msgid "terms.sync.body"
+msgstr "OBIS 和 Eders 数据通常每 15 分钟在后台更新，Eders 间隔可能不同。界面显示已保存快照，可能落后于来源。关闭通知或 Mini App 不会停止同步。设置控制课表、成绩、出勤、菜单及 Eders 变化、提醒和管理员群发的投递。部分消息会进入队列并在失败后重试。为防止重复处理，会保存 Telegram 更新 ID 和处理时间；每日清理会删除超过两天的记录。"
+
+msgid "terms.ranking.title"
+msgstr "6. 成就与排行榜"
+
+msgid "terms.ranking.body"
+msgstr "启用成就访问后，服务记录符合条件的行为，并根据菜单查看、广告活动和学习快照计算奖励。有奖励的参与者可能进入前十。其他获授权的成就参与者可看到 Telegram 姓名、名次、奖励数量、已获得奖励、说明和获得日期。排行榜不返回原始成绩、GPA、出勤明细、学号、凭据或未完成进度。但学习类奖励及条件仍可能间接透露学习情况。关闭成就访问会将参与者从榜单隐藏并停止新进度，同时保留原有奖励。请通过反馈联系管理员申请。"
+
+msgid "terms.controls.title"
+msgstr "7. 控制与数据请求"
+
+msgid "terms.controls.body"
+msgstr "可在设置或 Mini App 更改语言、主题、课程和通知偏好。在“设置 → OBIS 凭据”可更换或删除学号和密码；删除也会清除 OBIS 结果缓存和比较基准，并停止使用这些凭据进行同步。这不会删除所有其他记录、Eders 历史或已获奖励。屏蔽机器人会停止投递，但不删除数据。若要删除数据、撤回账户访问或调整成就访问，请使用“设置 → 反馈”或联系 @usbtypec。资料、快照、广告和成就没有统一的自动过期时间，可能保留至被替换、通过功能删除或按请求删除。"
+
+msgid "terms.limits.title"
+msgstr "8. 准确性与责任"
+
+msgid "terms.limits.body"
+msgstr "请在大学官方系统核实成绩、出勤、截止日期和提交/完成状态。通知与计算仅供参考，可能延迟、不完整或不可用；服务不保证学习结果或不间断投递。请保护账户，仅发布有权分享的内容及联系方式。广告须经审核。本协议描述当前实现，不排除适用法律规定的权利和义务。源代码：https://github.com/usbtypec1/manashelper。问题与请求：@usbtypec 或“设置 → 反馈”。"

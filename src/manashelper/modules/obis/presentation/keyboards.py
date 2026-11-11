@@ -1,7 +1,9 @@
-from aiogram.types import InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardMarkup, WebAppInfo
+from aiogram.utils.i18n import get_i18n
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from manashelper.core.config import get_settings
 from manashelper.modules.notifications.settings import NotificationSetting, NotificationSettingsSummary
 from manashelper.modules.obis.presentation.callbacks import (
     ObisAction,
@@ -16,8 +18,6 @@ from manashelper.platform.telegram.callbacks import (
     SettingsCallback,
 )
 from manashelper.platform.telegram.navigation import build_navigation_keyboard
-
-TERMS_URL = "https://telegra.ph/Polzovatelskoe-soglashenie-manas-helper-bot-01-13"
 
 
 def build_obis_menu_keyboard() -> InlineKeyboardMarkup:
@@ -88,7 +88,14 @@ def build_confirm_clear_credentials_keyboard() -> InlineKeyboardMarkup:
 
 def build_terms_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text=_("obis.terms"), url=TERMS_URL)
+    public_url = get_settings().public_url
+    if public_url:
+        builder.button(
+            text=_("obis.terms"),
+            web_app=WebAppInfo(url=f"{public_url.rstrip('/')}/app/?view=terms&lang={get_i18n().current_locale}"),
+        )
+    else:
+        builder.button(text=_("obis.terms"), callback_data=ObisCallback(action=ObisAction.TERMS))
     builder.button(text=_("obis.accept_terms"), callback_data=ObisCallback(action=ObisAction.ACCEPT_TERMS))
     builder.button(text=_("common.cancel"), callback_data=ObisCallback(action=ObisAction.CANCEL_CREDENTIALS))
     builder.adjust(1)

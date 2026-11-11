@@ -3,12 +3,13 @@ import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import messages from './messages.json'
 import AchievementBadge from './AchievementBadge.vue'
 import { achievementArt } from './achievementArt'
+import TermsLink from './TermsLink.vue'
 
 type Card = {
   key: string; name: string; description: string; earned_at: string | null
 }
 type Profile = { score: number; total: number; rank: number | null; locale: string; theme: string; ui: Record<string, string>; achievements: Card[] }
-type Entry = { full_name: string; score: number; rank: number; is_self: boolean }
+type Entry = { full_name: string; score: number; rank: number; is_self: boolean; achievements: Card[] }
 type TelegramApp = {
   initData: string; colorScheme?: 'light' | 'dark'; initDataUnsafe?: { user?: { language_code?: string } }
   ready: () => void; expand: () => void
@@ -34,6 +35,7 @@ const loading = ref(true)
 const error = ref(false)
 const selected = ref<Card>()
 const dialog = ref<HTMLDialogElement>()
+const expandedEntry = ref<number>()
 let trigger: HTMLElement | null = null
 
 async function api(path: string) {
@@ -147,16 +149,30 @@ onUnmounted(() => {
         <p v-if="!entries.length" class="empty">{{ copy.empty }}</p>
         <ol v-else class="ranking-list">
           <li v-for="(entry, index) in entries" :key="index" :class="{ self: entry.is_self }">
-            <span class="place" :class="{ 'podium-place': entry.rank <= 3 }">
-              <svg v-if="entry.rank <= 3" class="podium-medal" :class="`podium-${entry.rank}`" viewBox="0 0 32 42" aria-hidden="true">
-                <path d="M7 1h8l4 14-8 3Z" fill="#c995ed"/><path d="M17 1h8l-5 17-8-3Z" fill="#7cc8f5"/>
-                <circle cx="16" cy="26" r="13" fill="currentColor"/><circle cx="16" cy="26" r="10" fill="none" stroke="white" stroke-opacity=".5"/>
-              </svg>
-              <span>{{ entry.rank }}</span>
-            </span>
-            <span class="avatar" :class="`avatar-${index % 5}`" aria-hidden="true">{{ entry.full_name.trim().charAt(0).toUpperCase() }}</span>
-            <span class="person">{{ entry.full_name }}<small v-if="entry.is_self">{{ copy.you }}</small></span>
-            <strong class="score-pill">{{ entry.score }}</strong>
+            <button class="ranking-person" :aria-expanded="expandedEntry === index" :aria-controls="`awards-${index}`"
+              @click="expandedEntry = expandedEntry === index ? undefined : index">
+              <span class="place" :class="{ 'podium-place': entry.rank <= 3 }">
+                <svg v-if="entry.rank <= 3" class="podium-medal" :class="`podium-${entry.rank}`" viewBox="0 0 32 42" aria-hidden="true">
+                  <path d="M7 1h8l4 14-8 3Z" fill="#c995ed"/><path d="M17 1h8l-5 17-8-3Z" fill="#7cc8f5"/>
+                  <circle cx="16" cy="26" r="13" fill="currentColor"/><circle cx="16" cy="26" r="10" fill="none" stroke="white" stroke-opacity=".5"/>
+                </svg>
+                <span>{{ entry.rank }}</span>
+              </span>
+              <span class="avatar" :class="`avatar-${index % 5}`" aria-hidden="true">{{ entry.full_name.trim().charAt(0).toUpperCase() }}</span>
+              <span class="person">{{ entry.full_name }}<small v-if="entry.is_self">{{ copy.you }}</small></span>
+              <strong class="score-pill">{{ entry.score }}</strong>
+              <span class="chevron" aria-hidden="true">{{ expandedEntry === index ? '⌃' : '⌄' }}</span>
+            </button>
+            <section v-if="expandedEntry === index" :id="`awards-${index}`" class="ranking-awards" :aria-label="`${entry.full_name}: ${copy.earned}`">
+              <p>{{ copy.earned }} · {{ entry.achievements.length }}</p>
+              <div class="collection">
+                <button v-for="card in entry.achievements" :key="card.key" class="achievement earned"
+                  :aria-label="`${card.name}. ${copy.earned}`" @click="open(card, $event)">
+                  <span class="medal-wrap"><AchievementBadge :achievement-key="card.key" earned /></span>
+                  <span class="card-name">{{ card.name }}</span>
+                </button>
+              </div>
+            </section>
           </li>
         </ol>
         <div class="your-place"><span>{{ copy.you }}</span><strong>{{ profile.rank ? `#${profile.rank}` : '—' }}</strong><span>{{ copy.earned }} {{ profile.score }}</span></div>
@@ -177,5 +193,6 @@ onUnmounted(() => {
         <button class="sheet-dismiss" @click="close">{{ copy.close }}</button>
       </template>
     </dialog>
+    <TermsLink :locale="locale" from="achievements" />
   </main>
 </template>

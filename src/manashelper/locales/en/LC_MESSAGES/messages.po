@@ -1654,3 +1654,64 @@ msgstr "🥀 Couldn't save. Try again."
 
 msgid "ads.rich_price"
 msgstr "💵 Price: {price} som"
+
+
+msgid "terms.title"
+msgstr "Terms of use and data processing"
+
+msgid "terms.language"
+msgstr "Language"
+
+msgid "terms.updated_label"
+msgstr "Updated"
+
+msgid "terms.back"
+msgstr "Back"
+
+msgid "terms.services.title"
+msgstr "1. Service and consent"
+
+msgid "terms.services.body"
+msgstr "Manashelper (@manas_helper_bot) is an independent student project, not an official university service. It provides timetables and course selection, cafeteria menus, OBIS results, Eders materials and deadlines, a study-week overview, notifications, marketplace advertisements, feedback and achievements. Connecting your academic account is voluntary. By accepting these terms before entering credentials, you authorize the access and processing described below. Use only your own account."
+
+msgid "terms.data.title"
+msgstr "2. Data and protection"
+
+msgid "terms.data.body"
+msgstr "The service stores your Telegram ID, name, username, language, theme, selected courses and notification settings; connected student number and encrypted OBIS password; cached academic data, synchronization baselines and achievement records. Advertisement content, photos and contacts are processed for publication and moderation; feedback is forwarded to the administrator. Allowed private-chat actions are logged; password text is masked in the action log and the bot attempts to delete the password message. The OBIS password is encrypted with AES-GCM, but profile data, snapshots, logs and achievements are not individually encrypted by the application. Telegram and university systems receive the data necessary for messages and authentication. No absolute security or blanket non-disclosure guarantee is made."
+
+msgid "terms.obis.title"
+msgstr "3. OBIS access"
+
+msgid "terms.obis.body"
+msgstr "The bot signs in through /site/login, reads attendance from /vs-ders/taken-lessons and exam grades from /vs-ders/taken-grades. When achievements are enabled, it also reads /vs-ders/transkript-detailed to calculate GPA-based and final-grade achievements. /site/eders is used for Eders single sign-on only if direct Eders login fails. Credentials are checked before saving. OBIS grades and attendance are not modified. The pages used are listed below."
+
+msgid "terms.eders.title"
+msgstr "4. Eders access and completion"
+
+msgid "terms.eders.body"
+msgstr "When Eders is enabled, the bot first signs in using your saved student number and a service-configured Moodle password; OBIS single sign-on is a fallback. It reads the enrolled-course list through Moodle AJAX, course pages, profile timezone, assignment and quiz overview pages. It caches course names, activity titles, descriptions, links, opening/deadline dates, submission/grading status and completion flags. Resource, URL, folder, label, forum and feedback links are taken from course pages; their contents are not automatically fetched. The AJAX methods are core_course_get_enrolled_courses_by_timeline_classification and, only after your explicit completion action, core_completion_update_activity_completion_status_manually. Marking done or undoing it changes the completion flag in Eders; it does not submit coursework, start or submit a quiz, or change a grade. Reading an activity page may still be recorded by Moodle. The pages used are listed below; placeholders denote course/activity IDs."
+
+msgid "terms.sync.title"
+msgstr "5. Background updates and notifications"
+
+msgid "terms.sync.body"
+msgstr "OBIS and Eders data are refreshed in the background, normally every 15 minutes; the Eders interval may differ. Screens show saved snapshots and may lag behind the source. Disabling notifications or closing the Mini App does not stop synchronization. Notification preferences control delivery, including timetable, grades, attendance, cafeteria and Eders changes, reminders and administrator broadcasts. Some deliveries are queued and retried. Telegram update identifiers and processing times are retained for duplicate suppression; daily cleanup removes records older than two days."
+
+msgid "terms.ranking.title"
+msgstr "6. Achievements and leaderboard"
+
+msgid "terms.ranking.body"
+msgstr "When achievement access is enabled, the service records eligible activity and derives awards from cafeteria views, marketplace activity and academic snapshots. Participants with awards may appear in the top ten. Other authorized achievement participants can see the Telegram profile name, rank, award count, earned awards, their descriptions and award dates. Raw grades, GPA, attendance details, student number, credentials and unfinished progress are not returned in the leaderboard. Academic awards and their conditions can nevertheless reveal information about your studies. Disabling achievement access hides the participant from the ranking and stops new progress while preserving prior awards. Contact the administrator through Feedback to request this."
+
+msgid "terms.controls.title"
+msgstr "7. Your controls and data requests"
+
+msgid "terms.controls.body"
+msgstr "You can change language, theme, courses and delivery preferences in Settings or the Mini App. Settings → OBIS credentials lets you replace or remove the saved student number and password; removal also clears OBIS cached results and comparison baselines and prevents further account synchronization using those credentials. It does not erase all other service records, Eders history or earned awards. Blocking the bot stops delivery but does not delete data. Use Settings → Feedback, or contact @usbtypec, to request data deletion, withdrawal of account access or achievement access changes. There is no automatic expiry for all profile, snapshot, advertisement and achievement records; they may remain until replaced, removed by a feature or deleted following a request."
+
+msgid "terms.limits.title"
+msgstr "8. Accuracy and responsibility"
+
+msgid "terms.limits.body"
+msgstr "Verify grades, attendance, deadlines and submission/completion status in the official university systems. Notifications and calculations are informational and may be delayed, incomplete or unavailable; the service does not guarantee academic outcomes or uninterrupted delivery. Keep your account secure and publish only content and contacts you are entitled to share. Marketplace content is subject to moderation. These terms describe the current implementation and do not waive rights or obligations imposed by applicable law. Source code: https://github.com/usbtypec1/manashelper. Questions and requests: @usbtypec or Settings → Feedback."
