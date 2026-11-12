@@ -88,9 +88,10 @@ Current images:
 Seller (suit meme), Formula One (racing-driver portrait), Champion (military salute),
 Comeback/Negative growth (contrasting smiling and grim meme portraits), Cafeteria boss (chubby mascot
 with a fried-chicken bucket), Night owl (Anxiety character fusion), Eldin balasy (GigaChad fusion),
-Foodie (Naruto at Ichiraku with ramen and stacked bowls), and On the edge (tightrope between skyscrapers).
-Planned images without a file yet: Iron attendance (Hannibal Lecter in his glass cell meme), Critic (Anton Ego
-from Ratatouille); Phoenix, Stability and Einstein have no chosen art.
+Foodie (Naruto at Ichiraku with ramen and stacked bowls), On the edge (tightrope between skyscrapers),
+Iron attendance (Hannibal Lecter fusion behind bars in a glass cell), Critic (Anton Ego fusion reviewing a meal),
+Phoenix (fiery wings rising above a burning FF paper), Stability (meditating mascot beside three equal graph bars),
+and Einstein (tongue-out portrait with wild white hair, E=mc² and a red FF on the chalkboard).
 The key mapping selects these images for earned medals and detail sheets; locked medals still use the atlas.
 Display names retain stable storage keys: `fall` is Negative growth, and `thin_ice` is On the edge.
 Reference screenshots/video under `reference/` are design inputs only, never served to clients.
