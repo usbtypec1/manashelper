@@ -1,9 +1,7 @@
 from dataclasses import dataclass
 
-from manashelper.modules.schedule.infrastructure.timetable_parser import (
-    ScrapedLessonSlot,
-    ScrapedTimeSlot,
-)
+from manashelper.modules.schedule.application.lesson_items import LessonItemModel, format_items
+from manashelper.modules.schedule.infrastructure.timetable_parser import ScrapedTimeSlot
 
 
 @dataclass(frozen=True, slots=True)
@@ -14,10 +12,12 @@ class LessonChange:
     new_content: str | None
 
 
+def slot_items(slot: ScrapedTimeSlot) -> list[LessonItemModel]:
+    return [
+        LessonItemModel(code=lesson.lesson_code, name=lesson.lesson_name, teacher=lesson.teacher, room=lesson.room)
+        for lesson in slot.lessons
+    ]
+
+
 def format_slot_content(slot: ScrapedTimeSlot) -> str:
-    return " | ".join(_format_lesson(lesson) for lesson in slot.lessons)
-
-
-def _format_lesson(lesson: ScrapedLessonSlot) -> str:
-    code_prefix = f"{lesson.lesson_code} " if lesson.lesson_code else ""
-    return f"{code_prefix}{lesson.lesson_name} — {lesson.teacher}, {lesson.room}"
+    return format_items(slot_items(slot))

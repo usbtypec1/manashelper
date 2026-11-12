@@ -5,6 +5,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.modules.obis.application.models import ExamModel, LessonAttendanceModel, LessonExamsModel, Snapshot
+from manashelper.modules.obis.infrastructure.models.session import ObisSession
 from manashelper.modules.obis.infrastructure.models.snapshot import ObisSnapshot
 from manashelper.modules.obis.infrastructure.models.user_exam_grade import UserExamGrade
 from manashelper.modules.obis.infrastructure.models.user_lesson_attendance import UserLessonAttendance
@@ -58,5 +59,10 @@ class ObisSnapshotRepository:
             await self._session.execute(delete(model).where(model.user_id == user_id))
 
     async def get_poll_user_ids(self) -> list[int]:
-        query = select(User.id).where(User.student_number.is_not(None), User.encrypted_password.is_not(None))
+        # Only an open captcha login can be polled; OBIS rejects password-only logins.
+        query = (
+            select(User.id)
+            .join(ObisSession, ObisSession.user_id == User.id)
+            .where(User.student_number.is_not(None), User.encrypted_password.is_not(None))
+        )
         return list((await self._session.scalars(query)).all())

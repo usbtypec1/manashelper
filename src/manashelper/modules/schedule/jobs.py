@@ -5,6 +5,7 @@ from dishka import AsyncContainer
 from manashelper.modules.schedule.application.course import CourseQuery
 from manashelper.modules.schedule.application.sync_course import ScheduleChangeSender
 from manashelper.modules.schedule.application.use_cases.sync_course_timetable import SyncCourseTimetableUseCase
+from manashelper.modules.schedule.application.use_cases.sync_room_catalog import SyncRoomCatalogUseCase
 from manashelper.modules.schedule.presentation.sender import TelegramScheduleChangeSender
 from manashelper.modules.users.application.locale import LocaleQuery
 from manashelper.modules.users.application.theme import ThemeQuery
@@ -37,3 +38,12 @@ async def _sync_course_timetable(container: AsyncContainer, course_id: int) -> N
             await sync_course_timetable.execute(course_id, sender)
     except Exception:
         logger.exception("Failed to sync timetable for course %s", course_id)
+
+
+async def sync_room_catalog_job(container: AsyncContainer) -> None:
+    try:
+        async with container() as request_container:
+            rooms = await (await request_container.get(SyncRoomCatalogUseCase)).execute()
+        logger.info("Synchronized %s timetable rooms", rooms)
+    except Exception:
+        logger.exception("Failed to synchronize the timetable room catalog")

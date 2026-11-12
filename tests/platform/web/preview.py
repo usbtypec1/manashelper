@@ -25,6 +25,7 @@ from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.infrastructure.models.course import Course
 from manashelper.modules.schedule.infrastructure.models.department import Department
 from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
+from manashelper.modules.schedule.infrastructure.models.lesson import Lesson
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.provider import UsersProvider
@@ -98,6 +99,23 @@ async def app() -> web.Application:
             department = Department(id=uuid4(), name="Информатика", faculty=faculty)
             session.add_all(
                 [Course(id=1, number=1, department=department), Course(id=2, number=2, department=department)]
+                + [
+                    # Year 1 is busy 8:00-9:40 and year 2 at 9:50 on Mondays; together they share 10:45-11:30.
+                    Lesson(
+                        id=uuid4(),
+                        course_id=course_id,
+                        weekday=weekday,
+                        time_range=time_range,
+                        content="FIZ-101 FİZİK — Hoca, MFFB-127",
+                        normalized_content="fiz-101 fizik — hoca, mffb-127",
+                    )
+                    for course_id, weekday, time_range in (
+                        (1, 1, "8:00-8:45"),
+                        (1, 1, "8:55-9:40"),
+                        (2, 1, "9:50-10:35"),
+                        (2, 2, "10:45-11:30"),
+                    )
+                ]
             )
             await session.flush()
             repo = await scope.get(AchievementRepository)

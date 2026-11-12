@@ -519,9 +519,6 @@ msgstr "💯 Grades"
 msgid "obis.password_prompt"
 msgstr "Enter your OBIS password:"
 
-msgid "obis.credentials_saved"
-msgstr "Credentials saved successfully ✅"
-
 msgid "obis.accept_terms_prompt"
 msgstr "Please accept the bot's terms of use to continue."
 
@@ -551,6 +548,27 @@ msgstr "Couldn't fetch data from OBIS. Please try again later."
 
 msgid "obis.login_failed"
 msgstr "Invalid OBIS credentials. Enter your student number again:"
+
+msgid "obis.captcha_prompt"
+msgstr "Enter the code from the image to log in to OBIS:"
+
+msgid "obis.captcha_invalid"
+msgstr "The code is wrong or has expired. Enter the new code:"
+
+msgid "obis.refresh_captcha"
+msgstr "🔄 Another image"
+
+msgid "obis.login"
+msgstr "🔐 Log in to OBIS"
+
+msgid "obis.logged_in"
+msgstr "Logged in to OBIS ✅ Grades and attendance will update within 15 minutes."
+
+msgid "obis.session_expired"
+msgstr "Your OBIS session has ended, so grades and attendance are no longer updating. Log in again — you'll only need the code from the image."
+
+msgid "obis.session_required"
+msgstr "To load your OBIS data, log in and enter the code from the image."
 
 msgid "menu.settings"
 msgstr "⚙️ Settings"
@@ -1745,3 +1763,146 @@ msgstr "8. Accuracy and responsibility"
 
 msgid "terms.limits.body"
 msgstr "Verify grades, attendance, deadlines and submission/completion status in the official university systems. Notifications and calculations are informational and may be delayed, incomplete or unavailable; the service does not guarantee academic outcomes or uninterrupted delivery. Keep your account secure and publish only content and contacts you are entitled to share. Marketplace content is subject to moderation. These terms describe the current implementation and do not waive rights or obligations imposed by applicable law. Source code: https://github.com/usbtypec1/manashelper. Questions and requests: @usbtypec or Settings → Feedback."
+
+msgid "menu.rooms"
+msgstr "🚪 Rooms"
+
+msgid "menu.teachers"
+msgstr "👨‍🏫 Teachers"
+
+msgid "commands.now"
+msgstr "Current and next class"
+
+msgid "schedule.course_master"
+msgstr "Master's"
+
+msgid "schedule.course_doctorate"
+msgstr "PhD"
+
+msgid "schedule.now.button"
+msgstr "⏱ Now"
+
+msgid "schedule.now.header"
+msgstr "⏱ <b>Now and next</b>"
+
+msgid "schedule.now.current"
+msgstr "🔥 <b>Now</b> · until {until}"
+
+msgid "schedule.now.next"
+msgstr "⏰ <b>Next</b> · {when}"
+
+msgid "schedule.now.today_at"
+msgstr "today at {time} (in {minutes} min)"
+
+msgid "schedule.now.idle"
+msgstr "☕ No class right now."
+
+msgid "schedule.now.refresh"
+msgstr "🔄 Refresh"
+
+msgid "schedule.teacher.idle"
+msgstr "☕ No class right now."
+
+msgid "schedule.teacher.search"
+msgstr "👨‍🏫 Find a teacher"
+
+msgid "schedule.teacher.search_prompt"
+msgstr "Enter a teacher's surname or first name. You can type Turkish letters using regular Latin ones."
+
+msgid "schedule.rooms.idle"
+msgstr "🟢 The room is free right now."
+
+msgid "schedule.rooms.capacity"
+msgstr "{capacity} seats"
+
+msgid "schedule.rooms.free_all_day"
+msgstr "until the end of the day"
+
+msgid "schedule.rooms.free_until"
+msgstr "until {time}"
+
+msgid "schedule.rooms.free_header"
+msgstr "🚪 <b>Free rooms</b>"
+
+msgid "schedule.rooms.free_building_header"
+msgstr "🚪 <b>Free rooms — {building}</b>"
+
+msgid "schedule.rooms.none_free"
+msgstr "No rooms are free at this time."
+
+msgid "schedule.rooms.choose_building"
+msgstr "Free rooms: {count}. Choose a building."
+
+msgid "schedule.rooms.now"
+msgstr "🕘 Now"
+
+msgid "schedule.rooms.buildings"
+msgstr "🏢 All buildings"
+
+msgid "schedule.rooms.search"
+msgstr "🔎 Find a room"
+
+msgid "schedule.rooms.free_now"
+msgstr "🟢 Free rooms"
+
+msgid "schedule.rooms.search_prompt"
+msgstr "Enter a room number, for example MFFB 127 or İİBF A-205. Spaces and hyphens don't matter."
+
+msgid "schedule.campus.choose"
+msgstr "Several matches found, choose one:"
+
+msgid "schedule.query_too_short_retry"
+msgstr "The query is too short. Tap the search button below and try again."
+
+msgid "schedule.free_time.mini_app"
+msgstr "👥 Common free time (Mini App)"
+
+msgid "schedule.change_room"
+msgstr "🚪 Room: {previous} → {new}"
+
+msgid "schedule.change_teacher"
+msgstr "👨‍🏫 Teacher: {previous} → {new}"
+
+msgid "schedule.change_details"
+msgstr ""
+"✏️ {time_range}\n"
+"{content}"
+
+msgid "obis.kind_theory"
+msgstr "theory"
+
+msgid "obis.kind_practice"
+msgstr "practice"
+
+msgid "obis.weekly_hours"
+msgstr "{theory} h theory + {practice} h practice per week"
+
+msgid "miniapp.ui.course_master"
+msgstr "Master's"
+
+msgid "miniapp.ui.course_doctorate"
+msgstr "PhD"
+
+msgid "miniapp.ui.free_time"
+msgstr "Common free time"
+
+msgid "miniapp.ui.free_time_note"
+msgstr "Add your courses and your friends' courses to see when nobody has classes. Windows are counted in class periods from 8:00 to 19:45."
+
+msgid "miniapp.ui.free_time_selected"
+msgstr "Courses to compare"
+
+msgid "miniapp.ui.free_time_add"
+msgstr "Add a course"
+
+msgid "miniapp.ui.free_time_limit"
+msgstr "You can compare up to {count} courses."
+
+msgid "miniapp.ui.free_time_none"
+msgstr "No common free time"
+
+msgid "miniapp.ui.free_time_empty"
+msgstr "Add at least one course."
+
+msgid "miniapp.ui.free_time_periods"
+msgstr "periods: {count}"

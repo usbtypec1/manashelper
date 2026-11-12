@@ -1,12 +1,13 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
-from manashelper.modules.schedule.application.schedule import (
+from manashelper.modules.schedule.application.course_level import CourseLevel, parse_course_level
+from manashelper.modules.schedule.application.text_normalization import fold_turkish
+from manashelper.modules.schedule.application.time_ranges import (
     MAX_GAP_MINUTES_TO_GROUP,
     parse_time_range_end_minutes,
     parse_time_range_start_minutes,
 )
-from manashelper.modules.schedule.application.text_normalization import fold_turkish
 from manashelper.modules.schedule.infrastructure.models.lesson import Lesson
 from manashelper.modules.schedule.infrastructure.repositories.lesson import LessonRepository
 
@@ -20,6 +21,7 @@ class LessonSearchResult:
     weekday: int
     content: str
     time_ranges: list[str]
+    course_level: CourseLevel = CourseLevel.BACHELOR
 
 
 @dataclass(slots=True)
@@ -32,6 +34,7 @@ class _Block:
     content: str
     end_minutes: int
     time_ranges: list[str] = field(default_factory=list)
+    course_level: CourseLevel = CourseLevel.BACHELOR
 
 
 def _group_lessons(lessons: Sequence[Lesson]) -> list[LessonSearchResult]:
@@ -66,6 +69,7 @@ def _group_lessons(lessons: Sequence[Lesson]) -> list[LessonSearchResult]:
                     content=lesson.content,
                     end_minutes=end,
                     time_ranges=[lesson.time_range],
+                    course_level=parse_course_level(lesson.course.level),
                 )
             )
 
@@ -78,6 +82,7 @@ def _group_lessons(lessons: Sequence[Lesson]) -> list[LessonSearchResult]:
             weekday=block.weekday,
             content=block.content,
             time_ranges=block.time_ranges,
+            course_level=block.course_level,
         )
         for block in blocks
     ]

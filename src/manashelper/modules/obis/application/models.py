@@ -76,6 +76,41 @@ class StoredCredentials:
 
 
 @dataclass(frozen=True, slots=True)
+class ObisLoginAttempt:
+    """Server-side state of one OBIS login form: its cookies bind the captcha and CSRF token."""
+
+    cookies: dict[str, str] = field(repr=False)
+    csrf_token: str = field(repr=False)
+
+
+@dataclass(frozen=True, slots=True)
+class ObisLoginChallenge:
+    attempt: ObisLoginAttempt
+    captcha_image: bytes = field(repr=False)
+
+
+@dataclass(frozen=True, slots=True)
+class PendingObisLogin:
+    """Credentials waiting for a captcha answer; the password stays encrypted between messages."""
+
+    student_number: str = field(repr=False)
+    encrypted_password: str = field(repr=False)
+    attempt: ObisLoginAttempt
+
+
+@dataclass(frozen=True, slots=True)
+class ObisCaptcha:
+    pending: PendingObisLogin
+    image: bytes = field(repr=False)
+
+
+@dataclass(frozen=True, slots=True)
+class StoredObisSession:
+    encrypted_cookies: str = field(repr=False)
+    created_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
 class ExamGradeRecord:
     id: UUID | None
     lesson_code: str | None

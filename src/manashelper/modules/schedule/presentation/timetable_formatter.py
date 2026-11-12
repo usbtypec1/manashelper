@@ -4,15 +4,18 @@ from datetime import datetime
 from aiogram.utils.i18n import gettext as _
 
 from manashelper.localization.weekdays import weekday_full
-from manashelper.modules.schedule.application.schedule import (
+from manashelper.modules.schedule.application.lesson_items import LessonItemModel, parse_slot_content
+from manashelper.modules.schedule.application.schedule import ScheduleLessonModel
+from manashelper.modules.schedule.application.time_ranges import (
     LUNCH_END_MINUTES,
     LUNCH_START_MINUTES,
     MAX_GAP_MINUTES_TO_GROUP,
-    ScheduleLessonModel,
+    format_minutes,
     parse_time_range_end_minutes,
     parse_time_range_start_minutes,
 )
 from manashelper.modules.schedule.application.timetable_sync import LessonChange
+from manashelper.platform.telegram.html import escape_html
 
 LATE_MORNING_THRESHOLD_MINUTES = 11 * 60 + 30
 
@@ -58,21 +61,25 @@ def _group_into_blocks(day_lessons: list[ScheduleLessonModel], now_minutes: int,
     return blocks
 
 
-def _split_lesson_content(content: str) -> tuple[str, str | None]:
-    if " | " in content:
-        return content, None
+def _item_title(item: LessonItemModel) -> str:
+    code = f"{item.code} " if item.code else ""
+    return escape_html(code + item.name)
 
-    parts = content.split(" — ", 1)
-    if len(parts) != 2:
-        return content, None
 
-    lesson_name, teacher_and_room = parts
-    teacher_room_parts = teacher_and_room.split(", ", 1)
-    if len(teacher_room_parts) != 2:
-        return lesson_name, teacher_and_room
+def _item_details(item: LessonItemModel) -> str | None:
+    if item.teacher and item.room:
+        return escape_html(f"{item.teacher} - {item.room}")
+    return escape_html(item.teacher or item.room) or None
 
-    teacher, room = teacher_room_parts
-    return lesson_name, f"{teacher} - {room}"
+
+def _format_items(items: list[LessonItemModel]) -> list[str]:
+    lines: list[str] = []
+    for item in items:
+        lines.append(f"<b>{_item_title(item)}</b>")
+        details = _item_details(item)
+        if details:
+            lines.append(details)
+    return lines
 
 
 def _should_show_lunch(day_lessons: list[ScheduleLessonModel]) -> bool:
@@ -117,10 +124,11 @@ def format_day_schedule(weekday: int, lessons: list[ScheduleLessonModel], now: d
             lines.append("")
             lunch_inserted = True
 
-        lesson_name, teacher_and_room = _split_lesson_content(block.content)
-        lines.append(f"<b>{lesson_name}</b>")
-        if teacher_and_room:
-            lines.append(teacher_and_room)
+        items = parse_slot_content(block.content)
+        if len(items) == 1:
+            lines.extend(_format_items(items))
+        else:
+            lines.append(f"<b>{escape_html(block.content)}</b>")
         lines.extend(block.periods)
         lines.append("")
 
@@ -132,45 +140,100 @@ def format_day_schedule(weekday: int, lessons: list[ScheduleLessonModel], now: d
     return "\n".join(lines)
 
 
-def _format_change_lesson_content(content: str) -> str:
-    lines = []
-    for part in content.split(" | "):
-        lesson_name, teacher_and_room = _split_lesson_content(part)
-        lines.append(f"<b>{lesson_name}</b>")
-        if teacher_and_room:
-            lines.append(teacher_and_room)
-    return "\n".join(lines)
+@dataclass(frozen=True, slots=True)
+class MergedChange:
+    """Consecutive periods of one day that changed in exactly the same way."""
+
+    weekday: int
+    start_minutes: int
+    end_minutes: int
+    previous_content: str | None
+    new_content: str | None
+
+    @property
+    def span(self) -> str:
+        return f"{format_minutes(self.start_minutes)}–{format_minutes(self.end_minutes)}"
 
 
-def _format_change_block(change: LessonChange) -> str:
+def merge_changes(changes: list[LessonChange]) -> list[MergedChange]:
+    ordered = sorted(changes, key=lambda change: (change.weekday, parse_time_range_start_minutes(change.time_range)))
+    merged: list[MergedChange] = []
+    for change in ordered:
+        start = parse_time_range_start_minutes(change.time_range)
+        end = parse_time_range_end_minutes(change.time_range)
+        previous = merged[-1] if merged else None
+        if (
+            previous is not None
+            and previous.weekday == change.weekday
+            and (previous.previous_content, previous.new_content) == (change.previous_content, change.new_content)
+            and start - previous.end_minutes <= MAX_GAP_MINUTES_TO_GROUP
+        ):
+            merged[-1] = MergedChange(
+                previous.weekday, previous.start_minutes, end, previous.previous_content, previous.new_content
+            )
+        else:
+            merged.append(MergedChange(change.weekday, start, end, change.previous_content, change.new_content))
+    return merged
+
+
+def _detail_changes(previous: list[LessonItemModel], new: list[LessonItemModel]) -> list[str] | None:
+    """Room/teacher moves of the same lessons, or None when the lessons themselves changed."""
+    if len(previous) != len(new) or any(
+        (old.code, old.name) != (current.code, current.name) for old, current in zip(previous, new, strict=True)
+    ):
+        return None
+    lines: list[str] = []
+    for old, current in zip(previous, new, strict=True):
+        if (old.teacher, old.room) == (current.teacher, current.room):
+            continue
+        lines.append(f"<b>{_item_title(current)}</b>")
+        if old.room != current.room:
+            lines.append(
+                _("schedule.change_room").format(
+                    previous=escape_html(old.room or "—"), new=escape_html(current.room or "—")
+                )
+            )
+        if old.teacher != current.teacher:
+            lines.append(
+                _("schedule.change_teacher").format(
+                    previous=escape_html(old.teacher or "—"), new=escape_html(current.teacher or "—")
+                )
+            )
+    return lines or None
+
+
+def _format_change_block(change: MergedChange) -> str:
     previous_content, new_content = change.previous_content, change.new_content
     if previous_content is None and new_content is not None:
         return _("schedule.change_added").format(
-            time_range=change.time_range, content=_format_change_lesson_content(new_content)
+            time_range=change.span, content="\n".join(_format_items(parse_slot_content(new_content)))
         )
     if new_content is None and previous_content is not None:
         return _("schedule.change_cancelled").format(
-            time_range=change.time_range, content=_format_change_lesson_content(previous_content)
+            time_range=change.span, content="\n".join(_format_items(parse_slot_content(previous_content)))
         )
     assert previous_content is not None
     assert new_content is not None
+    previous_items, new_items = parse_slot_content(previous_content), parse_slot_content(new_content)
+    details = _detail_changes(previous_items, new_items)
+    if details is not None:
+        return _("schedule.change_details").format(time_range=change.span, content="\n".join(details))
     return _("schedule.change_updated").format(
-        time_range=change.time_range,
-        previous=_format_change_lesson_content(previous_content),
-        new=_format_change_lesson_content(new_content),
+        time_range=change.span,
+        previous="\n".join(_format_items(previous_items)),
+        new="\n".join(_format_items(new_items)),
     )
 
 
 def format_lesson_changes(changes: list[LessonChange]) -> str:
-    by_weekday: dict[int, list[LessonChange]] = {}
-    for change in changes:
+    by_weekday: dict[int, list[MergedChange]] = {}
+    for change in merge_changes(changes):
         by_weekday.setdefault(change.weekday, []).append(change)
 
     sections = [_("schedule.changes_header")]
     for weekday in sorted(by_weekday):
-        day_changes = sorted(by_weekday[weekday], key=lambda change: change.time_range)
         day_lines = [_("schedule.day_header").format(day=weekday_full(weekday))]
-        for change in day_changes:
+        for change in by_weekday[weekday]:
             day_lines.append("")
             day_lines.append(_format_change_block(change))
         sections.append("\n".join(day_lines))

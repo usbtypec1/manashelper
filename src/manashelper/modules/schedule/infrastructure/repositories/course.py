@@ -3,8 +3,10 @@ from collections.abc import Sequence
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from manashelper.modules.schedule.infrastructure.models.course import Course
+from manashelper.modules.schedule.infrastructure.models.department import Department
 
 
 class CourseRepository:
@@ -19,6 +21,16 @@ class CourseRepository:
 
     async def get_by_id(self, course_id: int) -> Course | None:
         return await self._session.get(Course, course_id)
+
+    async def get_with_departments(self, course_ids: Sequence[int]) -> Sequence[Course]:
+        if not course_ids:
+            return []
+        result = await self._session.scalars(
+            select(Course)
+            .where(Course.id.in_(course_ids))
+            .options(selectinload(Course.department).selectinload(Department.faculty))
+        )
+        return result.all()
 
     async def get_all_ids(self) -> Sequence[int]:
         result = await self._session.execute(select(Course.id))

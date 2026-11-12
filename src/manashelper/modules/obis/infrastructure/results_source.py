@@ -5,14 +5,14 @@ from manashelper.modules.obis.infrastructure.transcript_parser import parse_tran
 
 
 class ObisResultsSource:
-    async def fetch_transcript(self, student_number: str, password: str) -> Transcript:
-        return parse_transcript(await self._client.fetch_transcript_html(student_number, password))
-
     def __init__(self, client: ObisClient) -> None:
         self._client = client
 
-    async def fetch_exam_grades(self, student_number: str, password: str) -> list[LessonExamsModel]:
-        html = await self._client.fetch_exam_grades_html(student_number, password)
+    async def fetch_transcript(self, cookies: dict[str, str]) -> Transcript:
+        return parse_transcript(await self._client.fetch_transcript_html(cookies))
+
+    async def fetch_exam_grades(self, cookies: dict[str, str]) -> list[LessonExamsModel]:
+        html = await self._client.fetch_exam_grades_html(cookies)
         return [
             LessonExamsModel(
                 lesson.lesson_name,
@@ -22,8 +22,8 @@ class ObisResultsSource:
             for lesson in parse_exam_grades_page(html)
         ]
 
-    async def fetch_attendance(self, student_number: str, password: str) -> list[AttendanceRecord]:
-        html = await self._client.fetch_attendance_html(student_number, password)
+    async def fetch_attendance(self, cookies: dict[str, str]) -> list[AttendanceRecord]:
+        html = await self._client.fetch_attendance_html(cookies)
         return [
             AttendanceRecord(
                 lesson.lesson_name,

@@ -1,10 +1,14 @@
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.i18n import ngettext
 
+from manashelper.localization.weekdays import weekday_abbr
 from manashelper.modules.obis.application.models import LessonAttendanceModel, LessonExamsModel
 from manashelper.modules.obis.application.notification import ExamGradeChange, LessonSkipChange, SkipType
+from manashelper.modules.schedule.application.lesson_items import LessonKind, subject_key
+from manashelper.modules.schedule.application.subject_timetable import SubjectSession, SubjectWeek
+from manashelper.modules.schedule.application.time_ranges import format_minutes
 
 SUBJECTS_PER_PAGE = 2
 MAX_PAGE_BODY_CHARS = 1600
@@ -65,7 +69,25 @@ def format_exam_grades_pages(lessons: list[LessonExamsModel]) -> list[str]:
     return _build_pages(_("menu.grades"), blocks, _("obis.no_grades"))
 
 
-def format_attendance_pages(lessons: list[LessonAttendanceModel]) -> list[str]:
+def _format_session(session: SubjectSession) -> str:
+    kind = _("obis.kind_theory") if session.kind == LessonKind.THEORY else _("obis.kind_practice")
+    if session.section is not None:
+        kind = f"{kind} .{session.section}"
+    span = f"{format_minutes(session.start_minutes)}–{format_minutes(session.end_minutes)}"
+    return f"{weekday_abbr(session.weekday)} {span} ({kind})"
+
+
+def format_subject_week(week: SubjectWeek) -> str:
+    """Plain-text timetable line under a subject's attendance (OBIS pages use parse_mode=None)."""
+    sessions = ", ".join(_format_session(session) for session in week.sessions)
+    hours = _("obis.weekly_hours").format(theory=week.theory_hours, practice=week.practice_hours)
+    return f"🗓 {sessions} · {hours}"
+
+
+def format_attendance_pages(
+    lessons: list[LessonAttendanceModel], weeks: Mapping[str, SubjectWeek] | None = None
+) -> list[str]:
+    """Attendance pages; ``weeks`` (by schedule subject key) adds each subject's weekly timetable when known."""
     blocks = []
     for lesson in lessons:
         theory_skips = lesson.theory_skippable
@@ -77,14 +99,16 @@ def format_attendance_pages(lessons: list[LessonAttendanceModel]) -> list[str]:
         elif (theory_skips is not None and theory_skips <= 1) or (practice_skips is not None and practice_skips <= 1):
             name = f"⚠️ {name}"
 
-        block = "\n".join(
-            [
-                name,
-                _format_skips_line(_("obis.theory"), lesson.theory_skips_percentage, theory_skips),
-                _format_skips_line(_("obis.practice"), lesson.practice_skips_percentage, practice_skips),
-            ]
-        )
-        blocks.append(block)
+        lines = [
+            name,
+            _format_skips_line(_("obis.theory"), lesson.theory_skips_percentage, theory_skips),
+            _format_skips_line(_("obis.practice"), lesson.practice_skips_percentage, practice_skips),
+        ]
+        key = subject_key(lesson.lesson_code)
+        week = weeks.get(key) if weeks is not None and key is not None else None
+        if week is not None and week.sessions:
+            lines.append(format_subject_week(week))
+        blocks.append("\n".join(lines))
 
     return _build_pages(_("menu.attendance"), blocks, _("obis.no_subjects"))
 

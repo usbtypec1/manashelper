@@ -520,9 +520,6 @@ msgstr "💯 Notlar"
 msgid "obis.password_prompt"
 msgstr "OBIS şifrenizi girin:"
 
-msgid "obis.credentials_saved"
-msgstr "Bilgiler başarıyla kaydedildi ✅"
-
 msgid "obis.accept_terms_prompt"
 msgstr "Devam etmek için lütfen botun kullanım koşullarını kabul edin."
 
@@ -552,6 +549,27 @@ msgstr "OBIS'ten veri alınamadı. Lütfen daha sonra tekrar deneyin."
 
 msgid "obis.login_failed"
 msgstr "OBIS bilgileri hatalı. Öğrenci numaranızı tekrar girin:"
+
+msgid "obis.captcha_prompt"
+msgstr "OBIS'e giriş yapmak için resimdeki kodu girin:"
+
+msgid "obis.captcha_invalid"
+msgstr "Kod yanlış veya süresi dolmuş. Yeni kodu girin:"
+
+msgid "obis.refresh_captcha"
+msgstr "🔄 Başka resim"
+
+msgid "obis.login"
+msgstr "🔐 OBIS'e giriş yap"
+
+msgid "obis.logged_in"
+msgstr "OBIS'e giriş yapıldı ✅ Notlar ve devamsızlık 15 dakika içinde güncellenecek."
+
+msgid "obis.session_expired"
+msgstr "OBIS oturumunuz sona erdi, bu yüzden notlar ve devamsızlık artık güncellenmiyor. Tekrar giriş yapın — yalnızca resimdeki kod gerekecek."
+
+msgid "obis.session_required"
+msgstr "OBIS verilerinizi yüklemek için giriş yapın ve resimdeki kodu girin."
 
 msgid "menu.settings"
 msgstr "⚙️ Ayarlar"
@@ -1744,3 +1762,146 @@ msgstr "8. Doğruluk ve sorumluluk"
 
 msgid "terms.limits.body"
 msgstr "Notları, devamı, son tarihleri ve teslim/tamamlama durumunu üniversitenin resmî sistemlerinden doğrulayın. Bildirimler ve hesaplamalar bilgi amaçlıdır; gecikebilir, eksik veya kullanılamaz olabilir. Hizmet akademik sonuçları veya kesintisiz teslimatı garanti etmez. Hesabınızı koruyun, yalnızca paylaşma hakkınız olan içerik ve iletişim bilgilerini yayınlayın. İlanlar moderasyona tabidir. Bu koşullar mevcut uygulamayı açıklar, yürürlükteki hukukun hak ve yükümlülüklerini kaldırmaz. Kod: https://github.com/usbtypec1/manashelper. Sorular: @usbtypec veya Ayarlar → Geri bildirim."
+
+msgid "menu.rooms"
+msgstr "🚪 Derslikler"
+
+msgid "menu.teachers"
+msgstr "👨‍🏫 Öğretim elemanları"
+
+msgid "commands.now"
+msgstr "Şu anki ve sonraki ders"
+
+msgid "schedule.course_master"
+msgstr "Yüksek lisans"
+
+msgid "schedule.course_doctorate"
+msgstr "Doktora"
+
+msgid "schedule.now.button"
+msgstr "⏱ Şimdi"
+
+msgid "schedule.now.header"
+msgstr "⏱ <b>Şimdi ve sonra</b>"
+
+msgid "schedule.now.current"
+msgstr "🔥 <b>Şimdi</b> · {until} saatine kadar"
+
+msgid "schedule.now.next"
+msgstr "⏰ <b>Sonraki</b> · {when}"
+
+msgid "schedule.now.today_at"
+msgstr "bugün {time} ({minutes} dk sonra)"
+
+msgid "schedule.now.idle"
+msgstr "☕ Şu anda ders yok."
+
+msgid "schedule.now.refresh"
+msgstr "🔄 Yenile"
+
+msgid "schedule.teacher.idle"
+msgstr "☕ Şu anda dersi yok."
+
+msgid "schedule.teacher.search"
+msgstr "👨‍🏫 Öğretim elemanı ara"
+
+msgid "schedule.teacher.search_prompt"
+msgstr "Öğretim elemanının soyadını veya adını girin. Türkçe harfleri normal Latin harfleriyle de yazabilirsiniz."
+
+msgid "schedule.rooms.idle"
+msgstr "🟢 Derslik şu anda boş."
+
+msgid "schedule.rooms.capacity"
+msgstr "{capacity} kişilik"
+
+msgid "schedule.rooms.free_all_day"
+msgstr "gün sonuna kadar"
+
+msgid "schedule.rooms.free_until"
+msgstr "{time} saatine kadar"
+
+msgid "schedule.rooms.free_header"
+msgstr "🚪 <b>Boş derslikler</b>"
+
+msgid "schedule.rooms.free_building_header"
+msgstr "🚪 <b>Boş derslikler — {building}</b>"
+
+msgid "schedule.rooms.none_free"
+msgstr "Bu saatte boş derslik yok."
+
+msgid "schedule.rooms.choose_building"
+msgstr "Boş derslik: {count}. Bir bina seçin."
+
+msgid "schedule.rooms.now"
+msgstr "🕘 Şimdi"
+
+msgid "schedule.rooms.buildings"
+msgstr "🏢 Tüm binalar"
+
+msgid "schedule.rooms.search"
+msgstr "🔎 Derslik ara"
+
+msgid "schedule.rooms.free_now"
+msgstr "🟢 Boş derslikler"
+
+msgid "schedule.rooms.search_prompt"
+msgstr "Derslik numarasını girin, örneğin MFFB 127 veya İİBF A-205. Boşluk ve tireler önemli değildir."
+
+msgid "schedule.campus.choose"
+msgstr "Birden fazla sonuç bulundu, birini seçin:"
+
+msgid "schedule.query_too_short_retry"
+msgstr "Sorgu çok kısa. Aşağıdaki arama düğmesine basıp tekrar deneyin."
+
+msgid "schedule.free_time.mini_app"
+msgstr "👥 Ortak boş saatler (Mini App)"
+
+msgid "schedule.change_room"
+msgstr "🚪 Derslik: {previous} → {new}"
+
+msgid "schedule.change_teacher"
+msgstr "👨‍🏫 Öğretim elemanı: {previous} → {new}"
+
+msgid "schedule.change_details"
+msgstr ""
+"✏️ {time_range}\n"
+"{content}"
+
+msgid "obis.kind_theory"
+msgstr "teori"
+
+msgid "obis.kind_practice"
+msgstr "uygulama"
+
+msgid "obis.weekly_hours"
+msgstr "haftada {theory} saat teori + {practice} saat uygulama"
+
+msgid "miniapp.ui.course_master"
+msgstr "Yüksek lisans"
+
+msgid "miniapp.ui.course_doctorate"
+msgstr "Doktora"
+
+msgid "miniapp.ui.free_time"
+msgstr "Ortak boş saatler"
+
+msgid "miniapp.ui.free_time_note"
+msgstr "Kendi derslerinizi ve arkadaşlarınızın derslerini ekleyin; kimsenin dersi olmadığı saatleri gösterelim. Boş saatler 8:00–19:45 arasındaki ders saatlerine göre hesaplanır."
+
+msgid "miniapp.ui.free_time_selected"
+msgstr "Karşılaştırılacak sınıflar"
+
+msgid "miniapp.ui.free_time_add"
+msgstr "Sınıf ekle"
+
+msgid "miniapp.ui.free_time_limit"
+msgstr "En fazla {count} sınıf karşılaştırabilirsiniz."
+
+msgid "miniapp.ui.free_time_none"
+msgstr "Ortak boş saat yok"
+
+msgid "miniapp.ui.free_time_empty"
+msgstr "En az bir sınıf ekleyin."
+
+msgid "miniapp.ui.free_time_periods"
+msgstr "ders saati: {count}"

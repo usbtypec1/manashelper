@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardMarkup, WebAppInfo
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from aiogram.utils.i18n import get_i18n
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -43,13 +43,17 @@ def build_obis_notifications_keyboard(settings: NotificationSettingsSummary) -> 
     return builder.as_markup()
 
 
-def build_obis_results_keyboard(page: int, total_pages: int) -> InlineKeyboardMarkup:
+def build_obis_results_keyboard(page: int, total_pages: int, *, login: bool = False) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     if page > 0:
         builder.button(text="⬅️", callback_data=ObisResultsPageCallback(page=page - 1))
     if page < total_pages - 1:
         builder.button(text="➡️", callback_data=ObisResultsPageCallback(page=page + 1))
     builder.adjust(2)
+    if login:
+        builder.row(
+            InlineKeyboardButton(text=_("obis.login"), callback_data=ObisCallback(action=ObisAction.LOGIN).pack())
+        )
     builder.attach(build_navigation_keyboard(ObisCallback(action=ObisAction.MENU)))
     return builder.as_markup()
 
@@ -104,6 +108,22 @@ def build_terms_keyboard() -> InlineKeyboardMarkup:
 
 def build_cancel_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
+    builder.button(text=_("common.cancel"), callback_data=ObisCallback(action=ObisAction.CANCEL_CREDENTIALS))
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def build_login_keyboard() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(text=_("obis.login"), callback_data=ObisCallback(action=ObisAction.LOGIN))
+    builder.adjust(1)
+    builder.attach(build_navigation_keyboard(NavigationCallback(action=NavigationAction.STUDY)))
+    return builder.as_markup()
+
+
+def build_captcha_keyboard() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(text=_("obis.refresh_captcha"), callback_data=ObisCallback(action=ObisAction.REFRESH_CAPTCHA))
     builder.button(text=_("common.cancel"), callback_data=ObisCallback(action=ObisAction.CANCEL_CREDENTIALS))
     builder.adjust(1)
     return builder.as_markup()

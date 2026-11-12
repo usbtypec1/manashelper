@@ -4,6 +4,7 @@ from aiogram.utils.i18n import gettext as _
 
 from manashelper.localization.weekdays import weekday_abbr
 from manashelper.modules.schedule.application.lesson_search import LessonSearchResult
+from manashelper.modules.schedule.presentation.labels import course_label
 
 GROUPS_PER_PAGE = 7
 
@@ -13,7 +14,7 @@ def total_page_count(results: list[LessonSearchResult]) -> int:
 
 
 def _format_result(result: LessonSearchResult) -> list[str]:
-    course_year = _("schedule.course_year").format(number=result.course_number)
+    course_year = course_label(result.course_number, result.course_level)
     lines = [
         _("schedule.search_course").format(
             faculty=result.faculty_name, department=result.department_name, course_year=course_year

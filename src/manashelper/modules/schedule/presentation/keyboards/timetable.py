@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -14,13 +14,18 @@ from manashelper.modules.schedule.presentation.callbacks import (
     TimetableMenuAction,
     TimetableMenuCallback,
 )
+from manashelper.modules.schedule.presentation.labels import course_label
 from manashelper.platform.telegram.callbacks import (
     NavigationAction,
     NavigationCallback,
     SettingsAction,
     SettingsCallback,
 )
-from manashelper.platform.telegram.navigation import build_mini_app_button, build_navigation_keyboard
+from manashelper.platform.telegram.navigation import (
+    build_free_time_button,
+    build_mini_app_button,
+    build_navigation_keyboard,
+)
 
 
 def build_timetable_menu_keyboard() -> InlineKeyboardMarkup:
@@ -73,6 +78,17 @@ def build_schedule_days_keyboard(current_weekday: int) -> InlineKeyboardMarkup:
         text=_("schedule.change_courses"), callback_data=SettingsCallback(action=SettingsAction.OPEN_COURSE_TRACKING)
     )
     builder.adjust(1)
+    # Course selection stays alone in the first row; quick tools follow it.
+    tools = [
+        InlineKeyboardButton(
+            text=_("schedule.now.button"),
+            callback_data=TimetableMenuCallback(action=TimetableMenuAction.OPEN_NOW).pack(),
+        )
+    ]
+    free_time = build_free_time_button()
+    if free_time is not None:
+        tools.append(free_time)
+    builder.row(*tools)
     days = InlineKeyboardBuilder()
     for weekday in range(1, 6):
         if weekday == current_weekday:
@@ -90,7 +106,7 @@ def build_course_keyboard(courses: list[CourseSummary]) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     for course in courses:
         check_mark = "✅ " if course.is_tracked else ""
-        course_year = _("schedule.course_year").format(number=course.number)
+        course_year = course_label(course.number, course.level)
         builder.button(text=f"{check_mark}{course_year}", callback_data=CourseCallback(id=course.id))
     builder.adjust(1)
     builder.button(

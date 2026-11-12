@@ -9,13 +9,25 @@ from manashelper.modules.schedule.infrastructure.models.department import Depart
 from manashelper.modules.schedule.infrastructure.models.lesson import Lesson
 
 
-def _escape_like_pattern(value: str) -> str:
+def escape_like_pattern(value: str) -> str:
     return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 class LessonRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+
+    async def get_time_ranges(self) -> Sequence[str]:
+        result = await self._session.scalars(select(Lesson.time_range).distinct())
+        return result.all()
+
+    async def get_all_with_courses_by_course_ids(self, course_ids: Sequence[int]) -> Sequence[Lesson]:
+        result = await self._session.execute(
+            select(Lesson)
+            .options(joinedload(Lesson.course).joinedload(Course.department))
+            .where(Lesson.course_id.in_(course_ids))
+        )
+        return result.unique().scalars().all()
 
     async def get_all_by_course_id(self, course_id: int) -> list[Lesson]:
         result = await self._session.execute(select(Lesson).where(Lesson.course_id == course_id))
@@ -26,7 +38,7 @@ class LessonRepository:
         return list(result.scalars().all())
 
     async def search_by_normalized_content(self, normalized_query: str) -> Sequence[Lesson]:
-        pattern = f"%{_escape_like_pattern(normalized_query)}%"
+        pattern = f"%{escape_like_pattern(normalized_query)}%"
         result = await self._session.execute(
             select(Lesson)
             .options(joinedload(Lesson.course).joinedload(Course.department).joinedload(Department.faculty))

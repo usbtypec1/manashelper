@@ -39,6 +39,25 @@ def parse_login_page_csrf_token(html: str) -> str:
     return token
 
 
+def parse_login_page_captcha_url(html: str) -> str:
+    soup = BeautifulSoup(html, "lxml")
+    image = soup.select_one("form img#loginform-verifycode-image")
+    source = image.get("src") if image is not None else None
+    # Only same-site relative captcha paths keep the session cookies away from other hosts.
+    if not isinstance(source, str) or not source.startswith("/site/captcha"):
+        raise ObisParseError("OBIS login page has no captcha image.")
+    return source
+
+
+def is_login_page(html: str) -> bool:
+    return BeautifulSoup(html, "lxml").select_one("form input[name='LoginForm[username]']") is not None
+
+
+def has_captcha_error(html: str) -> bool:
+    feedback = BeautifulSoup(html, "lxml").select_one(".field-loginform-verifycode .invalid-feedback")
+    return feedback is not None and bool(feedback.get_text(strip=True))
+
+
 def parse_exam_grades_page(html: str) -> list[ScrapedLessonExams]:
     soup = BeautifulSoup(html, "lxml")
     table_bodies = soup.select("tbody")

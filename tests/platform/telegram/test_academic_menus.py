@@ -95,6 +95,7 @@ async def test_study_feature_menu_views_notifications_and_back(monkeypatch, loca
         toggle_eders_setting=tracking,
         results=obis_service,
         activity=AsyncMock(),
+        subject_timetable=AsyncMock(weekly_by_subject=AsyncMock(return_value={})),
         get_notification_settings=SimpleNamespace(execute=settings_execute),
         set_broadcast_mute=SimpleNamespace(execute=settings_execute),
         toggle_notification_setting=SimpleNamespace(execute=settings_execute),

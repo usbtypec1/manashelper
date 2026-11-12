@@ -199,7 +199,14 @@ async def test_translated_reply_keyboard_buttons_match_filters(
 
     monkeypatch.setattr(get_settings(), "eders_password", SecretStr("fake-password") if eders_enabled else None)
     main_keys = ["menu.food", "menu.study", "menu.marketplace", "menu.settings"]
-    study_keys = ["menu.schedule", "menu.obis", "schedule.search_subject", "common.back_to_menu"]
+    study_keys = [
+        "menu.schedule",
+        "menu.obis",
+        "menu.rooms",
+        "menu.teachers",
+        "schedule.search_subject",
+        "common.back_to_menu",
+    ]
     if eders_enabled:
         study_keys.insert(1, "menu.study_week")
         study_keys.insert(3, "menu.eders")

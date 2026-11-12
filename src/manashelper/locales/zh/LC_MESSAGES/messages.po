@@ -513,9 +513,6 @@ msgstr "💯 成绩"
 msgid "obis.password_prompt"
 msgstr "请输入 OBIS 密码："
 
-msgid "obis.credentials_saved"
-msgstr "登录信息已保存 ✅"
-
 msgid "obis.accept_terms_prompt"
 msgstr "请接受机器人的使用条款以继续。"
 
@@ -545,6 +542,27 @@ msgstr "无法从 OBIS 获取数据。请稍后再试。"
 
 msgid "obis.login_failed"
 msgstr "OBIS 登录信息无效。请重新输入学号："
+
+msgid "obis.captcha_prompt"
+msgstr "请输入图片中的验证码以登录 OBIS："
+
+msgid "obis.captcha_invalid"
+msgstr "验证码错误或已过期。请输入新的验证码："
+
+msgid "obis.refresh_captcha"
+msgstr "🔄 换一张"
+
+msgid "obis.login"
+msgstr "🔐 登录 OBIS"
+
+msgid "obis.logged_in"
+msgstr "已登录 OBIS ✅ 成绩和考勤将在 15 分钟内更新。"
+
+msgid "obis.session_expired"
+msgstr "你的 OBIS 会话已结束，成绩和考勤不再更新。请重新登录——只需输入图片中的验证码。"
+
+msgid "obis.session_required"
+msgstr "要加载 OBIS 数据，请登录并输入图片中的验证码。"
 
 msgid "menu.settings"
 msgstr "⚙️ 设置"
@@ -1737,3 +1755,146 @@ msgstr "8. 准确性与责任"
 
 msgid "terms.limits.body"
 msgstr "请在大学官方系统核实成绩、出勤、截止日期和提交/完成状态。通知与计算仅供参考，可能延迟、不完整或不可用；服务不保证学习结果或不间断投递。请保护账户，仅发布有权分享的内容及联系方式。广告须经审核。本协议描述当前实现，不排除适用法律规定的权利和义务。源代码：https://github.com/usbtypec1/manashelper。问题与请求：@usbtypec 或“设置 → 反馈”。"
+
+msgid "menu.rooms"
+msgstr "🚪 教室"
+
+msgid "menu.teachers"
+msgstr "👨‍🏫 教师"
+
+msgid "commands.now"
+msgstr "当前和下一节课"
+
+msgid "schedule.course_master"
+msgstr "硕士"
+
+msgid "schedule.course_doctorate"
+msgstr "博士"
+
+msgid "schedule.now.button"
+msgstr "⏱ 现在"
+
+msgid "schedule.now.header"
+msgstr "⏱ <b>现在与接下来</b>"
+
+msgid "schedule.now.current"
+msgstr "🔥 <b>现在</b> · 至 {until}"
+
+msgid "schedule.now.next"
+msgstr "⏰ <b>下一节</b> · {when}"
+
+msgid "schedule.now.today_at"
+msgstr "今天 {time}（{minutes} 分钟后）"
+
+msgid "schedule.now.idle"
+msgstr "☕ 现在没有课。"
+
+msgid "schedule.now.refresh"
+msgstr "🔄 刷新"
+
+msgid "schedule.teacher.idle"
+msgstr "☕ 现在没有课。"
+
+msgid "schedule.teacher.search"
+msgstr "👨‍🏫 查找教师"
+
+msgid "schedule.teacher.search_prompt"
+msgstr "请输入教师的姓或名。可以用普通拉丁字母代替土耳其字母。"
+
+msgid "schedule.rooms.idle"
+msgstr "🟢 教室现在空闲。"
+
+msgid "schedule.rooms.capacity"
+msgstr "{capacity} 个座位"
+
+msgid "schedule.rooms.free_all_day"
+msgstr "直到今天结束"
+
+msgid "schedule.rooms.free_until"
+msgstr "至 {time}"
+
+msgid "schedule.rooms.free_header"
+msgstr "🚪 <b>空闲教室</b>"
+
+msgid "schedule.rooms.free_building_header"
+msgstr "🚪 <b>空闲教室 — {building}</b>"
+
+msgid "schedule.rooms.none_free"
+msgstr "这个时间没有空闲教室。"
+
+msgid "schedule.rooms.choose_building"
+msgstr "空闲教室：{count} 间。请选择教学楼。"
+
+msgid "schedule.rooms.now"
+msgstr "🕘 现在"
+
+msgid "schedule.rooms.buildings"
+msgstr "🏢 所有教学楼"
+
+msgid "schedule.rooms.search"
+msgstr "🔎 查找教室"
+
+msgid "schedule.rooms.free_now"
+msgstr "🟢 空闲教室"
+
+msgid "schedule.rooms.search_prompt"
+msgstr "请输入教室编号，例如 MFFB 127 或 İİBF A-205。空格和连字符无关紧要。"
+
+msgid "schedule.campus.choose"
+msgstr "找到多个结果，请选择："
+
+msgid "schedule.query_too_short_retry"
+msgstr "查询太短。请点击下方的搜索按钮重试。"
+
+msgid "schedule.free_time.mini_app"
+msgstr "👥 共同空闲时间（Mini App）"
+
+msgid "schedule.change_room"
+msgstr "🚪 教室：{previous} → {new}"
+
+msgid "schedule.change_teacher"
+msgstr "👨‍🏫 教师：{previous} → {new}"
+
+msgid "schedule.change_details"
+msgstr ""
+"✏️ {time_range}\n"
+"{content}"
+
+msgid "obis.kind_theory"
+msgstr "理论"
+
+msgid "obis.kind_practice"
+msgstr "实践"
+
+msgid "obis.weekly_hours"
+msgstr "每周理论 {theory} 学时 + 实践 {practice} 学时"
+
+msgid "miniapp.ui.course_master"
+msgstr "硕士"
+
+msgid "miniapp.ui.course_doctorate"
+msgstr "博士"
+
+msgid "miniapp.ui.free_time"
+msgstr "共同空闲时间"
+
+msgid "miniapp.ui.free_time_note"
+msgstr "添加你和朋友的课程，查看大家都没有课的时间。空闲时间按 8:00 至 19:45 的课时计算。"
+
+msgid "miniapp.ui.free_time_selected"
+msgstr "要比较的课程"
+
+msgid "miniapp.ui.free_time_add"
+msgstr "添加课程"
+
+msgid "miniapp.ui.free_time_limit"
+msgstr "最多可以比较 {count} 个课程。"
+
+msgid "miniapp.ui.free_time_none"
+msgstr "没有共同空闲时间"
+
+msgid "miniapp.ui.free_time_empty"
+msgstr "请至少添加一个课程。"
+
+msgid "miniapp.ui.free_time_periods"
+msgstr "{count} 节课"

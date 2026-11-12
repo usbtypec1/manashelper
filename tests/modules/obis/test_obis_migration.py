@@ -1,5 +1,6 @@
 import base64
 import hashlib
+from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -26,6 +27,9 @@ from manashelper.modules.obis.application.models import (
     ExamModel,
     LessonAttendanceModel,
     LessonExamsModel,
+    ObisCaptcha,
+    ObisLoginAttempt,
+    PendingObisLogin,
     RefreshResult,
 )
 from manashelper.modules.obis.application.notification import (
@@ -36,22 +40,28 @@ from manashelper.modules.obis.application.notification import (
 from manashelper.modules.obis.application.ports import (
     AttendanceStore,
     CredentialsStore,
-    CredentialsVerifier,
     ExamGradeStore,
+    ObisAuthenticator,
     PasswordCipher,
     ResultsSource,
+    SessionStore,
     SnapshotStore,
 )
 from manashelper.modules.obis.application.queries import ObisResultsQuery
+from manashelper.modules.obis.application.sessions import ObisSessions
 from manashelper.modules.obis.application.use_cases.clear_obis_credentials import ClearObisCredentialsUseCase
+from manashelper.modules.obis.application.use_cases.complete_obis_login import CompleteObisLoginUseCase
 from manashelper.modules.obis.application.use_cases.poll_obis_user import PollObisUserUseCase
 from manashelper.modules.obis.application.use_cases.refresh_obis_attendance import RefreshObisAttendanceUseCase
+from manashelper.modules.obis.application.use_cases.refresh_obis_captcha import RefreshObisCaptchaUseCase
 from manashelper.modules.obis.application.use_cases.refresh_obis_grades import RefreshObisGradesUseCase
-from manashelper.modules.obis.application.use_cases.save_obis_credentials import SaveObisCredentialsUseCase
+from manashelper.modules.obis.application.use_cases.start_obis_login import StartObisLoginUseCase
 from manashelper.modules.obis.errors import (
     DecryptionError,
+    ObisCaptchaError,
     ObisLoginError,
     ObisParseError,
+    ObisSessionExpiredError,
     UserHasNoCredentialsError,
     UserNotFoundError,
 )
@@ -59,11 +69,13 @@ from manashelper.modules.obis.infrastructure import crypto as crypto_module
 from manashelper.modules.obis.infrastructure.client import ObisClient
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
 from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
+from manashelper.modules.obis.infrastructure.repositories.session import ObisSessionRepository
 from manashelper.modules.obis.infrastructure.repositories.user_exam_grade import UserExamGradeRepository
 from manashelper.modules.obis.infrastructure.repositories.user_lesson_attendance import UserLessonAttendanceRepository
 from manashelper.modules.obis.presentation import router as router
 from manashelper.modules.obis.presentation.callbacks import ObisAction, ObisCallback, ObisResultsPageCallback
 from manashelper.modules.obis.presentation.formatter import format_exam_grade_change
+from manashelper.modules.obis.presentation.keyboards import build_login_keyboard
 from manashelper.modules.obis.presentation.sender import TelegramObisNotificationSender
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.users.infrastructure.models.user import User as DbUser
@@ -93,12 +105,13 @@ async def test_credentials_verify_before_storage_and_keep_cipher_format(session,
     session.add(user)
     await session.flush()
 
-    async def verify(student_number, password):
-        assert (student_number, password) == ("new", "fake-password")
+    async def verify(attempt, student_number, password, code):
+        assert (student_number, password, code) == ("new", "fake-password", "code")
         assert (user.student_number, user.encrypted_password) == ("old", old)
+        return {"PHPSESSID": "fake-session"}
 
-    credentials.client.verify_credentials.side_effect = verify
-    await credentials.save.execute(975001, "new", "fake-password")
+    credentials.client.complete_login.side_effect = verify
+    await credentials.login(975001, "new", "fake-password")
     assert user.student_number == "new" and crypto.decrypt(user.encrypted_password) == "fake-password"
     assert len(base64.b64decode(user.encrypted_password)) == 12 + len("fake-password") + 16
     assert await credentials.account.has_credentials(975001)
@@ -111,22 +124,24 @@ async def test_credentials_verify_before_storage_and_keep_cipher_format(session,
 async def test_unknown_user_never_attempts_login(credentials, operation):
     with pytest.raises(UserNotFoundError) as error:
         if operation == "save":
-            await credentials.save.execute(975001, "fake-student", "fake-password")
+            await credentials.login(975001, "fake-student", "fake-password")
         elif operation == "has":
             await credentials.account.has_credentials(975001)
         else:
             await credentials.clear.execute(975001)
     assert error.value.user_id == 975001
-    credentials.client.verify_credentials.assert_not_awaited()
+    credentials.client.start_login.assert_not_awaited()
+    credentials.client.complete_login.assert_not_awaited()
 
 
 async def test_failed_login_does_not_replace_existing_credentials(session, credentials):
     user = DbUser(id=975001, full_name="Student", student_number="old", encrypted_password="old-ciphertext")
     session.add(user)
     await session.flush()
-    credentials.client.verify_credentials.side_effect = ObisLoginError("denied")
+    credentials.client.complete_login.side_effect = ObisLoginError("denied")
     with pytest.raises(ObisLoginError):
-        await credentials.save.execute(975001, "new", "fake-password")
+        await credentials.login(975001, "new", "fake-password")
+    assert not await credentials.sessions.has_session(975001)
     assert (user.student_number, user.encrypted_password) == ("old", "old-ciphertext")
     await session.commit()
     await session.refresh(user)
@@ -143,7 +158,8 @@ async def test_encryption_failure_does_not_replace_existing_credentials(session,
 
     monkeypatch.setattr(crypto, "encrypt", fail)
     with pytest.raises(RuntimeError, match="Encryption unavailable"):
-        await credentials.save.execute(975001, "new", "fake-password")
+        await credentials.login(975001, "new", "fake-password")
+    credentials.client.start_login.assert_not_awaited()
     assert (user.student_number, user.encrypted_password) == ("old", "old-ciphertext")
     await session.commit()
     await session.refresh(user)
@@ -186,7 +202,9 @@ async def test_first_grade_snapshot_is_silent_and_subsequent_changes_notify(sess
     account.get_credentials.return_value = SimpleNamespace(
         student_number="student", plain_password="password", credential_marker="marker"
     )
-    service = RefreshObisGradesUseCase(account, AsyncMock(), source, AsyncMock(), UserExamGradeRepository(session))
+    service = RefreshObisGradesUseCase(
+        account, AsyncMock(), source, AsyncMock(), AsyncMock(), UserExamGradeRepository(session)
+    )
     first = (await service.execute(975001)).changes
     assert first == []
     await session.flush()
@@ -215,7 +233,7 @@ async def test_attendance_baseline_is_silent_and_only_known_increases_notify(ses
         student_number="student", plain_password="password", credential_marker="marker"
     )
     service = RefreshObisAttendanceUseCase(
-        account, AsyncMock(), source, AsyncMock(), UserLessonAttendanceRepository(session), AsyncMock()
+        account, AsyncMock(), source, AsyncMock(), AsyncMock(), UserLessonAttendanceRepository(session), AsyncMock()
     )
     assert (await service.execute(975001)).changes == []
     await session.flush()
@@ -231,14 +249,15 @@ def test_obis_callbacks_fsm_private_and_password_mask_contract():
     assert ObisResultsPageCallback(page=2).pack() == "obis_results_page:2"
     assert router.ObisCredentialsForm.student_number.state == "ObisCredentialsForm:student_number"
     assert router.ObisCredentialsForm.password.state == "ObisCredentialsForm:password"
+    assert router.ObisCredentialsForm.captcha.state == "ObisCredentialsForm:captcha"
+    assert ObisCallback(action=ObisAction.LOGIN).pack() == "obis:login"
     handlers = router.router.message.handlers + router.router.callback_query.handlers
     assert all(handler.flags["private_chat_only"] for handler in handlers)
     password = next(handler for handler in handlers if handler.callback.__name__ == "on_password_entered")
     assert password.flags["mask_logged_message"]
 
 
-@pytest.mark.parametrize("failure", [None, "login", "missing"])
-async def test_credentials_form_deletes_password_and_preserves_fsm_transitions(monkeypatch, failure):
+def _form_context(monkeypatch):
     bot = Bot(token="123456:development-placeholder")
     user = User(id=975001, is_bot=False, first_name="Student")
     message = Message(message_id=1, date=0, chat=Chat(id=user.id, type="private"), from_user=user).as_(bot)
@@ -246,9 +265,19 @@ async def test_credentials_form_deletes_password_and_preserves_fsm_transitions(m
     request = AsyncMock(return_value=message)
     monkeypatch.setattr(bot.session, "make_request", request)
     state = FSMContext(MemoryStorage(), StorageKey(bot_id=bot.id, chat_id=user.id, user_id=user.id))
+    return user, message, callback, request, state
+
+
+PENDING = PendingObisLogin("fake-student", "fake-ciphertext", ObisLoginAttempt({"PHPSESSID": "form"}, "csrf"))
+
+
+@pytest.mark.parametrize("failure", [None, "unavailable", "missing"])
+async def test_credentials_form_deletes_password_and_opens_captcha(monkeypatch, failure):
+    user, message, callback, request, state = _form_context(monkeypatch)
     service = AsyncMock()
+    service.execute.return_value = ObisCaptcha(PENDING, b"captcha-png")
     if failure:
-        service.execute.side_effect = ObisLoginError("denied") if failure == "login" else UserNotFoundError(user.id)
+        service.execute.side_effect = httpx.ConnectError("down") if failure == "unavailable" else UserNotFoundError(1)
     with i18n.context(), i18n.use_locale("en"):
         await router.on_accept_terms(callback, state)
         await router.on_student_number_entered(message.model_copy(update={"text": " fake-student "}), state)
@@ -258,8 +287,56 @@ async def test_credentials_form_deletes_password_and_preserves_fsm_transitions(m
     service.execute.assert_awaited_once_with(user.id, "fake-student", "fake-password")
     methods = [call.args[1] for call in request.await_args_list]
     assert methods[0].__api_method__ == "deleteMessage"
-    assert await state.get_state() == ("ObisCredentialsForm:student_number" if failure == "login" else None)
-    assert all("fake-password" not in (getattr(method, "text", None) or "") for method in methods)
+    assert all("fake-password" not in str(method.model_dump()) for method in methods)
+    if failure:
+        assert await state.get_state() is None
+        return
+    assert await state.get_state() == "ObisCredentialsForm:captcha"
+    assert router.load_pending_login(await state.get_data()) == PENDING
+    assert methods[-1].__api_method__ == "sendPhoto"
+
+
+@pytest.mark.parametrize("failure", [None, "captcha", "login"])
+async def test_captcha_answer_completes_login_or_shows_new_captcha(monkeypatch, failure):
+    user, message, _, request, state = _form_context(monkeypatch)
+    await state.set_state(router.ObisCredentialsForm.captcha)
+    await state.update_data({router.PENDING_LOGIN_KEY: router.pending_login_data(PENDING)})
+    complete, refresh = AsyncMock(), AsyncMock()
+    if failure:
+        complete.execute.side_effect = ObisCaptchaError if failure == "captcha" else ObisLoginError
+    renewed = PendingObisLogin("fake-student", "fake-ciphertext", ObisLoginAttempt({"PHPSESSID": "new"}, "csrf2"))
+    refresh.execute.return_value = ObisCaptcha(renewed, b"new-png")
+    with i18n.context(), i18n.use_locale("en"):
+        await router.on_captcha_entered(message.model_copy(update={"text": " Ab3x9 "}), state, complete, refresh)
+        expected_text = {None: "obis.logged_in", "captcha": "obis.captcha_invalid", "login": "obis.login_failed"}
+        sent = request.await_args.args[1]
+        assert (sent.caption if failure == "captcha" else sent.text) == i18n.gettext(expected_text[failure])
+    complete.execute.assert_awaited_once_with(user.id, PENDING, "Ab3x9")
+    if failure == "captcha":
+        refresh.execute.assert_awaited_once_with(PENDING)
+        assert await state.get_state() == "ObisCredentialsForm:captcha"
+        assert router.load_pending_login(await state.get_data()) == renewed
+    else:
+        refresh.execute.assert_not_awaited()
+        expected_state = "ObisCredentialsForm:student_number" if failure == "login" else None
+        assert await state.get_state() == expected_state
+
+
+async def test_login_button_reuses_saved_account_and_reports_missing_credentials(monkeypatch):
+    user, _, callback, request, state = _form_context(monkeypatch)
+    service = AsyncMock()
+    service.execute.return_value = ObisCaptcha(PENDING, b"captcha-png")
+    with i18n.context(), i18n.use_locale("en"):
+        await router.on_login(callback, state, service)
+        service.execute.assert_awaited_once_with(user.id)
+        assert await state.get_state() == "ObisCredentialsForm:captcha"
+        assert request.await_args.args[1].__api_method__ == "sendPhoto"
+
+        await state.clear()
+        service.execute.side_effect = UserHasNoCredentialsError(user.id)
+        await router.on_login(callback, state, service)
+        assert request.await_args.args[1].text == i18n.gettext("obis.credentials_missing")
+    assert await state.get_state() is None
 
 
 async def test_public_credentials_keep_ciphertext_marker_and_hide_secrets(session, credentials, crypto):
@@ -285,7 +362,7 @@ async def test_public_credentials_keep_ciphertext_marker_and_hide_secrets(sessio
     assert await build_eders_service(credentials.account, client, tracking).refresh_snapshot(user.id) is snapshot
     client.fetch_snapshot.assert_awaited_once_with("fake-student")
     tracking.observe.assert_awaited_once_with(user.id, hashlib.sha256(b"fake-student").hexdigest(), snapshot)
-    credentials.client.verify_credentials.assert_not_awaited()
+    credentials.client.start_login.assert_not_awaited()
 
 
 @pytest.mark.parametrize("mode", ["unknown", "missing", "empty"])
@@ -337,7 +414,7 @@ async def test_polling_use_case_keeps_expected_error_suppression_and_unexpected_
     attendance.execute.return_value = RefreshResult([], ["skip"])
     grades.execute.side_effect = error
     sender = AsyncMock()
-    polling = PollObisUserUseCase(grades, attendance, AsyncMock())
+    polling = PollObisUserUseCase(grades, attendance, AsyncMock(), AsyncMock())
     if isinstance(error, (httpx.HTTPError, RuntimeError)):
         with pytest.raises(type(error)):
             await polling.execute(975001, True, True, sender)
@@ -368,7 +445,7 @@ async def test_telegram_sender_keeps_recipient_locale_and_queue_failure_boundary
     sender = TelegramObisNotificationSender(bot, 975001, Locale.ZH, Theme.BASIC)
     with i18n.context(), i18n.use_locale("ru"):
         if not failure:
-            await PollObisUserUseCase(grades, attendance, AsyncMock()).execute(975001, True, True, sender)
+            await PollObisUserUseCase(grades, attendance, AsyncMock(), AsyncMock()).execute(975001, True, True, sender)
             assert bot.enqueue.await_count == 3
             assert all("Math" in call.args[1][0].text for call in bot.enqueue.await_args_list)
             with i18n.use_locale("zh"):
@@ -376,7 +453,9 @@ async def test_telegram_sender_keeps_recipient_locale_and_queue_failure_boundary
             assert bot.enqueue.await_args_list[0].args[1][0].text == expected
         else:
             with pytest.raises(RuntimeError, match="Queue failed"):
-                await PollObisUserUseCase(grades, attendance, AsyncMock()).execute(975001, True, True, sender)
+                await PollObisUserUseCase(grades, attendance, AsyncMock(), AsyncMock()).execute(
+                    975001, True, True, sender
+                )
             assert bot.enqueue.await_count == 1
             attendance.execute.assert_not_awaited()
         assert i18n.current_locale == "ru"
@@ -394,8 +473,13 @@ async def test_obis_provider_preserves_app_request_scopes_and_model_registry():
         ObisResultsQuery,
         RefreshObisGradesUseCase,
         RefreshObisAttendanceUseCase,
-        SaveObisCredentialsUseCase,
+        StartObisLoginUseCase,
+        RefreshObisCaptchaUseCase,
+        CompleteObisLoginUseCase,
         ClearObisCredentialsUseCase,
+        ObisSessions,
+        ObisSessionRepository,
+        SessionStore,
         UserExamGradeRepository,
         UserLessonAttendanceRepository,
         PollObisUserUseCase,
@@ -421,16 +505,17 @@ async def test_obis_provider_preserves_app_request_scopes_and_model_registry():
             assert client is await request.get(ObisClient) and crypto is await request.get(CryptoService)
             assert source is await request.get(ResultsSource)
             assert await request.get(CredentialsStore) is await request.get(ObisCredentialsRepository)
+            assert await request.get(SessionStore) is await request.get(ObisSessionRepository)
             assert await request.get(ExamGradeStore) is await request.get(UserExamGradeRepository)
             assert await request.get(AttendanceStore) is await request.get(UserLessonAttendanceRepository)
-            assert client is await request.get(CredentialsVerifier)
+            assert client is await request.get(ObisAuthenticator)
             assert crypto is await request.get(PasswordCipher)
         async with container() as request:
             for dependency, instance in zip(dependencies, first, strict=True):
                 assert instance is not await request.get(dependency)
             assert client is await request.get(ObisClient) and crypto is await request.get(CryptoService)
             assert source is await request.get(ResultsSource)
-            assert client is await request.get(CredentialsVerifier)
+            assert client is await request.get(ObisAuthenticator)
             assert crypto is await request.get(PasswordCipher)
 
 
@@ -439,3 +524,29 @@ def test_obis_polling_refreshes_every_fifteen_minutes():
     matching = [job for job in scheduler.get_jobs() if job.func is jobs.poll_obis_notifications_job]
     assert len(matching) == 1 and matching[0].trigger.interval.total_seconds() == 900
     assert matching[0].args == ("container", "bot")
+
+
+@pytest.mark.parametrize("age", [timedelta(hours=3), None])
+async def test_expired_session_is_forgotten_and_reported_only_when_it_existed(age):
+    grades = AsyncMock(spec=RefreshObisGradesUseCase)
+    attendance = AsyncMock(spec=RefreshObisAttendanceUseCase)
+    grades.execute.side_effect = ObisSessionExpiredError
+    sessions = AsyncMock(spec=ObisSessions)
+    sessions.expire.return_value = age
+    sender = AsyncMock()
+    await PollObisUserUseCase(grades, attendance, AsyncMock(), sessions).execute(975001, True, True, sender)
+    sessions.expire.assert_awaited_once_with(975001)
+    attendance.execute.assert_not_awaited()
+    assert sender.session_expired.await_count == int(age is not None)
+
+
+async def test_session_expired_notification_uses_recipient_locale_and_login_button():
+    outbox = AsyncMock()
+    sender = TelegramObisNotificationSender(outbox, 975001, Locale.ZH, Theme.BASIC)
+    with i18n.context(), i18n.use_locale("ru"):
+        await sender.session_expired()
+        with i18n.use_locale("zh"):
+            expected_text, expected_keyboard = i18n.gettext("obis.session_expired"), build_login_keyboard()
+    (method,) = outbox.enqueue.await_args.args[1]
+    assert method.text == expected_text and method.reply_markup == expected_keyboard
+    assert outbox.enqueue.await_args.kwargs == {"category": "obis_session"}

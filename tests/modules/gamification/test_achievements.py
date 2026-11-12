@@ -266,7 +266,12 @@ async def test_transcript_fetch_is_skipped_for_disabled_users(session):
     await repo.set_enabled(991001, False)
     source, credentials, store = AsyncMock(), AsyncMock(), AsyncMock()
     refresh = RefreshObisTranscriptUseCase(
-        credentials, store, source, RecordTranscriptUseCase(repo, build_awards(session)), GamificationQuery(repo)
+        credentials,
+        store,
+        source,
+        AsyncMock(),
+        RecordTranscriptUseCase(repo, build_awards(session)),
+        GamificationQuery(repo),
     )
     await refresh.execute(991001)
     source.fetch_transcript.assert_not_awaited()

@@ -6,8 +6,11 @@ from manashelper.modules.obis.application.models import (
     ExamGradeRecord,
     LessonAttendanceModel,
     LessonExamsModel,
+    ObisLoginAttempt,
+    ObisLoginChallenge,
     Snapshot,
     StoredCredentials,
+    StoredObisSession,
     Transcript,
 )
 from manashelper.modules.obis.application.notification import ExamGradeChange, LessonSkipChange
@@ -18,13 +21,17 @@ class ObisNotificationSender(Protocol):
 
     async def lesson_skips_changed(self, change: LessonSkipChange) -> None: ...
 
+    async def session_expired(self) -> None: ...
+
 
 class ResultsSource(Protocol):
-    async def fetch_transcript(self, student_number: str, password: str) -> Transcript: ...
+    """Fetch with saved session cookies; raises ObisSessionExpiredError when OBIS requires a new login."""
 
-    async def fetch_exam_grades(self, student_number: str, password: str) -> list[LessonExamsModel]: ...
+    async def fetch_transcript(self, cookies: dict[str, str]) -> Transcript: ...
 
-    async def fetch_attendance(self, student_number: str, password: str) -> list[AttendanceRecord]: ...
+    async def fetch_exam_grades(self, cookies: dict[str, str]) -> list[LessonExamsModel]: ...
+
+    async def fetch_attendance(self, cookies: dict[str, str]) -> list[AttendanceRecord]: ...
 
 
 class SnapshotStore(Protocol):
@@ -51,8 +58,22 @@ class CredentialsStore(Protocol):
     async def lock(self, user_id: int) -> None: ...
 
 
-class CredentialsVerifier(Protocol):
-    async def verify_credentials(self, student_number: str, plain_password: str) -> None: ...
+class ObisAuthenticator(Protocol):
+    async def start_login(self) -> ObisLoginChallenge: ...
+
+    async def complete_login(
+        self, attempt: ObisLoginAttempt, student_number: str, plain_password: str, captcha_code: str
+    ) -> dict[str, str]:
+        """Return authenticated session cookies; raise ObisCaptchaError or ObisLoginError."""
+        ...
+
+
+class SessionStore(Protocol):
+    async def get(self, user_id: int) -> StoredObisSession | None: ...
+
+    async def save(self, user_id: int, session: StoredObisSession) -> None: ...
+
+    async def delete(self, user_id: int) -> StoredObisSession | None: ...
 
 
 class PasswordCipher(Protocol):

@@ -10,7 +10,7 @@ from manashelper.modules.advertisements.jobs import cleanup_expired_advertisemen
 from manashelper.modules.eders.jobs import poll_eders_job
 from manashelper.modules.food_menu.jobs import broadcast_dinner_menu_job, broadcast_lunch_menu_job, sync_daily_menus_job
 from manashelper.modules.obis.jobs import poll_obis_notifications_job
-from manashelper.modules.schedule.jobs import sync_timetable_job
+from manashelper.modules.schedule.jobs import sync_room_catalog_job, sync_timetable_job
 from manashelper.platform.telegram.outbox.jobs import cleanup_outbox_job, run_outbox_worker
 from manashelper.platform.telegram.webhook_jobs import cleanup_webhook_receipts_job
 
@@ -69,6 +69,7 @@ def create_scheduler(container: AsyncContainer, bot: Bot) -> AsyncIOScheduler:
             coalesce=True,
         )
     scheduler.add_job(sync_timetable_job, "interval", hours=1, args=[container], next_run_time=now)
+    scheduler.add_job(sync_room_catalog_job, "interval", hours=24, args=[container], next_run_time=now)
     scheduler.add_job(cleanup_expired_advertisements_job, "interval", hours=1, args=[container, bot], next_run_time=now)
 
     return scheduler

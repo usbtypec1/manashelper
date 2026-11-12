@@ -49,6 +49,14 @@ Schedule lives in `modules/schedule/`: catalog/tracking, timetable/search, sync,
 TimetableClient remains APP; services/repositories remain REQUEST. CourseTrackingRepository owns the tracked-course
 query formerly in UserRepository, preserving ORM collections. SyncCourseTimetableUseCase uses public NotificationRecipientsQuery;
 its Telegram sender preserves per-recipient locale and delivery behavior. GetStudyWeekUseCase consumes its public application results.
+Sync stores each slot's lessons as `timetable_lesson_items` (code, name, teacher, room plus folded lookup keys) next to the
+unchanged slot content/history; slots stored before V32 are backfilled silently on their next sync. It also sets
+Course.level from the page heading ("5/6 - sınıf LEE" = master/doctorate; Medicine's years 5/6 stay bachelor) and the
+daily job mirrors the site's room catalog (capacities) into `timetable_rooms`. CampusQuery derives free rooms, room and
+teacher timetables from these items; FreeTimeQuery serves the Mini App `/app/free-time`; SubjectTimetableQuery is the
+public per-subject weekly timetable that OBIS attendance shows. Change notifications merge consecutive identical periods
+and report room/teacher moves of the same lesson as such. Studies has Rooms and Teachers entries; `/now` and the
+timetable's Now button show the current and next class.
 Notifications lives in `modules/notifications/`: application/use_cases, settings, recipient queries, ORM, repository, callbacks,
 keyboard and router. Its provider retains REQUEST scope. Settings checks users through UsersQuery;
 Schedule and OBIS polling select recipients through NotificationRecipientsQuery. Shared Settings navigation
@@ -120,24 +128,31 @@ Command JSON and .mo runtime directories are unchanged, with checkout/Docker-lik
 OBIS lives in `modules/obis/`: application queries/use cases/snapshot comparison, HTTP/parser/crypto,
 credential and snapshot repositories/ORM, Telegram presentation, provider and jobs. ObisProvider keeps
 ObisClient/CryptoService/ObisResultsSource in APP and all other dependencies in REQUEST. Public errors live in errors.py.
-SaveObisCredentialsUseCase and ClearObisCredentialsUseCase own credential changes and snapshot/baseline reset.
+OBIS login requires a captcha. StartObisLoginUseCase opens a login form and returns its captcha image
+(new credentials are encrypted first; without them it reuses the saved account); RefreshObisCaptchaUseCase opens
+a fresh form; CompleteObisLoginUseCase submits the answer and saves credentials (resetting snapshots only when they
+change) plus the session. ClearObisCredentialsUseCase removes credentials, snapshots/baselines and the session.
+ObisSessions owns the AES-GCM encrypted session cookies in `obis_sessions`; polling and refreshes use them.
 ObisCredentialsQuery owns credential reads/decryption; ObisResultsQuery reads cached results and eligible polling IDs.
 RefreshObisGradesUseCase and RefreshObisAttendanceUseCase lock the user, fetch, persist snapshots, compare and save
 notification baselines, returning data and changes. PollObisUserUseCase coordinates refresh and conditional delivery.
 Use cases use application-owned ResultsSource and SnapshotStore protocols. ObisResultsSource owns HTTP/HTML
 mapping; ObisSnapshotRepository owns JSON/ORM mapping and checks the account marker before decoding snapshots.
 Application models live in application/models.py; attendance skip calculations stay in the application layer.
-Credentials use CredentialsStore, CredentialsVerifier and PasswordCipher protocols; stored credential read models
+Credentials use CredentialsStore, ObisAuthenticator, SessionStore and PasswordCipher protocols; stored credential read models
 hide both fields in repr. Notification comparisons are pure application functions returning changed baseline records
 and notification events; ExamGradeStore/AttendanceStore persist those records without exposing ORM objects.
 Its frozen read model hides secrets in repr; OBIS credentials retain the SHA-256 ciphertext marker.
-Eders owns its HTTP client: try direct Moodle form login first, then the legacy OBIS login and /site/eders SSO flow.
+Eders owns its HTTP client: try direct Moodle form login first, then the legacy OBIS login and /site/eders SSO flow
+(OBIS now rejects that captcha-less fallback, so only direct Moodle login works).
 PollObisUserUseCase handles expected auth/parse errors; its sender owns locale/HTML and enqueues messages transactionally.
 Unexpected errors abort that user and are logged by the job, without stopping the next user.
 The first grade snapshot and attendance's first row are silent. Later new or changed nonempty grades notify.
-Saving verifies login and encrypts the password before assigning either credential field, so login/encryption failures
-preserve both previous values even if caught inside a committed scope. Preserve 15-minute polling, FSM,
-password masking and encryption format.
+Saving completes the captcha login before assigning either credential field, so login/captcha/encryption failures
+preserve both previous values and the previous session even if caught inside a committed scope. Only users with
+a session are polled; when OBIS redirects a fetch to its login page, polling deletes the session and sends one
+localized reminder with a login button (cached results stay visible). Preserve 15-minute polling (it also keeps
+the session alive), FSM, password masking and encryption format.
 
 OBIS and Eders user screens read persisted snapshots only, including Study week. Background jobs refresh both
 every 15 minutes (Eders retains its existing interval override). Notification toggles affect delivery, not
@@ -207,9 +222,11 @@ revision flags; omit `--autogenerate` for a handwritten migration. Never rewrite
   notification settings. Its repository initializes new lunch/dinner flags to True before flush, so the first
   meal/day toggle disables the selection immediately. Missing rows mean enabled; saved preferences must be preserved.
 
-- OBIS credentials are verified with a real login before storage and encrypted with AES-GCM through
-  `CryptoService`. The credentials form uses aiogram FSM and in-process `MemoryStorage`. OBIS fetches authenticate
-  per call; do not assume a persistent browser session.
+- OBIS credentials are verified with a real captcha login before storage and encrypted with AES-GCM through
+  `CryptoService`. The credentials form uses aiogram FSM and in-process `MemoryStorage`: student number, password,
+  then a captcha photo. FSM keeps only plain pending-login values with the password encrypted. A wrong captcha or
+  expired form (HTTP 400) shows a new captcha; wrong credentials restart at the student number. OBIS fetches reuse
+  the saved session cookies and raise ObisSessionExpiredError when OBIS asks for a login.
   Grade/attendance pages use FSM caches keyed by message ID; page navigation must not re-fetch OBIS or mix results
   from different messages. Preserve expired-navigation handling after FSM data is cleared.
 - All jobs are registered in `jobs/scheduler.py`. They use independent request scopes, catch

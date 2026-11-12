@@ -24,12 +24,15 @@ export const router = createRouter({
     { path: '/leaderboard', name: 'leaderboard', component: achievements, props: { tab: 'leaderboard' }, meta: { backTo: 'achievements' } },
     { path: '/settings', name: 'settings', component: preferences, props: { tab: 'settings' } },
     { path: '/courses', name: 'courses', component: preferences, props: { tab: 'courses' }, meta: { backTo: 'settings' } },
+    { path: '/free-time', name: 'free-time', component: () => import('./pages/FreeTimePage.vue') },
     {
       path: '/terms', name: 'terms', component: () => import('./TermsView.vue'),
       meta: {
         backTo: route => {
           const from = route.query.from
-          return from === 'achievements' || from === 'leaderboard' || from === 'courses' ? from : 'settings'
+          return from === 'achievements' || from === 'leaderboard' || from === 'courses' || from === 'free-time'
+            ? from
+            : 'settings'
         },
       },
     },

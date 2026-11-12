@@ -23,10 +23,19 @@ must not contain a user ID. API responses use `Cache-Control: no-store`.
 | GET | `/api/studies/departments` | Query: `faculty_id` UUID |
 | GET | `/api/studies/courses` | Query: `department_id` UUID |
 | PUT | `/api/studies/courses/{course_id}` | `tracked`: boolean |
+| GET | `/api/studies/free-time` | Query: `course_ids`, 1–8 comma-separated positive course IDs |
 
 Settings reads and successful writes return `locale`, the saved bot `theme`, localized `ui` strings,
 `notifications`, seven `food` day settings, `eders`, and `tracked_courses`.
-Catalog reads return `faculties`, `departments`, or `courses` arrays.
+Catalog reads return `faculties`, `departments`, or `courses` arrays. Courses and tracked courses include
+`level` (`bachelor`, `master` or `doctorate`); graduate programmes are labelled by name, not by year 5/6.
+
+`/app/free-time` (opened from the bot's timetable) compares any registered user's selected courses,
+for example their own and their friends'. The selection lives in `?courses=1,2` so the page can be
+reloaded or shared; without it the page starts from the viewer's tracked courses. The endpoint returns
+`max_courses`, the selected `courses` (with department, faculty and level, duplicates removed) and five
+`days` (`weekday` 1–5) with `windows` of consecutive periods free for every course: `start`, `end`
+("H:MM") and `periods`. Periods are the distinct timetable periods of all synchronized courses.
 Eders settings are `null` when disabled; writing them returns 404.
 
 Writes reuse the owning feature's use cases and serialize on the user's database row.
@@ -38,4 +47,5 @@ Telegram's light/dark preference remains independent. Choose the bot theme under
 
 Missing or invalid authentication returns 401; an unregistered user returns 403.
 Invalid JSON, extra body fields, invalid enum values, non-boolean flags, out-of-range
-weekdays, and malformed catalog identifiers return 400. An unknown course returns 404.
+weekdays, malformed catalog identifiers, and an empty, malformed or oversized free-time selection
+return 400. An unknown course returns 404.

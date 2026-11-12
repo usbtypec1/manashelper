@@ -1,9 +1,11 @@
 from aiogram.methods import SendMessage
+from aiogram.utils.i18n import gettext as _
 
 from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme
 from manashelper.modules.obis.application.notification import ExamGradeChange, LessonSkipChange
 from manashelper.modules.obis.presentation.formatter import format_exam_grade_change, format_lesson_skip_change
+from manashelper.modules.obis.presentation.keyboards import build_login_keyboard
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.outbox.service import OutboxService
 
@@ -28,3 +30,10 @@ class TelegramObisNotificationSender:
         await self._outbox.enqueue(
             self._user_id, [SendMessage(chat_id=self._user_id, text=text)], category="lesson_skips"
         )
+
+    async def session_expired(self) -> None:
+        with i18n.context(), i18n.use_locale(self._locale.value), i18n.use_theme(self._theme):
+            method = SendMessage(
+                chat_id=self._user_id, text=_("obis.session_expired"), reply_markup=build_login_keyboard()
+            )
+        await self._outbox.enqueue(self._user_id, [method], category="obis_session")
