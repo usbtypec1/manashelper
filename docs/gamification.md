@@ -89,9 +89,9 @@ Seller (suit meme), Formula One (racing-driver portrait), Champion (military sal
 Comeback/Negative growth (contrasting smiling and grim meme portraits), Cafeteria boss (chubby mascot
 with a fried-chicken bucket), Night owl (Anxiety character fusion), Eldin balasy (GigaChad fusion),
 Foodie (Naruto at Ichiraku with ramen and stacked bowls), On the edge (tightrope between skyscrapers),
-Iron attendance (Hannibal Lecter fusion wearing his restraint mask behind bars in a glass cell),
-Critic (Anton Ego fusion stunned after tasting ratatouille), I'll be back (Terminator fusion sinking into lava with a thumbs-up),
-Stability (mascot as a meditating monk beside three equal graph bars),
+Iron attendance (upright, front-facing Hannibal Lecter fusion wearing his restraint mask behind glass and bars),
+Critic (Anton Ego fusion stunned after tasting ratatouille against a plain background),
+I'll be back (only a gloved hand giving a thumbs-up above lava), Stability (a centered meditating monk),
 and Einstein (tongue-out portrait with wild white hair, E=mc² and a red FF on the chalkboard).
 The key mapping selects these images for earned medals and detail sheets; locked medals still use the atlas.
 Display names retain stable storage keys: `fall` is Negative growth, `thin_ice` is On the edge,
