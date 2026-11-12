@@ -1113,7 +1113,7 @@ msgid "gamification.thin_ice.description"
 msgstr "Бир семестрде беш башка сабактын теориясынан же практикасынан кеминде 18,75% калтыр."
 
 msgid "gamification.phoenix.name"
-msgstr "Феникс"
+msgstr "I'll be back"
 
 msgid "gamification.phoenix.description"
 msgstr "Мурда F1 же FF алган сабагыңды оң баа менен жап."

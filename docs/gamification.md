@@ -40,7 +40,7 @@ rows remain stored, but only keys in the active achievement catalog contribute t
   (subjects without any percentage are ignored; an empty snapshot never qualifies). It is checked only in
   November–January and April–June (Bishkek time), because early-semester snapshots are trivially clean.
 - Critic counts a user's first rating of each daily menu (100 menus); changing an existing score does not count.
-- Phoenix: the last chronological attempt of a course code is a passing letter grade (AA–DD) and the code was
+- I'll be back (`phoenix`): the last chronological attempt of a course code is a passing letter grade (AA–DD) and the code was
   failed (F1/FF) earlier. Failed codes are remembered per academic account marker in `failed_courses`,
   because OBIS may overwrite a failed row with the retake result.
 - Stability: three consecutive fall/spring semesters with official totals and a semester GPA (points/credits,
@@ -89,11 +89,13 @@ Seller (suit meme), Formula One (racing-driver portrait), Champion (military sal
 Comeback/Negative growth (contrasting smiling and grim meme portraits), Cafeteria boss (chubby mascot
 with a fried-chicken bucket), Night owl (Anxiety character fusion), Eldin balasy (GigaChad fusion),
 Foodie (Naruto at Ichiraku with ramen and stacked bowls), On the edge (tightrope between skyscrapers),
-Iron attendance (Hannibal Lecter fusion behind bars in a glass cell), Critic (Anton Ego fusion reviewing a meal),
-Phoenix (fiery wings rising above a burning FF paper), Stability (meditating mascot beside three equal graph bars),
+Iron attendance (Hannibal Lecter fusion wearing his restraint mask behind bars in a glass cell),
+Critic (Anton Ego fusion stunned after tasting ratatouille), I'll be back (Terminator fusion sinking into lava with a thumbs-up),
+Stability (mascot as a meditating monk beside three equal graph bars),
 and Einstein (tongue-out portrait with wild white hair, E=mc² and a red FF on the chalkboard).
 The key mapping selects these images for earned medals and detail sheets; locked medals still use the atlas.
-Display names retain stable storage keys: `fall` is Negative growth, and `thin_ice` is On the edge.
+Display names retain stable storage keys: `fall` is Negative growth, `thin_ice` is On the edge,
+and `phoenix` is I'll be back.
 Reference screenshots/video under `reference/` are design inputs only, never served to clients.
 
 ## Build and verify locally

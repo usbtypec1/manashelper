@@ -1110,7 +1110,7 @@ msgid "gamification.thin_ice.description"
 msgstr "Набери минимум 18,75% пропусков по теории или практике у пяти разных предметов в одном семестре."
 
 msgid "gamification.phoenix.name"
-msgstr "Феникс"
+msgstr "I'll be back"
 
 msgid "gamification.phoenix.description"
 msgstr "Закрой положительной оценкой предмет, по которому раньше получил F1 или FF."

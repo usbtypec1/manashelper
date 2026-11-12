@@ -1109,7 +1109,7 @@ msgid "gamification.thin_ice.description"
 msgstr "Bir yarıyılda beş farklı dersin teori veya uygulama kısmında en az %18,75 devamsızlığa ulaş."
 
 msgid "gamification.phoenix.name"
-msgstr "Anka kuşu"
+msgstr "I'll be back"
 
 msgid "gamification.phoenix.description"
 msgstr "Daha önce F1 veya FF aldığın bir dersi geçer notla tamamla."

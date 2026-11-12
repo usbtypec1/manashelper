@@ -1102,7 +1102,7 @@ msgid "gamification.thin_ice.description"
 msgstr "在同一学期的五门不同课程中，理论课或实践课的缺勤率达到至少 18.75%。"
 
 msgid "gamification.phoenix.name"
-msgstr "涅槃重生"
+msgstr "I'll be back"
 
 msgid "gamification.phoenix.description"
 msgstr "在曾获得 F1 或 FF 的课程中重新取得及格成绩。"

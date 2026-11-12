@@ -1131,7 +1131,7 @@ msgid "gamification.thin_ice.description"
 msgstr "Reach at least 18.75% absence in theory or practice for five different subjects in one semester."
 
 msgid "gamification.phoenix.name"
-msgstr "Phoenix"
+msgstr "I'll be back"
 
 msgid "gamification.phoenix.description"
 msgstr "Pass a course with a positive grade after previously receiving F1 or FF in it."
