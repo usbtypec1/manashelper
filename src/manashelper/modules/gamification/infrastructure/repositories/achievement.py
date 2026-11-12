@@ -54,9 +54,9 @@ class AchievementRepository:
         )
         return result is not None
 
-    async def get_progress(self, user_id: int) -> tuple[int, int, date | None]:
+    async def get_progress(self, user_id: int) -> tuple[int, int, date | None, int]:
         row = await self.session.get(GamificationProgress, user_id)
-        return (row.food_views, row.night_streak, row.last_night_date) if row else (0, 0, None)
+        return (row.food_views, row.night_streak, row.last_night_date, row.menu_ratings) if row else (0, 0, None, 0)
 
     async def get_awards(self, user_id: int) -> dict[str, datetime]:
         rows = await self.session.execute(

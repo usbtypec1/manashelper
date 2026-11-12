@@ -200,6 +200,8 @@ revision flags; omit `--autogenerate` for a handwritten migration. Never rewrite
   Preserve their earned awards and progress. The extra transcript fetch is skipped while disabled.
   Eldin balasy counts three final AA grades within one semester; Thin ice counts five distinct subjects in one
   current attendance snapshot with theory OR practice absence >= 18.75%, counting each subject once.
+  Iron attendance needs 0% in every reported percentage, only in Nov–Jan/Apr–Jun; Critic counts first ratings of 100 menus;
+  Phoenix/Einstein/Stability use transcript course rows (see docs/gamification.md for exact rules).
 
 - Food menu keeps rich/ephemeral message behavior, fixed-date callbacks and weekday meal
   notification settings. Its repository initializes new lunch/dinner flags to True before flush, so the first

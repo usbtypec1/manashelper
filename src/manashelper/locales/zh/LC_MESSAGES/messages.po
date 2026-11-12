@@ -1101,6 +1101,36 @@ msgstr "岌岌可危"
 msgid "gamification.thin_ice.description"
 msgstr "在同一学期的五门不同课程中，理论课或实践课的缺勤率达到至少 18.75%。"
 
+msgid "gamification.phoenix.name"
+msgstr "涅槃重生"
+
+msgid "gamification.phoenix.description"
+msgstr "在曾获得 F1 或 FF 的课程中重新取得及格成绩。"
+
+msgid "gamification.stability.name"
+msgstr "稳定发挥"
+
+msgid "gamification.stability.description"
+msgstr "连续三个学期的学期 GPA 不低于 3.00。"
+
+msgid "gamification.iron_attendance.name"
+msgstr "全勤铁人"
+
+msgid "gamification.iron_attendance.description"
+msgstr "零缺勤：本学期所有课程的理论课和实践课缺勤率均为 0%。自 11 月 1 日和 4 月 1 日起计算。"
+
+msgid "gamification.critic.name"
+msgstr "美食评论家"
+
+msgid "gamification.critic.description"
+msgstr "在 100 个不同的日子为食堂菜单评分。"
+
+msgid "gamification.einstein.name"
+msgstr "爱因斯坦"
+
+msgid "gamification.einstein.description"
+msgstr "物理挂科：在名称含“物理”的课程中获得 F1 或 FF。"
+
 msgid "commands.gamification"
 msgstr "开启或关闭用户的成就功能"
 

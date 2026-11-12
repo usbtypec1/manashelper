@@ -12,18 +12,27 @@ from manashelper.core.config import get_settings
 from manashelper.modules.gamification.application.queries import GamificationQuery
 from manashelper.modules.gamification.application.use_cases.record_activity import RecordActivityUseCase
 from manashelper.modules.gamification.application.use_cases.record_attendance import RecordAttendanceUseCase
-from manashelper.modules.gamification.application.use_cases.record_transcript import RecordTranscriptUseCase
+from manashelper.modules.gamification.application.use_cases.record_transcript import RecordTranscriptUseCase, is_physics
 from manashelper.modules.gamification.application.use_cases.set_gamification_enabled import (
     SetGamificationEnabledUseCase,
 )
 from manashelper.modules.gamification.infrastructure.models.achievement import UserAchievement
 from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
 from manashelper.modules.gamification.presentation import router
-from manashelper.modules.obis.application.models import LessonAttendanceModel, Transcript, TranscriptSemester
+from manashelper.modules.obis.application.models import (
+    LessonAttendanceModel,
+    Transcript,
+    TranscriptCourse,
+    TranscriptSemester,
+)
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.navigation import build_main_keyboard
 from tests.modules.gamification.factories import build_awards
+
+
+def courses(*grades: str) -> tuple[TranscriptCourse, ...]:
+    return tuple(TranscriptCourse(f"C{index}", "Example", grade) for index, grade in enumerate(grades))
 
 
 async def seed(session: AsyncSession, user_id: int = 991001) -> AchievementRepository:
@@ -69,15 +78,15 @@ async def test_official_transcript_thresholds_decimal_and_account_marker(session
     record = RecordTranscriptUseCase(repo, build_awards(session))
     transcript = Transcript(
         (
-            TranscriptSemester("2025-2026:spring", Decimal(30), Decimal(90), ("F1", "FF")),
-            TranscriptSemester("2026-2027:fall", None, None, ()),
+            TranscriptSemester("2025-2026:spring", Decimal(30), Decimal(90), courses("F1", "FF")),
+            TranscriptSemester("2026-2027:fall", None, None, courses()),
         ),
         Decimal(gpa),
     )
     await record.execute(991001, "fixture-student", transcript)
     assert set(await repo.get_awards(991001)) == {"formula_one", "champion", award}
     profile = await GamificationQuery(repo).profile(991001)
-    assert all(card.available for card in profile.achievements if card.key != "thin_ice")
+    assert all(card.available for card in profile.achievements if card.key not in {"thin_ice", "iron_attendance"})
     user = await session.get(User, 991001)
     user.student_number = "another-student"
     await session.flush()
@@ -86,7 +95,7 @@ async def test_official_transcript_thresholds_decimal_and_account_marker(session
 
 async def test_first_semester_has_no_invented_baseline(session):
     repo = await seed(session)
-    transcript = Transcript((TranscriptSemester("2026-2027:fall", Decimal(30), Decimal(90), ()),), Decimal(3))
+    transcript = Transcript((TranscriptSemester("2026-2027:fall", Decimal(30), Decimal(90), courses()),), Decimal(3))
     await RecordTranscriptUseCase(repo, build_awards(session)).execute(991001, "fixture-student", transcript)
     profile = await GamificationQuery(repo).profile(991001)
     assert all(card.blocked_reason == "baseline" for card in profile.achievements if card.key in {"comeback", "fall"})
@@ -131,7 +140,7 @@ async def test_retired_awards_are_preserved_but_excluded_from_collection_and_ran
     assert list(await repo.get_awards(991001)) == ["seller"]
     assert await repo.ranking() == [(991001, "Synthetic achiever", 1, 1), (991002, "Synthetic achiever", 1, 1)]
     profile = await GamificationQuery(repo).profile(991003)
-    assert (profile.score, profile.total, profile.rank) == (0, 10, None)
+    assert (profile.score, profile.total, profile.rank) == (0, 15, None)
     assert "pokemon" not in {card.key for card in profile.achievements}
     stored = await session.get(UserAchievement, (991001, "pokemon"))
     assert stored is not None and stored.granted_by == 5 and stored.earned_at == now + timedelta(days=1)
@@ -144,7 +153,7 @@ async def test_default_off_blocks_all_writers_and_opt_out_preserves_progress(ses
     query = GamificationQuery(repo)
     access = SetGamificationEnabledUseCase(repo, get_settings())
     activity = RecordActivityUseCase(repo, build_awards(session))
-    transcript = Transcript((TranscriptSemester("term", None, None, ("AA", "AA", "AA", "F1")),), Decimal(3))
+    transcript = Transcript((TranscriptSemester("term", None, None, courses("AA", "AA", "AA", "F1")),), Decimal(3))
     assert not await query.is_enabled(991001)
     await activity.execute(991001, "food")
     await activity.execute(991001, "grades")
@@ -152,7 +161,7 @@ async def test_default_off_blocks_all_writers_and_opt_out_preserves_progress(ses
     await RecordTranscriptUseCase(repo, build_awards(session)).execute(991001, "fixture-student", transcript)
     await RecordAttendanceUseCase(repo, build_awards(session)).execute(991001, "fixture-student", [])
     assert not await repo.award(991001, "seller", datetime.now(UTC))
-    assert await repo.get_progress(991001) == (0, 0, None)
+    assert await repo.get_progress(991001) == (0, 0, None, 0)
     assert not await repo.get_awards(991001)
     assert not (await repo.academic_progress(991001))[0]
     with pytest.raises(PermissionError):
@@ -177,8 +186,8 @@ async def test_aa_requires_three_in_same_semester_and_progress_uses_best_semeste
     repo = await seed(session)
     record = RecordTranscriptUseCase(repo, build_awards(session))
     semesters = (
-        TranscriptSemester("spring", Decimal(30), Decimal(90), ("AA", "AA")),
-        TranscriptSemester("fall", None, None, ("AA",)),
+        TranscriptSemester("spring", Decimal(30), Decimal(90), courses("AA", "AA")),
+        TranscriptSemester("fall", None, None, courses("AA")),
     )
     await record.execute(991001, "fixture-student", Transcript(semesters, Decimal(3)))
     assert "eldin_balasy" not in await repo.get_awards(991001)
@@ -186,7 +195,7 @@ async def test_aa_requires_three_in_same_semester_and_progress_uses_best_semeste
         card for card in (await GamificationQuery(repo).profile(991001)).achievements if card.key == "eldin_balasy"
     )
     assert (card.current, card.target, card.available) == (2, 3, True)
-    semesters = (TranscriptSemester("spring", Decimal(30), Decimal(90), ("AA", "AA", "AA")), semesters[1])
+    semesters = (TranscriptSemester("spring", Decimal(30), Decimal(90), courses("AA", "AA", "AA")), semesters[1])
     await record.execute(991001, "fixture-student", Transcript(semesters, Decimal(3)))
     before = await repo.get_awards(991001)
     assert "eldin_balasy" in before
@@ -262,3 +271,124 @@ async def test_transcript_fetch_is_skipped_for_disabled_users(session):
     await refresh.execute(991001)
     source.fetch_transcript.assert_not_awaited()
     store.lock.assert_not_awaited()
+
+
+def semester(key: str, gpa: str | None, *rows: tuple[str, str, str]) -> TranscriptSemester:
+    credits, points = (Decimal(30), Decimal(gpa) * 30) if gpa is not None else (None, None)
+    return TranscriptSemester(key, credits, points, tuple(TranscriptCourse(*row) for row in rows))
+
+
+async def test_phoenix_requires_a_later_pass_and_remembers_overwritten_failures(session):
+    repo = await seed(session)
+    record = RecordTranscriptUseCase(repo, build_awards(session))
+    # A failed improvement attempt after a pass is not a comeback.
+    semesters = (
+        semester("2024-2025:fall", "3", ("MAT-1", "Math", "CC")),
+        semester("2024-2025:spring", "3", ("MAT-1", "Math", "FF")),
+    )
+    await record.execute(991001, "fixture-student", Transcript(semesters, Decimal(3)))
+    assert "phoenix" not in await repo.get_awards(991001)
+    # OBIS replaced the failed row with the retake result; the stored failure still qualifies.
+    semesters = (semesters[0], semester("2024-2025:spring", "3", ("MAT-1", "Math", "DD")))
+    await record.execute(991001, "fixture-student", Transcript(semesters, Decimal(3)))
+    assert "phoenix" in await repo.get_awards(991001)
+
+    repo = await seed(session, 991002)
+    semesters = (
+        semester("2024-2025:fall", "3", ("PHY-1", "Physics", "F1")),
+        semester("2024-2025:spring", "3", ("PHY-1", "Physics", "BA")),
+    )
+    await record.execute(991002, "fixture-student", Transcript(semesters, Decimal(3)))
+    assert "phoenix" in await repo.get_awards(991002)
+
+
+async def test_phoenix_forgets_failures_of_another_account(session):
+    repo = await seed(session)
+    record = RecordTranscriptUseCase(repo, build_awards(session))
+    failed = (semester("2024-2025:fall", "3", ("MAT-1", "Math", "FF")),)
+    await record.execute(991001, "previous-student", Transcript(failed, Decimal(3)))
+    passed = (semester("2024-2025:fall", "3", ("MAT-1", "Math", "BB")),)
+    await record.execute(991001, "fixture-student", Transcript(passed, Decimal(3)))
+    assert "phoenix" not in await repo.get_awards(991001)
+
+
+async def test_stability_needs_three_consecutive_regular_semesters_at_or_above_three(session):
+    repo = await seed(session)
+    record = RecordTranscriptUseCase(repo, build_awards(session))
+    semesters = (
+        semester("2023-2024:fall", "3.00"),
+        semester("2023-2024:spring", "2.99"),
+        semester("2024-2025:fall", "3.50"),
+        semester("2024-2025:spring", "3.00"),
+        # Summer school and an unfinished semester neither count nor break the streak.
+        semester("2024-2025:summer", "1.00"),
+        semester("2025-2026:fall", None),
+    )
+    await record.execute(991001, "fixture-student", Transcript(semesters, Decimal(3)))
+    assert "stability" not in await repo.get_awards(991001)
+    semesters = (*semesters[:5], semester("2025-2026:fall", "3.995"), semester("2025-2026:spring", None))
+    await record.execute(991001, "fixture-student", Transcript(semesters, Decimal(3)))
+    assert "stability" in await repo.get_awards(991001)
+
+
+@pytest.mark.parametrize(
+    "name,expected",
+    [
+        ("Физика", True),
+        ("Физиканын негиздери", True),
+        ("Биофизика", True),
+        ("Genel Fizik I", True),
+        ("KATIHAL FİZİĞİ", True),
+        ("Physics II", True),
+        ("Fiziksel Kimya", False),
+        ("Физикалык химия", False),
+        ("Physical Education", False),
+        ("Физическая культура", False),
+        ("Математика", False),
+    ],
+)
+def test_physics_course_names(name, expected):
+    assert is_physics(name) is expected
+
+
+async def test_einstein_requires_a_failed_physics_course(session):
+    repo = await seed(session)
+    record = RecordTranscriptUseCase(repo, build_awards(session))
+    passed = (semester("2024-2025:fall", "3", ("PHY-1", "Genel Fizik I", "DD"), ("CHE-1", "Fiziksel Kimya", "FF")),)
+    await record.execute(991001, "fixture-student", Transcript(passed, Decimal(3)))
+    assert "einstein" not in await repo.get_awards(991001)
+    failed = (semester("2024-2025:fall", "3", ("PHY-1", "Genel Fizik I", "F1")),)
+    await record.execute(991001, "fixture-student", Transcript(failed, Decimal(3)))
+    assert "einstein" in await repo.get_awards(991001)
+
+
+async def test_iron_attendance_requires_a_clean_snapshot_from_november_or_april(session):
+    repo = await seed(session)
+    record = RecordAttendanceUseCase(repo, build_awards(session))
+    clean = [
+        LessonAttendanceModel("Theory", "A", 0, 0, None, None),
+        LessonAttendanceModel("Practice only", "B", None, 0, None, None),
+        LessonAttendanceModel("No data", "C", None, None, None, None),
+    ]
+    # Bishkek is UTC+6: 17:59 UTC on October 31 is still October there.
+    for observed_at in (datetime(2026, 10, 31, 17, 59, tzinfo=UTC), datetime(2027, 3, 31, 12, tzinfo=UTC)):
+        await record.execute(991001, "fixture-student", clean, observed_at=observed_at)
+    november = datetime(2026, 10, 31, 18, tzinfo=UTC)
+    for lessons in ([], clean[2:], [*clean, LessonAttendanceModel("Missed", "D", 0, 1.5, None, None)]):
+        await record.execute(991001, "fixture-student", lessons, observed_at=november)
+    assert "iron_attendance" not in await repo.get_awards(991001)
+    await record.execute(991001, "fixture-student", clean, observed_at=november)
+    assert "iron_attendance" in await repo.get_awards(991001)
+
+
+async def test_critic_after_one_hundred_rated_menus(session):
+    repo = await seed(session)
+    record = RecordActivityUseCase(repo, build_awards(session))
+    for _ in range(99):
+        await record.execute(991001, "rating")
+    assert "critic" not in await repo.get_awards(991001)
+    card = next(card for card in (await GamificationQuery(repo).profile(991001)).achievements if card.key == "critic")
+    assert (card.current, card.target) == (99, 100)
+    await record.execute(991001, "rating")
+    assert (await repo.get_progress(991001))[3] == 100
+    assert "critic" in await repo.get_awards(991001)

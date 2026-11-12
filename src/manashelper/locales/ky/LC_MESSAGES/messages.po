@@ -1112,6 +1112,36 @@ msgstr "Кыл учунда"
 msgid "gamification.thin_ice.description"
 msgstr "Бир семестрде беш башка сабактын теориясынан же практикасынан кеминде 18,75% калтыр."
 
+msgid "gamification.phoenix.name"
+msgstr "Феникс"
+
+msgid "gamification.phoenix.description"
+msgstr "Мурда F1 же FF алган сабагыңды оң баа менен жап."
+
+msgid "gamification.stability.name"
+msgstr "Туруктуулук"
+
+msgid "gamification.stability.description"
+msgstr "Үч семестр катары менен семестрдик GPA кеминде 3,00 болсун."
+
+msgid "gamification.iron_attendance.name"
+msgstr "Темир катышуу"
+
+msgid "gamification.iron_attendance.description"
+msgstr "Бир да калтыруу жок: семестрдеги бардык сабактардын теориясы жана практикасы боюнча 0%. 1-ноябрдан жана 1-апрелден баштап эсептелет."
+
+msgid "gamification.critic.name"
+msgstr "Сынчы"
+
+msgid "gamification.critic.description"
+msgstr "Ашкананын менюсуна 100 башка күнү баа бер."
+
+msgid "gamification.einstein.name"
+msgstr "Эйнштейн"
+
+msgid "gamification.einstein.description"
+msgstr "Физиканы кулат: аталышында «физика» бар сабактан F1 же FF ал."
+
 msgid "commands.gamification"
 msgstr "Колдонуучунун жетишкендиктерин күйгүзүү же өчүрүү"
 

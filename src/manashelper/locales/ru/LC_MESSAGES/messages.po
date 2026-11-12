@@ -1109,6 +1109,36 @@ msgstr "На грани"
 msgid "gamification.thin_ice.description"
 msgstr "Набери минимум 18,75% пропусков по теории или практике у пяти разных предметов в одном семестре."
 
+msgid "gamification.phoenix.name"
+msgstr "Феникс"
+
+msgid "gamification.phoenix.description"
+msgstr "Закрой положительной оценкой предмет, по которому раньше получил F1 или FF."
+
+msgid "gamification.stability.name"
+msgstr "Стабильность"
+
+msgid "gamification.stability.description"
+msgstr "Получи семестровый GPA не ниже 3,00 три семестра подряд."
+
+msgid "gamification.iron_attendance.name"
+msgstr "Железная явка"
+
+msgid "gamification.iron_attendance.description"
+msgstr "Ни одного пропуска: 0% по теории и практике у всех предметов семестра. Засчитывается с 1 ноября и с 1 апреля."
+
+msgid "gamification.critic.name"
+msgstr "Критик"
+
+msgid "gamification.critic.description"
+msgstr "Оцени йемек за 100 разных дней."
+
+msgid "gamification.einstein.name"
+msgstr "Эйнштейн"
+
+msgid "gamification.einstein.description"
+msgstr "Провали физику: получи F1 или FF по предмету с «физикой» в названии."
+
 msgid "commands.gamification"
 msgstr "Включить или отключить ачивки пользователя"
 

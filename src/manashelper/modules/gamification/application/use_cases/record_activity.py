@@ -13,7 +13,11 @@ class RecordActivityUseCase:
     awards: AwardAchievementUseCase
 
     async def execute(
-        self, user_id: int, activity: Literal["food", "grades", "published"], *, observed_at: datetime | None = None
+        self,
+        user_id: int,
+        activity: Literal["food", "grades", "published", "rating"],
+        *,
+        observed_at: datetime | None = None,
     ) -> None:
         now = observed_at or datetime.now(UTC)
         if now.tzinfo is None:
@@ -45,3 +49,8 @@ class RecordActivityUseCase:
                 await self.awards.execute(user_id, "night_owl", now)
         elif activity == "published":
             await self.awards.execute(user_id, "seller", now)
+        elif activity == "rating":
+            # Callers report only a user's first rating of a daily menu, not later score changes.
+            progress.menu_ratings += 1
+            if progress.menu_ratings >= 100:
+                await self.awards.execute(user_id, "critic", now)

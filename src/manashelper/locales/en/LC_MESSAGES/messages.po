@@ -1130,6 +1130,36 @@ msgstr "On the edge"
 msgid "gamification.thin_ice.description"
 msgstr "Reach at least 18.75% absence in theory or practice for five different subjects in one semester."
 
+msgid "gamification.phoenix.name"
+msgstr "Phoenix"
+
+msgid "gamification.phoenix.description"
+msgstr "Pass a course with a positive grade after previously receiving F1 or FF in it."
+
+msgid "gamification.stability.name"
+msgstr "Stability"
+
+msgid "gamification.stability.description"
+msgstr "Earn a semester GPA of at least 3.00 in three consecutive semesters."
+
+msgid "gamification.iron_attendance.name"
+msgstr "Iron attendance"
+
+msgid "gamification.iron_attendance.description"
+msgstr "Miss nothing: 0% theory and practice absence in every subject of the semester. Counts from November 1 and April 1."
+
+msgid "gamification.critic.name"
+msgstr "Critic"
+
+msgid "gamification.critic.description"
+msgstr "Rate the cafeteria menu on 100 different days."
+
+msgid "gamification.einstein.name"
+msgstr "Einstein"
+
+msgid "gamification.einstein.description"
+msgstr "Fail physics: receive F1 or FF in a course with “physics” in its name."
+
 msgid "commands.gamification"
 msgstr "Enable or disable a user’s achievements"
 

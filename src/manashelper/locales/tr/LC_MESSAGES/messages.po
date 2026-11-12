@@ -1108,6 +1108,36 @@ msgstr "Sınırda"
 msgid "gamification.thin_ice.description"
 msgstr "Bir yarıyılda beş farklı dersin teori veya uygulama kısmında en az %18,75 devamsızlığa ulaş."
 
+msgid "gamification.phoenix.name"
+msgstr "Anka kuşu"
+
+msgid "gamification.phoenix.description"
+msgstr "Daha önce F1 veya FF aldığın bir dersi geçer notla tamamla."
+
+msgid "gamification.stability.name"
+msgstr "İstikrar"
+
+msgid "gamification.stability.description"
+msgstr "Art arda üç yarıyılda en az 3,00 dönem ortalaması yap."
+
+msgid "gamification.iron_attendance.name"
+msgstr "Demir devam"
+
+msgid "gamification.iron_attendance.description"
+msgstr "Hiç kaçırma: yarıyılın tüm derslerinde teori ve uygulamada %0 devamsızlık. 1 Kasım ve 1 Nisan’dan itibaren sayılır."
+
+msgid "gamification.critic.name"
+msgstr "Eleştirmen"
+
+msgid "gamification.critic.description"
+msgstr "Yemek menüsünü 100 farklı gün puanla."
+
+msgid "gamification.einstein.name"
+msgstr "Einstein"
+
+msgid "gamification.einstein.description"
+msgstr "Fizikten kal: adında “fizik” geçen bir dersten F1 veya FF al."
+
 msgid "commands.gamification"
 msgstr "Kullanıcının başarımlarını aç veya kapat"
 

@@ -34,7 +34,7 @@ test('achievement routes support direct entry, refresh and browser history', asy
   await expect(page.getByRole('heading', { name: 'Лидерборд', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Моя коллекция', exact: true }).click()
   await expect(page).toHaveURL('/app/achievements')
-  await expect(page.locator('button.achievement')).toHaveCount(10)
+  await expect(page.locator('button.achievement')).toHaveCount(15)
   await page.goBack()
   await expect(page).toHaveURL('/app/leaderboard')
   await expect(page.getByRole('heading', { name: 'Лидерборд', exact: true })).toBeVisible()

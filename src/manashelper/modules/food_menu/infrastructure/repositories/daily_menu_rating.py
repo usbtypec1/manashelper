@@ -1,7 +1,7 @@
 import uuid
 from collections.abc import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,16 +29,21 @@ class DailyMenuRatingRepository:
         )
         return result.scalar_one_or_none()
 
-    async def set_score(self, daily_menu_id: uuid.UUID, user_id: int, score: int) -> None:
-        statement = insert(DailyMenuRating).values(
-            id=uuid.uuid4(), daily_menu_id=daily_menu_id, user_id=user_id, score=score
+    async def set_score(self, daily_menu_id: uuid.UUID, user_id: int, score: int) -> bool:
+        """Save the score and report whether this is the user's first rating of the menu."""
+        created = await self._session.scalar(
+            insert(DailyMenuRating)
+            .values(id=uuid.uuid4(), daily_menu_id=daily_menu_id, user_id=user_id, score=score)
+            .on_conflict_do_nothing(index_elements=[DailyMenuRating.daily_menu_id, DailyMenuRating.user_id])
+            .returning(DailyMenuRating.id)
         )
-        await self._session.execute(
-            statement.on_conflict_do_update(
-                index_elements=[DailyMenuRating.daily_menu_id, DailyMenuRating.user_id],
-                set_={"score": score},
+        if created is None:
+            await self._session.execute(
+                update(DailyMenuRating)
+                .where(DailyMenuRating.daily_menu_id == daily_menu_id, DailyMenuRating.user_id == user_id)
+                .values(score=score)
             )
-        )
+        return created is not None
 
     def add(self, rating: DailyMenuRating) -> None:
         self._session.add(rating)

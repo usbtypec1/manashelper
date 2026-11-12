@@ -5,11 +5,18 @@ from uuid import UUID
 
 
 @dataclass(frozen=True, slots=True)
+class TranscriptCourse:
+    code: str
+    name: str
+    grade: str
+
+
+@dataclass(frozen=True, slots=True)
 class TranscriptSemester:
     key: str
     credits: Decimal | None
     points: Decimal | None
-    grades: tuple[str, ...]
+    courses: tuple[TranscriptCourse, ...]
 
 
 @dataclass(frozen=True, slots=True)

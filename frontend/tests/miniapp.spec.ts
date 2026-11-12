@@ -6,7 +6,7 @@ test('collection, detail, keyboard close and leaderboard use real authenticated 
   await mockTelegram(page, fixture)
   await page.goto('/app/')
   await expect(page.getByRole('heading', { name: 'Ачивки' })).toBeVisible()
-  await expect(page.locator('button.achievement')).toHaveCount(10)
+  await expect(page.locator('button.achievement')).toHaveCount(15)
   await expect(page.getByRole('button', { name: /Покемон/ })).toHaveCount(0)
   await expect(page.locator('.collection')).toHaveCSS('display', 'grid')
   for (const [name, description] of [

@@ -2,6 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Numeric, String, false
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
 
 from manashelper.core.database import Base
@@ -23,6 +24,9 @@ class GamificationProgress(Base):
     aa_count: Mapped[int] = mapped_column(default=0, server_default="0")
     attendance_marker: Mapped[str | None] = mapped_column(String(64))
     attendance_count: Mapped[int] = mapped_column(default=0, server_default="0")
+    menu_ratings: Mapped[int] = mapped_column(default=0, server_default="0")
+    # Course codes seen with F1/FF for academic_marker's account; OBIS may overwrite them after a retake.
+    failed_courses: Mapped[list[str]] = mapped_column(ARRAY(String(32)), default=list, server_default="{}")
 
 
 class UserAchievement(Base):
