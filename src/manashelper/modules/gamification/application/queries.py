@@ -26,11 +26,18 @@ class AchievementProfile:
 
 
 @dataclass(frozen=True, slots=True)
+class EarnedAchievement:
+    key: str
+    earned_at: str
+
+
+@dataclass(frozen=True, slots=True)
 class LeaderboardEntry:
     user_id: int
     full_name: str
     score: int
     rank: int
+    achievements: tuple[EarnedAchievement, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,4 +94,19 @@ class GamificationQuery:
         return AchievementProfile(len(awards), len(ACHIEVEMENTS), ranking[0][3] if ranking else None, tuple(cards))
 
     async def leaderboard(self) -> tuple[LeaderboardEntry, ...]:
-        return tuple(LeaderboardEntry(*row) for row in await self.repository.ranking())
+        ranking = await self.repository.ranking()
+        awards = await self.repository.get_awards_for_users([row[0] for row in ranking])
+        return tuple(
+            LeaderboardEntry(
+                user_id,
+                name,
+                score,
+                rank,
+                tuple(
+                    EarnedAchievement(achievement.key, earned_at.isoformat())
+                    for achievement in ACHIEVEMENTS
+                    if (earned_at := awards.get(user_id, {}).get(achievement.key)) is not None
+                ),
+            )
+            for user_id, name, score, rank in ranking
+        )

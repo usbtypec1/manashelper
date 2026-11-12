@@ -41,11 +41,12 @@ def context(monkeypatch):
         yield SimpleNamespace(message=message, callback=callback, request=request)
 
 
-async def test_theme_defaults_persists_and_profile_refresh_preserves_other_preferences(session):
+@pytest.mark.parametrize("selected", [Theme.HALLOWEEN, Theme.PICKME, Theme.DEADINSIDE])
+async def test_theme_defaults_persists_and_profile_refresh_preserves_other_preferences(session, selected):
     repository = UserRepository(session)
     service = build_theme_service(repository)
     assert await service.get_theme(976001) == Theme.BASIC
-    await service.set_theme(976001, Theme.HALLOWEEN)
+    await service.set_theme(976001, selected)
     assert await repository.get_by_id(976001) is None
 
     # Raw INSERT proves the server default, independent of SQLAlchemy's Python default.
@@ -53,13 +54,13 @@ async def test_theme_defaults_persists_and_profile_refresh_preserves_other_prefe
     user = await repository.get_by_id(976001)
     assert user.theme == "basic"
     user.locale, user.student_number, user.encrypted_password = "tr", "123", "encrypted"
-    await service.set_theme(976001, Theme.HALLOWEEN)
+    await service.set_theme(976001, selected)
     await session.flush()
     session.expire_all()
-    assert await build_theme_service(UserRepository(session)).get_theme(976001) == Theme.HALLOWEEN
+    assert await build_theme_service(UserRepository(session)).get_theme(976001) == selected
     user = await repository.upsert(976001, "New name", "new_username")
     assert (user.theme, user.locale, user.student_number, user.encrypted_password) == (
-        "halloween",
+        selected.value,
         "tr",
         "123",
         "encrypted",
@@ -86,7 +87,8 @@ async def test_theme_picker_selection_refreshes_menu_in_selected_theme(context, 
         service.get_theme.assert_awaited_once_with(976001)
         picker = context.request.await_args_list[0].args[1]
         assert [
-            ThemeCallback.unpack(row[0].callback_data).theme for row in picker.reply_markup.inline_keyboard[:2]
+            ThemeCallback.unpack(row[0].callback_data).theme
+            for row in picker.reply_markup.inline_keyboard[: len(Theme)]
         ] == list(Theme)
         assert picker.reply_markup.inline_keyboard[0][0].text.startswith("✅ ")
         assert (
@@ -146,11 +148,12 @@ def test_theme_callbacks_reject_unknown_values_and_handlers_are_private():
 
 
 @pytest.mark.parametrize("fails", [False, True])
-async def test_middleware_reads_saved_theme_and_restores_context(session, context, fails):
+@pytest.mark.parametrize("selected", [Theme.HALLOWEEN, Theme.PICKME, Theme.DEADINSIDE])
+async def test_middleware_reads_saved_theme_and_restores_context(session, context, fails, selected):
     repository = UserRepository(session)
     await repository.upsert(976001, "Student", None)
     service = build_theme_service(repository)
-    await service.set_theme(976001, Theme.HALLOWEEN)
+    await service.set_theme(976001, selected)
     dependencies = {
         ResolveUserLocaleUseCase: SimpleNamespace(execute=build_locale_service(repository).resolve),
         ThemeQuery: service,
@@ -161,7 +164,7 @@ async def test_middleware_reads_saved_theme_and_restores_context(session, contex
     }
 
     async def handler(event, payload):
-        assert i18n.gettext("menu.food").startswith("🎃 ")
+        assert i18n.current_theme == selected
         if fails:
             raise RuntimeError("handler failed")
         return "handled"
@@ -190,9 +193,11 @@ async def test_theme_context_is_isolated_between_concurrent_users():
             await asyncio.sleep(0)
             return i18n.gettext("common.welcome", locale="en")
 
-    themed, basic = await asyncio.gather(render(Theme.HALLOWEEN), render(Theme.BASIC))
+    basic, themed, pickme, deadinside = await asyncio.gather(*(render(theme) for theme in Theme))
     assert themed == "🎃 " + basic
     assert basic == "Welcome to Manashelper!"
+    assert pickme.startswith("🎀 You picked me!")
+    assert deadinside == "🖤 You're here. The semester goes on."
 
 
 async def test_theme_migration_preserves_existing_profile_on_upgrade_and_downgrade(session):

@@ -606,8 +606,8 @@ msgstr "💵 价格：<b>{price}</b> 索姆"
 msgid "ads.valid_until"
 msgstr "⏰ 有效期至：{date}"
 
-msgid "ads.contact_link"
-msgstr "📞 <a href=\"{link}\">点击查看卖家的联系方式</a>"
+msgid "ads.contacts_button"
+msgstr "联系方式"
 
 msgid "ads.contacts"
 msgstr "📞 联系方式："
@@ -1283,3 +1283,427 @@ msgstr "星期六"
 
 msgid "miniapp.ui.sunday"
 msgstr "星期日"
+
+msgid "theme.pickme"
+msgstr "🎀 选我嘛"
+
+msgid "pickme.common.welcome"
+msgstr "🎀 你选了我！一起度过大学生活，好不好嘛 🥺"
+
+msgid "pickme.menu.food"
+msgstr "🍓 一起吃饭嘛？"
+
+msgid "pickme.menu.study"
+msgstr "🎀 陪我学习"
+
+msgid "pickme.menu.schedule"
+msgstr "🗓 我们的课表"
+
+msgid "pickme.menu.attendance"
+msgstr "🥺 有好好上课吧？"
+
+msgid "pickme.menu.grades"
+msgstr "💗 给我看看成绩嘛"
+
+msgid "pickme.menu.eders"
+msgstr "🎀 你的 Eders 小天地"
+
+msgid "pickme.menu.eders_materials"
+msgstr "📚 给你的小笔记"
+
+msgid "pickme.menu.study_week"
+msgstr "🗓 我们的一周"
+
+msgid "pickme.menu.marketplace"
+msgstr "🛍 逛逛二手市场嘛？"
+
+msgid "pickme.menu.settings"
+msgstr "🎀 把我设成你喜欢的样子"
+
+msgid "pickme.menu.main"
+msgstr "🏡 回我们的小窝"
+
+msgid "pickme.menu.obis"
+msgstr "🎓 一起看 OBIS？"
+
+msgid "pickme.menu.achievements"
+msgstr "💗 你的小小成就"
+
+msgid "pickme.settings.title"
+msgstr "🎀 想当你最喜欢的小帮手"
+
+msgid "pickme.theme.prompt"
+msgstr "🎀 给我挑个样子嘛！我会记住的 🥺"
+
+msgid "pickme.theme.selected"
+msgstr "💗 我的新样子：{theme}"
+
+msgid "pickme.common.back"
+msgstr "🎀 带我回去嘛"
+
+msgid "pickme.common.back_to_menu"
+msgstr "🏡 回我们的小菜单"
+
+msgid "pickme.common.error_retry"
+msgstr "🥺 没成功。陪我再试一次嘛？"
+
+msgid "pickme.food.day_selection_title"
+msgstr "🍓 食堂小约会"
+
+msgid "pickme.food.choose_day"
+msgstr "🎀 哪天一起吃嘛？"
+
+msgid "pickme.food.menu_header"
+msgstr "🍓 我们的菜单 · {weekday}，{date}"
+
+msgid "pickme.food.dish"
+msgstr "🎀 {index}. {name} — {calories} 千卡"
+
+msgid "pickme.food.total_calories"
+msgstr "💗 给你一天的能量：{calories} 千卡"
+
+msgid "pickme.food.rating"
+msgstr "💗 这顿饭的评分：{average}（{count}）"
+
+msgid "pickme.food.no_ratings"
+msgstr "🥺 第一个给菜单打分嘛？"
+
+msgid "pickme.food.rate_prompt"
+msgstr "💗 给菜单打个 1 到 5 分嘛？评分可以修改。"
+
+msgid "pickme.food.rating_thanks"
+msgstr "💗 你打分啦！谢谢，我看到了 🥺"
+
+msgid "pickme.food.enjoy_meal"
+msgstr "🍓 好好吃饭！给我留个位子嘛？"
+
+msgid "pickme.food.open_menu"
+msgstr "🍓 看看我们的菜单"
+
+msgid "pickme.food.today_unpublished"
+msgstr "🥺 今天的菜单还没发布。我陪你等。"
+
+msgid "pickme.food.menu_unpublished"
+msgstr "🥺 那天的菜单还没发布。晚点再来看看嘛？"
+
+msgid "pickme.schedule.search_prompt"
+msgstr "🎀 告诉我课程名嘛。土耳其字母也能用普通拉丁字母代替：ş 用 s，ı 用 i。"
+
+msgid "pickme.schedule.no_tracked_courses"
+msgstr "🥺 你还没选年级。点下面选好，我就能给你看课表啦。"
+
+msgid "pickme.schedule.no_classes"
+msgstr "🎀 没课啦。给自己留点时间嘛？"
+
+msgid "pickme.schedule.changes_header"
+msgstr "💌 <b>课表有变化——我来报信啦</b>"
+
+msgid "pickme.obis.student_number_prompt"
+msgstr "🎀 写下学号嘛，我们一起看 OBIS。"
+
+msgid "pickme.obis.password_prompt"
+msgstr "🎀 接着输入 OBIS 密码。"
+
+msgid "pickme.obis.loading_grades"
+msgstr "💗 正在找你的成绩。陪我等一下嘛？"
+
+msgid "pickme.obis.loading_attendance"
+msgstr "🥺 一起看看出勤情况…"
+
+msgid "pickme.obis.new_grade"
+msgstr "💌 “{lesson}”有新成绩——马上来告诉你！\n{exam}：{score}"
+
+msgid "pickme.obis.skip_recorded"
+msgstr "⚠️ “{lesson}”记录了缺勤（{skip_type}）。照顾好自己 💗"
+
+msgid "pickme.eders.reminder_day"
+msgstr "💌 Eders 截止还有一天。我帮你记着呢。"
+
+msgid "pickme.eders.reminder_two_hours"
+msgstr "💌 Eders 截止还有两小时。我的小小提醒。"
+
+msgid "pickme.eders.empty"
+msgstr "🎀 这个筛选下没有内容。换一个看看嘛？"
+
+msgid "pickme.notifications.title"
+msgstr "💌 告诉我什么时候可以给你发消息"
+
+msgid "pickme.feedback.message_prompt"
+msgstr "💌 把想说的话写给管理员。回复会发到这里。"
+
+msgid "pickme.feedback.sent"
+msgstr "💗 已把你的消息交给管理员。谢谢你写信！"
+
+msgid "pickme.ads.review_prompt"
+msgstr "🎀 再看一眼你的小广告嘛？"
+
+msgid "pickme.ads.title_prompt"
+msgstr "🎀 让你的小广告被看见。发个 <b>标题</b>嘛，最多 {max} 个字符。"
+
+msgid "pickme.data.preparing"
+msgstr "🎀 正在为你准备。下次后台更新后再看看嘛（每 15 分钟更新）。"
+
+msgid "pickme.gamification.ui.collection"
+msgstr "💗 我的小小成就"
+
+msgid "pickme.gamification.ui.leaderboard"
+msgstr "🎀 校园小明星"
+
+msgid "pickme.gamification.ui.subtitle"
+msgstr "🎀 你的小小进步，我都看见啦。"
+
+msgid "pickme.miniapp.ui.title"
+msgstr "🎀 你的温馨小窝"
+
+msgid "pickme.miniapp.ui.note"
+msgstr "💌 选好想让我告诉你的事嘛。每次修改都会立即保存。"
+
+msgid "pickme.miniapp.ui.saved"
+msgstr "💗 为你保存好啦"
+
+msgid "pickme.miniapp.ui.error"
+msgstr "🥺 没保存成功。再试一次嘛？"
+
+msgid "pickme.food.rich_menu_header"
+msgstr "🍓 我们的菜单 · {weekday}，{date}"
+
+msgid "pickme.food.rich_dish"
+msgstr "🎀 {index}. {name} — {calories} 千卡"
+
+msgid "pickme.food.rich_total_calories"
+msgstr "💗 给你一天的能量：{calories} 千卡"
+
+msgid "pickme.food.rich_rating"
+msgstr "💗 这顿饭的评分：{average}（{count}）"
+
+msgid "pickme.menu.achievements_button"
+msgstr "💗 你的小小成就"
+
+msgid "pickme.miniapp.ui.achievements"
+msgstr "💗 你的小小成就"
+
+msgid "theme.deadinside"
+msgstr "🖤 暗夜心境"
+
+msgid "deadinside.common.welcome"
+msgstr "🖤 你来了。学期还在继续。"
+
+msgid "deadinside.menu.food"
+msgstr "🥀 食堂。照旧。"
+
+msgid "deadinside.menu.study"
+msgstr "🖤 学业日常"
+
+msgid "deadinside.menu.schedule"
+msgstr "🕰 又要上课"
+
+msgid "deadinside.menu.attendance"
+msgstr "🥀 出勤的痕迹"
+
+msgid "deadinside.menu.grades"
+msgstr "🖤 成绩的判决"
+
+msgid "deadinside.menu.eders"
+msgstr "🌑 暗夜 Eders"
+
+msgid "deadinside.menu.eders_materials"
+msgstr "📜 阴影中的笔记"
+
+msgid "deadinside.menu.study_week"
+msgstr "🕰 七天的日常"
+
+msgid "deadinside.menu.marketplace"
+msgstr "🥀 等待主人的物品"
+
+msgid "deadinside.menu.settings"
+msgstr "⚙️ 调整暗色"
+
+msgid "deadinside.menu.main"
+msgstr "🌑 又回到起点"
+
+msgid "deadinside.menu.obis"
+msgstr "🖤 OBIS。直面数字。"
+
+msgid "deadinside.menu.achievements"
+msgstr "🥀 暗夜中的小小胜利"
+
+msgid "deadinside.settings.title"
+msgstr "🌑 你的暗色角落"
+
+msgid "deadinside.theme.prompt"
+msgstr "🥀 选一种暗色。我会记住。"
+
+msgid "deadinside.theme.selected"
+msgstr "🖤 心情已保存：{theme}"
+
+msgid "deadinside.common.back"
+msgstr "← 回到阴影"
+
+msgid "deadinside.common.back_to_menu"
+msgstr "🌑 返回菜单"
+
+msgid "deadinside.common.error_retry"
+msgstr "🥀 没成功。再试一次。"
+
+msgid "deadinside.food.day_selection_title"
+msgstr "🥀 食堂纪事"
+
+msgid "deadinside.food.choose_day"
+msgstr "🕰 看哪天的菜单？"
+
+msgid "deadinside.food.menu_header"
+msgstr "🥀 日常菜单 · {weekday}，{date}"
+
+msgid "deadinside.food.dish"
+msgstr "🖤 {index}. {name} — <b>{calories}</b> 千卡"
+
+msgid "deadinside.food.rich_dish"
+msgstr "🖤 {index}. {name} — {calories} 千卡"
+
+msgid "deadinside.food.total_calories"
+msgstr "🕰 又一天的能量：{calories} 千卡"
+
+msgid "deadinside.food.rating"
+msgstr "🥀 餐点评分：{average}（{count}）"
+
+msgid "deadinside.food.no_ratings"
+msgstr "🥀 还没有评分。来做第一个吧。"
+
+msgid "deadinside.food.rate_prompt"
+msgstr "🖤 打个 1 到 5 分。之后也能修改。"
+
+msgid "deadinside.food.rating_thanks"
+msgstr "🖤 评分已记录。"
+
+msgid "deadinside.food.enjoy_meal"
+msgstr "🥀 吃点东西。课可以等一会儿。"
+
+msgid "deadinside.food.open_menu"
+msgstr "🥀 打开食堂纪事"
+
+msgid "deadinside.food.today_unpublished"
+msgstr "🌑 今天的菜单还在阴影中。稍后再来看看。"
+
+msgid "deadinside.food.menu_unpublished"
+msgstr "🌑 这一天的菜单还没发布。稍后再来看看。"
+
+msgid "deadinside.food.no_available_menus"
+msgstr "🌑 暂时没有已发布的菜单。稍后再来看看。"
+
+msgid "deadinside.schedule.no_classes"
+msgstr "🌑 没课。日常暂停片刻。"
+
+msgid "deadinside.schedule.changes_header"
+msgstr "🥀 <b>课表变了。日常又有了转折。</b>"
+
+msgid "deadinside.obis.loading_grades"
+msgstr "🖤 正在查看成绩的判决…"
+
+msgid "deadinside.obis.loading_attendance"
+msgstr "🕰 正在寻找出勤的痕迹…"
+
+msgid "deadinside.obis.new_grade"
+msgstr "🖤 «{lesson}» 的新成绩\n{exam}：{score}"
+
+msgid "deadinside.obis.skip_recorded"
+msgstr "🥀 «{lesson}» 又记录了一次缺勤（{skip_type}）。"
+
+msgid "deadinside.eders.reminder_day"
+msgstr "🕰 距 Eders 截止还有一天。时钟还在走。"
+
+msgid "deadinside.eders.reminder_two_hours"
+msgstr "🕰 距 Eders 截止还有两小时。还有时间。"
+
+msgid "deadinside.eders.opened_notification"
+msgstr "🌑 Eders 活动从阴影中出现"
+
+msgid "deadinside.eders.changed_notification"
+msgstr "🥀 Eders 截止时间变了"
+
+msgid "deadinside.data.preparing"
+msgstr "🌑 这里暂时很安静。后台每 15 分钟更新一次，下次更新后再来看看。"
+
+msgid "deadinside.gamification.ui.collection"
+msgstr "🖤 我的无声胜利"
+
+msgid "deadinside.gamification.ui.leaderboard"
+msgstr "🥀 做到的人"
+
+msgid "deadinside.gamification.ui.subtitle"
+msgstr "🖤 暗夜中的胜利也值得记录。"
+
+msgid "deadinside.miniapp.ui.title"
+msgstr "🌑 你的暗色角落"
+
+msgid "deadinside.miniapp.ui.note"
+msgstr "🕰 决定让哪些消息打破安静。每次更改都会立即保存。"
+
+msgid "deadinside.miniapp.ui.saved"
+msgstr "🖤 已保存。无需多言。"
+
+msgid "deadinside.miniapp.ui.error"
+msgstr "🥀 未能保存。请重试。"
+
+msgid "ads.rich_price"
+msgstr "💵 价格：{price} 索姆"
+
+
+msgid "terms.title"
+msgstr "用户协议与数据处理"
+
+msgid "terms.language"
+msgstr "语言"
+
+msgid "terms.updated_label"
+msgstr "更新日期"
+
+msgid "terms.back"
+msgstr "返回"
+
+msgid "terms.services.title"
+msgstr "1. 服务与同意"
+
+msgid "terms.services.body"
+msgstr "Manashelper（@manas_helper_bot）是独立学生项目，并非大学官方服务。功能包括课表与课程选择、食堂菜单、OBIS 成绩、Eders 资料与截止日期、学习周概览、通知、分类广告、反馈和成就。关联学习账户完全自愿。在输入凭据前接受本协议，即授权下述访问与处理。请仅关联自己的账户。"
+
+msgid "terms.data.title"
+msgstr "2. 数据与保护"
+
+msgid "terms.data.body"
+msgstr "服务保存 Telegram ID、姓名、用户名、语言、主题、所选课程、通知设置、学号、加密的 OBIS 密码、学习数据快照、比较基准和成就记录。广告文字、照片和联系方式用于发布及审核；反馈转发给管理员。允许的私聊操作会被记录；日志中的密码文字会被遮蔽，机器人会尝试删除密码消息。OBIS 密码使用 AES-GCM 加密，但资料、快照、日志和成就并未由应用逐项加密。Telegram 和大学系统会接收消息与登录所需的数据。不承诺绝对安全，也不承诺任何数据都不会传递给第三方。"
+
+msgid "terms.obis.title"
+msgstr "3. OBIS 访问"
+
+msgid "terms.obis.body"
+msgstr "机器人通过 /site/login 登录，从 /vs-ders/taken-lessons 读取出勤，从 /vs-ders/taken-grades 读取考试成绩。启用成就后，还会读取 /vs-ders/transkript-detailed，计算与 GPA 和期末成绩有关的成就。仅当 Eders 直接登录失败时，才通过 /site/eders 进行单点登录。凭据在保存前验证。不会修改 OBIS 成绩或出勤。所用页面见下方。"
+
+msgid "terms.eders.title"
+msgstr "4. Eders 访问与完成标记"
+
+msgid "terms.eders.body"
+msgstr "启用 Eders 时，机器人先用已保存学号和服务配置的 Moodle 密码登录，OBIS 单点登录作为备用。它通过 Moodle AJAX 读取已选课程列表，并读取课程页、个人资料时区、作业和测验概览页。缓存课程及活动名称、说明、链接、开放与截止时间、提交/评分状态和完成标记。文件、外部链接、文件夹、文本块、论坛及反馈链接取自课程页，其内容不会被自动下载。AJAX 方法为 core_course_get_enrolled_courses_by_timeline_classification，以及仅在您明确操作完成标记时调用的 core_completion_update_activity_completion_status_manually。标记完成或撤销会更改 Eders 的完成状态，但不会提交作业、开始或提交测验，也不会更改成绩。读取页面本身仍可能被 Moodle 记录。下方占位符表示课程或活动 ID。"
+
+msgid "terms.sync.title"
+msgstr "5. 后台更新与通知"
+
+msgid "terms.sync.body"
+msgstr "OBIS 和 Eders 数据通常每 15 分钟在后台更新，Eders 间隔可能不同。界面显示已保存快照，可能落后于来源。关闭通知或 Mini App 不会停止同步。设置控制课表、成绩、出勤、菜单及 Eders 变化、提醒和管理员群发的投递。部分消息会进入队列并在失败后重试。为防止重复处理，会保存 Telegram 更新 ID 和处理时间；每日清理会删除超过两天的记录。"
+
+msgid "terms.ranking.title"
+msgstr "6. 成就与排行榜"
+
+msgid "terms.ranking.body"
+msgstr "启用成就访问后，服务记录符合条件的行为，并根据菜单查看、广告活动和学习快照计算奖励。有奖励的参与者可能进入前十。其他获授权的成就参与者可看到 Telegram 姓名、名次、奖励数量、已获得奖励、说明和获得日期。排行榜不返回原始成绩、GPA、出勤明细、学号、凭据或未完成进度。但学习类奖励及条件仍可能间接透露学习情况。关闭成就访问会将参与者从榜单隐藏并停止新进度，同时保留原有奖励。请通过反馈联系管理员申请。"
+
+msgid "terms.controls.title"
+msgstr "7. 控制与数据请求"
+
+msgid "terms.controls.body"
+msgstr "可在设置或 Mini App 更改语言、主题、课程和通知偏好。在“设置 → OBIS 凭据”可更换或删除学号和密码；删除也会清除 OBIS 结果缓存和比较基准，并停止使用这些凭据进行同步。这不会删除所有其他记录、Eders 历史或已获奖励。屏蔽机器人会停止投递，但不删除数据。若要删除数据、撤回账户访问或调整成就访问，请使用“设置 → 反馈”或联系 @usbtypec。资料、快照、广告和成就没有统一的自动过期时间，可能保留至被替换、通过功能删除或按请求删除。"
+
+msgid "terms.limits.title"
+msgstr "8. 准确性与责任"
+
+msgid "terms.limits.body"
+msgstr "请在大学官方系统核实成绩、出勤、截止日期和提交/完成状态。通知与计算仅供参考，可能延迟、不完整或不可用；服务不保证学习结果或不间断投递。请保护账户，仅发布有权分享的内容及联系方式。广告须经审核。本协议描述当前实现，不排除适用法律规定的权利和义务。源代码：https://github.com/usbtypec1/manashelper。问题与请求：@usbtypec 或“设置 → 反馈”。"

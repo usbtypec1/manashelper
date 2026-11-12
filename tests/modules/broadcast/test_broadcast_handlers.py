@@ -11,6 +11,7 @@ from aiogram.methods import AnswerCallbackQuery, EditMessageCaption, EditMessage
 from aiogram.types import BotCommandScopeChat, CallbackQuery, Chat, Message, PhotoSize, User
 
 from manashelper.localization.locale import Locale
+from manashelper.localization.theme import Theme
 from manashelper.modules.broadcast import router as handlers
 from manashelper.modules.broadcast.application.use_cases.send_broadcast import SendBroadcastUseCase
 from manashelper.modules.broadcast.callbacks import BroadcastAction, BroadcastCallback
@@ -74,6 +75,7 @@ def context(monkeypatch):
             service=SendBroadcastUseCase(users),
             outbox=outbox,
             locales=locales,
+            themes=SimpleNamespace(get_theme=AsyncMock(return_value=Theme.BASIC)),
             callback=callback,
             settings=SimpleNamespace(admin_chat_id=ADMIN_CHAT_ID),
             sending_states=sending_states,
@@ -101,6 +103,7 @@ async def confirm(context, callback=None):
         context.service,
         context.locales,
         context.outbox,
+        context.themes,
     )
 
 
@@ -173,6 +176,29 @@ async def test_empty_preview_keeps_existing_draft(context, body):
     assert await context.state.get_data() == {"body": "previous"}
     assert methods(context, SendMessage)[0].text == i18n.gettext("broadcast.text_required", locale="ru")
     context.users.for_broadcasts.assert_not_awaited()
+
+
+async def test_preview_rejects_text_that_would_exceed_limit_in_another_theme(context):
+    overheads = []
+    for locale in Locale:
+        for theme in Theme:
+            with i18n.use_theme(theme):
+                overheads.extend(
+                    len(i18n.gettext(key, locale=locale.value).format(body="").encode("utf-16-le")) // 2
+                    for key in ("broadcast.preview", "broadcast.admin_message")
+                )
+    body = "x" * (4096 - max(overheads))
+    with i18n.use_theme(Theme.BASIC):
+        await handlers.on_broadcast_message_entered(
+            context.message.model_copy(update={"text": body}), context.state, context.settings
+        )
+        assert (await context.state.get_data())["body"] == body
+        await handlers.on_broadcast_message_entered(
+            context.message.model_copy(update={"text": body + "x"}), context.state, context.settings
+        )
+        assert methods(context, SendMessage)[-1].text == i18n.gettext("broadcast.too_long", locale="ru")
+        assert (await context.state.get_data())["body"] == body
+        assert i18n.current_theme == Theme.BASIC
 
 
 async def test_cancel_clears_form_and_uses_admin_locale(context):

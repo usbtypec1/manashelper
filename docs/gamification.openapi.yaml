@@ -37,12 +37,25 @@ paths:
                     items:
                       type: object
                       additionalProperties: false
-                      required: [full_name, score, rank, is_self]
+                      required: [full_name, score, rank, is_self, achievements]
                       properties:
                         full_name: { type: string }
                         score: { type: integer, minimum: 1 }
                         rank: { type: integer, minimum: 1 }
                         is_self: { type: boolean }
+                        achievements:
+                          type: array
+                          maxItems: 10
+                          description: Earned awards only, localized for the viewer; no private progress or source values.
+                          items:
+                            type: object
+                            additionalProperties: false
+                            required: [key, name, description, earned_at]
+                            properties:
+                              key: { type: string }
+                              name: { type: string }
+                              description: { type: string }
+                              earned_at: { type: string, format: date-time }
         '401': { description: Invalid or expired initData. }
         '403': { description: Signed user is not registered or achievements are disabled for this user. }
   /telegram/webhook:
@@ -80,12 +93,13 @@ components:
   schemas:
     Profile:
       type: object
-      required: [score, total, rank, achievements, locale, ui]
+      required: [score, total, rank, achievements, locale, theme, ui]
       properties:
         score: { type: integer, minimum: 0 }
         total: { type: integer, const: 10 }
         rank: { type: [integer, 'null'], minimum: 1 }
         locale: { type: string, enum: [en, ru, ky, tr, zh] }
+        theme: { type: string, enum: [basic, halloween, pickme, deadinside] }
         ui: { type: object, additionalProperties: { type: string } }
         achievements:
           type: array

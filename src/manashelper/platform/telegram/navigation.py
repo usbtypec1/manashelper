@@ -21,7 +21,7 @@ def build_mini_app_button(*, courses: bool = False) -> InlineKeyboardButton | No
         return None
     return InlineKeyboardButton(
         text=_("schedule.mini_app") if courses else _("settings.mini_app"),
-        web_app=WebAppInfo(url=f"{public_url}/app/?view={'courses' if courses else 'settings'}"),
+        web_app=WebAppInfo(url=f"{public_url.rstrip('/')}/app/{'courses' if courses else 'settings'}"),
     )
 
 

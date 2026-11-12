@@ -11,11 +11,14 @@ from pydantic import ValidationError
 
 from manashelper.core.config import Settings
 from manashelper.modules.gamification.application.queries import GamificationQuery
-from manashelper.modules.gamification.presentation.catalog import localize_profile, ui_strings
+from manashelper.modules.gamification.presentation.catalog import localize_leaderboard, localize_profile, ui_strings
 from manashelper.modules.users.application.locale import LocaleQuery
+from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.modules.users.queries import UsersQuery
+from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.webhook_context import webhook_processing
-from manashelper.platform.telegram.webhook_middleware import ConcurrentWebhookUpdateError, WebhookReceiptMiddleware
+from manashelper.platform.telegram.webhook_middleware import WebhookReceiptMiddleware
+from manashelper.platform.telegram.webhook_service import ConcurrentWebhookUpdateError
 from manashelper.platform.web.auth import authenticate
 from manashelper.platform.web.preferences import register_preferences_routes
 
@@ -75,22 +78,16 @@ def create_web_app(bot: Bot, dispatcher: Dispatcher, container: AsyncContainer, 
             if not await query.is_enabled(user_id):
                 raise web.HTTPForbidden()
             payload: dict[str, Any]
+            locale = await (await scope.get(LocaleQuery)).get_locale(user_id)
+            theme = await (await scope.get(ThemeQuery)).get_theme(user_id)
             if request.path.endswith("/leaderboard"):
-                payload = {
-                    "entries": [
-                        {
-                            "full_name": entry.full_name,
-                            "score": entry.score,
-                            "rank": entry.rank,
-                            "is_self": entry.user_id == user_id,
-                        }
-                        for entry in await query.leaderboard()
-                    ]
-                }
+                with i18n.use_theme(theme):
+                    payload = localize_leaderboard(await query.leaderboard(), user_id, locale.value)
             else:
-                locale = await (await scope.get(LocaleQuery)).get_locale(user_id)
-                payload = localize_profile(await query.profile(user_id), locale.value)
-                payload["ui"] = ui_strings(locale.value)
+                with i18n.use_theme(theme):
+                    payload = localize_profile(await query.profile(user_id), locale.value)
+                    payload["ui"] = ui_strings(locale.value)
+                payload["theme"] = theme.value
         return web.json_response(payload)
 
     async def index(request: web.Request) -> web.FileResponse:
@@ -109,5 +106,7 @@ def create_web_app(bot: Bot, dispatcher: Dispatcher, container: AsyncContainer, 
     app.router.add_get("/app/", index)
     if (STATIC_DIR / "assets").is_dir():
         app.router.add_static("/app/assets", STATIC_DIR / "assets")
+    # History-mode routes must also work on direct navigation and reload.
+    app.router.add_get("/app/{path:.*}", index)
     app.router.add_get("/health", health)
     return app

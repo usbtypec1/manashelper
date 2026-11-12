@@ -61,18 +61,16 @@ jobs:
       - name: Compile gettext catalogs
         run: uv run pybabel compile -d src/manashelper/locales
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '22'
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: '1.4.3'
 
       - name: Build Mini App
         run: |
           uv run python frontend/scripts/export_messages.py
-          npm --prefix frontend ci
-          npm --prefix frontend run build
+          bun install --cwd frontend --frozen-lockfile
+          bun run --cwd frontend --bun build
 
       - name: Lint
         run: uv run ruff check .
@@ -92,8 +90,8 @@ jobs:
       - name: Test Mini App in Chromium
         working-directory: frontend
         run: |
-          npx playwright install --with-deps chromium
-          npm run test:e2e
+          bunx --bun --no-install playwright install --with-deps chromium
+          bun run --bun test:e2e
 
 
   build:

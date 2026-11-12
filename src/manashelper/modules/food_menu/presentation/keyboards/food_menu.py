@@ -24,6 +24,10 @@ _RATING_LABELS = {1: "1️⃣", 2: "2️⃣", 3: "3️⃣", 4: "4️⃣", 5: "5�
 
 
 def _rating_label(score: int) -> str:
+    if i18n.current_theme == Theme.DEADINSIDE:
+        return f"🖤 {score}"
+    if i18n.current_theme == Theme.PICKME:
+        return f"💗 {score}"
     return f"🎃 {score}" if i18n.current_theme == Theme.HALLOWEEN else _RATING_LABELS[score]
 
 

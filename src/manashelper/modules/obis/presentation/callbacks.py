@@ -11,6 +11,7 @@ class ObisAction(StrEnum):
     GRADES = "grades"
     NOTIFICATIONS = "notifications"
     START_CREDENTIALS = "start_credentials"
+    TERMS = "terms"
     ACCEPT_TERMS = "accept_terms"
     CANCEL_CREDENTIALS = "cancel_credentials"
     CLEAR_CREDENTIALS = "clear_credentials"

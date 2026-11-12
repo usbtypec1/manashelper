@@ -1,16 +1,11 @@
 import { expect, test } from '@playwright/test'
-
-test.beforeEach(async ({ page }) => {
-  await page.route('https://telegram.org/js/telegram-web-app.js', route => route.fulfill({ body: '', contentType: 'application/javascript' }))
-})
+import { mockTelegram } from './telegram'
 
 test('settings persist for a user without achievement access', async ({ page, request }) => {
   const fixture = await (await request.get('/_fixture/init-data?preferences=1&locale=en')).json()
   const headers = { Authorization: `tma ${fixture.initData}` }
   expect((await request.get('/api/gamification/me', { headers })).status()).toBe(403)
-  await page.addInitScript(({ initData }) => {
-    Object.assign(window, { Telegram: { WebApp: { initData, ready() {}, expand() {} } } })
-  }, fixture)
+  await mockTelegram(page, fixture)
   await page.goto('/app/?view=settings')
   await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible()
   const grades = page.getByRole('checkbox', { name: 'Exam grades', exact: true })
@@ -27,9 +22,7 @@ test('settings persist for a user without achievement access', async ({ page, re
 
 test('course selection and removal survive reload with escaped catalog names', async ({ page, request }) => {
   const fixture = await (await request.get('/_fixture/init-data?preferences=1&locale=en')).json()
-  await page.addInitScript(({ initData }) => {
-    Object.assign(window, { Telegram: { WebApp: { initData, ready() {}, expand() {} } } })
-  }, fixture)
+  await mockTelegram(page, fixture)
   await page.goto('/app/?view=courses')
   await expect(page.getByText('No courses selected. Choose a faculty and department below.')).toBeVisible()
   await page.getByRole('combobox', { name: 'Choose a faculty', exact: true }).selectOption({ label: 'Факультет <проверка>' })
@@ -51,9 +44,7 @@ test('course selection and removal survive reload with escaped catalog names', a
 
 test('a rejected write keeps the last saved checkbox value', async ({ page, request }) => {
   const fixture = await (await request.get('/_fixture/init-data?preferences=1&locale=en')).json()
-  await page.addInitScript(({ initData }) => {
-    Object.assign(window, { Telegram: { WebApp: { initData, ready() {}, expand() {} } } })
-  }, fixture)
+  await mockTelegram(page, fixture)
   await page.goto('/app/?view=settings')
   const grades = page.getByRole('checkbox', { name: 'Exam grades', exact: true })
   await expect(grades).toBeChecked()

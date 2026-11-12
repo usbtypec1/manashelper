@@ -34,8 +34,8 @@ async def cached_obis(session):
     session.add(user)
     await session.flush()
     client = AsyncMock(spec=ObisClient)
-    client.fetch_exam_grades_html.return_value = (FIXTURES_DIR / "obis/grades.html").read_text()
-    client.fetch_attendance_html.return_value = (FIXTURES_DIR / "obis/attendance.html").read_text()
+    client.fetch_exam_grades_html.return_value = (FIXTURES_DIR / "obis/grades.html").read_text(encoding="utf-8")
+    client.fetch_attendance_html.return_value = (FIXTURES_DIR / "obis/attendance.html").read_text(encoding="utf-8")
     service = build_obis(session, client, crypto)
     return service, client, user
 

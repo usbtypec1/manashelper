@@ -11,10 +11,19 @@ from aiogram.filters import CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.base import StorageKey
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.methods import AnswerCallbackQuery, DeleteMessages, EditMessageText, GetMe, SendMediaGroup, SendMessage
+from aiogram.methods import (
+    AnswerCallbackQuery,
+    DeleteMessages,
+    EditMessageText,
+    GetMe,
+    SendMediaGroup,
+    SendMessage,
+    SendRichMessage,
+)
 from aiogram.types import CallbackQuery, Chat, Message, User
 
 from manashelper.localization.locale import Locale
+from manashelper.localization.theme import Theme
 from manashelper.modules.advertisements.application.advertisement import (
     AdvertisementDeletionResult,
     AdvertisementMediaItem,
@@ -40,6 +49,7 @@ from manashelper.modules.advertisements.presentation.advertisement import (
     on_title_entered,
 )
 from manashelper.modules.advertisements.presentation.advertisement_contact import on_advertisement_deep_link
+from manashelper.modules.advertisements.presentation.advertisement_formatter import build_advertisement_rich_message
 from manashelper.modules.advertisements.presentation.advertisement_moderation import (
     AdvertisementModerationForm,
     on_approve,
@@ -79,7 +89,7 @@ def context(monkeypatch):
                 Message(message_id=100 + index, date=0, chat=Chat(id=method.chat_id, type="channel")).as_(bot)
                 for index in range(len(method.media))
             ]
-        if isinstance(method, (SendMessage, EditMessageText)):
+        if isinstance(method, (SendMessage, SendRichMessage, EditMessageText)):
             return Message(message_id=42, date=0, chat=Chat(id=method.chat_id, type="private")).as_(bot)
         return True
 
@@ -121,6 +131,7 @@ def context(monkeypatch):
             contacts=contacts,
             reveal=reveal,
             locale=SimpleNamespace(get_locale=AsyncMock(return_value=Locale.ZH)),
+            themes=SimpleNamespace(get_theme=AsyncMock(return_value=Theme.BASIC)),
             settings=SimpleNamespace(
                 moderation_chat_id=MODERATION_CHAT_ID,
                 advertisement_channel_id=CHANNEL_ID,
@@ -233,36 +244,62 @@ async def test_new_draft_requires_phone_again_and_invalid_input_does_not_advance
     assert await context.state.get_state() == AdvertisementForm.title.state
 
 
-@pytest.mark.parametrize("media", [False, True])
-async def test_approval_preserves_channel_locale_hidden_contacts_and_message_ids(context, media):
-    if media:
-        context.moderation.approve.return_value = replace(
-            context.moderation.approve.return_value,
-            media=[
+@pytest.mark.parametrize("media", ["none", "photo", "video", "album", "max_album"])
+@pytest.mark.parametrize("selected", list(Theme))
+async def test_approval_preserves_channel_locale_hidden_contacts_and_message_ids(context, media, selected):
+    context.themes.get_theme.return_value = selected
+    if media != "none":
+        media_items = {
+            "photo": [AdvertisementMediaItem("photo", AdvertisementMediaType.PHOTO)],
+            "video": [AdvertisementMediaItem("video", AdvertisementMediaType.VIDEO)],
+            "album": [
                 AdvertisementMediaItem("photo", AdvertisementMediaType.PHOTO),
                 AdvertisementMediaItem("video", AdvertisementMediaType.VIDEO),
             ],
+            "max_album": [
+                AdvertisementMediaItem(f"photo-{index}", AdvertisementMediaType.PHOTO) for index in range(10)
+            ],
+        }
+        context.moderation.approve.return_value = replace(
+            context.moderation.approve.return_value,
+            media=media_items[media],
         )
-    await on_approve(
-        callback(context, MODERATION_CHAT_ID),
-        AdvertisementModerationCallback(id=AD_ID, action=AdvertisementModerationAction.APPROVE),
-        context.bot,
-        context.settings,
-        SimpleNamespace(execute=context.service.record_channel_messages),
-        SimpleNamespace(execute=context.moderation.approve),
-        context.locale,
-    )
-    publication = methods(context, SendMediaGroup if media else SendMessage)[0]
-    caption = publication.media[0].caption if media else publication.text
+    with i18n.use_theme(Theme.PICKME):
+        await on_approve(
+            callback(context, MODERATION_CHAT_ID),
+            AdvertisementModerationCallback(id=AD_ID, action=AdvertisementModerationAction.APPROVE),
+            context.bot,
+            context.settings,
+            SimpleNamespace(execute=context.service.record_channel_messages),
+            SimpleNamespace(execute=context.moderation.approve),
+            context.locale,
+            context.themes,
+        )
+        assert i18n.current_theme == Theme.PICKME
+    publication = methods(context, SendRichMessage)[0]
+    rich = publication.rich_message
+    blocks = rich.blocks
+    assert blocks is not None
     assert publication.chat_id == CHANNEL_ID
-    assert f"https://t.me/manas_test?start=ad_{AD_ID}" in caption
-    assert "&lt;Book&gt;" in caption and "@seller" not in caption and "+996" not in caption
-    assert i18n.gettext("ads.price", locale="ru").format(price=100) in caption
-    if media:
-        assert publication.media[1].caption is None
-    context.service.record_channel_messages.assert_awaited_once_with(AD_ID, [100, 101] if media else [42])
+    assert rich.skip_entity_detection is True
+    assert blocks[0].text == "<Book>"
+    paragraphs = [block.text for block in blocks if block.type == "paragraph"]
+    assert paragraphs == ["Description & details", i18n.gettext("ads.rich_price", locale="ru").format(price=100)]
+    assert blocks[-1].buttons[0].text == "Контакты"
+    assert blocks[-1].buttons[0].url == f"https://t.me/manas_test?start=ad_{AD_ID}"
+    assert blocks[-1].buttons[0].callback_data is None
+    if media != "none":
+        media_blocks = blocks[1].blocks if media in {"album", "max_album"} else [blocks[1]]
+        for block, expected in zip(media_blocks, context.moderation.approve.return_value.media, strict=True):
+            assert block.type == expected.media_type.value
+            assert getattr(block, block.type).media == expected.file_id
+    payload = context.bot.session.prepare_value(rich, bot=context.bot, files={}, _dumps_json=False)
+    assert "@seller" not in str(payload) and "+996" not in str(payload)
+    assert not methods(context, SendMediaGroup)
+    context.service.record_channel_messages.assert_awaited_once_with(AD_ID, [42])
     owner = [message for message in methods(context, SendMessage) if message.chat_id == USER_ID][0]
-    assert owner.text == i18n.gettext("ads.owner_approved", locale="zh").format(title="&lt;Book&gt;")
+    with i18n.use_theme(selected):
+        assert owner.text == i18n.gettext("ads.owner_approved", locale="zh").format(title="&lt;Book&gt;")
 
 
 async def test_moderation_from_other_chat_is_rejected_before_service_call(context):
@@ -274,6 +311,7 @@ async def test_moderation_from_other_chat_is_rejected_before_service_call(contex
         SimpleNamespace(execute=context.service.record_channel_messages),
         SimpleNamespace(execute=context.moderation.approve),
         context.locale,
+        context.themes,
     )
     context.moderation.approve.assert_not_awaited()
     assert not methods(context, SendMessage)
@@ -284,7 +322,7 @@ async def test_publication_failure_does_not_record_message_ids_or_notify_owner(c
     respond = context.request.side_effect
 
     async def fail_channel(bot, method, **kwargs):
-        if isinstance(method, SendMessage) and method.chat_id == CHANNEL_ID:
+        if isinstance(method, SendRichMessage) and method.chat_id == CHANNEL_ID:
             raise TelegramBadRequest(method=method, message="test: channel unavailable")
         return await respond(bot, method, **kwargs)
 
@@ -297,12 +335,36 @@ async def test_publication_failure_does_not_record_message_ids_or_notify_owner(c
         SimpleNamespace(execute=context.service.record_channel_messages),
         SimpleNamespace(execute=context.moderation.approve),
         context.locale,
+        context.themes,
     )
     # Existing behavior: approve runs before publication. No compensation is performed here.
     context.moderation.approve.assert_awaited_once_with(AD_ID)
     context.service.record_channel_messages.assert_not_awaited()
     context.locale.get_locale.assert_not_awaited()
     assert methods(context, AnswerCallbackQuery)[0].text == i18n.gettext("ads.publish_failed")
+
+
+@pytest.mark.parametrize("locale", list(Locale))
+@pytest.mark.parametrize("price", [None, 0, 100])
+def test_public_rich_post_preserves_plain_text_optional_price_and_expiry(context, locale, price):
+    expiry = datetime(2026, 12, 1, 12, 30)
+    summary = replace(
+        context.summary,
+        description='<b>Literal & text</b> <tg-button url="https://example.com">',
+        price=price,
+        expires_at=expiry,
+    )
+    with i18n.use_locale(locale.value), i18n.use_theme(Theme.BASIC):
+        rich = build_advertisement_rich_message(summary, "https://t.me/manas_test?start=ad_test")
+        blocks = rich.blocks
+        assert blocks[0].text == summary.title
+        assert blocks[1].text == summary.description
+        assert blocks[-2].text == i18n.gettext("ads.valid_until").format(date="01.12.2026 12:30")
+        assert blocks[-1].buttons[0].text == i18n.gettext("ads.contacts_button")
+        assert len(blocks) == (4 if price is None else 5)
+        if price is not None:
+            assert blocks[2].text == i18n.gettext("ads.rich_price").format(price=price)
+        assert rich.skip_entity_detection is True
 
 
 async def test_rejection_comment_keeps_fsm_and_existing_storage_truncation(context):
@@ -318,7 +380,12 @@ async def test_rejection_comment_keeps_fsm_and_existing_storage_truncation(conte
         update={"text": " " + raw + " ", "chat": Chat(id=MODERATION_CHAT_ID, type="supergroup")}
     )
     await on_reject_comment_entered(
-        message, context.state, context.bot, SimpleNamespace(execute=context.moderation.reject), context.locale
+        message,
+        context.state,
+        context.bot,
+        SimpleNamespace(execute=context.moderation.reject),
+        context.locale,
+        context.themes,
     )
     context.moderation.reject.assert_awaited_once_with(AD_ID, raw[:512])
     assert await context.state.get_state() is None

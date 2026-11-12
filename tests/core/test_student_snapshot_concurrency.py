@@ -78,6 +78,8 @@ async def test_cached_reads_do_not_wait_for_background_http_fetch(engine, featur
             client.fetch_snapshot.side_effect = slow_fetch
             refresh, _ = services(writer, client)
             _, read = services(reader, client)
+            # Connect before the fetch starts so the timeout measures lock waiting, not connection setup.
+            await reader.connection()
             task = asyncio.create_task(refresh(user_id))
             try:
                 await asyncio.wait_for(entered.wait(), timeout=2)

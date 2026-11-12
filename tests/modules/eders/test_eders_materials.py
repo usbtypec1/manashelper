@@ -107,7 +107,7 @@ def test_ajax_course_names_and_pagination():
 
 
 def test_actual_theme_turkish_dates_labels_and_folders():
-    html = (FIXTURES_DIR / "eders/actual-theme.html").read_text()
+    html = (FIXTURES_DIR / "eders/actual-theme.html").read_text(encoding="utf-8")
     items = parse_course_activities(html, EdersCourse(10, "Course"))
     assert {entry.kind for entry in items} == {ActivityKind.ASSIGNMENT, ActivityKind.LABEL, ActivityKind.FOLDER}
     assignment = next(entry for entry in items if entry.kind == ActivityKind.ASSIGNMENT)

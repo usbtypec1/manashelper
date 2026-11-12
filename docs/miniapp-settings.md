@@ -1,6 +1,9 @@
 # Mini App settings and course selection
 
-Inline Telegram Web App buttons open `/app/?view=settings` or `/app/?view=courses`.
+Inline Telegram Web App buttons open `/app/settings` or `/app/courses`.
+Vue Router uses HTML5 history under `/app/`; direct requests and reloads serve the same application shell.
+Old `/app/?view=settings` and `/app/?view=courses` links redirect while preserving other query parameters.
+Settings/course navigation updates the URL, so browser Back/Forward restores the selected view.
 Both views are available to registered users regardless of achievement access.
 Without `MANASHELPER_PUBLIC_URL`, use the bot's native settings and course selection.
 
@@ -21,7 +24,7 @@ must not contain a user ID. API responses use `Cache-Control: no-store`.
 | GET | `/api/studies/courses` | Query: `department_id` UUID |
 | PUT | `/api/studies/courses/{course_id}` | `tracked`: boolean |
 
-Settings reads and successful writes return `locale`, localized `ui` strings,
+Settings reads and successful writes return `locale`, the saved bot `theme`, localized `ui` strings,
 `notifications`, seven `food` day settings, `eders`, and `tracked_courses`.
 Catalog reads return `faculties`, `departments`, or `courses` arrays.
 Eders settings are `null` when disabled; writing them returns 404.
@@ -30,6 +33,8 @@ Writes reuse the owning feature's use cases and serialize on the user's database
 They set explicit values, so retries do not toggle values again. Repeating an active
 broadcast mute preserves its existing deadline; a new mute lasts 14 days.
 The bot and Mini App share saved preferences and tracked courses.
+The Mini App uses the saved bot theme for copy and the Pick me or Dead inside colour palette;
+Telegram's light/dark preference remains independent. Choose the bot theme under Settings → Theme.
 
 Missing or invalid authentication returns 401; an unregistered user returns 403.
 Invalid JSON, extra body fields, invalid enum values, non-boolean flags, out-of-range

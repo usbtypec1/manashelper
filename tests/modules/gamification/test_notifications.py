@@ -118,7 +118,7 @@ async def test_disabled_and_stopped_users_do_not_receive_notifications(session, 
 
 
 @pytest.mark.parametrize("locale", ["en", "ru", "ky", "tr", "zh"])
-@pytest.mark.parametrize("theme", [Theme.BASIC, Theme.HALLOWEEN])
+@pytest.mark.parametrize("theme", list(Theme))
 async def test_notification_uses_recipient_locale_theme_and_escaped_copy(session, monkeypatch, locale, theme):
     await setup_user(session, locale=locale, theme=theme)
     original = sender_module.achievement_strings

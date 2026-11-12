@@ -1,29 +1,27 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import messages from './messages.json'
+import TermsLink from './TermsLink.vue'
+import { useTelegram } from './shared/telegram/telegram'
 
-const props = defineProps<{ initialTab: 'settings' | 'courses' }>()
-type TelegramApp = {
-  initData: string; colorScheme?: string; initDataUnsafe?: { user?: { language_code?: string } }
-  ready: () => void; expand: () => void
-  onEvent?: (event: string, callback: () => void) => void
-  offEvent?: (event: string, callback: () => void) => void
-}
+const props = defineProps<{ tab: 'settings' | 'courses' }>()
+const router = useRouter()
 type Course = { id: number; number: number; is_tracked: boolean }
 type TrackedCourse = { id: number; number: number; department_name: string; faculty_name: string }
 type CatalogItem = { id: string; name: string }
 type Settings = {
-  locale: string; ui: Record<string, string>
+  locale: string; theme: string; ui: Record<string, string>
   notifications: { schedule_changes_enabled: boolean; exam_grades_enabled: boolean; lesson_skips_enabled: boolean; broadcast_muted_until: string | null }
   food: { weekday: number; lunch_enabled: boolean; dinner_enabled: boolean }[]
   eders: Record<string, boolean> | null; tracked_courses: TrackedCourse[]
 }
-const telegram = (window as Window & { Telegram?: { WebApp?: TelegramApp } }).Telegram?.WebApp
-const detected = telegram?.initDataUnsafe?.user?.language_code?.split('-')[0] ?? 'en'
+const { rawInitData, languageCode } = useTelegram()
+const detected = languageCode.value
 const locale = ref(detected in messages ? detected : 'en')
 const data = ref<Settings>()
 const copy = computed<Record<string, string>>(() => data.value?.ui ?? messages[locale.value as keyof typeof messages].preferences)
-const tab = ref(props.initialTab)
+const tab = computed(() => props.tab)
 const loading = ref(true)
 const busy = ref(false)
 const error = ref(false)
@@ -45,7 +43,7 @@ const broadcastsEnabled = computed(() => {
 async function api<T>(path: string, body?: object): Promise<T> {
   const response = await fetch(`/api/${path}`, {
     method: body ? 'PUT' : 'GET', cache: 'no-store',
-    headers: { Authorization: `tma ${telegram?.initData ?? ''}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    headers: { Authorization: `tma ${rawInitData.value ?? ''}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
     ...(body ? { body: JSON.stringify(body) } : {}),
   })
   if (response.status === 401 || response.status === 403) expired.value = true
@@ -54,6 +52,7 @@ async function api<T>(path: string, body?: object): Promise<T> {
 }
 function apply(settings: Settings) {
   data.value = settings
+  document.documentElement.dataset.botTheme = settings.theme
   locale.value = settings.locale in messages ? settings.locale : 'en'
   document.documentElement.lang = locale.value
   document.title = settings.ui.title ?? ''
@@ -113,28 +112,22 @@ function checked(event: Event) {
   return desired
 }
 function courseName(number: number) { return copy.value.course_number?.replace('{number}', String(number)) }
-function applyTheme() { document.documentElement.dataset.theme = telegram?.colorScheme ?? 'dark' }
 onMounted(() => {
-  applyTheme()
-  telegram?.onEvent?.('themeChanged', applyTheme)
-  telegram?.ready()
-  telegram?.expand()
-  if (telegram?.initData) void load()
+  if (rawInitData.value) void load()
   else loading.value = false
 })
-onUnmounted(() => telegram?.offEvent?.('themeChanged', applyTheme))
 </script>
 
 <template>
   <main class="app-shell preferences">
-    <section v-if="!telegram?.initData" class="notice" role="status"><p>{{ copy.open_telegram }}</p></section>
+    <section v-if="!rawInitData" class="notice" role="status"><p>{{ copy.open_telegram }}</p></section>
     <section v-else-if="loading" class="notice" role="status"><p>{{ copy.loading }}</p></section>
     <section v-else-if="expired" class="notice" role="alert"><p>{{ copy.session_expired }}</p></section>
     <template v-else>
       <h1>{{ copy.title }}</h1>
       <nav class="view-switch" :aria-label="copy.title">
-        <button :aria-pressed="tab === 'settings'" @click="tab = 'settings'">{{ copy.notifications }}</button>
-        <button :aria-pressed="tab === 'courses'" @click="tab = 'courses'">{{ copy.courses }}</button>
+        <button :aria-pressed="tab === 'settings'" @click="router.push({ name: 'settings' })">{{ copy.notifications }}</button>
+        <button :aria-pressed="tab === 'courses'" @click="router.push({ name: 'courses' })">{{ copy.courses }}</button>
       </nav>
       <div v-if="error" class="preference-error" role="alert">
         <p>{{ copy.error }}</p><button class="primary" :disabled="busy" @click="load">{{ copy.retry }}</button>
@@ -201,6 +194,7 @@ onUnmounted(() => telegram?.offEvent?.('themeChanged', applyTheme))
         </fieldset>
       </template>
     </template>
+    <TermsLink :locale="locale" :from="tab" />
   </main>
 </template>
 

@@ -3,7 +3,7 @@ from typing import Any
 
 from aiogram.utils.i18n import gettext as _
 
-from manashelper.modules.gamification.application.queries import AchievementProfile
+from manashelper.modules.gamification.application.queries import AchievementProfile, LeaderboardEntry
 from manashelper.platform.i18n.catalog import i18n
 
 
@@ -56,3 +56,28 @@ def localize_profile(profile: AchievementProfile, locale: str) -> dict[str, Any]
             card["name"], card["description"] = strings[card["key"]]
     result["locale"] = locale
     return result
+
+
+def localize_leaderboard(entries: tuple[LeaderboardEntry, ...], viewer_id: int, locale: str) -> dict[str, Any]:
+    with i18n.context(), i18n.use_locale(locale):
+        strings = achievement_strings()
+        return {
+            "entries": [
+                {
+                    "full_name": entry.full_name,
+                    "score": entry.score,
+                    "rank": entry.rank,
+                    "is_self": entry.user_id == viewer_id,
+                    "achievements": [
+                        {
+                            "key": award.key,
+                            "name": strings[award.key][0],
+                            "description": strings[award.key][1],
+                            "earned_at": award.earned_at,
+                        }
+                        for award in entry.achievements
+                    ],
+                }
+                for entry in entries
+            ]
+        }

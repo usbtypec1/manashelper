@@ -15,6 +15,7 @@ from manashelper.bootstrap import load_models
 from manashelper.core.config import get_settings
 from manashelper.core.database import Base
 from manashelper.core.provider import CoreProvider
+from manashelper.localization.theme import Theme
 from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.food_menu.provider import FoodMenuProvider
 from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
@@ -72,14 +73,21 @@ async def app() -> web.Application:
 
     async def fixture(request: web.Request) -> web.Response:
         user_id = PREVIEW_USER
-        if request.query.get("preferences") == "1":
+        if request.query.get("preferences") == "1" or "theme" in request.query:
             user_id = next(preference_users)
             locale = request.query.get("locale", "ru")
             if locale not in {"en", "ru", "ky", "tr", "zh"}:
                 raise web.HTTPBadRequest()
+            try:
+                theme = Theme(request.query.get("theme", "basic"))
+            except ValueError as error:
+                raise web.HTTPBadRequest() from error
             async with container() as scope:
                 session = await scope.get(AsyncSession)
-                session.add(User(id=user_id, full_name="Preferences fixture", locale=locale))
+                session.add(User(id=user_id, full_name="Preferences fixture", locale=locale, theme=theme.value))
+                await session.flush()
+                if request.query.get("preferences") != "1":
+                    await (await scope.get(AchievementRepository)).set_enabled(user_id, True)
         return web.json_response({"initData": authorization(user_id).removeprefix("tma ")})
 
     async def lifecycle(application: web.Application):
@@ -99,6 +107,10 @@ async def app() -> web.Application:
             progress.food_views = 63
             for key in ("foodie", "seller", "eldin_balasy"):
                 await repo.award(PREVIEW_USER, key, datetime.now(UTC))
+            session.add(User(id=PREVIEW_USER - 1, full_name="Участник <Manas>", locale="tr"))
+            await session.flush()
+            await repo.set_enabled(PREVIEW_USER - 1, True)
+            await repo.award(PREVIEW_USER - 1, "champion", datetime.now(UTC))
         try:
             yield
         finally:

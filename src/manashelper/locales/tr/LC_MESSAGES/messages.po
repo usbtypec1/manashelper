@@ -613,8 +613,8 @@ msgstr "💵 Fiyat: <b>{price}</b> som"
 msgid "ads.valid_until"
 msgstr "⏰ Geçerlilik tarihi: {date}"
 
-msgid "ads.contact_link"
-msgstr "📞 <a href=\"{link}\">Satıcının iletişim bilgilerini görmek için buraya dokunun</a>"
+msgid "ads.contacts_button"
+msgstr "İletişim"
 
 msgid "ads.contacts"
 msgstr "📞 İletişim:"
@@ -1290,3 +1290,427 @@ msgstr "Cumartesi"
 
 msgid "miniapp.ui.sunday"
 msgstr "Pazar"
+
+msgid "theme.pickme"
+msgstr "🎀 Pick me"
+
+msgid "pickme.common.welcome"
+msgstr "🎀 Beni seçtin! Üniversiteyi birlikte atlatalım, olur mu? 🥺"
+
+msgid "pickme.menu.food"
+msgstr "🍓 Birlikte yemek?"
+
+msgid "pickme.menu.study"
+msgstr "🎀 Benimle çalış"
+
+msgid "pickme.menu.schedule"
+msgstr "🗓 Ders planlarımız"
+
+msgid "pickme.menu.attendance"
+msgstr "🥺 Derslere gidiyorsun, değil mi?"
+
+msgid "pickme.menu.grades"
+msgstr "💗 Notlarını gösterir misin?"
+
+msgid "pickme.menu.eders"
+msgstr "🎀 Eders köşen"
+
+msgid "pickme.menu.eders_materials"
+msgstr "📚 Sana özel ders notları"
+
+msgid "pickme.menu.study_week"
+msgstr "🗓 Birlikte haftamız"
+
+msgid "pickme.menu.marketplace"
+msgstr "🛍 Biraz alışveriş?"
+
+msgid "pickme.menu.settings"
+msgstr "🎀 Beni kendine göre ayarla"
+
+msgid "pickme.menu.main"
+msgstr "🏡 Bizim köşemize dön"
+
+msgid "pickme.menu.obis"
+msgstr "🎓 Birlikte OBIS’e?"
+
+msgid "pickme.menu.achievements"
+msgstr "💗 Küçük zaferlerin"
+
+msgid "pickme.settings.title"
+msgstr "🎀 En sevdiğin yardımcın olayım"
+
+msgid "pickme.theme.prompt"
+msgstr "🎀 Görünüşümü seç! Seçimini hatırlayacağım 🥺"
+
+msgid "pickme.theme.selected"
+msgstr "💗 Yeni görünüşüm: {theme}"
+
+msgid "pickme.common.back"
+msgstr "🎀 Beni geri götür"
+
+msgid "pickme.common.back_to_menu"
+msgstr "🏡 Menümüze dön"
+
+msgid "pickme.common.error_retry"
+msgstr "🥺 Olmadı. Benimle tekrar dener misin?"
+
+msgid "pickme.food.day_selection_title"
+msgstr "🍓 Yemekhanede bir buluşma"
+
+msgid "pickme.food.choose_day"
+msgstr "🎀 Hangi gün birlikte yiyoruz?"
+
+msgid "pickme.food.menu_header"
+msgstr "🍓 Menümüz · {weekday}, {date}"
+
+msgid "pickme.food.dish"
+msgstr "🎀 {index}. {name} — {calories} kcal"
+
+msgid "pickme.food.total_calories"
+msgstr "💗 Günün için enerji: {calories} kcal"
+
+msgid "pickme.food.rating"
+msgstr "💗 Yemeğimizin puanı: {average} ({count})"
+
+msgid "pickme.food.no_ratings"
+msgstr "🥺 Menümüze ilk puanı sen verir misin?"
+
+msgid "pickme.food.rate_prompt"
+msgstr "💗 Menüye 1 ile 5 arası puan verir misin? Puanını değiştirebilirsin."
+
+msgid "pickme.food.rating_thanks"
+msgstr "💗 Puan verdin! Teşekkürler, fark ettim 🥺"
+
+msgid "pickme.food.enjoy_meal"
+msgstr "🍓 Afiyet olsun! Bana da yer ayırır mısın?"
+
+msgid "pickme.food.open_menu"
+msgstr "🍓 Menümüzü göster"
+
+msgid "pickme.food.today_unpublished"
+msgstr "🥺 Bugünün menüsü henüz yayımlanmadı. Seninle bekliyorum."
+
+msgid "pickme.food.menu_unpublished"
+msgstr "🥺 O günün menüsü henüz yayımlanmadı. Sonra tekrar bakar mısın?"
+
+msgid "pickme.schedule.search_prompt"
+msgstr "🎀 Hangi dersi arıyoruz? Türkçe harfler yerine Latin harfleri de olur: ş için s, ı için i."
+
+msgid "pickme.schedule.no_tracked_courses"
+msgstr "🥺 Henüz sınıf seçmedin. Aşağıdan seç, ders programını göstereyim."
+
+msgid "pickme.schedule.no_classes"
+msgstr "🎀 Ders yok. Kendine biraz zaman?"
+
+msgid "pickme.schedule.changes_header"
+msgstr "💌 <b>Ders programın değişti — haberleri getirdim</b>"
+
+msgid "pickme.obis.student_number_prompt"
+msgstr "🎀 Öğrenci numaranı yaz, OBIS’e bakalım."
+
+msgid "pickme.obis.password_prompt"
+msgstr "🎀 Şimdi OBIS şifreni gir."
+
+msgid "pickme.obis.loading_grades"
+msgstr "💗 Notlarını getiriyorum. Biraz benimle kalır mısın?"
+
+msgid "pickme.obis.loading_attendance"
+msgstr "🥺 Devam durumuna birlikte bakalım…"
+
+msgid "pickme.obis.new_grade"
+msgstr "💌 “{lesson}” için yeni not — hemen sana geldim!\n{exam}: {score}"
+
+msgid "pickme.obis.skip_recorded"
+msgstr "⚠️ “{lesson}” için devamsızlık kaydedildi ({skip_type}). Kendine iyi bak 💗"
+
+msgid "pickme.eders.reminder_day"
+msgstr "💌 Eders son teslimine bir gün kaldı. Senin için hatırladım."
+
+msgid "pickme.eders.reminder_two_hours"
+msgstr "💌 Eders son teslimine iki saat kaldı. Benden küçük bir hatırlatma."
+
+msgid "pickme.eders.empty"
+msgstr "🎀 Bu filtrede bir şey yok. Başkasına bakalım mı?"
+
+msgid "pickme.notifications.title"
+msgstr "💌 Sana ne zaman yazabilirim?"
+
+msgid "pickme.feedback.message_prompt"
+msgstr "💌 Yönetime söylemek istediğini yaz. Yanıt buraya gelecek."
+
+msgid "pickme.feedback.sent"
+msgstr "💗 Mesajını yönetime ilettim. Yazdığın için teşekkürler!"
+
+msgid "pickme.ads.review_prompt"
+msgstr "🎀 İlanına son bir kez bakalım mı?"
+
+msgid "pickme.ads.title_prompt"
+msgstr "🎀 İlanını öne çıkaralım. En fazla {max} karakterlik bir <b>başlık</b> gönder."
+
+msgid "pickme.data.preparing"
+msgstr "🎀 Senin için hazırlanıyorum. Sonraki arka plan güncellemesinden sonra bak (15 dakikada bir)."
+
+msgid "pickme.gamification.ui.collection"
+msgstr "💗 Küçük zaferlerim"
+
+msgid "pickme.gamification.ui.leaderboard"
+msgstr "🎀 Kampüsün yıldızları"
+
+msgid "pickme.gamification.ui.subtitle"
+msgstr "🎀 Küçük zaferlerini fark ediyorum."
+
+msgid "pickme.miniapp.ui.title"
+msgstr "🎀 Sıcacık köşen"
+
+msgid "pickme.miniapp.ui.note"
+msgstr "💌 Sana nelerden haber vereyim? Her değişiklik hemen kaydedilir."
+
+msgid "pickme.miniapp.ui.saved"
+msgstr "💗 Senin için kaydettim"
+
+msgid "pickme.miniapp.ui.error"
+msgstr "🥺 Kaydedilemedi. Tekrar deneyelim mi?"
+
+msgid "pickme.food.rich_menu_header"
+msgstr "🍓 Menümüz · {weekday}, {date}"
+
+msgid "pickme.food.rich_dish"
+msgstr "🎀 {index}. {name} — {calories} kcal"
+
+msgid "pickme.food.rich_total_calories"
+msgstr "💗 Günün için enerji: {calories} kcal"
+
+msgid "pickme.food.rich_rating"
+msgstr "💗 Yemeğimizin puanı: {average} ({count})"
+
+msgid "pickme.menu.achievements_button"
+msgstr "💗 Küçük zaferlerin"
+
+msgid "pickme.miniapp.ui.achievements"
+msgstr "💗 Küçük zaferlerin"
+
+msgid "theme.deadinside"
+msgstr "🖤 Dead inside"
+
+msgid "deadinside.common.welcome"
+msgstr "🖤 Geldin. Dönem devam ediyor."
+
+msgid "deadinside.menu.food"
+msgstr "🥀 Yemekhane. Her zamanki gibi."
+
+msgid "deadinside.menu.study"
+msgstr "🖤 Ders rutini"
+
+msgid "deadinside.menu.schedule"
+msgstr "🕰 Yine dersler"
+
+msgid "deadinside.menu.attendance"
+msgstr "🥀 Yoklama izleri"
+
+msgid "deadinside.menu.grades"
+msgstr "🖤 Notların hükmü"
+
+msgid "deadinside.menu.eders"
+msgstr "🌑 Karanlıkta Eders"
+
+msgid "deadinside.menu.eders_materials"
+msgstr "📜 Gölgelerden notlar"
+
+msgid "deadinside.menu.study_week"
+msgstr "🕰 Yedi günlük rutin"
+
+msgid "deadinside.menu.marketplace"
+msgstr "🥀 Sahibini arayan eşyalar"
+
+msgid "deadinside.menu.settings"
+msgstr "⚙️ Karanlığı ayarla"
+
+msgid "deadinside.menu.main"
+msgstr "🌑 Yine başa dön"
+
+msgid "deadinside.menu.obis"
+msgstr "🖤 OBIS. Sayılarla yüzleş."
+
+msgid "deadinside.menu.achievements"
+msgstr "🥀 Karanlıktaki küçük zaferler"
+
+msgid "deadinside.settings.title"
+msgstr "🌑 Karanlık köşen"
+
+msgid "deadinside.theme.prompt"
+msgstr "🥀 Karanlığın tonunu seç. Hatırlayacağım."
+
+msgid "deadinside.theme.selected"
+msgstr "🖤 Ruh hâli kaydedildi: {theme}"
+
+msgid "deadinside.common.back"
+msgstr "← Gölgelere dön"
+
+msgid "deadinside.common.back_to_menu"
+msgstr "🌑 Menüye dön"
+
+msgid "deadinside.common.error_retry"
+msgstr "🥀 Olmadı. Tekrar dene."
+
+msgid "deadinside.food.day_selection_title"
+msgstr "🥀 Yemekhane günlükleri"
+
+msgid "deadinside.food.choose_day"
+msgstr "🕰 Hangi günün menüsü?"
+
+msgid "deadinside.food.menu_header"
+msgstr "🥀 Rutinin menüsü · {weekday}, {date}"
+
+msgid "deadinside.food.dish"
+msgstr "🖤 {index}. {name} — <b>{calories}</b> kcal"
+
+msgid "deadinside.food.rich_dish"
+msgstr "🖤 {index}. {name} — {calories} kcal"
+
+msgid "deadinside.food.total_calories"
+msgstr "🕰 Bir gün daha için yakıt: {calories} kcal"
+
+msgid "deadinside.food.rating"
+msgstr "🥀 Yemeğin hükmü: {average} ({count})"
+
+msgid "deadinside.food.no_ratings"
+msgstr "🥀 Henüz bir hüküm yok. İlk puanı sen ver."
+
+msgid "deadinside.food.rate_prompt"
+msgstr "🖤 1 ile 5 arası puan ver. Fikrini değiştirebilirsin."
+
+msgid "deadinside.food.rating_thanks"
+msgstr "🖤 Hüküm kaydedildi."
+
+msgid "deadinside.food.enjoy_meal"
+msgstr "🥀 Yemeğini ye. Dersler biraz beklesin."
+
+msgid "deadinside.food.open_menu"
+msgstr "🥀 Yemekhane günlüklerini aç"
+
+msgid "deadinside.food.today_unpublished"
+msgstr "🌑 Bugünün menüsü hâlâ gölgelerde. Sonra tekrar bak."
+
+msgid "deadinside.food.menu_unpublished"
+msgstr "🌑 Bu günün menüsü henüz yok. Sonra tekrar bak."
+
+msgid "deadinside.food.no_available_menus"
+msgstr "🌑 Henüz menü yayımlanmadı. Sonra tekrar bak."
+
+msgid "deadinside.schedule.no_classes"
+msgstr "🌑 Ders yok. Rutine bir ara."
+
+msgid "deadinside.schedule.changes_header"
+msgstr "🥀 <b>Program değişti. Rutinde yeni bir dönemeç.</b>"
+
+msgid "deadinside.obis.loading_grades"
+msgstr "🖤 Notların hükmüne bakıyoruz…"
+
+msgid "deadinside.obis.loading_attendance"
+msgstr "🕰 Yoklama izlerini arıyoruz…"
+
+msgid "deadinside.obis.new_grade"
+msgstr "🖤 «{lesson}» için yeni hüküm\n{exam}: {score}"
+
+msgid "deadinside.obis.skip_recorded"
+msgstr "🥀 «{lesson}» için bir devamsızlık daha kaydedildi ({skip_type})."
+
+msgid "deadinside.eders.reminder_day"
+msgstr "🕰 Eders teslimine bir gün kaldı. Saat işliyor."
+
+msgid "deadinside.eders.reminder_two_hours"
+msgstr "🕰 Eders teslimine iki saat kaldı. Hâlâ vakit var."
+
+msgid "deadinside.eders.opened_notification"
+msgstr "🌑 Gölgelerden bir Eders etkinliği çıktı"
+
+msgid "deadinside.eders.changed_notification"
+msgstr "🥀 Eders teslim tarihi değişti"
+
+msgid "deadinside.data.preparing"
+msgstr "🌑 Şimdilik sessizlik. Arka plan güncellemesi 15 dakikada bir. Bir sonrakinden sonra tekrar bak."
+
+msgid "deadinside.gamification.ui.collection"
+msgstr "🖤 Sessiz zaferlerim"
+
+msgid "deadinside.gamification.ui.leaderboard"
+msgstr "🥀 Başaranlar"
+
+msgid "deadinside.gamification.ui.subtitle"
+msgstr "🖤 Karanlıkta da zaferler sayılır."
+
+msgid "deadinside.miniapp.ui.title"
+msgstr "🌑 Karanlık köşen"
+
+msgid "deadinside.miniapp.ui.note"
+msgstr "🕰 Sessizliği neyin bozacağını seç. Her değişiklik anında kaydedilir."
+
+msgid "deadinside.miniapp.ui.saved"
+msgstr "🖤 Kaydedildi. Sessizce."
+
+msgid "deadinside.miniapp.ui.error"
+msgstr "🥀 Kaydedilemedi. Tekrar dene."
+
+msgid "ads.rich_price"
+msgstr "💵 Fiyat: {price} som"
+
+
+msgid "terms.title"
+msgstr "Kullanım koşulları ve veri işleme"
+
+msgid "terms.language"
+msgstr "Dil"
+
+msgid "terms.updated_label"
+msgstr "Güncelleme"
+
+msgid "terms.back"
+msgstr "Geri"
+
+msgid "terms.services.title"
+msgstr "1. Hizmet ve onay"
+
+msgid "terms.services.body"
+msgstr "Manashelper (@manas_helper_bot), üniversitenin resmî hizmeti olmayan bağımsız bir öğrenci projesidir. Ders programı ve ders seçimi, yemekhane menüsü, OBIS sonuçları, Eders materyalleri ve son tarihler, haftalık görünüm, bildirimler, ilanlar, geri bildirim ve başarımlar sunar. Öğrenci hesabını bağlamak isteğe bağlıdır. Bilgilerinizi girmeden önce koşulları kabul ederek aşağıda açıklanan erişim ve işlemeye izin verirsiniz. Yalnızca kendi hesabınızı kullanın."
+
+msgid "terms.data.title"
+msgstr "2. Veriler ve koruma"
+
+msgid "terms.data.body"
+msgstr "Hizmet Telegram kimliğinizi, adınızı, kullanıcı adınızı, dilinizi, temanızı, seçili dersleri, bildirim ayarlarını, öğrenci numarasını, şifrelenmiş OBIS parolasını, akademik veri kopyalarını, karşılaştırma durumlarını ve başarımları saklar. İlan metni, fotoğrafları ve iletişim bilgileri yayın ve moderasyon için işlenir; geri bildirim yöneticiye iletilir. İzin verilen özel sohbet eylemleri kaydedilir; parola metni günlükte maskelenir ve bot parola mesajını silmeye çalışır. OBIS parolası AES-GCM ile şifrelenir; profil, veri kopyaları, günlükler ve başarımlar uygulama tarafından ayrı ayrı şifrelenmez. Telegram ve üniversite sistemleri mesajlaşma ve giriş için gereken verileri alır. Mutlak güvenlik veya tüm verilerin hiçbir üçüncü tarafa aktarılmayacağı garantisi verilmez."
+
+msgid "terms.obis.title"
+msgstr "3. OBIS erişimi"
+
+msgid "terms.obis.body"
+msgstr "Bot /site/login üzerinden giriş yapar, /vs-ders/taken-lessons sayfasından devam durumunu ve /vs-ders/taken-grades sayfasından sınav notlarını okur. Başarımlar açıkken GPA ve dönem sonu notlarına dayalı ödüller için /vs-ders/transkript-detailed da okunur. /site/eders yalnızca doğrudan Eders girişi başarısız olursa tek oturum açmak için kullanılır. Bilgiler saklanmadan doğrulanır. OBIS notları ve devam durumu değiştirilmez. Kullanılan sayfalar aşağıdadır."
+
+msgid "terms.eders.title"
+msgstr "4. Eders erişimi ve tamamlama"
+
+msgid "terms.eders.body"
+msgstr "Eders etkinse bot önce kayıtlı öğrenci numarası ve hizmette yapılandırılmış Moodle parolasıyla giriş yapar; OBIS tek oturum açma yedek yoldur. Moodle AJAX üzerinden kayıtlı ders listesi, ders sayfaları, profil saat dilimi ve ödev/sınav özet sayfaları okunur. Ders ve etkinlik adları, açıklamalar, bağlantılar, açılış/son tarihler, teslim, değerlendirme ve tamamlama durumları saklanır. Dosya, dış bağlantı, klasör, etiket, forum ve geri bildirim bağlantıları ders sayfalarından alınır; içerikleri otomatik indirilmez. AJAX yöntemleri core_course_get_enrolled_courses_by_timeline_classification ve yalnızca açık tamamlama komutunuzla core_completion_update_activity_completion_status_manually yöntemidir. Tamamlandı işareti ve geri alınması Eders durumunu değiştirir; ödev teslim etmez, sınav başlatmaz veya göndermez, not değiştirmez. Sayfanın okunması Moodle tarafından kaydedilebilir. Aşağıdaki yer tutucular ders/etkinlik kimlikleridir."
+
+msgid "terms.sync.title"
+msgstr "5. Arka plan güncellemeleri ve bildirimler"
+
+msgid "terms.sync.body"
+msgstr "OBIS ve Eders verileri genellikle 15 dakikada bir arka planda güncellenir; Eders aralığı farklı olabilir. Ekranlar kayıtlı kopyaları gösterir ve kaynaktan geride kalabilir. Bildirimleri kapatmak veya Mini App uygulamasını kapatmak eşitlemeyi durdurmaz. Ayarlar ders programı, not, devam, menü ve Eders değişikliklerini, hatırlatmaları ve yönetici yayınlarını kontrol eder. Bazı mesajlar kuyruğa alınır ve hatada yeniden denenir. Tekrar işlemeyi önlemek için Telegram güncelleme kimliği ve işleme zamanı saklanır; günlük temizlik iki günden eski kayıtları siler."
+
+msgid "terms.ranking.title"
+msgstr "6. Başarımlar ve sıralama"
+
+msgid "terms.ranking.body"
+msgstr "Başarım erişimi açıkken uygun eylemler kaydedilir; menü görüntüleme, ilanlar ve akademik kopyalara göre ödüller hesaplanır. Ödüllü katılımcılar ilk ona girebilir. Diğer yetkili katılımcılar Telegram profil adını, sırayı, ödül sayısını, kazanılan ödülleri, açıklamalarını ve kazanılma tarihlerini görebilir. Ham notlar, GPA, devam ayrıntıları, öğrenci numarası, giriş bilgileri ve tamamlanmamış ilerleme sıralamada verilmez. Ancak akademik ödüller ve koşulları öğreniminiz hakkında dolaylı bilgi verebilir. Erişimi kapatmak kişiyi sıralamadan gizler ve yeni ilerlemeyi durdurur; eski ödüller korunur. Bunun için Geri bildirim üzerinden yöneticiye başvurun."
+
+msgid "terms.controls.title"
+msgstr "7. Kontroller ve veri talepleri"
+
+msgid "terms.controls.body"
+msgstr "Dil, tema, ders ve bildirim tercihlerini Ayarlar veya Mini App üzerinden değiştirebilirsiniz. Ayarlar → OBIS giriş bilgileri bölümünden öğrenci numarasını ve parolayı değiştirebilir veya silebilirsiniz; silme OBIS sonuç kopyalarını ve karşılaştırma durumlarını da temizler ve bu bilgilerle eşitlemeyi durdurur. Bu işlem diğer tüm kayıtları, Eders geçmişini veya ödülleri silmez. Botu engellemek teslimatı durdurur, verileri silmez. Veri silme, hesap erişimini geri çekme veya başarım erişimi değişikliği için Ayarlar → Geri bildirim ya da @usbtypec kullanın. Tüm profil, kopya, ilan ve ödüller için ortak otomatik silme süresi yoktur; kayıtlar değiştirilene, özellik içinde veya talep üzerine silinene kadar kalabilir."
+
+msgid "terms.limits.title"
+msgstr "8. Doğruluk ve sorumluluk"
+
+msgid "terms.limits.body"
+msgstr "Notları, devamı, son tarihleri ve teslim/tamamlama durumunu üniversitenin resmî sistemlerinden doğrulayın. Bildirimler ve hesaplamalar bilgi amaçlıdır; gecikebilir, eksik veya kullanılamaz olabilir. Hizmet akademik sonuçları veya kesintisiz teslimatı garanti etmez. Hesabınızı koruyun, yalnızca paylaşma hakkınız olan içerik ve iletişim bilgilerini yayınlayın. İlanlar moderasyona tabidir. Bu koşullar mevcut uygulamayı açıklar, yürürlükteki hukukun hak ve yükümlülüklerini kaldırmaz. Kod: https://github.com/usbtypec1/manashelper. Sorular: @usbtypec veya Ayarlar → Geri bildirim."

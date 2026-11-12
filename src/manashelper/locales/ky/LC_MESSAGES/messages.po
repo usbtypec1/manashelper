@@ -615,8 +615,8 @@ msgstr "💵 Баасы: <b>{price}</b> сом"
 msgid "ads.valid_until"
 msgstr "⏰ Мөөнөтү: {date}"
 
-msgid "ads.contact_link"
-msgstr "📞 <a href=\"{link}\">Сатуучунун байланыштарын көрүү үчүн бул жерди басыңыз</a>"
+msgid "ads.contacts_button"
+msgstr "Байланыштар"
 
 msgid "ads.contacts"
 msgstr "📞 Байланыш:"
@@ -1294,3 +1294,427 @@ msgstr "Ишемби"
 
 msgid "miniapp.ui.sunday"
 msgstr "Жекшемби"
+
+msgid "theme.pickme"
+msgstr "🎀 Пикми"
+
+msgid "pickme.common.welcome"
+msgstr "🎀 Мени тандадың! Университет күндөрүн чогуу өткөрөлүчү 🥺"
+
+msgid "pickme.menu.food"
+msgstr "🍓 Чогуу тамактанабызбы?"
+
+msgid "pickme.menu.study"
+msgstr "🎀 Мени менен оку"
+
+msgid "pickme.menu.schedule"
+msgstr "🗓 Сабак пландарыбыз"
+
+msgid "pickme.menu.attendance"
+msgstr "🥺 Сабакка барып жатасыңбы?"
+
+msgid "pickme.menu.grades"
+msgstr "💗 Бааларыңды көрсөтчү"
+
+msgid "pickme.menu.eders"
+msgstr "🎀 Сенин Eders бурчуң"
+
+msgid "pickme.menu.eders_materials"
+msgstr "📚 Сен үчүн материалдар"
+
+msgid "pickme.menu.study_week"
+msgstr "🗓 Биздин жума"
+
+msgid "pickme.menu.marketplace"
+msgstr "🛍 Базарга барабызбы?"
+
+msgid "pickme.menu.settings"
+msgstr "🎀 Мени өзүңө ылайыкта"
+
+msgid "pickme.menu.main"
+msgstr "🏡 Жайлуу бурчубузга"
+
+msgid "pickme.menu.obis"
+msgstr "🎓 OBISке чогуубу?"
+
+msgid "pickme.menu.achievements"
+msgstr "💗 Сенин кичинекей жеңиштериң"
+
+msgid "pickme.settings.title"
+msgstr "🎀 Сүйүктүү жардамчың болгум келет"
+
+msgid "pickme.theme.prompt"
+msgstr "🎀 Мага образ тандачы! Тандооңду эстеп калам 🥺"
+
+msgid "pickme.theme.selected"
+msgstr "💗 Жаңы образым: {theme}"
+
+msgid "pickme.common.back"
+msgstr "🎀 Артка кайтарчы"
+
+msgid "pickme.common.back_to_menu"
+msgstr "🏡 Биздин менюга"
+
+msgid "pickme.common.error_retry"
+msgstr "🥺 Болбой калды. Мени менен дагы аракет кыласыңбы?"
+
+msgid "pickme.food.day_selection_title"
+msgstr "🍓 Ашканадагы жолугушуу"
+
+msgid "pickme.food.choose_day"
+msgstr "🎀 Кайсы күнү чогуу тамактанабыз?"
+
+msgid "pickme.food.menu_header"
+msgstr "🍓 Биздин меню · {weekday}, {date}"
+
+msgid "pickme.food.dish"
+msgstr "🎀 {index}. {name} — {calories} ккал"
+
+msgid "pickme.food.total_calories"
+msgstr "💗 Күнүңө энергия: {calories} ккал"
+
+msgid "pickme.food.rating"
+msgstr "💗 Тамагыбыздын баасы: {average} ({count})"
+
+msgid "pickme.food.no_ratings"
+msgstr "🥺 Менюбузду биринчи баалайсыңбы?"
+
+msgid "pickme.food.rate_prompt"
+msgstr "💗 Менюну 1ден 5ке чейин баалайсыңбы? Бааны өзгөртсө болот."
+
+msgid "pickme.food.rating_thanks"
+msgstr "💗 Бааладың! Рахмат, кубанып калдым 🥺"
+
+msgid "pickme.food.enjoy_meal"
+msgstr "🍓 Тамагың таттуу болсун! Мага орун калтырасыңбы?"
+
+msgid "pickme.food.open_menu"
+msgstr "🍓 Менюбузду көрсөтчү"
+
+msgid "pickme.food.today_unpublished"
+msgstr "🥺 Бүгүнкү меню чыга элек. Сени менен чогуу күтөм."
+
+msgid "pickme.food.menu_unpublished"
+msgstr "🥺 Бул күндүн менюсу чыга элек. Кийинчерээк карайсыңбы?"
+
+msgid "pickme.schedule.search_prompt"
+msgstr "🎀 Кайсы сабакты издейбиз? Түрк тамгаларын латынча жазсаң болот: ş ордуна s, ı ордуна i."
+
+msgid "pickme.schedule.no_tracked_courses"
+msgstr "🥺 Курстарды тандай элексиң. Төмөндөн танда, жадыбалыңды көрсөтөм."
+
+msgid "pickme.schedule.no_classes"
+msgstr "🎀 Сабак жок. Өзүңө бир аз убакыт бөлөсүңбү?"
+
+msgid "pickme.schedule.changes_header"
+msgstr "💌 <b>Жадыбал өзгөрдү — жаңылыктарды алып келдим</b>"
+
+msgid "pickme.obis.student_number_prompt"
+msgstr "🎀 Студенттик номериңди жазчы, OBISке кирели."
+
+msgid "pickme.obis.password_prompt"
+msgstr "🎀 Эми OBIS сырсөзүңдү киргиз."
+
+msgid "pickme.obis.loading_grades"
+msgstr "💗 Бааларыңды жүктөп жатам. Бир аз күтө турасыңбы?"
+
+msgid "pickme.obis.loading_attendance"
+msgstr "🥺 Сабакка катышууну чогуу текшерели…"
+
+msgid "pickme.obis.new_grade"
+msgstr "💌 «{lesson}» боюнча жаңы баа — дароо кабарладым!\n{exam}: {score}"
+
+msgid "pickme.obis.skip_recorded"
+msgstr "⚠️ «{lesson}» боюнча калтыруу катталды ({skip_type}). Өзүңдү кара 💗"
+
+msgid "pickme.eders.reminder_day"
+msgstr "💌 Eders мөөнөтүнө бир күн калды. Сен үчүн эстеп жүрөм."
+
+msgid "pickme.eders.reminder_two_hours"
+msgstr "💌 Eders мөөнөтүнө эки саат калды. Менден кичинекей эскертүү."
+
+msgid "pickme.eders.empty"
+msgstr "🎀 Бул чыпкада эч нерсе жок. Башкасын карайлыбы?"
+
+msgid "pickme.notifications.title"
+msgstr "💌 Качан жазсам болорун айтчы"
+
+msgid "pickme.feedback.message_prompt"
+msgstr "💌 Администрацияга айткың келгенди жаз. Жооп ушул жерге келет."
+
+msgid "pickme.feedback.sent"
+msgstr "💗 Билдирүүңдү администрацияга жөнөттүм. Жазганыңа рахмат!"
+
+msgid "pickme.ads.review_prompt"
+msgstr "🎀 Жарнамаңды дагы бир карайлыбы?"
+
+msgid "pickme.ads.title_prompt"
+msgstr "🎀 Жарнамаңды көрүнүктүү кылалы. {max} белгиге чейинки <b>аталышын</b> жаз."
+
+msgid "pickme.data.preparing"
+msgstr "🎀 Сен үчүн даярдап жатам. Кийинки жаңыртуудан кийин кара — ар 15 мүнөт сайын жаңыртылат."
+
+msgid "pickme.gamification.ui.collection"
+msgstr "💗 Менин кичинекей жеңиштерим"
+
+msgid "pickme.gamification.ui.leaderboard"
+msgstr "🎀 Кампустун жылдыздары"
+
+msgid "pickme.gamification.ui.subtitle"
+msgstr "🎀 Кичинекей жеңиштериңди байкайм."
+
+msgid "pickme.miniapp.ui.title"
+msgstr "🎀 Сенин жайлуу бурчуң"
+
+msgid "pickme.miniapp.ui.note"
+msgstr "💌 Эмне тууралуу жазарымды танда. Ар бир өзгөртүү дароо сакталат."
+
+msgid "pickme.miniapp.ui.saved"
+msgstr "💗 Сен үчүн сактадым"
+
+msgid "pickme.miniapp.ui.error"
+msgstr "🥺 Сакталбай калды. Дагы аракет кылабызбы?"
+
+msgid "pickme.food.rich_menu_header"
+msgstr "🍓 Биздин меню · {weekday}, {date}"
+
+msgid "pickme.food.rich_dish"
+msgstr "🎀 {index}. {name} — {calories} ккал"
+
+msgid "pickme.food.rich_total_calories"
+msgstr "💗 Күнүңө энергия: {calories} ккал"
+
+msgid "pickme.food.rich_rating"
+msgstr "💗 Тамагыбыздын баасы: {average} ({count})"
+
+msgid "pickme.menu.achievements_button"
+msgstr "💗 Сенин кичинекей жеңиштериң"
+
+msgid "pickme.miniapp.ui.achievements"
+msgstr "💗 Сенин кичинекей жеңиштериң"
+
+msgid "theme.deadinside"
+msgstr "🖤 Дединсайд"
+
+msgid "deadinside.common.welcome"
+msgstr "🖤 Сен келдиң. Семестр уланууда."
+
+msgid "deadinside.menu.food"
+msgstr "🥀 Йемек. Адаттагыдай."
+
+msgid "deadinside.menu.study"
+msgstr "🖤 Окуу күнүмдүгү"
+
+msgid "deadinside.menu.schedule"
+msgstr "🕰 Кайра сабакка"
+
+msgid "deadinside.menu.attendance"
+msgstr "🥀 Катышуунун издери"
+
+msgid "deadinside.menu.grades"
+msgstr "🖤 Баалардын өкүмү"
+
+msgid "deadinside.menu.eders"
+msgstr "🌑 Караңгыдагы Eders"
+
+msgid "deadinside.menu.eders_materials"
+msgstr "📜 Көлөкөдөгү конспекттер"
+
+msgid "deadinside.menu.study_week"
+msgstr "🕰 Жети күндүк күнүмдүк иштер"
+
+msgid "deadinside.menu.marketplace"
+msgstr "🥀 Буюмдар ээсин издейт"
+
+msgid "deadinside.menu.settings"
+msgstr "⚙️ Караңгылыкты жөндөө"
+
+msgid "deadinside.menu.main"
+msgstr "🌑 Кайра башына"
+
+msgid "deadinside.menu.obis"
+msgstr "🖤 OBIS. Сандарды карап көр."
+
+msgid "deadinside.menu.achievements"
+msgstr "🥀 Караңгыдагы кичинекей жеңиштер"
+
+msgid "deadinside.settings.title"
+msgstr "🌑 Сенин караңгы бурчуң"
+
+msgid "deadinside.theme.prompt"
+msgstr "🥀 Караңгылыктын өңүн танда. Эсимде сактайм."
+
+msgid "deadinside.theme.selected"
+msgstr "🖤 Маанай сакталды: {theme}"
+
+msgid "deadinside.common.back"
+msgstr "← Кайра көлөкөгө"
+
+msgid "deadinside.common.back_to_menu"
+msgstr "🌑 Кайра менюга"
+
+msgid "deadinside.common.error_retry"
+msgstr "🥀 Болбой калды. Кайра аракет кыл."
+
+msgid "deadinside.food.day_selection_title"
+msgstr "🥀 Йемекхананын баяны"
+
+msgid "deadinside.food.choose_day"
+msgstr "🕰 Кайсы күндүн менюсу?"
+
+msgid "deadinside.food.menu_header"
+msgstr "🥀 Күнүмдүк меню · {weekday}, {date}"
+
+msgid "deadinside.food.dish"
+msgstr "🖤 {index}. {name} — <b>{calories}</b> ккал"
+
+msgid "deadinside.food.rich_dish"
+msgstr "🖤 {index}. {name} — {calories} ккал"
+
+msgid "deadinside.food.total_calories"
+msgstr "🕰 Дагы бир күнгө кубат: {calories} ккал"
+
+msgid "deadinside.food.rating"
+msgstr "🥀 Тамакка баа: {average} ({count})"
+
+msgid "deadinside.food.no_ratings"
+msgstr "🥀 Азырынча баа жок. Биринчи баа бер."
+
+msgid "deadinside.food.rate_prompt"
+msgstr "🖤 1ден 5ке чейин баала. Бааны өзгөртсөң болот."
+
+msgid "deadinside.food.rating_thanks"
+msgstr "🖤 Баа жазылды."
+
+msgid "deadinside.food.enjoy_meal"
+msgstr "🥀 Тамактанып ал. Сабактар бир аз күтө турсун."
+
+msgid "deadinside.food.open_menu"
+msgstr "🥀 Йемектин баянын ачуу"
+
+msgid "deadinside.food.today_unpublished"
+msgstr "🌑 Бүгүнкү меню азырынча көлөкөдө. Кийин карап көр."
+
+msgid "deadinside.food.menu_unpublished"
+msgstr "🌑 Бул күндүн менюсу азырынча жок. Кийин карап көр."
+
+msgid "deadinside.food.no_available_menus"
+msgstr "🌑 Меню азырынча жарыялана элек. Кийин карап көр."
+
+msgid "deadinside.schedule.no_classes"
+msgstr "🌑 Сабак жок. Күнүмдүк иштерден тыныгуу."
+
+msgid "deadinside.schedule.changes_header"
+msgstr "🥀 <b>Жадыбал өзгөрдү. Күнүмдүк иштерде жаңы бурулуш.</b>"
+
+msgid "deadinside.obis.loading_grades"
+msgstr "🖤 Баалардын өкүмүн карайбыз…"
+
+msgid "deadinside.obis.loading_attendance"
+msgstr "🕰 Катышуунун издерин издейбиз…"
+
+msgid "deadinside.obis.new_grade"
+msgstr "🖤 «{lesson}» боюнча жаңы баа\n{exam}: {score}"
+
+msgid "deadinside.obis.skip_recorded"
+msgstr "🥀 Журналда «{lesson}» боюнча дагы бир калтыруу ({skip_type})."
+
+msgid "deadinside.eders.reminder_day"
+msgstr "🕰 Eders мөөнөтүнө бир күн калды. Саат жүрүп жатат."
+
+msgid "deadinside.eders.reminder_two_hours"
+msgstr "🕰 Eders мөөнөтүнө эки саат калды. Дагы убакыт бар."
+
+msgid "deadinside.eders.opened_notification"
+msgstr "🌑 Көлөкөдөн Eders тапшырмасы чыкты"
+
+msgid "deadinside.eders.changed_notification"
+msgstr "🥀 Eders мөөнөтү өзгөрдү"
+
+msgid "deadinside.data.preparing"
+msgstr "🌑 Бул жерде азырынча тынч. Фондук жаңыртуу ар 15 мүнөттө жүрөт. Кийинкисинен кийин карап көр."
+
+msgid "deadinside.gamification.ui.collection"
+msgstr "🖤 Менин тынч жеңиштерим"
+
+msgid "deadinside.gamification.ui.leaderboard"
+msgstr "🥀 Колунан келгендер"
+
+msgid "deadinside.gamification.ui.subtitle"
+msgstr "🖤 Караңгыда да жеңиштер эсептелет."
+
+msgid "deadinside.miniapp.ui.title"
+msgstr "🌑 Сенин караңгы бурчуң"
+
+msgid "deadinside.miniapp.ui.note"
+msgstr "🕰 Тынчтыкты эмне бузсун, өзүң чеч. Ар бир өзгөртүү дароо сакталат."
+
+msgid "deadinside.miniapp.ui.saved"
+msgstr "🖤 Сакталды. Ашыкча сөзсүз."
+
+msgid "deadinside.miniapp.ui.error"
+msgstr "🥀 Сакталган жок. Кайра аракет кыл."
+
+msgid "ads.rich_price"
+msgstr "💵 Баасы: {price} сом"
+
+
+msgid "terms.title"
+msgstr "Колдонуучу келишими жана маалыматтарды иштетүү"
+
+msgid "terms.language"
+msgstr "Тил"
+
+msgid "terms.updated_label"
+msgstr "Жаңыртылды"
+
+msgid "terms.back"
+msgstr "Артка"
+
+msgid "terms.services.title"
+msgstr "1. Кызмат жана макулдук"
+
+msgid "terms.services.body"
+msgstr "Manashelper (@manas_helper_bot) — университеттин расмий кызматы эмес, көз карандысыз студенттик долбоор. Ал сабак жадыбалын жана курстарды тандоону, ашкана менюсун, OBIS жыйынтыктарын, Eders материалдарын жана мөөнөттөрүн, окуу жумасын, билдирүүлөрдү, жарыяларды, кайтарым байланышты жана жетишкендиктерди сунуштайт. Окуу аккаунтун туташтыруу ыктыярдуу. Маалыматтарды киргизүүдөн мурда келишимди кабыл алуу менен төмөндө сүрөттөлгөн кирүүгө жана иштетүүгө макул болосуз. Өз аккаунтуңузду гана колдонуңуз."
+
+msgid "terms.data.title"
+msgstr "2. Маалыматтар жана коргоо"
+
+msgid "terms.data.body"
+msgstr "Кызмат Telegram ID, аты-жөнү, username, тил, тема, тандалган курстар, билдирүү жөндөөлөрү, студенттик номер, шифрленген OBIS сырсөзү, окуу маалыматтарынын көчүрмөлөрү, салыштыруу абалдары жана жетишкендиктерди сактайт. Жарыянын тексти, сүрөттөрү жана байланыштары жарыялоо жана модерация үчүн иштетилет; кайтарым байланыш администраторго жөнөтүлөт. Уруксат берилген жеке чат аракеттери журналга жазылат; сырсөздүн тексти жашырылат жана бот сырсөз камтылган билдирүүнү өчүрүүгө аракет кылат. OBIS сырсөзү AES-GCM менен шифрленет, бирок профиль, көчүрмөлөр, журналдар жана жетишкендиктер тиркеме тарабынан өзүнчө шифрленбейт. Telegram жана университет системалары билдирүү жана кирүү үчүн керектүү маалыматтарды алышат. Толук коопсуздук же маалымат эч кимге берилбейт деген кепилдик жок."
+
+msgid "terms.obis.title"
+msgstr "3. OBIS системасына кирүү"
+
+msgid "terms.obis.body"
+msgstr "Бот /site/login аркылуу кирип, /vs-ders/taken-lessons барагынан катышууну жана /vs-ders/taken-grades барагынан экзамен бааларын окуйт. Жетишкендиктер иштетилсе, GPA жана жыйынтык баалар боюнча сыйлыктар үчүн /vs-ders/transkript-detailed да окулат. Eders түз кирүүсү ишке ашпаса гана /site/eders аркылуу бирдиктүү кирүү колдонулат. Эсеп маалыматтары сактоодон мурда текшерилет. OBIS баалары жана катышуу өзгөртүлбөйт. Барактар төмөндө көрсөтүлгөн."
+
+msgid "terms.eders.title"
+msgstr "4. Eders жана аткаруу белгилери"
+
+msgid "terms.eders.body"
+msgstr "Eders иштетилгенде бот сакталган студенттик номер жана кызматта жөндөлгөн Moodle сырсөзү менен кирет; кошумча жол — OBIS аркылуу кирүү. Moodle AJAX аркылуу катталган курстар, курс барактары, профилдин убакыт алкагы, тапшырма жана тесттин обзор барактары окулат. Курстардын жана иштердин аттары, сүрөттөмөлөр, шилтемелер, ачылуу жана акыркы мөөнөттөр, тапшыруу, текшерүү жана аткаруу абалдары сакталат. Файл, тышкы ресурс, папка, текст, форум жана сурамжылоо шилтемелери курс барагынан алынат; алардын мазмуну автоматтык жүктөлбөйт. AJAX ыкмалары: core_course_get_enrolled_courses_by_timeline_classification жана сиз аткарууну белгилегенде гана core_completion_update_activity_completion_status_manually. Аткарылды белгиси же аны алып салуу Eders абалын өзгөртөт; ишти тапшырбайт, тестти баштабайт же тапшырбайт жана бааны өзгөртпөйт. Баракты окуунун өзү Moodle журналына түшүшү мүмкүн. Төмөндөгү орун баскычтар курс же иштин ID номерин билдирет."
+
+msgid "terms.sync.title"
+msgstr "5. Фондук жаңыртуу жана билдирүүлөр"
+
+msgid "terms.sync.body"
+msgstr "OBIS жана Eders маалыматтары адатта ар 15 мүнөттө фондо жаңыртылат; Eders аралыгы башкача болушу мүмкүн. Экрандар сакталган көчүрмөлөрдү көрсөтөт жана булактан кечигиши мүмкүн. Билдирүүлөрдү өчүрүү же Mini App жабуу синхрондоштурууну токтотпойт. Жөндөөлөр жадыбал, баалар, катышуу, меню жана Eders өзгөрүүлөрүн, эскертмелерди жана администратордун таратууларын башкарат. Айрым билдирүүлөр кезекке коюлуп, катадан кийин кайталанат. Кайталанган иштетүүнү токтотуу үчүн Telegram жаңыртуу ID жана убактысы сакталат; күнүмдүк тазалоо эки күндөн эски жазууларды өчүрөт."
+
+msgid "terms.ranking.title"
+msgstr "6. Жетишкендиктер жана рейтинг"
+
+msgid "terms.ranking.body"
+msgstr "Жетишкендиктерге кирүү иштетилсе, кызмат тиешелүү аракеттерди эсептеп, меню көрүү, жарыя жана окуу көчүрмөлөрү боюнча сыйлыктарды аныктайт. Сыйлыгы барлар топ-10го кириши мүмкүн. Башка уруксат берилген катышуучулар Telegram атын, ордун, сыйлыктардын санын, алынган сыйлыктарды, сүрөттөмөлөрүн жана даталарын көрөт. Чийки баалар, GPA, катышуу чоо-жайы, студенттик номер, сырсөз жана бүтө элек прогресс рейтингде берилбейт. Бирок окуу сыйлыктары жана шарттары окуу тууралуу маалыматты кыйыр ачышы мүмкүн. Кирүүнү өчүрүү катышуучуну рейтингден жашырып, жаңы прогрессти токтотот; мурдагы сыйлыктар сакталат. Бул үчүн кайтарым байланыш аркылуу администраторго кайрылыңыз."
+
+msgid "terms.controls.title"
+msgstr "7. Башкаруу жана маалымат өтүнүчтөрү"
+
+msgid "terms.controls.body"
+msgstr "Тилди, теманы, курстарды жана билдирүүлөрдү жөндөөлөрдөн же Mini App аркылуу өзгөртө аласыз. Жөндөөлөр → OBIS эсеп маалыматтары бөлүмүндө студенттик номер менен сырсөздү алмаштырып же өчүрө аласыз; өчүрүү OBIS көчүрмөлөрүн жана салыштыруу абалдарын тазалап, бул маалыматтар менен синхрондоштурууну токтотот. Бул башка жазууларды, Eders тарыхын жана сыйлыктарды толук өчүрбөйт. Ботту бөгөттөө билдирүүнү токтотот, бирок маалыматты өчүрбөйт. Маалыматты өчүрүү, аккаунтка кирүүнү токтотуу же жетишкендиктерге кирүүнү өзгөртүү үчүн Жөндөөлөр → Кайтарым байланыш же @usbtypec аркылуу кайрылыңыз. Профиль, көчүрмө, жарыя жана сыйлыктардын баарына бирдиктүү автоматтык өчүрүү мөөнөтү жок; алар алмаштырылганга, функция аркылуу же өтүнүч боюнча өчүрүлгөнгө чейин калышы мүмкүн."
+
+msgid "terms.limits.title"
+msgstr "8. Тактык жана жоопкерчилик"
+
+msgid "terms.limits.body"
+msgstr "Бааларды, катышууну, мөөнөттөрдү жана тапшыруу/аткаруу абалын расмий университет системаларынан текшериңиз. Билдирүүлөр жана эсептөөлөр маалыматтык мүнөздө; кечигиши, толук болбошу же жеткиликсиз болушу мүмкүн. Кызмат окуу натыйжасын же үзгүлтүксүз жеткирүүнү кепилдебейт. Аккаунтуңузду коргоп, бөлүшүүгө укуктуу материалдарды жана байланыштарды гана жарыялаңыз. Жарыялар модерациядан өтөт. Келишим учурдагы иштөөнү сүрөттөйт жана мыйзамдагы укук-милдеттерди жокко чыгарбайт. Код: https://github.com/usbtypec1/manashelper. Суроолор: @usbtypec же Жөндөөлөр → Кайтарым байланыш."

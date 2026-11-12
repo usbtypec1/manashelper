@@ -612,8 +612,8 @@ msgstr "💵 Price: <b>{price}</b> som"
 msgid "ads.valid_until"
 msgstr "⏰ Valid until: {date}"
 
-msgid "ads.contact_link"
-msgstr "📞 <a href=\"{link}\">Tap here to see the seller's contacts</a>"
+msgid "ads.contacts_button"
+msgstr "Contacts"
 
 msgid "ads.contacts"
 msgstr "📞 Contacts:"
@@ -1291,3 +1291,427 @@ msgstr "Saturday"
 
 msgid "miniapp.ui.sunday"
 msgstr "Sunday"
+
+msgid "theme.pickme"
+msgstr "🎀 Pick me"
+
+msgid "pickme.common.welcome"
+msgstr "🎀 You picked me! Let’s get through uni together, okay? 🥺"
+
+msgid "pickme.menu.food"
+msgstr "🍓 Lunch date?"
+
+msgid "pickme.menu.study"
+msgstr "🎀 Study with me"
+
+msgid "pickme.menu.schedule"
+msgstr "🗓 Our class plans"
+
+msgid "pickme.menu.attendance"
+msgstr "🥺 Any missed classes?"
+
+msgid "pickme.menu.grades"
+msgstr "💗 Show me your grades"
+
+msgid "pickme.menu.eders"
+msgstr "🎀 Your Eders corner"
+
+msgid "pickme.menu.eders_materials"
+msgstr "📚 Notes, just for you"
+
+msgid "pickme.menu.study_week"
+msgstr "🗓 Our week together"
+
+msgid "pickme.menu.marketplace"
+msgstr "🛍 A little shopping?"
+
+msgid "pickme.menu.settings"
+msgstr "🎀 Make me your own"
+
+msgid "pickme.menu.main"
+msgstr "🏡 Back to our corner"
+
+msgid "pickme.menu.obis"
+msgstr "🎓 OBIS, together?"
+
+msgid "pickme.menu.achievements"
+msgstr "💗 Your little victories"
+
+msgid "pickme.settings.title"
+msgstr "🎀 Let me be your favourite helper"
+
+msgid "pickme.theme.prompt"
+msgstr "🎀 Pick my look! I’ll remember your choice 🥺"
+
+msgid "pickme.theme.selected"
+msgstr "💗 My new look: {theme}"
+
+msgid "pickme.common.back"
+msgstr "🎀 Take me back"
+
+msgid "pickme.common.back_to_menu"
+msgstr "🏡 Back to our menu"
+
+msgid "pickme.common.error_retry"
+msgstr "🥺 That didn’t work. Try again with me?"
+
+msgid "pickme.food.day_selection_title"
+msgstr "🍓 A little lunch date"
+
+msgid "pickme.food.choose_day"
+msgstr "🎀 Which day are we eating together?"
+
+msgid "pickme.food.menu_header"
+msgstr "🍓 Our menu · {weekday}, {date}"
+
+msgid "pickme.food.dish"
+msgstr "🎀 {index}. {name} — {calories} kcal"
+
+msgid "pickme.food.total_calories"
+msgstr "💗 Energy for your day: {calories} kcal"
+
+msgid "pickme.food.rating"
+msgstr "💗 Lunch-date rating: {average} ({count})"
+
+msgid "pickme.food.no_ratings"
+msgstr "🥺 Be the first to rate our menu?"
+
+msgid "pickme.food.rate_prompt"
+msgstr "💗 Rate the menu from 1 to 5? You can change your rating."
+
+msgid "pickme.food.rating_thanks"
+msgstr "💗 You rated it! Thank you, I noticed 🥺"
+
+msgid "pickme.food.enjoy_meal"
+msgstr "🍓 Enjoy your meal! Save me a seat?"
+
+msgid "pickme.food.open_menu"
+msgstr "🍓 Show our menu"
+
+msgid "pickme.food.today_unpublished"
+msgstr "🥺 Today’s menu isn’t published yet. I’m waiting with you."
+
+msgid "pickme.food.menu_unpublished"
+msgstr "🥺 That day’s menu isn’t published yet. Check again later?"
+
+msgid "pickme.schedule.search_prompt"
+msgstr "🎀 Tell me the subject name. Plain Latin letters work for Turkish letters too (s for ş, i for ı)."
+
+msgid "pickme.schedule.no_tracked_courses"
+msgstr "🥺 No courses selected yet. Pick them below so I can show your timetable."
+
+msgid "pickme.schedule.no_classes"
+msgstr "🎀 No classes. A little time for yourself?"
+
+msgid "pickme.schedule.changes_header"
+msgstr "💌 <b>Your timetable changed — I brought the news</b>"
+
+msgid "pickme.obis.student_number_prompt"
+msgstr "🎀 Tell me your student number so we can open OBIS."
+
+msgid "pickme.obis.password_prompt"
+msgstr "🎀 Now enter your OBIS password."
+
+msgid "pickme.obis.loading_grades"
+msgstr "💗 Getting your grades. Stay with me a moment?"
+
+msgid "pickme.obis.loading_attendance"
+msgstr "🥺 Checking attendance together…"
+
+msgid "pickme.obis.new_grade"
+msgstr "💌 A new grade for “{lesson}” — I came to tell you!\n{exam}: {score}"
+
+msgid "pickme.obis.skip_recorded"
+msgstr "⚠️ An absence was recorded in “{lesson}” ({skip_type}). Take care of yourself 💗"
+
+msgid "pickme.eders.reminder_day"
+msgstr "💌 Your Eders deadline is one day away. I remembered for you."
+
+msgid "pickme.eders.reminder_two_hours"
+msgstr "💌 Two hours until your Eders deadline. One little reminder from me."
+
+msgid "pickme.eders.empty"
+msgstr "🎀 Nothing matches this filter. Shall we try another?"
+
+msgid "pickme.notifications.title"
+msgstr "💌 Tell me when I may message you"
+
+msgid "pickme.feedback.message_prompt"
+msgstr "💌 Tell the admins what’s on your mind. Their reply will arrive here."
+
+msgid "pickme.feedback.sent"
+msgstr "💗 Your message is with the admins. Thank you for writing!"
+
+msgid "pickme.ads.review_prompt"
+msgstr "🎀 One last look at your ad?"
+
+msgid "pickme.ads.title_prompt"
+msgstr "🎀 Let’s make your ad stand out. Send a <b>title</b>, up to {max} characters."
+
+msgid "pickme.data.preparing"
+msgstr "🎀 Getting things ready for you. Check after the next background update (every 15 minutes)."
+
+msgid "pickme.gamification.ui.collection"
+msgstr "💗 My little victories"
+
+msgid "pickme.gamification.ui.leaderboard"
+msgstr "🎀 Campus favourites"
+
+msgid "pickme.gamification.ui.subtitle"
+msgstr "🎀 I notice your little victories."
+
+msgid "pickme.miniapp.ui.title"
+msgstr "🎀 Your cosy corner"
+
+msgid "pickme.miniapp.ui.note"
+msgstr "💌 Pick what I should tell you about. Every change saves right away."
+
+msgid "pickme.miniapp.ui.saved"
+msgstr "💗 Saved, just for you"
+
+msgid "pickme.miniapp.ui.error"
+msgstr "🥺 That didn’t save. Shall we try again?"
+
+msgid "pickme.food.rich_menu_header"
+msgstr "🍓 Our menu · {weekday}, {date}"
+
+msgid "pickme.food.rich_dish"
+msgstr "🎀 {index}. {name} — {calories} kcal"
+
+msgid "pickme.food.rich_total_calories"
+msgstr "💗 Energy for your day: {calories} kcal"
+
+msgid "pickme.food.rich_rating"
+msgstr "💗 Lunch-date rating: {average} ({count})"
+
+msgid "pickme.menu.achievements_button"
+msgstr "💗 Your little victories"
+
+msgid "pickme.miniapp.ui.achievements"
+msgstr "💗 Your little victories"
+
+msgid "theme.deadinside"
+msgstr "🖤 Dead inside"
+
+msgid "deadinside.common.welcome"
+msgstr "🖤 You're here. The semester goes on."
+
+msgid "deadinside.menu.food"
+msgstr "🥀 Cafeteria. As usual."
+
+msgid "deadinside.menu.study"
+msgstr "🖤 Academic routine"
+
+msgid "deadinside.menu.schedule"
+msgstr "🕰 Another day of classes"
+
+msgid "deadinside.menu.attendance"
+msgstr "🥀 Attendance. The evidence."
+
+msgid "deadinside.menu.grades"
+msgstr "🖤 The verdict: grades"
+
+msgid "deadinside.menu.eders"
+msgstr "🌑 Eders after dark"
+
+msgid "deadinside.menu.eders_materials"
+msgstr "📜 Notes from the shadows"
+
+msgid "deadinside.menu.study_week"
+msgstr "🕰 Seven days of routine"
+
+msgid "deadinside.menu.marketplace"
+msgstr "🥀 Things looking for an owner"
+
+msgid "deadinside.menu.settings"
+msgstr "⚙️ Adjust the gloom"
+
+msgid "deadinside.menu.main"
+msgstr "🌑 Back to the beginning"
+
+msgid "deadinside.menu.obis"
+msgstr "🖤 OBIS. Face the numbers."
+
+msgid "deadinside.menu.achievements"
+msgstr "🥀 Small victories in the gloom"
+
+msgid "deadinside.settings.title"
+msgstr "🌑 Your corner of the gloom"
+
+msgid "deadinside.theme.prompt"
+msgstr "🥀 Pick a shade of gloom. I'll remember."
+
+msgid "deadinside.theme.selected"
+msgstr "🖤 Mood saved: {theme}"
+
+msgid "deadinside.common.back"
+msgstr "← Back into the shadows"
+
+msgid "deadinside.common.back_to_menu"
+msgstr "🌑 Back to the menu"
+
+msgid "deadinside.common.error_retry"
+msgstr "🥀 Didn't work. Try again."
+
+msgid "deadinside.food.day_selection_title"
+msgstr "🥀 Cafeteria chronicles"
+
+msgid "deadinside.food.choose_day"
+msgstr "🕰 Which day's menu?"
+
+msgid "deadinside.food.menu_header"
+msgstr "🥀 Menu of the routine · {weekday}, {date}"
+
+msgid "deadinside.food.dish"
+msgstr "🖤 {index}. {name} — <b>{calories}</b> kcal"
+
+msgid "deadinside.food.rich_dish"
+msgstr "🖤 {index}. {name} — {calories} kcal"
+
+msgid "deadinside.food.total_calories"
+msgstr "🕰 Fuel for another day: {calories} kcal"
+
+msgid "deadinside.food.rating"
+msgstr "🥀 Verdict on lunch: {average} ({count})"
+
+msgid "deadinside.food.no_ratings"
+msgstr "🥀 No verdict yet. Be the first to rate."
+
+msgid "deadinside.food.rate_prompt"
+msgstr "🖤 Rate it from 1 to 5. You can change your mind."
+
+msgid "deadinside.food.rating_thanks"
+msgstr "🖤 Verdict recorded."
+
+msgid "deadinside.food.enjoy_meal"
+msgstr "🥀 Eat. The classes can wait a moment."
+
+msgid "deadinside.food.open_menu"
+msgstr "🥀 Open the cafeteria chronicles"
+
+msgid "deadinside.food.today_unpublished"
+msgstr "🌑 Today's menu is still in the shadows. Check back later."
+
+msgid "deadinside.food.menu_unpublished"
+msgstr "🌑 No menu for this day yet. Check back later."
+
+msgid "deadinside.food.no_available_menus"
+msgstr "🌑 No menus published yet. Check back later."
+
+msgid "deadinside.schedule.no_classes"
+msgstr "🌑 No classes. A pause in the routine."
+
+msgid "deadinside.schedule.changes_header"
+msgstr "🥀 <b>The timetable changed. Routine has a twist.</b>"
+
+msgid "deadinside.obis.loading_grades"
+msgstr "🖤 Looking up the verdict…"
+
+msgid "deadinside.obis.loading_attendance"
+msgstr "🕰 Looking for traces of attendance…"
+
+msgid "deadinside.obis.new_grade"
+msgstr "🖤 A new verdict for «{lesson}»\n{exam}: {score}"
+
+msgid "deadinside.obis.skip_recorded"
+msgstr "🥀 An absence was recorded for «{lesson}» ({skip_type})."
+
+msgid "deadinside.eders.reminder_day"
+msgstr "🕰 One day until the Eders deadline. The clock keeps going."
+
+msgid "deadinside.eders.reminder_two_hours"
+msgstr "🕰 Two hours until the Eders deadline. Still time."
+
+msgid "deadinside.eders.opened_notification"
+msgstr "🌑 An Eders activity emerged from the shadows"
+
+msgid "deadinside.eders.changed_notification"
+msgstr "🥀 The Eders deadline shifted"
+
+msgid "deadinside.data.preparing"
+msgstr "🌑 Nothing here yet. Background updates run every 15 minutes. Check back after the next one."
+
+msgid "deadinside.gamification.ui.collection"
+msgstr "🖤 My quiet victories"
+
+msgid "deadinside.gamification.ui.leaderboard"
+msgstr "🥀 Those who made it"
+
+msgid "deadinside.gamification.ui.subtitle"
+msgstr "🖤 Even in the gloom, victories count."
+
+msgid "deadinside.miniapp.ui.title"
+msgstr "🌑 Your corner of the gloom"
+
+msgid "deadinside.miniapp.ui.note"
+msgstr "🕰 Decide what breaks the silence. Each change saves immediately."
+
+msgid "deadinside.miniapp.ui.saved"
+msgstr "🖤 Saved. Quietly."
+
+msgid "deadinside.miniapp.ui.error"
+msgstr "🥀 Couldn't save. Try again."
+
+msgid "ads.rich_price"
+msgstr "💵 Price: {price} som"
+
+
+msgid "terms.title"
+msgstr "Terms of use and data processing"
+
+msgid "terms.language"
+msgstr "Language"
+
+msgid "terms.updated_label"
+msgstr "Updated"
+
+msgid "terms.back"
+msgstr "Back"
+
+msgid "terms.services.title"
+msgstr "1. Service and consent"
+
+msgid "terms.services.body"
+msgstr "Manashelper (@manas_helper_bot) is an independent student project, not an official university service. It provides timetables and course selection, cafeteria menus, OBIS results, Eders materials and deadlines, a study-week overview, notifications, marketplace advertisements, feedback and achievements. Connecting your academic account is voluntary. By accepting these terms before entering credentials, you authorize the access and processing described below. Use only your own account."
+
+msgid "terms.data.title"
+msgstr "2. Data and protection"
+
+msgid "terms.data.body"
+msgstr "The service stores your Telegram ID, name, username, language, theme, selected courses and notification settings; connected student number and encrypted OBIS password; cached academic data, synchronization baselines and achievement records. Advertisement content, photos and contacts are processed for publication and moderation; feedback is forwarded to the administrator. Allowed private-chat actions are logged; password text is masked in the action log and the bot attempts to delete the password message. The OBIS password is encrypted with AES-GCM, but profile data, snapshots, logs and achievements are not individually encrypted by the application. Telegram and university systems receive the data necessary for messages and authentication. No absolute security or blanket non-disclosure guarantee is made."
+
+msgid "terms.obis.title"
+msgstr "3. OBIS access"
+
+msgid "terms.obis.body"
+msgstr "The bot signs in through /site/login, reads attendance from /vs-ders/taken-lessons and exam grades from /vs-ders/taken-grades. When achievements are enabled, it also reads /vs-ders/transkript-detailed to calculate GPA-based and final-grade achievements. /site/eders is used for Eders single sign-on only if direct Eders login fails. Credentials are checked before saving. OBIS grades and attendance are not modified. The pages used are listed below."
+
+msgid "terms.eders.title"
+msgstr "4. Eders access and completion"
+
+msgid "terms.eders.body"
+msgstr "When Eders is enabled, the bot first signs in using your saved student number and a service-configured Moodle password; OBIS single sign-on is a fallback. It reads the enrolled-course list through Moodle AJAX, course pages, profile timezone, assignment and quiz overview pages. It caches course names, activity titles, descriptions, links, opening/deadline dates, submission/grading status and completion flags. Resource, URL, folder, label, forum and feedback links are taken from course pages; their contents are not automatically fetched. The AJAX methods are core_course_get_enrolled_courses_by_timeline_classification and, only after your explicit completion action, core_completion_update_activity_completion_status_manually. Marking done or undoing it changes the completion flag in Eders; it does not submit coursework, start or submit a quiz, or change a grade. Reading an activity page may still be recorded by Moodle. The pages used are listed below; placeholders denote course/activity IDs."
+
+msgid "terms.sync.title"
+msgstr "5. Background updates and notifications"
+
+msgid "terms.sync.body"
+msgstr "OBIS and Eders data are refreshed in the background, normally every 15 minutes; the Eders interval may differ. Screens show saved snapshots and may lag behind the source. Disabling notifications or closing the Mini App does not stop synchronization. Notification preferences control delivery, including timetable, grades, attendance, cafeteria and Eders changes, reminders and administrator broadcasts. Some deliveries are queued and retried. Telegram update identifiers and processing times are retained for duplicate suppression; daily cleanup removes records older than two days."
+
+msgid "terms.ranking.title"
+msgstr "6. Achievements and leaderboard"
+
+msgid "terms.ranking.body"
+msgstr "When achievement access is enabled, the service records eligible activity and derives awards from cafeteria views, marketplace activity and academic snapshots. Participants with awards may appear in the top ten. Other authorized achievement participants can see the Telegram profile name, rank, award count, earned awards, their descriptions and award dates. Raw grades, GPA, attendance details, student number, credentials and unfinished progress are not returned in the leaderboard. Academic awards and their conditions can nevertheless reveal information about your studies. Disabling achievement access hides the participant from the ranking and stops new progress while preserving prior awards. Contact the administrator through Feedback to request this."
+
+msgid "terms.controls.title"
+msgstr "7. Your controls and data requests"
+
+msgid "terms.controls.body"
+msgstr "You can change language, theme, courses and delivery preferences in Settings or the Mini App. Settings → OBIS credentials lets you replace or remove the saved student number and password; removal also clears OBIS cached results and comparison baselines and prevents further account synchronization using those credentials. It does not erase all other service records, Eders history or earned awards. Blocking the bot stops delivery but does not delete data. Use Settings → Feedback, or contact @usbtypec, to request data deletion, withdrawal of account access or achievement access changes. There is no automatic expiry for all profile, snapshot, advertisement and achievement records; they may remain until replaced, removed by a feature or deleted following a request."
+
+msgid "terms.limits.title"
+msgstr "8. Accuracy and responsibility"
+
+msgid "terms.limits.body"
+msgstr "Verify grades, attendance, deadlines and submission/completion status in the official university systems. Notifications and calculations are informational and may be delayed, incomplete or unavailable; the service does not guarantee academic outcomes or uninterrupted delivery. Keep your account secure and publish only content and contacts you are entitled to share. Marketplace content is subject to moderation. These terms describe the current implementation and do not waive rights or obligations imposed by applicable law. Source code: https://github.com/usbtypec1/manashelper. Questions and requests: @usbtypec or Settings → Feedback."

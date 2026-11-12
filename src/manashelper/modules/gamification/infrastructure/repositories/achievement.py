@@ -66,6 +66,17 @@ class AchievementRepository:
         )
         return {key: earned_at for key, earned_at in rows}
 
+    async def get_awards_for_users(self, user_ids: list[int]) -> dict[int, dict[str, datetime]]:
+        rows = await self.session.execute(
+            select(UserAchievement.user_id, UserAchievement.achievement_key, UserAchievement.earned_at).where(
+                UserAchievement.user_id.in_(user_ids), UserAchievement.achievement_key.in_(ACHIEVEMENT_KEYS)
+            )
+        )
+        awards: dict[int, dict[str, datetime]] = {}
+        for user_id, key, earned_at in rows:
+            awards.setdefault(user_id, {})[key] = earned_at
+        return awards
+
     async def academic_progress(self, user_id: int) -> tuple[bool, Decimal | None, Decimal | None, int]:
         row = await self.session.get(GamificationProgress, user_id)
         student_number = await self.session.scalar(select(User.student_number).where(User.id == user_id))

@@ -1,14 +1,18 @@
 import uuid
 from dataclasses import replace
 from datetime import date
+from string import Formatter
+from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
 from aiogram import Bot
 from aiogram.types import PhotoSize, RichMessage
+from babel.messages.pofile import read_po
 
 from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme
+from manashelper.modules.broadcast.sender import TelegramBroadcastSender
 from manashelper.modules.eders.application.tracking import EdersEvent
 from manashelper.modules.eders.presentation.sender import TelegramEdersNotificationSender
 from manashelper.modules.food_menu.application.daily_menu import DailyMenuModel, DishModel
@@ -35,6 +39,24 @@ from manashelper.modules.users.infrastructure.repositories.user import UserRepos
 from manashelper.platform.i18n.catalog import i18n
 from tests.modules.eders.factories import NOW, item
 from tests.modules.users.application_factories import build_locale_service, build_theme_service
+from tests.paths import PROJECT_ROOT
+
+
+@pytest.mark.parametrize("selected,icon", [(Theme.PICKME, "🎀"), (Theme.DEADINSIDE, "🥀")])
+async def test_broadcast_uses_recipient_theme_for_wrapper_and_buttons_without_rewriting_body(selected, icon):
+    outbox = AsyncMock()
+    locales = SimpleNamespace(get_locale=AsyncMock(return_value=Locale.RU))
+    themes = SimpleNamespace(get_theme=AsyncMock(side_effect=[selected, Theme.BASIC, selected]))
+    sender = TelegramBroadcastSender(outbox, locales, themes)
+    with i18n.context(), i18n.use_locale("en"), i18n.use_theme(Theme.HALLOWEEN):
+        for user_id in [1, 2, 1]:
+            await sender.send(user_id, "Original <body> 🎃")
+            assert i18n.current_theme == Theme.HALLOWEEN and i18n.current_locale == "en"
+    messages = [call.args[1][0] for call in outbox.enqueue.await_args_list]
+    assert messages[0].text == messages[2].text != messages[1].text
+    assert all("Original &lt;body&gt; 🎃" in message.text for message in messages)
+    assert messages[0].reply_markup.inline_keyboard[-1][0].text.endswith(icon)
+    assert not messages[1].reply_markup.inline_keyboard[-1][0].text.endswith(icon)
 
 
 @pytest.fixture
@@ -83,7 +105,15 @@ def test_food_theme_covers_message_and_controls_without_changing_data(menu, loca
             4,
             5,
         ]
-        assert rating.buttons[0].text == ("🎃 1" if theme == Theme.HALLOWEEN else "1️⃣")
+        assert (
+            rating.buttons[0].text
+            == {
+                Theme.BASIC: "1️⃣",
+                Theme.HALLOWEEN: "🎃 1",
+                Theme.PICKME: "💗 1",
+                Theme.DEADINSIDE: "🖤 1",
+            }[theme]
+        )
         plain = format_daily_menu(menu)
         assert "Soup &lt;b&gt;&amp; rice 🎃" in plain
         assert "250" in plain
@@ -124,10 +154,13 @@ def test_explicit_locale_uses_that_locales_themed_catalog():
 
 
 @pytest.mark.parametrize("source", ["food", "schedule", "obis", "eders"])
-async def test_background_delivery_uses_each_recipients_saved_theme_and_restores_context(session, menu, source):
+@pytest.mark.parametrize("selected", [Theme.HALLOWEEN, Theme.PICKME, Theme.DEADINSIDE])
+async def test_background_delivery_uses_each_recipients_saved_theme_and_restores_context(
+    session, menu, source, selected
+):
     session.add_all(
         [
-            User(id=982001, full_name="Halloween", locale="ru", theme="halloween"),
+            User(id=982001, full_name="Themed", locale="ru", theme=selected.value),
             User(id=982002, full_name="Basic", locale="ru", theme="basic"),
         ]
     )
@@ -165,12 +198,46 @@ async def test_background_delivery_uses_each_recipients_saved_theme_and_restores
             assert i18n.current_theme == Theme.HALLOWEEN and i18n.current_locale == "en"
     if source == "food":
         messages = [call.args[1][0].rich_message.blocks[0].text for call in bot.enqueue.await_args_list]
-        assert [message.startswith("🎃 ") for message in messages] == [True, False, True]
     else:
         messages = [call.args[1][0].text for call in bot.enqueue.await_args_list]
+    if selected in {Theme.PICKME, Theme.DEADINSIDE}:
+        stride = 2 if source == "obis" else 1
+        for offset in range(stride):
+            themed, basic, repeated = messages[offset::stride]
+            assert themed == repeated and themed != basic
+            icons = ("🖤", "🥀", "🌑") if selected == Theme.DEADINSIDE else ("💌", "🍓", "💗", "🎀")
+            assert any(icon in themed for icon in icons)
+        return
+    if source == "food":
+        assert [message.startswith("🎃 ") for message in messages] == [True, False, True]
+    else:
         if source == "obis":
             assert [message.startswith("🍬 ") for message in messages[::2]] == [True, False, True]
             assert [message.startswith("👻 ") for message in messages[1::2]] == [True, False, True]
         else:
             icon = "🦇 " if source == "schedule" else "🕸️ "
             assert [message.startswith(icon) for message in messages] == [True, False, True]
+
+
+@pytest.mark.parametrize("locale", list(Locale))
+def test_deadinside_catalogs_preserve_placeholders_and_factual_fragments(locale):
+    with (PROJECT_ROOT / f"src/manashelper/locales/{locale.value}/LC_MESSAGES/messages.po").open(
+        encoding="utf-8"
+    ) as source:
+        catalog = read_po(source)
+    for message in catalog:
+        if not isinstance(message.id, str) or not message.id.startswith("deadinside."):
+            continue
+        original = catalog.get(message.id.removeprefix("deadinside."))
+        assert original is not None and message.string
+        expected = {field for _, field, _, _ in Formatter().parse(original.string) if field is not None}
+        actual = {field for _, field, _, _ in Formatter().parse(message.string) if field is not None}
+        assert actual == expected, message.id
+    with i18n.context(), i18n.use_locale(locale.value):
+        facts = ["eders.submitted", "eders.not_submitted", "ads.status_rejected", "gamification.foodie.description"]
+        basic = [i18n.gettext(key) for key in facts]
+        with i18n.use_theme(Theme.DEADINSIDE):
+            assert [i18n.gettext(key) for key in facts] == basic
+            assert i18n.gettext("theme.deadinside") == catalog.get("theme.deadinside").string
+            assert i18n.gettext("food.day_selection_title") == catalog.get("deadinside.food.day_selection_title").string
+            assert i18n.gettext("food.day_selection_title", locale="unsupported") == "🥀 Cafeteria chronicles"

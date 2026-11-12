@@ -13,6 +13,7 @@ def authorization(user_id=USER_ID, age=0, **extra):
     fields = {
         "auth_date": str(int(time.time()) - age),
         "user": json.dumps({"id": user_id, "first_name": "Fixture"}),
+        "signature": "synthetic-test-signature",
         **extra,
     }
     check = "\n".join(f"{key}={value}" for key, value in sorted(fields.items()))

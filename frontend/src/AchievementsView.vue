@@ -1,37 +1,45 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import messages from './messages.json'
 import AchievementBadge from './AchievementBadge.vue'
 import { achievementArt } from './achievementArt'
+import TermsLink from './TermsLink.vue'
+import { useTelegram, useTelegramDialogBack } from './shared/telegram/telegram'
+
+const props = defineProps<{ tab: 'collection' | 'leaderboard' }>()
+const router = useRouter()
 
 type Card = {
   key: string; name: string; description: string; earned_at: string | null
 }
-type Profile = { score: number; total: number; rank: number | null; locale: string; achievements: Card[] }
-type Entry = { full_name: string; score: number; rank: number; is_self: boolean }
-type TelegramApp = {
-  initData: string; colorScheme?: 'light' | 'dark'; initDataUnsafe?: { user?: { language_code?: string } }
-  ready: () => void; expand: () => void
-  onEvent?: (name: string, cb: () => void) => void; offEvent?: (name: string, cb: () => void) => void
-  BackButton?: { show: () => void; hide: () => void; onClick: (cb: () => void) => void; offClick: (cb: () => void) => void }
-}
-const telegram = (window as Window & { Telegram?: { WebApp?: TelegramApp } }).Telegram?.WebApp
-const detected = telegram?.initDataUnsafe?.user?.language_code?.split('-')[0] ?? 'en'
+type Profile = { score: number; total: number; rank: number | null; locale: string; theme: string; ui: Record<string, string>; achievements: Card[] }
+type Entry = { full_name: string; score: number; rank: number; is_self: boolean; achievements: Card[] }
+const { rawInitData, languageCode } = useTelegram()
+const detected = languageCode.value
 const locale = ref(detected in messages ? detected : 'en')
-const copy = computed(() => messages[locale.value as keyof typeof messages])
+const copy = computed(() => {
+  const fallback = messages[locale.value as keyof typeof messages]
+  const ui = profile.value?.ui
+  if (!ui) return fallback
+  return { ...fallback, ...ui, source_pending: ui.sourcePending ?? fallback.source_pending,
+    baseline_missing: ui.baselineMissing ?? fallback.baseline_missing,
+    open_telegram: ui.openTelegram ?? fallback.open_telegram, top_ten: ui.topTen ?? fallback.top_ten }
+})
 const title = ref('Manashelper')
 const profile = ref<Profile>()
 const entries = ref<Entry[]>([])
-const tab = ref<'collection' | 'leaderboard'>('collection')
+const tab = computed(() => props.tab)
 const loading = ref(true)
 const error = ref(false)
 const selected = ref<Card>()
 const dialog = ref<HTMLDialogElement>()
+const expandedEntry = ref<number>()
 let trigger: HTMLElement | null = null
 
 async function api(path: string) {
   const response = await fetch(`/api/gamification/${path}`, {
-    headers: { Authorization: `tma ${telegram?.initData ?? ''}` }, cache: 'no-store',
+    headers: { Authorization: `tma ${rawInitData.value ?? ''}` }, cache: 'no-store',
   })
   if (!response.ok) throw new Error('Request failed')
   return response.json()
@@ -42,6 +50,7 @@ async function load() {
   try {
     const [me, leaderboard] = await Promise.all([api('me'), api('leaderboard')])
     profile.value = me
+    document.documentElement.dataset.botTheme = me.theme
     entries.value = leaderboard.entries
     locale.value = me.locale in messages ? me.locale : 'en'
     document.documentElement.lang = locale.value
@@ -55,39 +64,29 @@ async function open(card: Card, event: MouseEvent) {
   selected.value = card
   await nextTick()
   dialog.value?.showModal()
-  telegram?.BackButton?.show()
 }
-function close() { dialog.value?.close() }
+function close() {
+  selected.value = undefined
+  dialog.value?.close()
+}
 function selectTab(value: 'collection' | 'leaderboard') {
-  tab.value = value
+  void router.push({ name: value === 'collection' ? 'achievements' : 'leaderboard' })
 }
 const selectedTone = computed(() => achievementArt[selected.value?.key ?? '']?.color ?? '#d2c5eb')
 function afterClose() {
   selected.value = undefined
-  telegram?.BackButton?.hide()
   trigger?.focus()
 }
-function applyTheme() {
-  document.documentElement.dataset.theme = telegram?.colorScheme ?? 'dark'
-}
+useTelegramDialogBack(computed(() => !!selected.value), close)
 onMounted(() => {
-  applyTheme()
-  telegram?.onEvent?.('themeChanged', applyTheme)
-  telegram?.ready()
-  telegram?.expand()
-  telegram?.BackButton?.onClick(close)
-  if (telegram?.initData) void load()
+  if (rawInitData.value) void load()
   else loading.value = false
-})
-onUnmounted(() => {
-  telegram?.BackButton?.offClick(close)
-  telegram?.offEvent?.('themeChanged', applyTheme)
 })
 </script>
 
 <template>
   <main class="app-shell">
-    <section v-if="!telegram?.initData" class="notice" role="status">
+    <section v-if="!rawInitData" class="notice" role="status">
       <span class="notice-icon" aria-hidden="true">✧</span><p>{{ copy.open_telegram }}</p>
     </section>
     <section v-else-if="loading" class="notice" role="status" aria-live="polite">
@@ -139,16 +138,30 @@ onUnmounted(() => {
         <p v-if="!entries.length" class="empty">{{ copy.empty }}</p>
         <ol v-else class="ranking-list">
           <li v-for="(entry, index) in entries" :key="index" :class="{ self: entry.is_self }">
-            <span class="place" :class="{ 'podium-place': entry.rank <= 3 }">
-              <svg v-if="entry.rank <= 3" class="podium-medal" :class="`podium-${entry.rank}`" viewBox="0 0 32 42" aria-hidden="true">
-                <path d="M7 1h8l4 14-8 3Z" fill="#c995ed"/><path d="M17 1h8l-5 17-8-3Z" fill="#7cc8f5"/>
-                <circle cx="16" cy="26" r="13" fill="currentColor"/><circle cx="16" cy="26" r="10" fill="none" stroke="white" stroke-opacity=".5"/>
-              </svg>
-              <span>{{ entry.rank }}</span>
-            </span>
-            <span class="avatar" :class="`avatar-${index % 5}`" aria-hidden="true">{{ entry.full_name.trim().charAt(0).toUpperCase() }}</span>
-            <span class="person">{{ entry.full_name }}<small v-if="entry.is_self">{{ copy.you }}</small></span>
-            <strong class="score-pill">{{ entry.score }}</strong>
+            <button class="ranking-person" :aria-expanded="expandedEntry === index" :aria-controls="`awards-${index}`"
+              @click="expandedEntry = expandedEntry === index ? undefined : index">
+              <span class="place" :class="{ 'podium-place': entry.rank <= 3 }">
+                <svg v-if="entry.rank <= 3" class="podium-medal" :class="`podium-${entry.rank}`" viewBox="0 0 32 42" aria-hidden="true">
+                  <path d="M7 1h8l4 14-8 3Z" fill="#c995ed"/><path d="M17 1h8l-5 17-8-3Z" fill="#7cc8f5"/>
+                  <circle cx="16" cy="26" r="13" fill="currentColor"/><circle cx="16" cy="26" r="10" fill="none" stroke="white" stroke-opacity=".5"/>
+                </svg>
+                <span>{{ entry.rank }}</span>
+              </span>
+              <span class="avatar" :class="`avatar-${index % 5}`" aria-hidden="true">{{ entry.full_name.trim().charAt(0).toUpperCase() }}</span>
+              <span class="person">{{ entry.full_name }}<small v-if="entry.is_self">{{ copy.you }}</small></span>
+              <strong class="score-pill">{{ entry.score }}</strong>
+              <span class="chevron" aria-hidden="true">{{ expandedEntry === index ? '⌃' : '⌄' }}</span>
+            </button>
+            <section v-if="expandedEntry === index" :id="`awards-${index}`" class="ranking-awards" :aria-label="`${entry.full_name}: ${copy.earned}`">
+              <p>{{ copy.earned }} · {{ entry.achievements.length }}</p>
+              <div class="collection">
+                <button v-for="card in entry.achievements" :key="card.key" class="achievement earned"
+                  :aria-label="`${card.name}. ${copy.earned}`" @click="open(card, $event)">
+                  <span class="medal-wrap"><AchievementBadge :achievement-key="card.key" earned /></span>
+                  <span class="card-name">{{ card.name }}</span>
+                </button>
+              </div>
+            </section>
           </li>
         </ol>
         <div class="your-place"><span>{{ copy.you }}</span><strong>{{ profile.rank ? `#${profile.rank}` : '—' }}</strong><span>{{ copy.earned }} {{ profile.score }}</span></div>
@@ -156,7 +169,7 @@ onUnmounted(() => {
     </template>
     <dialog ref="dialog" class="achievement-sheet" :style="{ '--medal-tone': selectedTone }"
       aria-labelledby="achievement-title" aria-describedby="achievement-description"
-      @close="afterClose" @click="($event.target === dialog) && close()"
+      @close="afterClose" @cancel.prevent="close" @click="($event.target === dialog) && close()"
     >
       <template v-if="selected">
         <span class="sheet-handle" aria-hidden="true"></span>
@@ -169,5 +182,6 @@ onUnmounted(() => {
         <button class="sheet-dismiss" @click="close">{{ copy.close }}</button>
       </template>
     </dialog>
+    <TermsLink :locale="locale" :from="tab === 'collection' ? 'achievements' : 'leaderboard'" />
   </main>
 </template>

@@ -9,7 +9,7 @@ from manashelper.modules.obis.infrastructure.transcript_parser import parse_tran
 # The user's original HTML, profile, CSRF token and course history are not copied.
 from tests.paths import FIXTURES_DIR
 
-HTML = (FIXTURES_DIR / "obis/transcript.html").read_text()
+HTML = (FIXTURES_DIR / "obis/transcript.html").read_text(encoding="utf-8")
 
 
 def test_nested_semester_totals_and_unfinished_semester():

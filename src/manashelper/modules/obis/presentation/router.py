@@ -47,7 +47,9 @@ from manashelper.modules.obis.presentation.keyboards import (
     build_obis_settings_keyboard,
     build_terms_keyboard,
 )
+from manashelper.platform.legal import TERMS_SOURCES, TERMS_UPDATED, terms_sections, terms_ui_strings
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
+from manashelper.platform.telegram.html import escape_html
 
 router = Router(name="obis")
 menu_router = Router(name="obis_menu")
@@ -273,6 +275,20 @@ async def on_accept_terms(callback_query: CallbackQuery, state: FSMContext) -> N
     if isinstance(callback_query.message, Message):
         await callback_query.message.answer(_("obis.student_number_prompt"), reply_markup=build_cancel_keyboard())
     await callback_query.answer()
+
+
+@router.callback_query(ObisCallback.filter(F.action == ObisAction.TERMS))
+@flags.private_chat_only
+async def on_terms(callback_query: CallbackQuery) -> None:
+    await callback_query.answer()
+    if not isinstance(callback_query.message, Message):
+        return
+    title = terms_ui_strings()["title"]
+    await callback_query.message.answer(f"{title} · {TERMS_UPDATED}", parse_mode=None)
+    for key, title, body in terms_sections():
+        sources = TERMS_SOURCES.get(key, ())
+        text = "\n\n".join((title, body, *sources))
+        await callback_query.message.answer(escape_html(text))
 
 
 @router.callback_query(ObisCallback.filter(F.action == ObisAction.CANCEL_CREDENTIALS))
