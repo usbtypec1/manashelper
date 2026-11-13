@@ -7,6 +7,7 @@ from manashelper.modules.obis.application.credentials import ObisCredentialsQuer
 from manashelper.modules.obis.application.models import LessonAttendanceModel, RefreshResult, Snapshot
 from manashelper.modules.obis.application.notification import LessonSkipChange, compare_attendance
 from manashelper.modules.obis.application.ports import AttendanceStore, CredentialsStore, ResultsSource, SnapshotStore
+from manashelper.modules.obis.application.sessions import ObisSessions
 
 
 @dataclass(frozen=True, slots=True)
@@ -14,6 +15,7 @@ class RefreshObisAttendanceUseCase:
     credentials: ObisCredentialsQuery
     store: CredentialsStore
     source: ResultsSource
+    sessions: ObisSessions
     snapshots: SnapshotStore
     attendance: AttendanceStore
     record: RecordAttendanceUseCase
@@ -21,7 +23,7 @@ class RefreshObisAttendanceUseCase:
     async def execute(self, user_id: int) -> RefreshResult[LessonAttendanceModel, LessonSkipChange]:
         await self.store.lock(user_id)
         credentials = await get_results_credentials(self.credentials, user_id)
-        records = await self.source.fetch_attendance(credentials.student_number, credentials.plain_password)
+        records = await self.source.fetch_attendance(await self.sessions.get_cookies(user_id))
         lessons = [to_attendance_model(record) for record in records]
         await self.snapshots.save_attendance(
             user_id, Snapshot(credentials.credential_marker, lessons, datetime.now(UTC))

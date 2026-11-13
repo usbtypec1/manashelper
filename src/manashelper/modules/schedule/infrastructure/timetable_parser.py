@@ -5,6 +5,8 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 _CODE_AND_NAME_PATTERN = re.compile(r"^(\S+)\s+(.*)$")
+_ROOM_OPTION_PATTERN = re.compile(r"^(.*?)\s+kapasitesi:\s*(\d+)\s*$", re.IGNORECASE)
+ROOM_SELECT_ID = "timetablebundle_dersplangenerator_room"
 
 
 class TimetableParseError(Exception):
@@ -24,6 +26,13 @@ class ScrapedTimeSlot:
     weekday: int
     time_range: str
     lessons: list[ScrapedLessonSlot]
+
+
+@dataclass(frozen=True, slots=True)
+class ScrapedRoom:
+    id: int
+    name: str
+    capacity: int
 
 
 def parse_timetable_page(html: str) -> list[ScrapedTimeSlot]:
@@ -51,6 +60,39 @@ def parse_timetable_page(html: str) -> list[ScrapedTimeSlot]:
             time_slots.append(ScrapedTimeSlot(weekday=weekday, time_range=time_range, lessons=lessons))
 
     return time_slots
+
+
+def parse_timetable_title(html: str) -> str | None:
+    """The page heading, e.g. "1 - sınıf Bilgisayar Mühendisliği" or "5 - sınıf LEE ... ABD".
+
+    The site relabels graduate headings only with client-side JavaScript, so the raw text is returned.
+    """
+    heading = BeautifulSoup(html, "lxml").find("h3")
+    if heading is None:
+        return None
+    title = " ".join(heading.get_text().split())
+    return title or None
+
+
+def parse_room_catalog(html: str) -> list[ScrapedRoom]:
+    soup = BeautifulSoup(html, "lxml")
+    select = soup.find("select", id=ROOM_SELECT_ID)
+    if not isinstance(select, Tag):
+        raise TimetableParseError("Room selector not found")
+
+    rooms: list[ScrapedRoom] = []
+    for option in select.find_all("option"):
+        value = str(option.get("value") or "").strip()
+        if not value.isdigit():
+            continue
+        text = " ".join(option.get_text().split())
+        match = _ROOM_OPTION_PATTERN.match(text)
+        name, capacity = (match.group(1), int(match.group(2))) if match else (text, 0)
+        if name:
+            rooms.append(ScrapedRoom(id=int(value), name=name, capacity=capacity))
+    if not rooms:
+        raise TimetableParseError("Room selector has no rooms")
+    return rooms
 
 
 def _parse_lesson_div(div: Tag) -> ScrapedLessonSlot:

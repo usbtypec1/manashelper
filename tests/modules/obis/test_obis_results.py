@@ -12,7 +12,13 @@ from aiogram.methods import AnswerCallbackQuery, EditMessageText, SendMessage
 from aiogram.types import CallbackQuery, Chat, Message, User
 
 from manashelper.modules.obis.application.models import ExamModel, LessonAttendanceModel, LessonExamsModel
-from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
+from manashelper.modules.obis.errors import (
+    ObisLoginError,
+    ObisParseError,
+    ObisSessionExpiredError,
+    UserHasNoCredentialsError,
+    UserNotFoundError,
+)
 from manashelper.modules.obis.presentation.callbacks import ObisAction, ObisCallback, ObisResultsPageCallback
 from manashelper.modules.obis.presentation.router import (
     MAX_SAVED_RESULTS,
@@ -24,6 +30,12 @@ from manashelper.modules.obis.presentation.router import (
 from manashelper.platform.i18n.catalog import i18n
 
 USER_ID = 900_001
+
+
+async def _attendance_button(*args):
+    # Users without tracked courses get no timetable lines; the router still asks Schedule.
+    no_timetable = AsyncMock(weekly_by_subject=AsyncMock(return_value={}))
+    return await on_attendance_button(*args, subject_timetable=no_timetable)
 
 
 def _context(monkeypatch):
@@ -64,7 +76,7 @@ def _lessons(kind, count=5):
 def _handler_and_fetch(service, kind):
     if kind == "grades":
         return lambda *args: on_exams_button(*args, activity=AsyncMock()), service.get_exam_grades
-    return on_attendance_button, service.get_attendance
+    return _attendance_button, service.get_attendance
 
 
 def _callback(message, message_id):
@@ -176,9 +188,9 @@ async def test_pages_are_bound_to_each_message_and_do_not_refetch_obis(monkeypat
     service.get_attendance.return_value = _lessons("attendance")
     with i18n.context(), i18n.use_locale("en"):
         await on_exams_button(message, state, service, AsyncMock())
-        await on_attendance_button(message, state, service)
-        await on_obis_results_page(_callback(message, 41), ObisResultsPageCallback(page=1), state)
-        await on_obis_results_page(_callback(message, 42), ObisResultsPageCallback(page=2), state)
+        await _attendance_button(message, state, service)
+        await on_obis_results_page(_callback(message, 41), ObisResultsPageCallback(page=1), state, AsyncMock())
+        await on_obis_results_page(_callback(message, 42), ObisResultsPageCallback(page=2), state, AsyncMock())
     edits = _methods(request, EditMessageText)
     grades, attendance = edits[-2:]
     assert grades.message_id == 41
@@ -201,8 +213,8 @@ async def test_missing_or_out_of_range_page_answers_without_editing(monkeypatch,
     message, state, request = _context(monkeypatch)
     await state.update_data({RESULTS_KEY: {"41": ["First", "Second"]}})
     with i18n.context(), i18n.use_locale("en"):
-        await on_obis_results_page(_callback(message, 41), ObisResultsPageCallback(page=page), state)
-        await on_obis_results_page(_callback(message, 99), ObisResultsPageCallback(page=0), state)
+        await on_obis_results_page(_callback(message, 41), ObisResultsPageCallback(page=page), state, AsyncMock())
+        await on_obis_results_page(_callback(message, 99), ObisResultsPageCallback(page=0), state, AsyncMock())
     assert not _methods(request, EditMessageText)
     assert all(answer.show_alert for answer in _methods(request, AnswerCallbackQuery))
 
@@ -232,7 +244,7 @@ async def test_repeated_page_callback_still_answers_when_message_is_not_modified
 
     request.side_effect = unchanged
     with i18n.context(), i18n.use_locale("en"):
-        await on_obis_results_page(_callback(message, 41), ObisResultsPageCallback(page=0), state)
+        await on_obis_results_page(_callback(message, 41), ObisResultsPageCallback(page=0), state, AsyncMock())
     answer = _methods(request, AnswerCallbackQuery)[0]
     assert not answer.show_alert
 
@@ -258,3 +270,32 @@ async def test_request_cancellation_cancels_obis_fetch(monkeypatch) -> None:
             await task
     assert cancelled.is_set()
     assert not _methods(request, EditMessageText)
+
+
+@pytest.mark.parametrize("kind", ["grades", "attendance"])
+async def test_missing_session_without_snapshot_offers_captcha_login(monkeypatch, kind) -> None:
+    message, state, request = _context(monkeypatch)
+    service = AsyncMock()
+    handler, fetch = _handler_and_fetch(service, kind)
+    fetch.side_effect = ObisSessionExpiredError
+    with i18n.context(), i18n.use_locale("en"):
+        await handler(message, state, service)
+        final = _methods(request, EditMessageText)[0]
+        assert final.text == i18n.gettext("obis.session_required")
+    assert final.reply_markup.inline_keyboard[0][0].callback_data == ObisCallback(action=ObisAction.LOGIN).pack()
+
+
+@pytest.mark.parametrize("has_session", [True, False])
+async def test_cached_results_offer_login_only_without_session(monkeypatch, has_session) -> None:
+    message, state, request = _context(monkeypatch)
+    service = AsyncMock()
+    service.get_exam_grades.return_value = _lessons("grades")
+    service.has_session.return_value = has_session
+    login = ObisCallback(action=ObisAction.LOGIN).pack()
+    with i18n.context(), i18n.use_locale("en"):
+        await on_exams_button(message, state, service, AsyncMock())
+        await on_obis_results_page(_callback(message, 41), ObisResultsPageCallback(page=1), state, service)
+    for edit in _methods(request, EditMessageText):
+        buttons = [button.callback_data for row in edit.reply_markup.inline_keyboard for button in row]
+        assert (login in buttons) is not has_session
+    service.has_session.assert_awaited_with(USER_ID)

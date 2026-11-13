@@ -93,6 +93,9 @@ def _verify_migration(connection):
         "gamification_progress",
         "gamification_achievements",
         "telegram_processed_updates",
+        "obis_sessions",
+        "timetable_lesson_items",
+        "timetable_rooms",
     }
     schema = f"table_prefix_test_{uuid4().hex}"
     connection.exec_driver_sql(f'CREATE SCHEMA "{schema}"')
@@ -193,7 +196,9 @@ def _verify_migration(connection):
 
         # Apply later additions before executing current ORM mappings, then prove
         # their downgrade preserves the data under this historical migration.
-        later_revisions = [scripts.get_revision(name) for name in ("V26", "V27", "V28", "V29", "V30")]
+        later_revisions = [
+            scripts.get_revision(name) for name in ("V26", "V27", "V28", "V29", "V30", "V31", "V32", "V33")
+        ]
         for later in later_revisions:
             later.module.upgrade()
         after = _snapshot(connection)

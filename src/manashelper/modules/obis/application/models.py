@@ -5,11 +5,18 @@ from uuid import UUID
 
 
 @dataclass(frozen=True, slots=True)
+class TranscriptCourse:
+    code: str
+    name: str
+    grade: str
+
+
+@dataclass(frozen=True, slots=True)
 class TranscriptSemester:
     key: str
     credits: Decimal | None
     points: Decimal | None
-    grades: tuple[str, ...]
+    courses: tuple[TranscriptCourse, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,6 +73,41 @@ class RefreshResult[T, C]:
 class StoredCredentials:
     student_number: str | None = field(repr=False)
     encrypted_password: str | None = field(repr=False)
+
+
+@dataclass(frozen=True, slots=True)
+class ObisLoginAttempt:
+    """Server-side state of one OBIS login form: its cookies bind the captcha and CSRF token."""
+
+    cookies: dict[str, str] = field(repr=False)
+    csrf_token: str = field(repr=False)
+
+
+@dataclass(frozen=True, slots=True)
+class ObisLoginChallenge:
+    attempt: ObisLoginAttempt
+    captcha_image: bytes = field(repr=False)
+
+
+@dataclass(frozen=True, slots=True)
+class PendingObisLogin:
+    """Credentials waiting for a captcha answer; the password stays encrypted between messages."""
+
+    student_number: str = field(repr=False)
+    encrypted_password: str = field(repr=False)
+    attempt: ObisLoginAttempt
+
+
+@dataclass(frozen=True, slots=True)
+class ObisCaptcha:
+    pending: PendingObisLogin
+    image: bytes = field(repr=False)
+
+
+@dataclass(frozen=True, slots=True)
+class StoredObisSession:
+    encrypted_cookies: str = field(repr=False)
+    created_at: datetime
 
 
 @dataclass(frozen=True, slots=True)

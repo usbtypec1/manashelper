@@ -151,7 +151,7 @@ async def test_obis_user_poll_keeps_locale_fallback_and_failure_isolation(monkey
     attendance.execute.return_value = RefreshResult([], [object()])
     dependencies = {
         LocaleQuery: build_locale_service(users),
-        PollObisUserUseCase: PollObisUserUseCase(grades, attendance, AsyncMock()),
+        PollObisUserUseCase: PollObisUserUseCase(grades, attendance, AsyncMock(), AsyncMock()),
         ThemeQuery: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
         OutboxService: AsyncMock(spec=OutboxService),
     }
@@ -268,7 +268,7 @@ def test_users_standalone_import_uses_explicit_model_registration(module):
         "from manashelper.core.database import Base; "
         "assert len(Base.metadata.tables) < 27; "
         "from manashelper.bootstrap import load_models; load_models(); configure_mappers(); "
-        "assert len(Base.metadata.tables) == 29; "
+        "assert len(Base.metadata.tables) == 32; "
         "assert Base.metadata.tables['timetable_user_courses'].c.user_id.references(Base.metadata.tables['users'].c.id)"
     )
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)

@@ -14,14 +14,19 @@ from manashelper.modules.obis.application.models import (
     LessonExamsModel,
     Snapshot,
 )
-from manashelper.modules.obis.errors import ObisSnapshotNotReadyError, UserHasNoCredentialsError
+from manashelper.modules.obis.errors import (
+    ObisSessionExpiredError,
+    ObisSnapshotNotReadyError,
+    UserHasNoCredentialsError,
+)
 from manashelper.modules.obis.infrastructure.client import ObisClient
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
+from manashelper.modules.obis.infrastructure.models.session import ObisSession
 from manashelper.modules.obis.infrastructure.models.snapshot import ObisSnapshot
 from manashelper.modules.obis.infrastructure.repositories.snapshot import ObisSnapshotRepository
 from manashelper.modules.obis.infrastructure.repositories.user_exam_grade import UserExamGradeRepository
 from manashelper.modules.users.infrastructure.models.user import User
-from tests.modules.obis.factories import build_obis
+from tests.modules.obis.factories import SESSION_COOKIES, build_obis
 from tests.paths import FIXTURES_DIR
 
 
@@ -37,6 +42,7 @@ async def cached_obis(session):
     client.fetch_exam_grades_html.return_value = (FIXTURES_DIR / "obis/grades.html").read_text(encoding="utf-8")
     client.fetch_attendance_html.return_value = (FIXTURES_DIR / "obis/attendance.html").read_text(encoding="utf-8")
     service = build_obis(session, client, crypto)
+    await service.login(user.id)
     return service, client, user
 
 
@@ -100,12 +106,13 @@ async def test_account_change_and_clear_invalidate_cached_data_and_notification_
     await service.grades.execute(user.id)
     await session.flush()
     assert await UserExamGradeRepository(session).get_all_by_user_id(user.id)
-    await service.save.execute(user.id, "another-student", "new-password")
+    await service.login(user.id, "another-student", "new-password")
     with pytest.raises(ObisSnapshotNotReadyError):
         await service.results.get_exam_grades(user.id)
     assert await UserExamGradeRepository(session).get_all_by_user_id(user.id) == []
     assert (await service.grades.execute(user.id)).changes == []
     await service.clear.execute(user.id)
+    assert not await service.sessions.has_session(user.id)
     with pytest.raises(UserHasNoCredentialsError):
         await service.results.get_exam_grades(user.id)
     assert await session.get(ObisSnapshot, (user.id, "grades")) is None
@@ -165,3 +172,33 @@ async def test_snapshot_payload_keeps_legacy_format(session, cached_obis, kind, 
     assert json.loads(row.payload) == json.loads(payload)
     assert row.credential_marker == marker
     assert row.fetched_at == fetched_at
+
+
+async def test_session_cookies_are_encrypted_at_rest(session, cached_obis):
+    service, client, user = cached_obis
+    await session.flush()
+    row = await session.get(ObisSession, user.id)
+    assert "fake-session" not in row.encrypted_cookies
+    assert await service.sessions.get_cookies(user.id) == SESSION_COOKIES
+    await service.grades.execute(user.id)
+    client.fetch_exam_grades_html.assert_awaited_once_with(SESSION_COOKIES)
+
+
+async def test_expired_session_notifies_once_stops_polling_and_keeps_cached_results(session, cached_obis):
+    service, client, user = cached_obis
+    grades = (await service.grades.execute(user.id)).lessons
+    await session.flush()
+    assert user.id in await service.results.get_poll_user_ids()
+    client.fetch_exam_grades_html.side_effect = ObisSessionExpiredError
+    sender = AsyncMock()
+    await service.poll.execute(user.id, True, True, sender)
+    await service.poll.execute(user.id, True, True, sender)
+    sender.session_expired.assert_awaited_once_with()
+    assert user.id not in await service.results.get_poll_user_ids()
+    assert await service.results.get_exam_grades(user.id) == grades
+    assert not await service.results.has_session(user.id)
+
+    await service.login(user.id)
+    await session.flush()
+    assert user.id in await service.results.get_poll_user_ids()
+    assert await service.results.get_exam_grades(user.id) == grades

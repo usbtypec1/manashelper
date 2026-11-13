@@ -14,7 +14,12 @@ from manashelper.modules.gamification.application.use_cases.record_attendance im
 from manashelper.modules.gamification.application.use_cases.record_transcript import RecordTranscriptUseCase
 from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
 from manashelper.modules.gamification.presentation import sender as sender_module
-from manashelper.modules.obis.application.models import LessonAttendanceModel, Transcript, TranscriptSemester
+from manashelper.modules.obis.application.models import (
+    LessonAttendanceModel,
+    Transcript,
+    TranscriptCourse,
+    TranscriptSemester,
+)
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.outbox.models import OutboxMessage
@@ -53,8 +58,20 @@ async def test_all_achievement_sources_enqueue_once_on_first_award(session):
                 "fixture-student",
                 Transcript(
                     (
-                        TranscriptSemester("previous", Decimal(30), Decimal(90), ("AA", "AA", "AA", "F1", "FF")),
-                        TranscriptSemester("current", None, None, ()),
+                        TranscriptSemester(
+                            "2024-2025:fall", Decimal(30), Decimal(90), (TranscriptCourse("PHY", "Физика", "FF"),)
+                        ),
+                        TranscriptSemester(
+                            "2024-2025:spring",
+                            Decimal(30),
+                            Decimal(90),
+                            tuple(TranscriptCourse(f"C{code}", "Example", "AA") for code in range(3))
+                            + (TranscriptCourse("C3", "Example", "F1"),),
+                        ),
+                        TranscriptSemester(
+                            "2025-2026:fall", Decimal(30), Decimal(90), (TranscriptCourse("PHY", "Физика", "BB"),)
+                        ),
+                        TranscriptSemester("2025-2026:spring", None, None, ()),
                     ),
                     Decimal(gpa),
                 ),
@@ -64,11 +81,19 @@ async def test_all_achievement_sources_enqueue_once_on_first_award(session):
             "fixture-student",
             [LessonAttendanceModel("Subject", str(index), 20, None, None, None) for index in range(5)],
         )
+        await attendance.execute(
+            991101,
+            "fixture-student",
+            [LessonAttendanceModel("Subject", "0", 0, 0, None, None)],
+            observed_at=datetime(2026, 11, 1, tzinfo=UTC),
+        )
+    for _ in range(100):
+        await activity.execute(991101, "rating")
     # Repeated food and night checks after the thresholds must not notify again.
     await activity.execute(991101, "food", observed_at=start + timedelta(days=4))
     await activity.execute(991101, "grades", observed_at=start + timedelta(days=3))
     rows = await queued(session)
-    assert len(rows) == len(ACHIEVEMENT_KEYS) == 10
+    assert len(rows) == len(ACHIEVEMENT_KEYS) == 15
     assert {row.deduplication_key for row in rows} == {f"achievement:991101:{key}" for key in ACHIEVEMENT_KEYS}
     assert set(await repository.get_awards(991101)) == set(ACHIEVEMENT_KEYS)
     assert all(row.category == "achievement" and row.status == "pending" for row in rows)

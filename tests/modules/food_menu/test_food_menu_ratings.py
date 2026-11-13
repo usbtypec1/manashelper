@@ -23,6 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.localization.theme import Theme
 from manashelper.modules.food_menu.application.daily_menu import DailyMenuModel, DailyMenuQuery, DishModel
+from manashelper.modules.food_menu.application.use_cases.rate_daily_menu import RateDailyMenuUseCase
 from manashelper.modules.food_menu.infrastructure.models.daily_menu import DailyMenu
 from manashelper.modules.food_menu.infrastructure.models.daily_menu_rating import DailyMenuRating
 from manashelper.modules.food_menu.infrastructure.models.dish import Dish
@@ -294,3 +295,14 @@ async def test_menu_delivery_and_broadcast_keep_ratings_without_auto_delete_cont
         broadcast_settings[0].buttons[0].callback_data
         == SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS).pack()
     )
+
+
+async def test_only_first_rating_of_each_menu_counts_as_activity(session: AsyncSession) -> None:
+    first, second = await _seed(session)
+    activity = AsyncMock()
+    rate = RateDailyMenuUseCase(DailyMenuRepository(session), DailyMenuRatingRepository(session), activity)
+    await rate.execute(900_001, first.id, 5)
+    changed = await rate.execute(900_001, first.id, 2)
+    await rate.execute(900_001, second.id, 4)
+    assert changed.ratings_count == 1 and changed.average_rating == 2
+    assert activity.execute.await_args_list == [((900_001, "rating"),), ((900_001, "rating"),)]

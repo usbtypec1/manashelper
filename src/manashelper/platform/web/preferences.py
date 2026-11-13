@@ -31,6 +31,12 @@ from manashelper.modules.notifications.settings import NotificationSetting
 from manashelper.modules.schedule.application.course import CourseNotFoundError, CourseQuery
 from manashelper.modules.schedule.application.department import DepartmentQuery
 from manashelper.modules.schedule.application.faculty import FacultyQuery
+from manashelper.modules.schedule.application.free_time import (
+    MAX_FREE_TIME_COURSES,
+    FreeTimeQuery,
+    TooManyCoursesError,
+)
+from manashelper.modules.schedule.application.time_ranges import format_minutes
 from manashelper.modules.schedule.application.use_cases.toggle_tracked_course import ToggleTrackedCourseUseCase
 from manashelper.modules.users.application.locale import LocaleQuery
 from manashelper.modules.users.application.theme import ThemeQuery
@@ -38,6 +44,8 @@ from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.web.auth import authenticate
 from manashelper.platform.web.preferences_catalog import ui_strings
+
+MAX_COURSE_ID = 2147483647
 
 
 class PreferenceInput(BaseModel):
@@ -80,6 +88,17 @@ def _uuid(request: web.Request, key: str) -> UUID:
         return UUID(request.query.get(key, ""))
     except ValueError as error:
         raise web.HTTPBadRequest() from error
+
+
+def _course_ids(raw: str) -> list[int]:
+    """Comma-separated positive course IDs; at least one is required."""
+    try:
+        course_ids = [int(value) for value in raw.split(",") if value.strip()]
+    except ValueError as error:
+        raise web.HTTPBadRequest() from error
+    if not course_ids or any(not 0 < course_id <= MAX_COURSE_ID for course_id in course_ids):
+        raise web.HTTPBadRequest()
+    return course_ids
 
 
 def _json(payload: dict[str, Any]) -> web.Response:
@@ -176,7 +195,7 @@ def register_preferences_routes(app: web.Application, container: AsyncContainer,
             body = await _body(request, CourseInput)
             try:
                 course_id = int(request.match_info["course_id"])
-                if not 0 < course_id <= 2147483647:
+                if not 0 < course_id <= MAX_COURSE_ID:
                     raise ValueError
             except ValueError as error:
                 raise web.HTTPBadRequest() from error
@@ -187,6 +206,36 @@ def register_preferences_routes(app: web.Application, container: AsyncContainer,
             payload = await _settings(scope, user_id, settings)
         return _json(payload)
 
+    async def free_time(request: web.Request) -> web.Response:
+        async with authorized(request) as (scope, _):
+            course_ids = _course_ids(request.query.get("course_ids", ""))
+            try:
+                result = await (await scope.get(FreeTimeQuery)).execute(course_ids)
+            except TooManyCoursesError as error:
+                raise web.HTTPBadRequest() from error
+            except CourseNotFoundError as error:
+                raise web.HTTPNotFound() from error
+        return _json(
+            {
+                "max_courses": MAX_FREE_TIME_COURSES,
+                "courses": [asdict(course) for course in result.courses],
+                "days": [
+                    {
+                        "weekday": day.weekday,
+                        "windows": [
+                            {
+                                "start": format_minutes(window.start_minutes),
+                                "end": format_minutes(window.end_minutes),
+                                "periods": window.periods,
+                            }
+                            for window in day.windows
+                        ],
+                    }
+                    for day in result.days
+                ],
+            }
+        )
+
     app.router.add_get("/api/settings", get_settings)
     app.router.add_put("/api/settings/notifications", notifications)
     app.router.add_put("/api/settings/food", food)
@@ -196,3 +245,4 @@ def register_preferences_routes(app: web.Application, container: AsyncContainer,
     app.router.add_get("/api/studies/departments", departments)
     app.router.add_get("/api/studies/courses", courses)
     app.router.add_put("/api/studies/courses/{course_id}", track_course)
+    app.router.add_get("/api/studies/free-time", free_time)

@@ -24,3 +24,11 @@ class ObisParseError(Exception):
 
 class ObisSnapshotNotReadyError(Exception):
     pass
+
+
+class ObisCaptchaError(Exception):
+    """OBIS rejected the captcha answer or the login form expired before submission."""
+
+
+class ObisSessionExpiredError(Exception):
+    """No saved OBIS session exists, or OBIS rejected it; the student must log in with a captcha again."""

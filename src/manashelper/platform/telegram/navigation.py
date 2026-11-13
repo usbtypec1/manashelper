@@ -25,6 +25,16 @@ def build_mini_app_button(*, courses: bool = False) -> InlineKeyboardButton | No
     )
 
 
+def build_free_time_button() -> InlineKeyboardButton | None:
+    public_url = get_settings().public_url
+    if not public_url:
+        return None
+    return InlineKeyboardButton(
+        text=_("schedule.free_time.mini_app"),
+        web_app=WebAppInfo(url=f"{public_url.rstrip('/')}/app/free-time"),
+    )
+
+
 def build_navigation_keyboard(back: CallbackData | None = None) -> InlineKeyboardBuilder:
     builder = InlineKeyboardBuilder()
     if back is not None:
@@ -62,6 +72,7 @@ def build_study_keyboard() -> ReplyKeyboardMarkup:
         keyboard=[
             schedule_row,
             services_row,
+            [KeyboardButton(text=_("menu.rooms")), KeyboardButton(text=_("menu.teachers"))],
             [KeyboardButton(text=_("schedule.search_subject"))],
             [KeyboardButton(text=_("common.back_to_menu"))],
         ],

@@ -2,6 +2,7 @@ import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass
 
+from manashelper.modules.schedule.application.course_level import CourseLevel, parse_course_level
 from manashelper.modules.schedule.infrastructure.models.course import Course
 from manashelper.modules.schedule.infrastructure.repositories.course import CourseRepository
 from manashelper.modules.schedule.infrastructure.repositories.course_tracking import CourseTrackingRepository
@@ -24,6 +25,7 @@ class CourseSummary:
     id: int
     number: int
     is_tracked: bool
+    level: CourseLevel = CourseLevel.BACHELOR
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,11 +34,17 @@ class TrackedCourseSummary:
     number: int
     department_name: str
     faculty_name: str
+    level: CourseLevel = CourseLevel.BACHELOR
 
 
 def to_summaries(courses: Sequence[Course], tracked_course_ids: set[int]) -> list[CourseSummary]:
     return [
-        CourseSummary(id=course.id, number=course.number, is_tracked=course.id in tracked_course_ids)
+        CourseSummary(
+            id=course.id,
+            number=course.number,
+            is_tracked=course.id in tracked_course_ids,
+            level=parse_course_level(course.level),
+        )
         for course in courses
     ]
 
@@ -48,7 +56,13 @@ class CourseQuery:
 
     async def get_tracked_courses(self, user_id: int) -> list[TrackedCourseSummary]:
         return [
-            TrackedCourseSummary(course.id, course.number, course.department.name, course.department.faculty.name)
+            TrackedCourseSummary(
+                course.id,
+                course.number,
+                course.department.name,
+                course.department.faculty.name,
+                parse_course_level(course.level),
+            )
             for course in await self.tracking_repository.get_tracked_courses(user_id)
         ]
 

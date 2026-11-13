@@ -517,9 +517,6 @@ msgstr "💯 Оценки"
 msgid "obis.password_prompt"
 msgstr "Введите ваш пароль от OBIS:"
 
-msgid "obis.credentials_saved"
-msgstr "Данные успешно сохранены ✅"
-
 msgid "obis.accept_terms_prompt"
 msgstr "Пожалуйста, примите условия использования бота, чтобы продолжить."
 
@@ -549,6 +546,27 @@ msgstr "Не удалось получить данные с OBIS. Попроб�
 
 msgid "obis.login_failed"
 msgstr "Неверные данные от OBIS. Введите студенческий номер заново:"
+
+msgid "obis.captcha_prompt"
+msgstr "Введите код с картинки, чтобы войти в OBIS:"
+
+msgid "obis.captcha_invalid"
+msgstr "Код с картинки неверный или устарел. Введите новый код:"
+
+msgid "obis.refresh_captcha"
+msgstr "🔄 Другая картинка"
+
+msgid "obis.login"
+msgstr "🔐 Войти в OBIS"
+
+msgid "obis.logged_in"
+msgstr "Вход в OBIS выполнен ✅ Оценки и посещаемость обновятся в течение 15 минут."
+
+msgid "obis.session_expired"
+msgstr "Сессия OBIS завершилась, поэтому оценки и посещаемость больше не обновляются. Войдите снова — понадобится только код с картинки."
+
+msgid "obis.session_required"
+msgstr "Чтобы загрузить данные из OBIS, войдите и введите код с картинки."
 
 msgid "menu.settings"
 msgstr "⚙️ Настройки"
@@ -1108,6 +1126,36 @@ msgstr "На грани"
 
 msgid "gamification.thin_ice.description"
 msgstr "Набери минимум 18,75% пропусков по теории или практике у пяти разных предметов в одном семестре."
+
+msgid "gamification.phoenix.name"
+msgstr "I'll be back"
+
+msgid "gamification.phoenix.description"
+msgstr "Закрой положительной оценкой предмет, по которому раньше получил F1 или FF."
+
+msgid "gamification.stability.name"
+msgstr "Стабильность"
+
+msgid "gamification.stability.description"
+msgstr "Получи семестровый GPA не ниже 3,00 три семестра подряд."
+
+msgid "gamification.iron_attendance.name"
+msgstr "Железная явка"
+
+msgid "gamification.iron_attendance.description"
+msgstr "Ни одного пропуска: 0% по теории и практике у всех предметов семестра. Засчитывается с 1 ноября и с 1 апреля."
+
+msgid "gamification.critic.name"
+msgstr "Критик"
+
+msgid "gamification.critic.description"
+msgstr "Оцени йемек за 100 разных дней."
+
+msgid "gamification.einstein.name"
+msgstr "Эйнштейн"
+
+msgid "gamification.einstein.description"
+msgstr "Провали физику: получи F1 или FF по предмету с «физикой» в названии."
 
 msgid "commands.gamification"
 msgstr "Включить или отключить ачивки пользователя"
@@ -1715,3 +1763,146 @@ msgstr "8. Точность и ответственность"
 
 msgid "terms.limits.body"
 msgstr "Проверяйте оценки, посещаемость, дедлайны и статусы сдачи/выполнения в официальных системах университета. Уведомления и расчёты носят информационный характер, могут задерживаться, быть неполными или недоступными; сервис не гарантирует учебные результаты и бесперебойную доставку. Защищайте свою учётную запись и публикуйте только те материалы и контакты, которыми вправе делиться. Объявления проходят модерацию. Соглашение описывает текущую реализацию и не отменяет права и обязанности, установленные применимым законом. Исходный код: https://github.com/usbtypec1/manashelper. Вопросы и запросы: @usbtypec или «Настройки → Обратная связь»."
+
+msgid "menu.rooms"
+msgstr "🚪 Аудитории"
+
+msgid "menu.teachers"
+msgstr "👨‍🏫 Преподаватели"
+
+msgid "commands.now"
+msgstr "Текущая и следующая пара"
+
+msgid "schedule.course_master"
+msgstr "Магистратура"
+
+msgid "schedule.course_doctorate"
+msgstr "Докторантура"
+
+msgid "schedule.now.button"
+msgstr "⏱ Сейчас"
+
+msgid "schedule.now.header"
+msgstr "⏱ <b>Сейчас и далее</b>"
+
+msgid "schedule.now.current"
+msgstr "🔥 <b>Сейчас</b> · до {until}"
+
+msgid "schedule.now.next"
+msgstr "⏰ <b>Далее</b> · {when}"
+
+msgid "schedule.now.today_at"
+msgstr "сегодня в {time} (через {minutes} мин)"
+
+msgid "schedule.now.idle"
+msgstr "☕ Сейчас пар нет."
+
+msgid "schedule.now.refresh"
+msgstr "🔄 Обновить"
+
+msgid "schedule.teacher.idle"
+msgstr "☕ Сейчас занятий нет."
+
+msgid "schedule.teacher.search"
+msgstr "👨‍🏫 Найти преподавателя"
+
+msgid "schedule.teacher.search_prompt"
+msgstr "Введите фамилию или имя преподавателя. Турецкие буквы можно набирать обычными латинскими."
+
+msgid "schedule.rooms.idle"
+msgstr "🟢 Сейчас аудитория свободна."
+
+msgid "schedule.rooms.capacity"
+msgstr "{capacity} мест"
+
+msgid "schedule.rooms.free_all_day"
+msgstr "до конца дня"
+
+msgid "schedule.rooms.free_until"
+msgstr "до {time}"
+
+msgid "schedule.rooms.free_header"
+msgstr "🚪 <b>Свободные аудитории</b>"
+
+msgid "schedule.rooms.free_building_header"
+msgstr "🚪 <b>Свободные аудитории — {building}</b>"
+
+msgid "schedule.rooms.none_free"
+msgstr "Свободных аудиторий в это время нет."
+
+msgid "schedule.rooms.choose_building"
+msgstr "Свободно аудиторий: {count}. Выберите корпус."
+
+msgid "schedule.rooms.now"
+msgstr "🕘 Сейчас"
+
+msgid "schedule.rooms.buildings"
+msgstr "🏢 Все корпуса"
+
+msgid "schedule.rooms.search"
+msgstr "🔎 Найти аудиторию"
+
+msgid "schedule.rooms.free_now"
+msgstr "🟢 Свободные аудитории"
+
+msgid "schedule.rooms.search_prompt"
+msgstr "Введите номер аудитории, например MFFB 127 или İİBF A-205. Пробелы и дефисы не важны."
+
+msgid "schedule.campus.choose"
+msgstr "Найдено несколько вариантов, выберите нужный:"
+
+msgid "schedule.query_too_short_retry"
+msgstr "Слишком короткий запрос. Нажмите кнопку поиска ниже и попробуйте снова."
+
+msgid "schedule.free_time.mini_app"
+msgstr "👥 Общие окна (Mini App)"
+
+msgid "schedule.change_room"
+msgstr "🚪 Аудитория: {previous} → {new}"
+
+msgid "schedule.change_teacher"
+msgstr "👨‍🏫 Преподаватель: {previous} → {new}"
+
+msgid "schedule.change_details"
+msgstr ""
+"✏️ {time_range}\n"
+"{content}"
+
+msgid "obis.kind_theory"
+msgstr "теория"
+
+msgid "obis.kind_practice"
+msgstr "практика"
+
+msgid "obis.weekly_hours"
+msgstr "{theory} ч теории + {practice} ч практики в неделю"
+
+msgid "miniapp.ui.course_master"
+msgstr "Магистратура"
+
+msgid "miniapp.ui.course_doctorate"
+msgstr "Докторантура"
+
+msgid "miniapp.ui.free_time"
+msgstr "Общие окна"
+
+msgid "miniapp.ui.free_time_note"
+msgstr "Добавьте свои курсы и курсы друзей — покажем, когда ни у кого нет пар. Окна считаются по парам с 8:00 до 19:45."
+
+msgid "miniapp.ui.free_time_selected"
+msgstr "Курсы для сравнения"
+
+msgid "miniapp.ui.free_time_add"
+msgstr "Добавить курс"
+
+msgid "miniapp.ui.free_time_limit"
+msgstr "Можно сравнить не больше {count} курсов."
+
+msgid "miniapp.ui.free_time_none"
+msgstr "Общих окон нет"
+
+msgid "miniapp.ui.free_time_empty"
+msgstr "Добавьте хотя бы один курс."
+
+msgid "miniapp.ui.free_time_periods"
+msgstr "пар: {count}"

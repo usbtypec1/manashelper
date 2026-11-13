@@ -24,6 +24,7 @@ def load_models() -> None:
     )
     from manashelper.modules.gamification.infrastructure.models.achievement import GamificationProgress, UserAchievement
     from manashelper.modules.notifications.orm import NotificationSettings
+    from manashelper.modules.obis.infrastructure.models.session import ObisSession
     from manashelper.modules.obis.infrastructure.models.snapshot import ObisSnapshot
     from manashelper.modules.obis.infrastructure.models.user_exam_grade import UserExamGrade
     from manashelper.modules.obis.infrastructure.models.user_lesson_attendance import UserLessonAttendance
@@ -33,6 +34,8 @@ def load_models() -> None:
     from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
     from manashelper.modules.schedule.infrastructure.models.lesson import Lesson
     from manashelper.modules.schedule.infrastructure.models.lesson_history import LessonHistory
+    from manashelper.modules.schedule.infrastructure.models.lesson_item import LessonItem
+    from manashelper.modules.schedule.infrastructure.models.room import Room
     from manashelper.modules.users.infrastructure.models.user import User
     from manashelper.platform.telegram.audit.orm import ActionLog
     from manashelper.platform.telegram.outbox.models import OutboxMessage, OutboxRateBucket

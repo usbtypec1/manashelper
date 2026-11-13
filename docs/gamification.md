@@ -16,7 +16,7 @@ rows remain stored, but only keys in the active achievement catalog contribute t
   No activity progress or awards (including temporarily retired achievements) are recorded, and the transcript-only HTTP refresh is skipped.
   Regular OBIS synchronization continues. Disabling preserves awards/progress; enabling resumes them without
   backfilling missed activity. Academic history can qualify on the next successful refresh.
-- The collection contains ten achievements. One achievement = one point. Awards are permanent and unique per Telegram user/key.
+- The collection contains fifteen achievements. One achievement = one point. Awards are permanent and unique per Telegram user/key.
 - Each newly earned achievement queues a localized text notification with its name and condition in
   `telegram_outbox` (category `achievement`, 24-hour TTL). The award and queue entry commit together;
   failures roll both back. Repeated observations and existing awards do not enqueue again.
@@ -36,11 +36,22 @@ rows remain stored, but only keys in the active achievement catalog contribute t
 - On the edge requires five distinct subject codes in one current attendance snapshot, each with theory OR practice
   absence >= 18.75%. Both parts of one subject count once. Use OBIS's percentages, not a reconstructed denominator;
   do not accumulate subjects across refreshes. Account markers hide progress from a previous linked account.
+- Iron attendance requires a current attendance snapshot whose every reported theory/practice percentage is 0
+  (subjects without any percentage are ignored; an empty snapshot never qualifies). It is checked only in
+  November–January and April–June (Bishkek time), because early-semester snapshots are trivially clean.
+- Critic counts a user's first rating of each daily menu (100 menus); changing an existing score does not count.
+- I'll be back (`phoenix`): the last chronological attempt of a course code is a passing letter grade (AA–DD) and the code was
+  failed (F1/FF) earlier. Failed codes are remembered per academic account marker in `failed_courses`,
+  because OBIS may overwrite a failed row with the retake result.
+- Stability: three consecutive fall/spring semesters with official totals and a semester GPA (points/credits,
+  rounded half-up to 0.01) of at least 3.00. Summer school and semesters without totals are skipped, not breaks.
+- Einstein: F1/FF in a course whose transcript name contains physics in Russian/Kyrgyz, Turkish or English
+  (`физик`, `fizik`/`fiziği`, `physic`), excluding the adjectives `fiziksel`, `физикалык` and `physical`.
 - Existing food/night views and publications are not backfilled. Historical F1/FF in the transcript are eligible.
 
 The existing 15-minute OBIS poll also fetches `/vs-ders/transkript-detailed`. Notification toggles do not stop
 synchronization or achievements. F1/FF come only from the transcript's final letter-grade column.
-The parser reads official semester credit/point totals and overall GPA. The baseline is the weighted sum of
+The parser reads each course row's code, name and final grade, official semester credit/point totals and overall GPA. The baseline is the weighted sum of
 previous semesters' points divided by credits, rounded half-up to two decimal places. It is frozen on the first
 successful observation of the latest semester/account. Compare OBIS's overall GPA to it using Decimal:
 `>= +0.20` earns Cumback; `<= -0.20` earns Fall. No previous credits/incomplete history means no invented baseline.
@@ -71,13 +82,20 @@ Shared interface copy uses `gamification.ui.*` in the same catalogs. After chang
 export messages and rebuild the frontend using the commands below.
 The medal sprite atlas is `frontend/src/assets/achievement-medals.png`; cell order and
 sheet colors are mapped by stable achievement key in `frontend/src/achievementArt.ts`.
-Individual `achievement-<name>.png` assets in the same directory override all ten medals:
+An individual `achievement-<key with dashes>.png` in the same directory (for example `achievement-thin-ice.png`)
+is picked up automatically by `achievementArt.ts`; a key without an image or atlas cell shows the locked medal.
+Current images:
 Seller (suit meme), Formula One (racing-driver portrait), Champion (military salute),
 Comeback/Negative growth (contrasting smiling and grim meme portraits), Cafeteria boss (chubby mascot
 with a fried-chicken bucket), Night owl (Anxiety character fusion), Eldin balasy (GigaChad fusion),
-Foodie (Naruto at Ichiraku with ramen and stacked bowls), and On the edge (tightrope between skyscrapers).
+Foodie (Naruto at Ichiraku with ramen and stacked bowls), On the edge (tightrope between skyscrapers),
+Iron attendance (upright, front-facing Hannibal Lecter fusion wearing his restraint mask behind glass and bars),
+Critic (Anton Ego fusion stunned after tasting ratatouille against a plain background),
+I'll be back (only a gloved hand giving a thumbs-up above lava), Stability (a centered meditating monk),
+and Einstein (tongue-out portrait with wild white hair, E=mc² and a red FF on the chalkboard).
 The key mapping selects these images for earned medals and detail sheets; locked medals still use the atlas.
-Display names retain stable storage keys: `fall` is Negative growth, and `thin_ice` is On the edge.
+Display names retain stable storage keys: `fall` is Negative growth, `thin_ice` is On the edge,
+and `phoenix` is I'll be back.
 Reference screenshots/video under `reference/` are design inputs only, never served to clients.
 
 ## Build and verify locally
@@ -161,6 +179,7 @@ unless intentionally discarding that data. Existing user/notification settings a
 V29 adds access (default off), AA and attendance progress fields. It preserves existing awards and counters.
 Downgrading V29 removes the access gate and these new counters, while keeping awards and prior progress fields;
 re-upgrading starts everyone disabled again. Deploy the V29-aware code together with this migration.
+V31 adds `menu_ratings` and `failed_courses` progress columns; downgrading drops only those counters.
 An older application version does not enforce the opt-in gate; do not roll back code alone during the pilot.
 
 ## HTTP contract and guarantees

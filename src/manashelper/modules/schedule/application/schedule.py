@@ -1,11 +1,16 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 from manashelper.modules.schedule.application.course import UserNotFoundError
+from manashelper.modules.schedule.application.time_ranges import parse_time_range_start_minutes
+from manashelper.modules.schedule.application.timetable_entries import (
+    NowNext,
+    TimetableEntry,
+    find_now_next,
+    lesson_entries,
+)
 from manashelper.modules.schedule.infrastructure.repositories.course_tracking import CourseTrackingRepository
 from manashelper.modules.schedule.infrastructure.repositories.lesson import LessonRepository
-
-LUNCH_START_MINUTES = 12 * 60 + 25
-LUNCH_END_MINUTES = 14 * 60 + 25
 
 
 class NoTrackedCoursesError(Exception):
@@ -21,35 +26,13 @@ class ScheduleLessonModel:
     content: str
 
 
-def parse_time_range_start_minutes(time_range: str) -> int:
-    """Minutes since midnight for a "H:MM-H:MM" range's start — sorts "10:45" correctly after "9:50"."""
-    hours, minutes = time_range.split("-", 1)[0].split(":")
-    return int(hours) * 60 + int(minutes)
-
-
-def parse_time_range_end_minutes(time_range: str) -> int:
-    hours, minutes = time_range.split("-", 1)[1].split(":")
-    return int(hours) * 60 + int(minutes)
-
-
-# Regular breaks between periods run ~10 minutes; anything longer (a free period, lunch) starts a new block.
-MAX_GAP_MINUTES_TO_GROUP = 20
-
-
 @dataclass(frozen=True, slots=True)
 class ScheduleQuery:
     lesson_repository: LessonRepository
     tracking_repository: CourseTrackingRepository
 
     async def get_user_schedule(self, user_id: int) -> list[ScheduleLessonModel]:
-        user = await self.tracking_repository.get_with_tracked_courses(user_id)
-        if user is None:
-            raise UserNotFoundError(user_id)
-
-        course_ids = [course.id for course in user.tracked_courses]
-        if not course_ids:
-            raise NoTrackedCoursesError(user_id)
-
+        course_ids = await self.get_tracked_course_ids(user_id)
         lessons = await self.lesson_repository.get_all_by_course_ids(course_ids)
         return sorted(
             (
@@ -58,3 +41,22 @@ class ScheduleQuery:
             ),
             key=lambda lesson: (lesson.weekday, parse_time_range_start_minutes(lesson.time_range)),
         )
+
+    async def get_user_entries(self, user_id: int) -> list[TimetableEntry]:
+        """Real lessons of the user's tracked courses; reserved placeholders are omitted."""
+        course_ids = await self.get_tracked_course_ids(user_id)
+        lessons = await self.lesson_repository.get_all_with_courses_by_course_ids(course_ids)
+        return [entry for lesson in lessons for entry in lesson_entries(lesson)]
+
+    async def get_now_next(self, user_id: int, now: datetime) -> NowNext:
+        return find_now_next(await self.get_user_entries(user_id), now)
+
+    async def get_tracked_course_ids(self, user_id: int) -> list[int]:
+        user = await self.tracking_repository.get_with_tracked_courses(user_id)
+        if user is None:
+            raise UserNotFoundError(user_id)
+
+        course_ids = [course.id for course in user.tracked_courses]
+        if not course_ids:
+            raise NoTrackedCoursesError(user_id)
+        return course_ids

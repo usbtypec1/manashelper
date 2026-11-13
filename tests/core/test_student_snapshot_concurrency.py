@@ -15,6 +15,7 @@ from manashelper.modules.eders.infrastructure.repositories.eders import EdersRep
 from manashelper.modules.eders.infrastructure.serialization import serialize_snapshot
 from manashelper.modules.obis.application.credentials import ObisCredentialsQuery
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
+from manashelper.modules.obis.infrastructure.models.session import ObisSession
 from manashelper.modules.obis.infrastructure.models.snapshot import ObisSnapshot
 from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
 from manashelper.modules.users.infrastructure.models.user import User
@@ -45,6 +46,7 @@ async def test_cached_reads_do_not_wait_for_background_http_fetch(engine, featur
                 fetched_at=now,
             )
         )
+        setup.add(ObisSession(user_id=user_id, encrypted_cookies=crypto.encrypt('{"PHPSESSID": "s"}'), created_at=now))
         setup.add(
             EdersState(
                 user_id=user_id,

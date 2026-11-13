@@ -522,9 +522,6 @@ msgstr "💯 Баалар"
 msgid "obis.password_prompt"
 msgstr "OBIS сырсөзүңүздү киргизиңиз:"
 
-msgid "obis.credentials_saved"
-msgstr "Маалыматтар ийгиликтүү сакталды ✅"
-
 msgid "obis.accept_terms_prompt"
 msgstr "Улантуу үчүн, сураныч, боттун колдонуу шарттарын кабыл алыңыз."
 
@@ -554,6 +551,27 @@ msgstr "OBIS'тен маалымат алынган жок. Кийинчерээ
 
 msgid "obis.login_failed"
 msgstr "OBIS маалыматтары туура эмес. Студенттик номериңизди кайра киргизиңиз:"
+
+msgid "obis.captcha_prompt"
+msgstr "OBISке кирүү үчүн сүрөттөгү кодду жазыңыз:"
+
+msgid "obis.captcha_invalid"
+msgstr "Сүрөттөгү код туура эмес же эскирип калды. Жаңы кодду жазыңыз:"
+
+msgid "obis.refresh_captcha"
+msgstr "🔄 Башка сүрөт"
+
+msgid "obis.login"
+msgstr "🔐 OBISке кирүү"
+
+msgid "obis.logged_in"
+msgstr "OBISке кирдиңиз ✅ Баалар жана катышуу 15 мүнөттүн ичинде жаңыланат."
+
+msgid "obis.session_expired"
+msgstr "OBIS сессиясы бүттү, ошондуктан баалар жана катышуу жаңыланбай калды. Кайра кириңиз — сүрөттөгү код гана керек болот."
+
+msgid "obis.session_required"
+msgstr "OBIS маалыматтарын жүктөө үчүн кирип, сүрөттөгү кодду жазыңыз."
 
 msgid "menu.settings"
 msgstr "⚙️ Тууралоолор"
@@ -1111,6 +1129,36 @@ msgstr "Кыл учунда"
 
 msgid "gamification.thin_ice.description"
 msgstr "Бир семестрде беш башка сабактын теориясынан же практикасынан кеминде 18,75% калтыр."
+
+msgid "gamification.phoenix.name"
+msgstr "I'll be back"
+
+msgid "gamification.phoenix.description"
+msgstr "Мурда F1 же FF алган сабагыңды оң баа менен жап."
+
+msgid "gamification.stability.name"
+msgstr "Туруктуулук"
+
+msgid "gamification.stability.description"
+msgstr "Үч семестр катары менен семестрдик GPA кеминде 3,00 болсун."
+
+msgid "gamification.iron_attendance.name"
+msgstr "Темир катышуу"
+
+msgid "gamification.iron_attendance.description"
+msgstr "Бир да калтыруу жок: семестрдеги бардык сабактардын теориясы жана практикасы боюнча 0%. 1-ноябрдан жана 1-апрелден баштап эсептелет."
+
+msgid "gamification.critic.name"
+msgstr "Сынчы"
+
+msgid "gamification.critic.description"
+msgstr "Ашкананын менюсуна 100 башка күнү баа бер."
+
+msgid "gamification.einstein.name"
+msgstr "Эйнштейн"
+
+msgid "gamification.einstein.description"
+msgstr "Физиканы кулат: аталышында «физика» бар сабактан F1 же FF ал."
 
 msgid "commands.gamification"
 msgstr "Колдонуучунун жетишкендиктерин күйгүзүү же өчүрүү"
@@ -1718,3 +1766,146 @@ msgstr "8. Тактык жана жоопкерчилик"
 
 msgid "terms.limits.body"
 msgstr "Бааларды, катышууну, мөөнөттөрдү жана тапшыруу/аткаруу абалын расмий университет системаларынан текшериңиз. Билдирүүлөр жана эсептөөлөр маалыматтык мүнөздө; кечигиши, толук болбошу же жеткиликсиз болушу мүмкүн. Кызмат окуу натыйжасын же үзгүлтүксүз жеткирүүнү кепилдебейт. Аккаунтуңузду коргоп, бөлүшүүгө укуктуу материалдарды жана байланыштарды гана жарыялаңыз. Жарыялар модерациядан өтөт. Келишим учурдагы иштөөнү сүрөттөйт жана мыйзамдагы укук-милдеттерди жокко чыгарбайт. Код: https://github.com/usbtypec1/manashelper. Суроолор: @usbtypec же Жөндөөлөр → Кайтарым байланыш."
+
+msgid "menu.rooms"
+msgstr "🚪 Аудиториялар"
+
+msgid "menu.teachers"
+msgstr "👨‍🏫 Окутуучулар"
+
+msgid "commands.now"
+msgstr "Учурдагы жана кийинки сабак"
+
+msgid "schedule.course_master"
+msgstr "Магистратура"
+
+msgid "schedule.course_doctorate"
+msgstr "Докторантура"
+
+msgid "schedule.now.button"
+msgstr "⏱ Азыр"
+
+msgid "schedule.now.header"
+msgstr "⏱ <b>Азыр жана кийинки</b>"
+
+msgid "schedule.now.current"
+msgstr "🔥 <b>Азыр</b> · {until} чейин"
+
+msgid "schedule.now.next"
+msgstr "⏰ <b>Кийинки</b> · {when}"
+
+msgid "schedule.now.today_at"
+msgstr "бүгүн {time} ({minutes} мүнөттөн кийин)"
+
+msgid "schedule.now.idle"
+msgstr "☕ Азыр сабак жок."
+
+msgid "schedule.now.refresh"
+msgstr "🔄 Жаңылоо"
+
+msgid "schedule.teacher.idle"
+msgstr "☕ Азыр сабагы жок."
+
+msgid "schedule.teacher.search"
+msgstr "👨‍🏫 Окутуучуну издөө"
+
+msgid "schedule.teacher.search_prompt"
+msgstr "Окутуучунун фамилиясын же атын киргизиңиз. Түрк тамгаларын кадимки латын тамгалары менен жазсаңыз болот."
+
+msgid "schedule.rooms.idle"
+msgstr "🟢 Азыр аудитория бош."
+
+msgid "schedule.rooms.capacity"
+msgstr "{capacity} орун"
+
+msgid "schedule.rooms.free_all_day"
+msgstr "күндүн аягына чейин"
+
+msgid "schedule.rooms.free_until"
+msgstr "{time} чейин"
+
+msgid "schedule.rooms.free_header"
+msgstr "🚪 <b>Бош аудиториялар</b>"
+
+msgid "schedule.rooms.free_building_header"
+msgstr "🚪 <b>Бош аудиториялар — {building}</b>"
+
+msgid "schedule.rooms.none_free"
+msgstr "Бул убакта бош аудитория жок."
+
+msgid "schedule.rooms.choose_building"
+msgstr "Бош аудиториялар: {count}. Корпусту тандаңыз."
+
+msgid "schedule.rooms.now"
+msgstr "🕘 Азыр"
+
+msgid "schedule.rooms.buildings"
+msgstr "🏢 Бардык корпустар"
+
+msgid "schedule.rooms.search"
+msgstr "🔎 Аудитория издөө"
+
+msgid "schedule.rooms.free_now"
+msgstr "🟢 Бош аудиториялар"
+
+msgid "schedule.rooms.search_prompt"
+msgstr "Аудиториянын номерин киргизиңиз, мисалы MFFB 127 же İİBF A-205. Боштуктар жана дефистер маанилүү эмес."
+
+msgid "schedule.campus.choose"
+msgstr "Бир нече вариант табылды, керектүүсүн тандаңыз:"
+
+msgid "schedule.query_too_short_retry"
+msgstr "Суроо өтө кыска. Төмөнкү издөө баскычын басып, кайра аракет кылыңыз."
+
+msgid "schedule.free_time.mini_app"
+msgstr "👥 Жалпы бош убакыт (Mini App)"
+
+msgid "schedule.change_room"
+msgstr "🚪 Аудитория: {previous} → {new}"
+
+msgid "schedule.change_teacher"
+msgstr "👨‍🏫 Окутуучу: {previous} → {new}"
+
+msgid "schedule.change_details"
+msgstr ""
+"✏️ {time_range}\n"
+"{content}"
+
+msgid "obis.kind_theory"
+msgstr "теория"
+
+msgid "obis.kind_practice"
+msgstr "практика"
+
+msgid "obis.weekly_hours"
+msgstr "жумасына {theory} саат теория + {practice} саат практика"
+
+msgid "miniapp.ui.course_master"
+msgstr "Магистратура"
+
+msgid "miniapp.ui.course_doctorate"
+msgstr "Докторантура"
+
+msgid "miniapp.ui.free_time"
+msgstr "Жалпы бош убакыт"
+
+msgid "miniapp.ui.free_time_note"
+msgstr "Өз курстарыңызды жана досторуңуздун курстарын кошуңуз — эч кимде сабак жок убакытты көрсөтөбүз. Бош убакыт 8:00дөн 19:45ке чейинки сабактар боюнча эсептелет."
+
+msgid "miniapp.ui.free_time_selected"
+msgstr "Салыштыруу үчүн курстар"
+
+msgid "miniapp.ui.free_time_add"
+msgstr "Курс кошуу"
+
+msgid "miniapp.ui.free_time_limit"
+msgstr "Эң көп {count} курсту салыштырса болот."
+
+msgid "miniapp.ui.free_time_none"
+msgstr "Жалпы бош убакыт жок"
+
+msgid "miniapp.ui.free_time_empty"
+msgstr "Жок дегенде бир курс кошуңуз."
+
+msgid "miniapp.ui.free_time_periods"
+msgstr "сабак: {count}"

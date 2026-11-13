@@ -41,6 +41,7 @@ from manashelper.modules.schedule.infrastructure.models.associations import user
 from manashelper.modules.schedule.infrastructure.models.course import Course
 from manashelper.modules.schedule.infrastructure.models.department import Department
 from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
+from manashelper.modules.schedule.infrastructure.models.lesson import Lesson
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.users.application.use_cases.set_user_theme import SetUserThemeUseCase
 from manashelper.modules.users.infrastructure.models.user import User
@@ -171,6 +172,57 @@ async def test_preferences_are_available_without_achievement_access_and_keep_def
         assert len(data["food"]) == 7 and all(day["lunch_enabled"] and day["dinner_enabled"] for day in data["food"])
         assert all(data["eders"].values()) and data["tracked_courses"] == []
         assert "student_number" not in json.dumps(data) and "encrypted_password" not in json.dumps(data)
+
+
+async def test_free_time_compares_selected_courses_and_validates_ids():
+    async with application() as (client, container, _), course_catalog(container) as (_, _, course_ids):
+        async with container() as scope:
+            session = await scope.get(AsyncSession)
+            (await session.get(Course, course_ids[1])).level = "master"  # type: ignore[union-attr]
+            session.add_all(
+                [
+                    Lesson(
+                        id=uuid4(),
+                        course_id=course_ids[0],
+                        weekday=1,
+                        time_range="8:00-8:45",
+                        content="A — B, C",
+                        normalized_content="a — b, c",
+                    ),
+                    Lesson(
+                        id=uuid4(),
+                        course_id=course_ids[1],
+                        weekday=1,
+                        time_range="8:55-9:40",
+                        content="D — E, F",
+                        normalized_content="d — e, f",
+                    ),
+                ]
+            )
+        headers = {"Authorization": authorization()}
+        try:
+            query = f"{course_ids[1]},{course_ids[0]},{course_ids[1]}"
+            response = await client.get(f"/api/studies/free-time?course_ids={query}", headers=headers)
+            assert response.status == 200 and response.headers["Cache-Control"] == "no-store"
+            data = await response.json()
+            assert [course["id"] for course in data["courses"]] == [course_ids[1], course_ids[0]]
+            assert data["courses"][0]["level"] == "master"
+            assert data["courses"][0]["department_name"] == "Department <test>"
+            assert [day["weekday"] for day in data["days"]] == [1, 2, 3, 4, 5]
+            monday = data["days"][0]["windows"]
+            assert all(window["start"] not in {"8:00", "8:55"} for window in monday)
+
+            for invalid in ("", "abc", "0", "1,-2", "2147483648"):
+                response = await client.get(f"/api/studies/free-time?course_ids={invalid}", headers=headers)
+                assert response.status == 400, invalid
+            too_many = ",".join(str(course_id) for course_id in range(1, 10))
+            assert (await client.get(f"/api/studies/free-time?course_ids={too_many}", headers=headers)).status == 400
+            assert (await client.get("/api/studies/free-time?course_ids=993999", headers=headers)).status == 404
+            assert (await client.get(f"/api/studies/free-time?course_ids={course_ids[0]}")).status == 401
+        finally:
+            async with container() as scope:
+                session = await scope.get(AsyncSession)
+                await session.execute(delete(Lesson).where(Lesson.course_id.in_(course_ids)))
 
 
 async def test_saved_bot_theme_reaches_both_miniapps_and_resets_without_leaking_context():

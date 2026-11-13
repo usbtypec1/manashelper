@@ -11,6 +11,7 @@ from manashelper.modules.schedule.infrastructure.models.department import Depart
 from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
 from manashelper.modules.schedule.infrastructure.models.lesson import Lesson
 from manashelper.modules.schedule.infrastructure.models.lesson_history import LessonHistory
+from manashelper.modules.schedule.infrastructure.repositories.course import CourseRepository
 from manashelper.modules.schedule.infrastructure.repositories.lesson import LessonRepository
 from manashelper.modules.schedule.infrastructure.repositories.lesson_history import LessonHistoryRepository
 from manashelper.modules.schedule.infrastructure.timetable_parser import ScrapedLessonSlot, ScrapedTimeSlot
@@ -71,7 +72,9 @@ async def test_synchronize_course_timetable_updates_content_and_records_history(
         ],
     )
 
-    service = SyncTimetableUseCase(_FakeTimetableClient(), LessonRepository(session), LessonHistoryRepository(session))
+    service = SyncTimetableUseCase(
+        _FakeTimetableClient(), LessonRepository(session), LessonHistoryRepository(session), CourseRepository(session)
+    )
     changes = await service.execute(course.id)
     await session.flush()
 
@@ -110,7 +113,9 @@ async def test_synchronize_course_timetable_first_sync_creates_no_history(
         ],
     )
 
-    service = SyncTimetableUseCase(_FakeTimetableClient(), LessonRepository(session), LessonHistoryRepository(session))
+    service = SyncTimetableUseCase(
+        _FakeTimetableClient(), LessonRepository(session), LessonHistoryRepository(session), CourseRepository(session)
+    )
     changes = await service.execute(course.id)
     await session.flush()
 

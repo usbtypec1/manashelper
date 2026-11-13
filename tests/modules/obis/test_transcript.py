@@ -2,6 +2,7 @@ from decimal import Decimal
 
 import pytest
 
+from manashelper.modules.obis.application.models import TranscriptCourse
 from manashelper.modules.obis.errors import ObisParseError
 from manashelper.modules.obis.infrastructure.transcript_parser import parse_transcript
 
@@ -16,7 +17,8 @@ def test_nested_semester_totals_and_unfinished_semester():
     result = parse_transcript(HTML)
     assert result.overall_gpa == Decimal("3.20")
     assert result.semesters[0].key == "2025-2026:spring"
-    assert result.semesters[0].grades == ("F1", "FF")
+    assert [course.grade for course in result.semesters[0].courses] == ["F1", "FF"]
+    assert result.semesters[0].courses[0] == TranscriptCourse("TEST-1", "Example", "F1")
     assert result.semesters[0].credits == 30
     assert result.semesters[0].points == 90
     assert result.semesters[1].credits is None

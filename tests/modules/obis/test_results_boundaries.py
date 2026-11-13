@@ -18,9 +18,19 @@ from manashelper.modules.obis.application.ports import (
     SnapshotStore,
 )
 from manashelper.modules.obis.application.queries import ObisResultsQuery
+from manashelper.modules.obis.application.sessions import ObisSessions
 from manashelper.modules.obis.application.use_cases.refresh_obis_attendance import RefreshObisAttendanceUseCase
 from manashelper.modules.obis.application.use_cases.refresh_obis_grades import RefreshObisGradesUseCase
-from manashelper.modules.obis.errors import ObisParseError, ObisSnapshotNotReadyError
+from manashelper.modules.obis.errors import ObisParseError, ObisSessionExpiredError, ObisSnapshotNotReadyError
+
+COOKIES = {"PHPSESSID": "session"}
+
+
+def _sessions(active=True):
+    sessions = AsyncMock(spec=ObisSessions)
+    sessions.get_cookies.return_value = COOKIES
+    sessions.has_session.return_value = active
+    return sessions
 
 
 @pytest.mark.parametrize("kind", ["exam_grades", "attendance"])
@@ -45,8 +55,8 @@ async def test_refresh_locks_then_fetches_then_saves_snapshot_and_comparison_bas
     attendance = [AttendanceRecord("Math", "MATH", 23.75, None)]
     expected = grades if kind == "exam_grades" else [LessonAttendanceModel("Math", "MATH", 23.75, None, 0, None)]
 
-    async def fetch(student_number, password):
-        assert (student_number, password) == ("student", "password")
+    async def fetch(cookies):
+        assert cookies == COOKIES
         order.append("fetch")
         return grades if kind == "exam_grades" else attendance
 
@@ -75,7 +85,7 @@ async def test_refresh_locks_then_fetches_then_saves_snapshot_and_comparison_bas
     before = datetime.now(UTC)
     cls = RefreshObisGradesUseCase if kind == "exam_grades" else RefreshObisAttendanceUseCase
     recorder = AsyncMock()
-    args = [credentials, store, source, snapshots, baseline]
+    args = [credentials, store, source, _sessions(), snapshots, baseline]
     if kind == "attendance":
         args.append(recorder)
     result = await cls(*args).execute(123)
@@ -93,10 +103,12 @@ async def test_cached_reads_pass_account_marker(kind):
     store = AsyncMock(spec=SnapshotStore)
     read = getattr(store, f"get_{kind}")
     read.return_value = None
-    query = ObisResultsQuery(credentials, store)
+    query = ObisResultsQuery(credentials, store, _sessions())
     with pytest.raises(ObisSnapshotNotReadyError):
         await getattr(query, f"get_{kind}")(123)
     read.assert_awaited_once_with(123, "marker")
+    with pytest.raises(ObisSessionExpiredError):
+        await getattr(ObisResultsQuery(credentials, store, _sessions(active=False)), f"get_{kind}")(123)
     read.return_value = []
     assert await getattr(query, f"get_{kind}")(123) == []
 
@@ -112,7 +124,7 @@ async def test_failed_source_does_not_write_snapshot_or_comparison_baseline(kind
     baseline = AsyncMock(spec=ExamGradeStore if kind == "exam_grades" else AttendanceStore)
     cls = RefreshObisGradesUseCase if kind == "exam_grades" else RefreshObisAttendanceUseCase
     recorder = AsyncMock()
-    args = [credentials, store, source, snapshots, baseline]
+    args = [credentials, store, source, _sessions(), snapshots, baseline]
     if kind == "attendance":
         args.append(recorder)
     with pytest.raises(ObisParseError):

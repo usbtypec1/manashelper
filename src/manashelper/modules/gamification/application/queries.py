@@ -5,6 +5,11 @@ from manashelper.core.time import BISHKEK_TZ
 from manashelper.modules.gamification.application.catalog import ACHIEVEMENTS
 from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
 
+ACADEMIC_KEYS = frozenset(
+    {"formula_one", "champion", "comeback", "fall", "eldin_balasy", "phoenix", "stability", "einstein"}
+)
+ATTENDANCE_KEYS = frozenset({"thin_ice", "iron_attendance"})
+
 
 @dataclass(frozen=True, slots=True)
 class AchievementCard:
@@ -48,7 +53,7 @@ class GamificationQuery:
         return await self.repository.is_enabled(user_id)
 
     async def profile(self, user_id: int) -> AchievementProfile:
-        food, streak, night_date = await self.repository.get_progress(user_id)
+        food, streak, night_date, ratings = await self.repository.get_progress(user_id)
         today = datetime.now(UTC).astimezone(BISHKEK_TZ).date()
         if night_date is None or night_date < today - timedelta(days=1):
             streak = 0
@@ -56,21 +61,24 @@ class GamificationQuery:
         academic_ready, baseline, current_gpa, aa_count = await self.repository.academic_progress(user_id)
         attendance_ready, attendance_count = await self.repository.attendance_progress(user_id)
         ranking = await self.repository.ranking(user_id)
+        counters: dict[str, int] = {
+            "foodie": food,
+            "cafeteria_boss": food,
+            "night_owl": streak,
+            "critic": ratings,
+            "eldin_balasy": aa_count,
+            "thin_ice": attendance_count,
+        }
         cards = []
         for achievement in ACHIEVEMENTS:
             earned = awards.get(achievement.key)
-            progress: int | float = food if achievement.key in {"foodie", "cafeteria_boss"} else streak
-            if achievement.key not in {"foodie", "cafeteria_boss", "night_owl"}:
-                progress = 0
+            progress: int | float = counters.get(achievement.key, 0)
             available = True
             blocked_reason = None
-            if achievement.key in {"formula_one", "champion", "comeback", "fall", "eldin_balasy"}:
+            if achievement.key in ACADEMIC_KEYS:
                 available = academic_ready
                 blocked_reason = None if available else "source"
-            if achievement.key == "eldin_balasy":
-                progress = aa_count
-            if achievement.key == "thin_ice":
-                progress = attendance_count
+            if achievement.key in ATTENDANCE_KEYS:
                 available = attendance_ready
                 blocked_reason = None if available else "source"
             if achievement.key in {"comeback", "fall"}:

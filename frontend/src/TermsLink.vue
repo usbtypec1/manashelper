@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import messages from './messages.json'
 import { RouterLink } from 'vue-router'
-defineProps<{ locale: string; from: 'settings' | 'courses' | 'achievements' | 'leaderboard' }>()
+defineProps<{ locale: string; from: 'settings' | 'courses' | 'achievements' | 'leaderboard' | 'free-time' }>()
 </script>
 
 <template>

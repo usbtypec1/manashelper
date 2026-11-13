@@ -23,6 +23,8 @@ from manashelper.modules.gamification.presentation.router import router as gamif
 from manashelper.modules.notifications.router import router as notifications_router
 from manashelper.modules.obis.presentation.router import menu_router as obis_menu_router
 from manashelper.modules.obis.presentation.router import router as obis_router
+from manashelper.modules.schedule.presentation.routers.campus import menu_router as campus_menu_router
+from manashelper.modules.schedule.presentation.routers.campus import router as campus_router
 from manashelper.modules.schedule.presentation.routers.lesson_search import router as lesson_search_router
 from manashelper.modules.schedule.presentation.routers.timetable import router as timetable_router
 from manashelper.modules.study_week.router import router as study_week_router
@@ -72,8 +74,10 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
         gamification_router,
         obis_menu_router,
         *((eders_menu_router,) if get_settings().eders_enabled else ()),
+        campus_menu_router,
         timetable_router,
         lesson_search_router,
+        campus_router,
         food_menu_router,
         food_menu_notifications_router,
         obis_router,

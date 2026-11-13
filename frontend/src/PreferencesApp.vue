@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import messages from './messages.json'
 import TermsLink from './TermsLink.vue'
 import { useTelegram } from './shared/telegram/telegram'
 
 const props = defineProps<{ tab: 'settings' | 'courses' }>()
 const router = useRouter()
-type Course = { id: number; number: number; is_tracked: boolean }
-type TrackedCourse = { id: number; number: number; department_name: string; faculty_name: string }
+type CourseLevel = 'bachelor' | 'master' | 'doctorate'
+type Course = { id: number; number: number; is_tracked: boolean; level?: CourseLevel }
+type TrackedCourse = { id: number; number: number; department_name: string; faculty_name: string; level?: CourseLevel }
 type CatalogItem = { id: string; name: string }
 type Settings = {
   locale: string; theme: string; ui: Record<string, string>
@@ -111,7 +112,12 @@ function checked(event: Event) {
   input.checked = !desired
   return desired
 }
-function courseName(number: number) { return copy.value.course_number?.replace('{number}', String(number)) }
+function courseName(course: { number: number; level?: CourseLevel }) {
+  // Graduate programmes are numbered 5/6 on the timetable site; show their names instead.
+  if (course.level === 'master') return copy.value.course_master
+  if (course.level === 'doctorate') return copy.value.course_doctorate
+  return copy.value.course_number?.replace('{number}', String(course.number))
+}
 onMounted(() => {
   if (rawInitData.value) void load()
   else loading.value = false
@@ -171,9 +177,10 @@ onMounted(() => {
           <legend>{{ copy.courses }}</legend>
           <h2>{{ copy.selected_courses }}</h2>
           <p v-if="!data.tracked_courses.length">{{ copy.none_selected }}</p>
+          <RouterLink v-else class="free-time-link" :to="{ name: 'free-time' }">{{ copy.free_time }} →</RouterLink>
           <div v-for="course in data.tracked_courses" :key="course.id" class="preference-row">
-            <span>{{ course.faculty_name }} · {{ course.department_name }} · {{ courseName(course.number) }}</span>
-            <button class="remove-course" :aria-label="`${copy.remove}: ${course.department_name}, ${courseName(course.number)}`"
+            <span>{{ course.faculty_name }} · {{ course.department_name }} · {{ courseName(course) }}</span>
+            <button class="remove-course" :aria-label="`${copy.remove}: ${course.department_name}, ${courseName(course)}`"
               @click="save(`studies/courses/${course.id}`, { tracked: false })">{{ copy.remove }}</button>
           </div>
           <label class="catalog-select"><span>{{ copy.choose_faculty }}</span>
@@ -188,7 +195,7 @@ onMounted(() => {
           </label>
           <p v-if="department && !courses.length">{{ copy.no_courses }}</p>
           <label v-for="course in courses" :key="course.id" class="preference-row">
-            <span>{{ courseName(course.number) }}</span><input type="checkbox" :checked="course.is_tracked"
+            <span>{{ courseName(course) }}</span><input type="checkbox" :checked="course.is_tracked"
               @change="save(`studies/courses/${course.id}`, { tracked: checked($event) })" />
           </label>
         </fieldset>
@@ -211,6 +218,7 @@ input[type='checkbox'] { flex-shrink: 0; width: 24px; height: 24px; accent-color
 .catalog-select { display: grid; gap: 8px; margin: 24px 0; }
 select { width: 100%; min-width: 0; min-height: 44px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--glass); color: var(--text); font: inherit; }
 option { background: Canvas; color: CanvasText; }
+.free-time-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); text-decoration: none; }
 .remove-course { background: var(--glass); border-radius: 8px; padding: 12px; flex-shrink: 0; }
 .preference-error { padding: 16px 0; }
 fieldset:disabled { opacity: .65; }

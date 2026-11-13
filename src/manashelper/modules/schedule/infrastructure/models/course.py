@@ -1,7 +1,7 @@
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from manashelper.core.database import Base
@@ -17,6 +17,8 @@ class Course(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False)
     number: Mapped[int]
+    # CourseLevel value, refreshed from the timetable page heading during sync.
+    level: Mapped[str] = mapped_column(String(16), server_default="bachelor")
     department_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("timetable_departments.id"))
 
     department: Mapped["Department"] = relationship(back_populates="courses")

@@ -8,6 +8,10 @@
     "description": "commands.yemek"
   },
   {
+    "command": "now",
+    "description": "commands.now"
+  },
+  {
     "command": "language",
     "description": "commands.language"
   },

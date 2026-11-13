@@ -38,7 +38,9 @@ def build_daily_menu_service(daily_menu_repository, daily_menu_rating_repository
             )
         ).execute,
         set_rating=RateDailyMenuUseCase(
-            daily_menu_repository=daily_menu_repository, daily_menu_rating_repository=daily_menu_rating_repository
+            daily_menu_repository=daily_menu_repository,
+            daily_menu_rating_repository=daily_menu_rating_repository,
+            activity=AsyncMock(),
         ).execute,
     )
 

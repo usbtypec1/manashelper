@@ -16,6 +16,8 @@ class ObisAction(StrEnum):
     CANCEL_CREDENTIALS = "cancel_credentials"
     CLEAR_CREDENTIALS = "clear_credentials"
     CONFIRM_CLEAR_CREDENTIALS = "confirm_clear_credentials"
+    LOGIN = "login"
+    REFRESH_CAPTCHA = "refresh_captcha"
 
 
 class ObisCallback(CallbackData, prefix="obis"):

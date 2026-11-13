@@ -10,6 +10,7 @@ from manashelper.core.database import Base
 
 if TYPE_CHECKING:
     from manashelper.modules.schedule.infrastructure.models.course import Course
+    from manashelper.modules.schedule.infrastructure.models.lesson_item import LessonItem
 
 
 class Lesson(Base):
@@ -25,3 +26,9 @@ class Lesson(Base):
     updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
 
     course: Mapped["Course"] = relationship()
+    items: Mapped[list["LessonItem"]] = relationship(
+        cascade="all, delete-orphan",
+        order_by="LessonItem.position",
+        lazy="selectin",
+        passive_deletes=True,
+    )

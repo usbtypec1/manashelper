@@ -19,6 +19,11 @@ ACHIEVEMENTS = (
     Achievement("seller", "💩", 1),
     Achievement("eldin_balasy", "🤓", 3),
     Achievement("thin_ice", "🥶", 5),
+    Achievement("phoenix", "👍", 1),
+    Achievement("stability", "🧘", 3),
+    Achievement("iron_attendance", "🔒", 1),
+    Achievement("critic", "🧐", 100),
+    Achievement("einstein", "⚛️", 1),
 )
 
 ACHIEVEMENT_KEYS = tuple(achievement.key for achievement in ACHIEVEMENTS)

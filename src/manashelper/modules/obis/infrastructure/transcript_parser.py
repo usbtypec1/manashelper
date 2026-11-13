@@ -4,7 +4,7 @@ from decimal import Decimal, InvalidOperation
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from manashelper.modules.obis.application.models import Transcript, TranscriptSemester
+from manashelper.modules.obis.application.models import Transcript, TranscriptCourse, TranscriptSemester
 from manashelper.modules.obis.errors import ObisParseError
 
 
@@ -45,11 +45,12 @@ def parse_transcript(html: str) -> Transcript:
         )
         if season is None:
             raise ObisParseError("Unknown transcript semester")
-        grades = []
+        courses = []
         for row in rows:
             cells = row.find_all("td", recursive=False)
             if len(cells) == 5:
-                grades.append(cells[2].get_text(strip=True).upper())
+                code, name, grade = (cell.get_text(" ", strip=True) for cell in cells[:3])
+                courses.append(TranscriptCourse(code, name, grade.upper()))
         credits: Decimal | None = None
         points: Decimal | None = None
         for nested in table.select("table"):
@@ -62,7 +63,7 @@ def parse_transcript(html: str) -> Transcript:
                     points = decimal_value(cells[1].get_text())
                     decimal_value(cells[2].get_text())
         semesters.append(
-            TranscriptSemester(f"{year.group(1)}-{year.group(2)}:{season}", credits, points, tuple(grades))
+            TranscriptSemester(f"{year.group(1)}-{year.group(2)}:{season}", credits, points, tuple(courses))
         )
     if not semesters or overall is None or overall > 4:
         raise ObisParseError("Transcript semesters or overall GPA not found")

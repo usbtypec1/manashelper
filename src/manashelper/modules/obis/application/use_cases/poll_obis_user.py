@@ -6,12 +6,14 @@ import httpx
 
 from manashelper.modules.obis.application.models import RefreshResult
 from manashelper.modules.obis.application.ports import ObisNotificationSender
+from manashelper.modules.obis.application.sessions import ObisSessions
 from manashelper.modules.obis.application.use_cases.refresh_obis_attendance import RefreshObisAttendanceUseCase
 from manashelper.modules.obis.application.use_cases.refresh_obis_grades import RefreshObisGradesUseCase
 from manashelper.modules.obis.application.use_cases.refresh_obis_transcript import RefreshObisTranscriptUseCase
 from manashelper.modules.obis.errors import (
     ObisLoginError,
     ObisParseError,
+    ObisSessionExpiredError,
     UserHasNoCredentialsError,
     UserNotFoundError,
 )
@@ -31,8 +33,21 @@ class PollObisUserUseCase:
     refresh_obis_grades: RefreshObisGradesUseCase
     refresh_obis_attendance: RefreshObisAttendanceUseCase
     refresh_obis_transcript: RefreshObisTranscriptUseCase
+    sessions: ObisSessions
 
     async def execute(
+        self, user_id: int, check_exam_grades: bool, check_lesson_skips: bool, sender: ObisNotificationSender
+    ) -> None:
+        try:
+            await self._refresh(user_id, check_exam_grades, check_lesson_skips, sender)
+        except ObisSessionExpiredError:
+            age = await self.sessions.expire(user_id)
+            # Only a deleted session notifies, so each captcha login produces at most one reminder.
+            if age is not None:
+                logger.info("OBIS session for user %s expired after %s", user_id, age)
+                await sender.session_expired()
+
+    async def _refresh(
         self, user_id: int, check_exam_grades: bool, check_lesson_skips: bool, sender: ObisNotificationSender
     ) -> None:
         grade_changes = await _changes(self.refresh_obis_grades.execute, user_id)
