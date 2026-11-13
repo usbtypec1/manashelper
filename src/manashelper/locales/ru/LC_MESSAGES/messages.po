@@ -1149,7 +1149,7 @@ msgid "gamification.critic.name"
 msgstr "Критик"
 
 msgid "gamification.critic.description"
-msgstr "Оцени йемек за 100 разных дней."
+msgstr "Оцени йемек за 30 разных дней."
 
 msgid "gamification.einstein.name"
 msgstr "Эйнштейн"

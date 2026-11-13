@@ -1148,7 +1148,7 @@ msgid "gamification.critic.name"
 msgstr "Eleştirmen"
 
 msgid "gamification.critic.description"
-msgstr "Yemek menüsünü 100 farklı gün puanla."
+msgstr "Yemek menüsünü 30 farklı gün puanla."
 
 msgid "gamification.einstein.name"
 msgstr "Einstein"

@@ -1152,7 +1152,7 @@ msgid "gamification.critic.name"
 msgstr "Сынчы"
 
 msgid "gamification.critic.description"
-msgstr "Ашкананын менюсуна 100 башка күнү баа бер."
+msgstr "Ашкананын менюсуна 30 башка күнү баа бер."
 
 msgid "gamification.einstein.name"
 msgstr "Эйнштейн"

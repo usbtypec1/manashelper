@@ -52,5 +52,5 @@ class RecordActivityUseCase:
         elif activity == "rating":
             # Callers report only a user's first rating of a daily menu, not later score changes.
             progress.menu_ratings += 1
-            if progress.menu_ratings >= 100:
+            if progress.menu_ratings >= 30:
                 await self.awards.execute(user_id, "critic", now)

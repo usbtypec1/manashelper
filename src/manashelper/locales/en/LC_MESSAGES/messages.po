@@ -1170,7 +1170,7 @@ msgid "gamification.critic.name"
 msgstr "Critic"
 
 msgid "gamification.critic.description"
-msgstr "Rate the cafeteria menu on 100 different days."
+msgstr "Rate the cafeteria menu on 30 different days."
 
 msgid "gamification.einstein.name"
 msgstr "Einstein"

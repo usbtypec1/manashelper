@@ -1141,7 +1141,7 @@ msgid "gamification.critic.name"
 msgstr "美食评论家"
 
 msgid "gamification.critic.description"
-msgstr "在 100 个不同的日子为食堂菜单评分。"
+msgstr "在 30 个不同的日子为食堂菜单评分。"
 
 msgid "gamification.einstein.name"
 msgstr "爱因斯坦"
