@@ -287,6 +287,12 @@ msgstr "Year {number}"
 msgid "common.private_chat_only"
 msgstr "This feature is only available in a private chat with the bot."
 
+msgid "common.rate_limit"
+msgstr "⏳ Too many requests in a row. Please wait a little."
+
+msgid "common.rate_limit_group"
+msgstr "{sender} (ID: <code>{sender_id}</code>)\n⏳ Too many requests in a row. Please wait a little."
+
 msgid "menu.marketplace"
 msgstr "🛒 Marketplace"
 

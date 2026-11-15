@@ -290,6 +290,12 @@ msgstr "{number}. sınıf"
 msgid "common.private_chat_only"
 msgstr "Bu özellik yalnızca bot ile özel sohbette kullanılabilir."
 
+msgid "common.rate_limit"
+msgstr "⏳ Art arda çok fazla istek gönderdiniz. Lütfen biraz bekleyin."
+
+msgid "common.rate_limit_group"
+msgstr "{sender} (ID: <code>{sender_id}</code>)\n⏳ Art arda çok fazla istek gönderdiniz. Lütfen biraz bekleyin."
+
 msgid "menu.marketplace"
 msgstr "🛒 Pazar Yeri"
 

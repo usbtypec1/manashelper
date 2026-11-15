@@ -288,6 +288,12 @@ msgstr "{number}-курс"
 msgid "common.private_chat_only"
 msgstr "Бул функция бот менен жеке чатта гана жеткиликтүү."
 
+msgid "common.rate_limit"
+msgstr "⏳ Өтө көп суроо-талап жөнөтүлдү. Бир аз күтө туруңуз."
+
+msgid "common.rate_limit_group"
+msgstr "{sender} (ID: <code>{sender_id}</code>)\n⏳ Өтө көп суроо-талап жөнөтүлдү. Бир аз күтө туруңуз."
+
 msgid "menu.marketplace"
 msgstr "🛒 Базар"
 

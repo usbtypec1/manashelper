@@ -285,6 +285,12 @@ msgstr "{number} 年级"
 msgid "common.private_chat_only"
 msgstr "此功能仅在与机器人的私聊中可用。"
 
+msgid "common.rate_limit"
+msgstr "⏳ 连续请求过多，请稍等片刻。"
+
+msgid "common.rate_limit_group"
+msgstr "{sender}（ID：<code>{sender_id}</code>）\n⏳ 连续请求过多，请稍等片刻。"
+
 msgid "menu.marketplace"
 msgstr "🛒 校园交易"
 

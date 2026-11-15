@@ -287,6 +287,12 @@ msgstr "{number} курс"
 msgid "common.private_chat_only"
 msgstr "Эта функция доступна только в личном чате с ботом."
 
+msgid "common.rate_limit"
+msgstr "⏳ Слишком много запросов подряд. Подождите немного."
+
+msgid "common.rate_limit_group"
+msgstr "{sender} (ID: <code>{sender_id}</code>)\n⏳ Слишком много запросов подряд. Подождите немного."
+
 msgid "menu.marketplace"
 msgstr "🛒 Барахолка"
 
