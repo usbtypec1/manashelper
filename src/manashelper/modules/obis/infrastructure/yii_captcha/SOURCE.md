@@ -6,8 +6,11 @@ that checkout is not needed at runtime or during the application build.
 
 `solver.solve(image_bytes, expected_hash)` returns a confident answer or `None`, and
 raises `InvalidCaptchaError` for invalid challenges. It uses the existing OBIS profile
-(5–6 lowercase letters, 120 × 46 pixels). `LocalCaptchaRecognizer` runs it in a thread
-with bounded concurrency and maps invalid challenges to `None` for manual fallback.
+(5–6 lowercase letters, 120 × 46 pixels). `LocalCaptchaRecognizer` runs one disposable
+worker process at a time. The sibling infrastructure adapter `captcha_worker.py` imports
+the library only in that child process and maps invalid challenges to `None`.
+Worker exit releases the glyph bank and temporary search allocations without retaining
+them in the long-running bot. The bundled library itself has no process or CLI logic.
 
 Only `_engine.py` is excluded from application lint/format rewriting and internal
 type checking. Its search algorithm and confidence thresholds remain unchanged;

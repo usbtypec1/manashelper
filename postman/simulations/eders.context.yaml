@@ -171,7 +171,30 @@ assumptions:
       tests/modules/obis/test_auto_login.py; postman/mocks/eders/default.js;
       src/manashelper/modules/obis/application/access.py.
     updated_at: "2026-11-15"
+  - id: disposable-captcha-worker-local-contract
+    status: supported
+    claim: In local tests, disposable CAPTCHA workers preserve the existing OBIS login and shared-session HTTP behavior while keeping solver memory outside the bot process.
+    reason: The real application and recognizer ran against the existing repository-owned HTTP fixtures; a separate network-isolated Docker probe measured worker lifetime and RSS.
+    verification: >-
+      On 2026-11-15, process tests passed for serialized fresh workers, cancellation, repeated cancellation,
+      timeout and abnormal worker output. The Docker probe submitted two concurrent requests followed by
+      another recognition: all three workers exited, only one was active at a time, parent RSS stayed
+      at 216.1-216.2 MiB and sampled parent-plus-worker RSS peaked at 645.3 MiB under one CPU and 1 GiB.
+      The earlier thread implementation peaked at 992.3 MiB in the parent for two concurrent requests.
+      These fixture measurements do not bound the search cost of every real CAPTCHA.
+      The full suite passed 1418 tests (8 skipped), including the existing HTTP scenarios with real workers.
+      The existing local simulation was reused; no live university account or owner discovery was needed.
+      Fingerprint disposable-captcha-worker-2026-11-15.
+    source: >-
+      tests/modules/obis/test_captcha_process.py; tests/modules/obis/test_auto_login.py;
+      tests/modules/eders/test_eders_http_flow.py; docs/obis-auto-login.md;
+      src/manashelper/modules/obis/infrastructure/captcha.py.
+    updated_at: "2026-11-15"
 fingerprints:
+  - id: disposable-captcha-worker-2026-11-15
+    date: "2026-11-15"
+    commit: "da52582 (working tree changes)"
+    cli: "1.75.0"
   - id: obis-shared-session-2026-11-15
     date: "2026-11-15"
     commit: "c82b92ac28c75bdd92fd14e0ad3f40a1c94c526a (working tree changes)"
