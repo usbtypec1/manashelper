@@ -1,5 +1,4 @@
 import base64
-import threading
 from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
@@ -24,7 +23,6 @@ from manashelper.modules.obis.errors import (
     ObisParseError,
     ObisRetryLaterError,
 )
-from manashelper.modules.obis.infrastructure import captcha
 from manashelper.modules.obis.infrastructure.captcha import LocalCaptchaRecognizer
 from manashelper.modules.obis.infrastructure.client import ObisClient
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
@@ -130,20 +128,6 @@ async def test_credential_and_unknown_outcomes_never_retry_a_post(auto, error):
         await auto.service.execute(123)
     auto.complete.execute.assert_awaited_once()
     auto.refresh.execute.assert_not_awaited()
-
-
-async def test_local_recognizer_offloads_cpu_and_preserves_abstention(monkeypatch):
-    recognizer = LocalCaptchaRecognizer()
-    main_thread = threading.get_ident()
-    threads = []
-
-    def solve(image, expected_hash):
-        threads.append(threading.get_ident())
-        return None
-
-    monkeypatch.setattr(captcha, "solve", solve)
-    assert await recognizer.solve(b"image", 3347) is None
-    assert threads and threads[0] != main_thread
 
 
 @pytest.mark.parametrize("notify", [False, True])

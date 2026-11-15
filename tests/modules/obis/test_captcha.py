@@ -2,6 +2,7 @@ import pytest
 
 import manashelper.modules.obis.infrastructure.yii_captcha._engine as captcha_engine
 from manashelper.modules.obis.infrastructure.captcha import LocalCaptchaRecognizer
+from manashelper.modules.obis.infrastructure.captcha_worker import recognize
 from tests.paths import FIXTURES_DIR
 
 
@@ -11,7 +12,7 @@ async def test_recognizer_never_uses_an_uncertain_candidate(monkeypatch, status)
     monkeypatch.setattr(
         captcha_engine, "solve", lambda *args, **kwargs: {"status": status, "answer": None, "best_candidate": "qinug"}
     )
-    assert await LocalCaptchaRecognizer().solve(image, 3347) is None
+    assert recognize(image, 3347) is None
 
 
 @pytest.mark.parametrize(

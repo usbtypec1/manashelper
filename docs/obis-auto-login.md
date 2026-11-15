@@ -17,9 +17,17 @@ responses stop the scenario without repeating the POST. After CAPTCHA exhaustion
 bot shows a fresh, unsubmitted image for the existing manual flow. A missing client hash
 also falls back to that flow.
 
-CPU recognition runs through `asyncio.to_thread`, with at most two active solver calls
-per application instance. The bot's asyncio loop remains available. Images and user
-answers are not collected for training, and there are no labeling routes or tables.
+CPU recognition runs in a fresh subprocess for each CAPTCHA, with one active worker
+per application instance. The bot process does not import the solver, NumPy or Pillow
+through this adapter. Glyph caches and temporary search allocations disappear when the
+worker exits, including after unsuccessful recognition. The asyncio loop stays available.
+
+The adapter sends only image bytes over stdin and the public CAPTCHA hash as an argument;
+the worker returns a JSON string or null. No credentials or session cookies enter it.
+A worker timeout after 60 seconds, launch failure, crash or invalid response becomes an
+`ObisParseError`, preserving the existing temporary-error/backoff behavior. On timeout
+or cancellation, the worker is killed and reaped before the next queued CAPTCHA starts.
+Images and user answers are not collected for training, and there are no labeling tables.
 
 ## Session recovery
 
@@ -57,7 +65,8 @@ any completion mutation. Live SSO availability remains an upstream compatibility
 The recognition engine and glyph bank from version 0.1.1 live directly in
 `src/manashelper/modules/obis/infrastructure/yii_captcha/`. The internal library exposes
 `solver.solve(image_bytes, expected_hash) -> str | None`; the asynchronous adapter in
-`infrastructure/captcha.py` handles thread execution and limits concurrency. Invalid
+`infrastructure/captcha.py` owns the worker lifecycle and serialization; its sibling
+`captcha_worker.py` imports and runs the library once. Invalid
 challenges and uncertain recognition allow manual fallback. The library contains no
 CLI, HTTP client, report writer or standalone package metadata. `ObisClient` owns
 challenge acquisition and authenticated sessions. The search algorithm and confidence
@@ -104,3 +113,26 @@ deadlines, partial-cycle backoff, cookie rotation, a one-time manual-login notic
 transactional rollback, and upgrade/downgrade preservation. The HTTP tests exercise fifth
 challenge success, five-challenge exhaustion and saved-cookie SSO. No live university
 account was used for these new checks; current production SSO compatibility remains unverified.
+
+## Disposable-worker memory verification
+
+The previous thread adapter retained solver allocations in the bot. In a Linux Docker
+measurement with full application imports and two simultaneous fixture recognitions,
+the process peaked at 992.3 MiB RSS and still held 926.1 MiB after both calls returned.
+Even explicit garbage collection left 758.9 MiB; an allocator trim reduced it to 431.3 MiB.
+The resource issue was the placement of CPU/search work in the long-lived bot process.
+
+With disposable workers, the same image/fixture profile was exercised with two queued
+requests followed by another recognition, under a one-CPU, 1 GiB container limit.
+The parent stayed at 216.1–216.2 MiB RSS, the sampled combined RSS of parent plus worker
+peaked at 645.3 MiB, and all three distinct workers exited. At most one child was active.
+These are measurements for this fixture and environment, not a bound for every CAPTCHA.
+CPU work still occurs during recognition; the fix bounds concurrency and releases its
+memory at process exit without changing the recognition algorithm or confidence rules.
+
+Process regression tests cover fresh worker identities, serialization, cancellation and
+repeated cancellation, timeout, startup/crash/protocol failure, and keeping heavy imports
+outside the parent adapter. The five-challenge login and saved-session tests remain in
+their owning suites. Final verification passed 1418 tests (8 skipped), Ruff lint/format
+and strict application mypy. The complete Docker image built successfully and the
+network-isolated runtime probe verified the packaged worker and glyph data.

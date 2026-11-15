@@ -232,7 +232,10 @@ revision flags; omit `--autogenerate` for a handwritten migration. Never rewrite
   `CryptoService`. After student number/password or the Login button, AutoLoginObisUseCase uses the vendored
   yii-captcha-solver 0.1.1 sources in OBIS infrastructure, imported directly without a separate package build.
   The internal library only recognizes image bytes and a Yii hash, returning `str | None`;
-  it has no CLI, HTTP client or report writer. Its APP adapter runs CPU work in threads with bounded concurrency.
+  it has no CLI, HTTP client or report writer. Its APP adapter serializes recognition in disposable subprocesses.
+Each worker imports the solver, processes one image and exits; NumPy/Pillow and glyph/search caches stay outside the bot.
+A 60-second timeout or request cancellation kills and reaps the worker before releasing the slot. Worker failures
+become ObisParseError so the owning login scenario preserves its temporary-error/backoff behavior.
   Five fresh challenges are tried at most; uncertain answers are not posted. Only definitive captcha rejection
   permits another POST. Credential, transport and unknown-response errors do not retry. Successful login requires
   a same-origin authenticated logout control. The existing captcha FSM/photo is a manual fallback after exhaustion
