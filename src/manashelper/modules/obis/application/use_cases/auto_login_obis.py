@@ -24,7 +24,7 @@ class AutoLoginObisUseCase:
         form/session. Credential, transport and unknown-response errors propagate.
         """
         captcha = await self.start.execute(user_id, student_number, plain_password)
-        for attempt in range(3):
+        for attempt in range(5):
             if captcha.expected_hash is None:
                 return captcha
             answer = await self.recognizer.solve(captcha.image, captcha.expected_hash)
@@ -35,7 +35,7 @@ class AutoLoginObisUseCase:
                     pass
                 else:
                     return None
-            elif attempt == 2:
+            elif attempt == 4:
                 return captcha
             # A rejected form is consumed, even on the last attempt. The fallback
             # must show a fresh image bound to an unsubmitted CSRF/cookie session.

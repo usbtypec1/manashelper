@@ -1,9 +1,11 @@
 from dishka import Provider, Scope, provide
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from manashelper.modules.obis.application.access import ObisAccessService
 from manashelper.modules.obis.application.credentials import ObisCredentialsQuery
 from manashelper.modules.obis.application.ports import (
     AttendanceStore,
+    AuthStateStore,
     CaptchaRecognizer,
     CredentialsStore,
     ExamGradeStore,
@@ -27,6 +29,7 @@ from manashelper.modules.obis.application.use_cases.start_obis_login import Star
 from manashelper.modules.obis.infrastructure.captcha import LocalCaptchaRecognizer
 from manashelper.modules.obis.infrastructure.client import ObisClient
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
+from manashelper.modules.obis.infrastructure.repositories.auth_state import ObisAuthStateRepository
 from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
 from manashelper.modules.obis.infrastructure.repositories.session import ObisSessionRepository
 from manashelper.modules.obis.infrastructure.repositories.snapshot import ObisSnapshotRepository
@@ -45,6 +48,8 @@ class ObisProvider(Provider):
     credentials = provide(ObisCredentialsQuery)
     session_repository = provide(ObisSessionRepository)
     sessions = provide(ObisSessions)
+    auth_state_repository = provide(ObisAuthStateRepository)
+    access = provide(ObisAccessService)
     grades = provide(UserExamGradeRepository)
     attendance = provide(UserLessonAttendanceRepository)
     results = provide(ObisResultsQuery)
@@ -72,6 +77,10 @@ class ObisProvider(Provider):
 
     @provide
     def credential_store(self, repository: ObisCredentialsRepository) -> CredentialsStore:
+        return repository
+
+    @provide
+    def auth_states(self, repository: ObisAuthStateRepository) -> AuthStateStore:
         return repository
 
     @provide

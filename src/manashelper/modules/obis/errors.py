@@ -30,5 +30,13 @@ class ObisCaptchaError(Exception):
     """OBIS rejected the captcha answer or the login form expired before submission."""
 
 
+class ObisManualLoginRequiredError(Exception):
+    """Automatic access is paused until the student completes a login."""
+
+
+class ObisRetryLaterError(Exception):
+    """A temporary failure postponed automatic access."""
+
+
 class ObisSessionExpiredError(Exception):
     """No saved OBIS session exists, or OBIS rejected it; the student must log in with a captcha again."""

@@ -4,17 +4,17 @@ from dataclasses import dataclass
 
 import httpx
 
+from manashelper.modules.obis.application.access import ObisAccessService
 from manashelper.modules.obis.application.models import RefreshResult
 from manashelper.modules.obis.application.ports import ObisNotificationSender
-from manashelper.modules.obis.application.sessions import ObisSessions
-from manashelper.modules.obis.application.use_cases.auto_login_obis import AutoLoginObisUseCase
 from manashelper.modules.obis.application.use_cases.refresh_obis_attendance import RefreshObisAttendanceUseCase
 from manashelper.modules.obis.application.use_cases.refresh_obis_grades import RefreshObisGradesUseCase
 from manashelper.modules.obis.application.use_cases.refresh_obis_transcript import RefreshObisTranscriptUseCase
 from manashelper.modules.obis.errors import (
     ObisLoginError,
+    ObisManualLoginRequiredError,
     ObisParseError,
-    ObisSessionExpiredError,
+    ObisRetryLaterError,
     UserHasNoCredentialsError,
     UserNotFoundError,
 )
@@ -34,34 +34,21 @@ class PollObisUserUseCase:
     refresh_obis_grades: RefreshObisGradesUseCase
     refresh_obis_attendance: RefreshObisAttendanceUseCase
     refresh_obis_transcript: RefreshObisTranscriptUseCase
-    sessions: ObisSessions
-    auto_login: AutoLoginObisUseCase
+    access: ObisAccessService
 
     async def execute(
         self, user_id: int, check_exam_grades: bool, check_lesson_skips: bool, sender: ObisNotificationSender
     ) -> None:
         try:
             await self._refresh(user_id, check_exam_grades, check_lesson_skips, sender)
-        except ObisSessionExpiredError:
-            try:
-                if await self.auto_login.execute(user_id) is None:
-                    await self._refresh(user_id, check_exam_grades, check_lesson_skips, sender)
-                    return
-            except (
-                UserNotFoundError,
-                UserHasNoCredentialsError,
-                ObisLoginError,
-                ObisParseError,
-                ObisSessionExpiredError,
-            ):
-                logger.warning("Automatic OBIS session recovery failed for user %s", user_id)
-            # Transport errors propagate: preserve the saved session and let the next
-            # scheduled poll recover, without blindly repeating an uncertain POST.
-            age = await self.sessions.expire(user_id)
-            # Request manual intervention once only when automatic recovery is unavailable.
-            if age is not None:
-                logger.info("OBIS session for user %s expired after %s", user_id, age)
+        except ObisManualLoginRequiredError:
+            if await self.access.claim_manual_login_notice(user_id):
                 await sender.session_expired()
+        except ObisRetryLaterError:
+            # Catch inside the request scope so durable retry state commits.
+            logger.info("OBIS polling postponed for user %s", user_id)
+        else:
+            await self.access.record_refresh_success(user_id)
 
     async def _refresh(
         self, user_id: int, check_exam_grades: bool, check_lesson_skips: bool, sender: ObisNotificationSender

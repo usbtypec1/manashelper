@@ -572,10 +572,10 @@ msgid "obis.logged_in"
 msgstr "OBIS'e giriş yapıldı ✅ Notlar ve devamsızlık 15 dakika içinde güncellenecek."
 
 msgid "obis.session_expired"
-msgstr "OBIS oturumunuz sona erdi, bu yüzden notlar ve devamsızlık artık güncellenmiyor. Tekrar giriş yapın — yalnızca resimdeki kod gerekecek."
+msgstr "OBIS'e otomatik giriş yapılamadı. Not ve devamsızlık güncellemeleri duraklatıldı. Bilgilerinizi kontrol etmek veya resimdeki kodu girmek için Giriş yap'a dokunun."
 
 msgid "obis.session_required"
-msgstr "OBIS verilerinizi yüklemek için giriş yapın ve resimdeki kodu girin."
+msgstr "OBIS verilerinizi yüklemek için Giriş yap'a dokunun. Bot otomatik giriş yapmayı deneyecek ve gerekirse resimdeki kodu isteyecek."
 
 msgid "menu.settings"
 msgstr "⚙️ Ayarlar"

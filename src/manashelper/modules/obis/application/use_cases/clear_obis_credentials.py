@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from manashelper.modules.obis.application.credentials import ObisCredentialsQuery
 from manashelper.modules.obis.application.models import StoredCredentials
-from manashelper.modules.obis.application.ports import CredentialsStore, SnapshotStore
+from manashelper.modules.obis.application.ports import AuthStateStore, CredentialsStore, SnapshotStore
 from manashelper.modules.obis.application.sessions import ObisSessions
 
 
@@ -12,6 +12,7 @@ class ClearObisCredentialsUseCase:
     store: CredentialsStore
     snapshots: SnapshotStore
     sessions: ObisSessions
+    auth_states: AuthStateStore
 
     async def execute(self, user_id: int) -> None:
         await self.store.lock(user_id)
@@ -19,3 +20,4 @@ class ClearObisCredentialsUseCase:
         await self.store.save(user_id, StoredCredentials(None, None))
         await self.snapshots.reset(user_id)
         await self.sessions.expire(user_id)
+        await self.auth_states.delete(user_id)

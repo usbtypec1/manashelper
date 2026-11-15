@@ -1,6 +1,5 @@
 import base64
 import hashlib
-from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -62,7 +61,6 @@ from manashelper.modules.obis.errors import (
     ObisCaptchaError,
     ObisLoginError,
     ObisParseError,
-    ObisSessionExpiredError,
     UserHasNoCredentialsError,
     UserNotFoundError,
 )
@@ -85,7 +83,7 @@ from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from tests.modules.eders.application_factories import build_eders_service
-from tests.modules.obis.factories import build_obis
+from tests.modules.obis.factories import build_obis, passthrough_access
 
 KEY = bytes(range(32))
 
@@ -205,7 +203,7 @@ async def test_first_grade_snapshot_is_silent_and_subsequent_changes_notify(sess
         student_number="student", plain_password="password", credential_marker="marker"
     )
     service = RefreshObisGradesUseCase(
-        account, AsyncMock(), source, AsyncMock(), AsyncMock(), UserExamGradeRepository(session)
+        account, AsyncMock(), source, passthrough_access(), AsyncMock(), UserExamGradeRepository(session)
     )
     first = (await service.execute(975001)).changes
     assert first == []
@@ -235,7 +233,13 @@ async def test_attendance_baseline_is_silent_and_only_known_increases_notify(ses
         student_number="student", plain_password="password", credential_marker="marker"
     )
     service = RefreshObisAttendanceUseCase(
-        account, AsyncMock(), source, AsyncMock(), AsyncMock(), UserLessonAttendanceRepository(session), AsyncMock()
+        account,
+        AsyncMock(),
+        source,
+        passthrough_access(),
+        AsyncMock(),
+        UserLessonAttendanceRepository(session),
+        AsyncMock(),
     )
     assert (await service.execute(975001)).changes == []
     await session.flush()
@@ -416,7 +420,7 @@ async def test_polling_use_case_keeps_expected_error_suppression_and_unexpected_
     attendance.execute.return_value = RefreshResult([], ["skip"])
     grades.execute.side_effect = error
     sender = AsyncMock()
-    polling = PollObisUserUseCase(grades, attendance, AsyncMock(), AsyncMock(), AsyncMock())
+    polling = PollObisUserUseCase(grades, attendance, AsyncMock(), AsyncMock())
     if isinstance(error, (httpx.HTTPError, RuntimeError)):
         with pytest.raises(type(error)):
             await polling.execute(975001, True, True, sender)
@@ -447,9 +451,7 @@ async def test_telegram_sender_keeps_recipient_locale_and_queue_failure_boundary
     sender = TelegramObisNotificationSender(bot, 975001, Locale.ZH, Theme.BASIC)
     with i18n.context(), i18n.use_locale("ru"):
         if not failure:
-            await PollObisUserUseCase(grades, attendance, AsyncMock(), AsyncMock(), AsyncMock()).execute(
-                975001, True, True, sender
-            )
+            await PollObisUserUseCase(grades, attendance, AsyncMock(), AsyncMock()).execute(975001, True, True, sender)
             assert bot.enqueue.await_count == 3
             assert all("Math" in call.args[1][0].text for call in bot.enqueue.await_args_list)
             with i18n.use_locale("zh"):
@@ -457,7 +459,7 @@ async def test_telegram_sender_keeps_recipient_locale_and_queue_failure_boundary
             assert bot.enqueue.await_args_list[0].args[1][0].text == expected
         else:
             with pytest.raises(RuntimeError, match="Queue failed"):
-                await PollObisUserUseCase(grades, attendance, AsyncMock(), AsyncMock(), AsyncMock()).execute(
+                await PollObisUserUseCase(grades, attendance, AsyncMock(), AsyncMock()).execute(
                     975001, True, True, sender
                 )
             assert bot.enqueue.await_count == 1
@@ -566,20 +568,20 @@ def test_obis_polling_refreshes_every_fifteen_minutes():
     assert matching[0].args == ("container", "bot")
 
 
-@pytest.mark.parametrize("age", [timedelta(hours=3), None])
-async def test_expired_session_is_forgotten_and_reported_only_when_it_existed(age):
+@pytest.mark.parametrize("pending", [True, False])
+async def test_manual_login_notice_is_sent_only_when_claimed(pending):
+    from manashelper.modules.obis.errors import ObisManualLoginRequiredError
+
     grades = AsyncMock(spec=RefreshObisGradesUseCase)
     attendance = AsyncMock(spec=RefreshObisAttendanceUseCase)
-    grades.execute.side_effect = ObisSessionExpiredError
-    sessions = AsyncMock(spec=ObisSessions)
-    sessions.expire.return_value = age
+    grades.execute.side_effect = ObisManualLoginRequiredError
+    access = AsyncMock()
+    access.claim_manual_login_notice.return_value = pending
     sender = AsyncMock()
-    await PollObisUserUseCase(grades, attendance, AsyncMock(), sessions, AsyncMock()).execute(
-        975001, True, True, sender
-    )
-    sessions.expire.assert_awaited_once_with(975001)
+    await PollObisUserUseCase(grades, attendance, AsyncMock(), access).execute(975001, True, True, sender)
+    access.claim_manual_login_notice.assert_awaited_once_with(975001)
     attendance.execute.assert_not_awaited()
-    assert sender.session_expired.await_count == int(age is not None)
+    assert sender.session_expired.await_count == int(pending)
 
 
 async def test_session_expired_notification_uses_recipient_locale_and_login_button():

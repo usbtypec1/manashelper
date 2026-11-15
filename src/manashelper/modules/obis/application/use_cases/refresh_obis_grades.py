@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
+from manashelper.modules.obis.application.access import ObisAccessService
 from manashelper.modules.obis.application.credentials import ObisCredentialsQuery, get_results_credentials
 from manashelper.modules.obis.application.models import LessonExamsModel, RefreshResult, Snapshot
 from manashelper.modules.obis.application.notification import ExamGradeChange, compare_exam_grades
 from manashelper.modules.obis.application.ports import CredentialsStore, ExamGradeStore, ResultsSource, SnapshotStore
-from manashelper.modules.obis.application.sessions import ObisSessions
 
 
 @dataclass(frozen=True, slots=True)
@@ -13,14 +13,14 @@ class RefreshObisGradesUseCase:
     credentials: ObisCredentialsQuery
     store: CredentialsStore
     source: ResultsSource
-    sessions: ObisSessions
+    access: ObisAccessService
     snapshots: SnapshotStore
     grades: ExamGradeStore
 
     async def execute(self, user_id: int) -> RefreshResult[LessonExamsModel, ExamGradeChange]:
         await self.store.lock(user_id)
         credentials = await get_results_credentials(self.credentials, user_id)
-        lessons = await self.source.fetch_exam_grades(await self.sessions.get_cookies(user_id))
+        lessons = await self.access.with_session(user_id, self.source.fetch_exam_grades)
         await self.snapshots.save_exam_grades(
             user_id, Snapshot(credentials.credential_marker, lessons, datetime.now(UTC))
         )

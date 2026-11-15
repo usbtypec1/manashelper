@@ -9,7 +9,7 @@ The same cookie session and CSRF token bind recognition to its POST. A matching 
 alone never establishes success: the response must be an authenticated same-origin page
 with a logout control. HTTP 200 maintenance pages are not accepted as a successful login.
 
-`AutoLoginObisUseCase` tries at most three challenges. It submits only a confident
+`AutoLoginObisUseCase` tries at most five challenges. It submits only a confident
 answer returned by the recognizer; an uncertain candidate is never posted. An uncertain result
 gets a fresh challenge. A definitive CAPTCHA rejection or expired form permits another
 attempt with a fresh form/session. Credential errors, transport errors and unconfirmed
@@ -23,17 +23,34 @@ answers are not collected for training, and there are no labeling routes or tabl
 
 ## Session recovery
 
-The existing 15-minute poll still selects users with saved sessions and reads the same
-stored snapshots. When a fetch detects an expired session, the poll automatically logs
-in using saved credentials and retries the refresh once. A successful recovery sends
-no expiry reminder. If manual input is needed or credentials fail, the existing single
-reminder/login-button flow is used. Transport errors propagate to the job transaction,
-preserving the previous session and data for a later scheduled poll. Cached user screens
-do not perform login or remote data fetches.
+The 15-minute poll selects users with nonempty saved credentials, including existing
+users who have never opened a session. The first poll creates their session automatically.
+User screens continue to read persisted snapshots without logging in or fetching remotely.
 
-Users without any saved session can enter through the Login button. The poll does not
-repeatedly attempt accounts whose session has already been removed after credential
-failure. Clear credentials retains its existing behavior.
+`ObisAccessService` acquires the user-row lock before inspecting auth state, obtaining
+cookies or starting login. It reuses saved cookies and recovers an expired session once,
+retrying only the failed operation. Earlier successful refreshes and notifications are
+not repeated. Concurrent requests reread the state after acquiring the same database lock.
+Updated authenticated cookies are saved encrypted without changing the session creation time.
+
+`obis_auth_states` distinguishes first login from paused automatic access. CAPTCHA
+exhaustion or invalid credentials require manual login; the OBIS poll queues one localized
+notice and marks it claimed in the same transaction. An enqueue failure rolls back the
+claim, allowing the next poll to deliver it. Unclaimed notices remain eligible even when
+Eders was the caller that encountered the auth failure.
+
+Temporary login/transport failures preserve the saved session and set a durable retry
+deadline: 15 minutes, doubling on consecutive failed refresh cycles up to six hours. Individual
+successful reads or Eders SSO do not erase this history; a complete successful OBIS poll clears it.
+No uncertain POST
+is repeated in the same attempt series. Successful login or clearing credentials resets
+the auth state. Expected manual/deferred outcomes are caught inside the request scope so
+these state changes commit; unexpected errors still roll back.
+
+Eders keeps direct Moodle login as its first choice. Its SSO fallback obtains cookies
+through the same access service and requests `/site/eders`; it never submits a separate
+OBIS password. An OBIS login redirect during SSO triggers the shared recovery path before
+any completion mutation. Live SSO availability remains an upstream compatibility check.
 
 ## Dependency and deployment
 
@@ -53,10 +70,10 @@ data, and `.dockerignore` explicitly preserves the bundled Yii license. The imag
 not depend on a sibling checkout or a private package index. Run `uv sync --frozen`
 locally, or rebuild the normal application image. PHP, Tesseract and a GPU are not needed.
 
-No new database migration is required. The uncommitted labeling feature and its V34
-migration were rolled back; the local development database was downgraded to V33 after
-confirming that its labeling table contained zero rows. Production databases were not
-accessed for that rollback.
+Deploy migration `V34_add_obis_auth_state.py` with the application. It adds only
+`obis_auth_states`: existing encrypted credentials, sessions and snapshots are unchanged.
+The migration makes no network requests; initial logins run through normal polling.
+Its downgrade removes only auth state, preserving those credentials, sessions and snapshots.
 
 ## Verification
 
@@ -72,9 +89,18 @@ overrides documented in `AGENTS.md`:
 pytest tests/modules/obis tests/modules/users tests/modules/feedback/test_feedback_composition.py
 ```
 
-The final local verification on 15 November 2026 passed 1338 tests (39 skipped),
+The earlier local verification on 15 November 2026 passed 1338 tests (39 skipped),
 Ruff lint/format, strict application mypy and the frozen dependency-lock check.
 The Linux Docker build stage recognized the real fixture through the direct-source
 adapter with networking disabled and no standalone solver package installed.
 A real OBIS login also succeeded through the application use case; the temporary
 database user/session were rolled back afterward, and no Telegram messages were sent.
+
+After adding shared access and durable auth state on the same date, the final suite passed
+1405 tests (8 skipped), including the local OBIS/Eders HTTP simulation. Ruff lint/format,
+strict application mypy, the dependency-lock check and Alembic schema comparison passed.
+Additional tests cover initial session creation, cross-worker locking, persisted retry
+deadlines, partial-cycle backoff, cookie rotation, a one-time manual-login notice with
+transactional rollback, and upgrade/downgrade preservation. The HTTP tests exercise fifth
+challenge success, five-challenge exhaustion and saved-cookie SSO. No live university
+account was used for these new checks; current production SSO compatibility remains unverified.

@@ -72,7 +72,7 @@ profile refresh and locale resolution; LocaleQuery serves delivery reads. UsersQ
 User keeps OBIS credential columns and the Schedule tracked_courses relationship without schema changes.
 OBIS owns credential access through ObisCredentialsRepository on the unchanged User row.
 EdersQuery and RefreshEdersSnapshotUseCase read the student number without decrypting a password for direct login and cached snapshots.
-Only a failed direct login triggers OBIS credential decryption and the legacy OBIS SSO fallback.
+Only a failed direct login requests the shared OBIS session for SSO; its owner handles any needed credential decryption.
 Eders tracking checks existence through UsersQuery; its repository owns credential eligibility SQL and the user-row lock.
 Shared Telegram navigation lives in `platform/telegram/navigation.py`; feature routers must not import the start router for it.
 The main keyboard groups academic features under Studies. Its reply submenu opens the timetable directly,
@@ -143,18 +143,22 @@ Credentials use CredentialsStore, ObisAuthenticator, SessionStore and PasswordCi
 hide both fields in repr. Notification comparisons are pure application functions returning changed baseline records
 and notification events; ExamGradeStore/AttendanceStore persist those records without exposing ORM objects.
 Its frozen read model hides secrets in repr; OBIS credentials retain the SHA-256 ciphertext marker.
-Eders owns its HTTP client: try direct Moodle form login first, then the legacy OBIS login and /site/eders SSO flow
-(OBIS now rejects that captcha-less fallback, so only direct Moodle login works).
+Eders owns its HTTP client: try direct Moodle form login first, then use ObisAccessService and its saved
+OBIS cookies for /site/eders SSO. Eders must not submit OBIS passwords or implement a separate OBIS login.
 PollObisUserUseCase handles expected auth/parse errors; its sender owns locale/HTML and enqueues messages transactionally.
 Unexpected errors abort that user and are logged by the job, without stopping the next user.
 The first grade snapshot and attendance's first row are silent. Later new or changed nonempty grades notify.
 Saving completes the captcha login before assigning either credential field, so login/captcha/encryption failures
-preserve both previous values and the previous session even if caught inside a committed scope. Only users with
-a session are polled; when OBIS redirects a fetch to its login page, polling first attempts automatic login
-and resumes the refresh once. If recovery needs manual input or credentials fail, it deletes the session
-and sends one localized reminder with a login button (cached results stay visible). Transport failures preserve
-the session for the next scheduled poll. Preserve 15-minute polling (it also keeps
-the session alive), FSM, password masking and encryption format.
+preserve both previous values and the previous session even if caught inside a committed scope.
+Users with saved credentials are polled, including those without a session. ObisAccessService serializes
+session creation/recovery on the user row and retries only the failed operation once after session expiry.
+Auth state in obis_auth_states persists manual_required, reason, failures, retry_at and the notification claim.
+Manual-input or credential failures pause automatic access and queue one localized login reminder; cached results stay visible.
+Temporary login/transport failures preserve the saved session and defer attempts for 15 minutes, doubling up to six hours.
+Expected access outcomes must be caught inside the request scope so retry state commits.
+Successful manual/automatic login and clearing credentials reset auth state. A complete successful OBIS poll resets
+retry history; individual successful reads and Eders SSO preserve it. Authenticated cookie updates are encrypted and saved.
+Preserve 15-minute polling (it also keeps the session alive), FSM, password masking and encryption format.
 
 OBIS and Eders user screens read persisted snapshots only, including Study week. Background jobs refresh both
 every 15 minutes (Eders retains its existing interval override). Notification toggles affect delivery, not
@@ -229,7 +233,7 @@ revision flags; omit `--autogenerate` for a handwritten migration. Never rewrite
   yii-captcha-solver 0.1.1 sources in OBIS infrastructure, imported directly without a separate package build.
   The internal library only recognizes image bytes and a Yii hash, returning `str | None`;
   it has no CLI, HTTP client or report writer. Its APP adapter runs CPU work in threads with bounded concurrency.
-  Three fresh challenges are tried at most; uncertain answers are not posted. Only definitive captcha rejection
+  Five fresh challenges are tried at most; uncertain answers are not posted. Only definitive captcha rejection
   permits another POST. Credential, transport and unknown-response errors do not retry. Successful login requires
   a same-origin authenticated logout control. The existing captcha FSM/photo is a manual fallback after exhaustion
   or a missing hash. FSM keeps only pending-login values with the password encrypted. A wrong manual captcha or

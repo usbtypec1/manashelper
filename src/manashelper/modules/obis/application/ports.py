@@ -10,6 +10,7 @@ from manashelper.modules.obis.application.models import (
     ObisLoginChallenge,
     Snapshot,
     StoredCredentials,
+    StoredObisAuthState,
     StoredObisSession,
     Transcript,
 )
@@ -25,7 +26,7 @@ class ObisNotificationSender(Protocol):
 
 
 class ResultsSource(Protocol):
-    """Fetch with saved session cookies; raises ObisSessionExpiredError when OBIS requires a new login."""
+    """Fetch with an in/out cookie mapping; raise ObisSessionExpiredError when a new login is needed."""
 
     async def fetch_transcript(self, cookies: dict[str, str]) -> Transcript: ...
 
@@ -72,6 +73,14 @@ class CaptchaRecognizer(Protocol):
     async def solve(self, image: bytes, expected_hash: int) -> str | None:
         """Return a recognized answer, or None when the image is unsupported or uncertain."""
         ...
+
+
+class AuthStateStore(Protocol):
+    async def get(self, user_id: int) -> StoredObisAuthState | None: ...
+
+    async def save(self, user_id: int, state: StoredObisAuthState) -> None: ...
+
+    async def delete(self, user_id: int) -> None: ...
 
 
 class SessionStore(Protocol):

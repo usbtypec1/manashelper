@@ -22,6 +22,7 @@ from manashelper.modules.obis.application.sessions import ObisSessions
 from manashelper.modules.obis.application.use_cases.refresh_obis_attendance import RefreshObisAttendanceUseCase
 from manashelper.modules.obis.application.use_cases.refresh_obis_grades import RefreshObisGradesUseCase
 from manashelper.modules.obis.errors import ObisParseError, ObisSessionExpiredError, ObisSnapshotNotReadyError
+from tests.modules.obis.factories import passthrough_access
 
 COOKIES = {"PHPSESSID": "session"}
 
@@ -85,7 +86,7 @@ async def test_refresh_locks_then_fetches_then_saves_snapshot_and_comparison_bas
     before = datetime.now(UTC)
     cls = RefreshObisGradesUseCase if kind == "exam_grades" else RefreshObisAttendanceUseCase
     recorder = AsyncMock()
-    args = [credentials, store, source, _sessions(), snapshots, baseline]
+    args = [credentials, store, source, passthrough_access(COOKIES), snapshots, baseline]
     if kind == "attendance":
         args.append(recorder)
     result = await cls(*args).execute(123)
@@ -124,7 +125,7 @@ async def test_failed_source_does_not_write_snapshot_or_comparison_baseline(kind
     baseline = AsyncMock(spec=ExamGradeStore if kind == "exam_grades" else AttendanceStore)
     cls = RefreshObisGradesUseCase if kind == "exam_grades" else RefreshObisAttendanceUseCase
     recorder = AsyncMock()
-    args = [credentials, store, source, _sessions(), snapshots, baseline]
+    args = [credentials, store, source, passthrough_access(COOKIES), snapshots, baseline]
     if kind == "attendance":
         args.append(recorder)
     with pytest.raises(ObisParseError):

@@ -113,6 +113,15 @@ class StoredObisSession:
 
 
 @dataclass(frozen=True, slots=True)
+class StoredObisAuthState:
+    manual_required: bool
+    reason: str
+    failures: int = 0
+    retry_at: datetime | None = None
+    notified: bool = False
+
+
+@dataclass(frozen=True, slots=True)
 class ExamGradeRecord:
     id: UUID | None
     lesson_code: str | None

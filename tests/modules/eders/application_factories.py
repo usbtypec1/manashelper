@@ -4,14 +4,18 @@ from manashelper.modules.eders.application.eders import EdersQuery
 from manashelper.modules.eders.application.tracking import EdersTrackingService
 from manashelper.modules.eders.application.use_cases.refresh_eders_snapshot import RefreshEdersSnapshotUseCase
 from manashelper.modules.eders.application.use_cases.toggle_eders_setting import ToggleEdersSettingUseCase
+from tests.modules.obis.factories import passthrough_access
 
 
-def build_eders_service(credentials, eders_client, eders_tracking_service):
+def build_eders_service(credentials, eders_client, eders_tracking_service, obis_access=None):
     query = EdersQuery(credentials, eders_tracking_service)
     return SimpleNamespace(
         get_snapshot=query.get_snapshot,
         refresh_snapshot=RefreshEdersSnapshotUseCase(
-            credentials=credentials, eders_client=eders_client, eders_tracking_service=eders_tracking_service
+            credentials=credentials,
+            eders_client=eders_client,
+            eders_tracking_service=eders_tracking_service,
+            obis_access=obis_access if obis_access is not None else passthrough_access(),
         ).execute,
     )
 

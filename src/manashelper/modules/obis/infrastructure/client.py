@@ -31,25 +31,6 @@ def session_cookies(client: httpx.AsyncClient) -> dict[str, str]:
     return {cookie.name: cookie.value for cookie in client.cookies.jar if cookie.value is not None}
 
 
-async def login(client: httpx.AsyncClient, student_number: str, plain_password: str) -> None:
-    """Legacy captcha-less login kept for the Eders SSO fallback; OBIS now rejects it."""
-    login_page = await client.get(OBIS_LOGIN_PATH)
-    login_page.raise_for_status()
-    csrf_token = parse_login_page_csrf_token(login_page.text)
-
-    response = await client.post(
-        OBIS_LOGIN_PATH,
-        data={
-            "LoginForm[username]": student_number,
-            "LoginForm[password_hash]": plain_password,
-            "_csrf": csrf_token,
-        },
-    )
-    response.raise_for_status()
-    if response.url.path.rstrip("/") == OBIS_LOGIN_PATH:
-        raise ObisLoginError("Invalid OBIS credentials")
-
-
 def _is_login_response(response: httpx.Response) -> bool:
     return response.url.path.rstrip("/") == OBIS_LOGIN_PATH or is_login_page(response.text)
 
@@ -115,4 +96,6 @@ class ObisClient:
             response.raise_for_status()
             if _is_login_response(response):
                 raise ObisSessionExpiredError
+            cookies.clear()
+            cookies.update(session_cookies(client))
             return response.text

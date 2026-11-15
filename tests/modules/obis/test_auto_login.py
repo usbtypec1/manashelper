@@ -9,7 +9,7 @@ import pytest
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from manashelper.modules.obis.application.credentials import ObisCredentialsQuery
-from manashelper.modules.obis.application.models import ObisCaptcha, ObisLoginAttempt, PendingObisLogin, RefreshResult
+from manashelper.modules.obis.application.models import ObisCaptcha, ObisLoginAttempt, PendingObisLogin
 from manashelper.modules.obis.application.ports import CaptchaRecognizer
 from manashelper.modules.obis.application.sessions import ObisSessions
 from manashelper.modules.obis.application.use_cases.auto_login_obis import AutoLoginObisUseCase
@@ -17,11 +17,18 @@ from manashelper.modules.obis.application.use_cases.complete_obis_login import C
 from manashelper.modules.obis.application.use_cases.poll_obis_user import PollObisUserUseCase
 from manashelper.modules.obis.application.use_cases.refresh_obis_captcha import RefreshObisCaptchaUseCase
 from manashelper.modules.obis.application.use_cases.start_obis_login import StartObisLoginUseCase
-from manashelper.modules.obis.errors import ObisCaptchaError, ObisLoginError, ObisParseError, ObisSessionExpiredError
+from manashelper.modules.obis.errors import (
+    ObisCaptchaError,
+    ObisLoginError,
+    ObisManualLoginRequiredError,
+    ObisParseError,
+    ObisRetryLaterError,
+)
 from manashelper.modules.obis.infrastructure import captcha
 from manashelper.modules.obis.infrastructure.captcha import LocalCaptchaRecognizer
 from manashelper.modules.obis.infrastructure.client import ObisClient
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
+from manashelper.modules.obis.infrastructure.repositories.auth_state import ObisAuthStateRepository
 from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
 from manashelper.modules.obis.infrastructure.repositories.session import ObisSessionRepository
 from manashelper.modules.obis.infrastructure.repositories.snapshot import ObisSnapshotRepository
@@ -85,19 +92,35 @@ async def test_uncertain_answer_fetches_another_challenge_without_submitting(aut
 async def test_rejected_captchas_have_a_bounded_post_count_and_fresh_manual_fallback(auto):
     auto.complete.execute.side_effect = ObisCaptchaError()
     fallback = await auto.service.execute(123)
-    assert auto.complete.execute.await_count == 3
-    assert auto.refresh.execute.await_count == 3
+    assert auto.complete.execute.await_count == 5
+    assert auto.refresh.execute.await_count == 5
     submitted = [call.args[1] for call in auto.complete.execute.await_args_list]
-    assert len({pending.attempt.csrf_token for pending in submitted}) == 3
+    assert len({pending.attempt.csrf_token for pending in submitted}) == 5
+    assert len({pending.attempt.cookies["PHPSESSID"] for pending in submitted}) == 5
     assert fallback is auto.refreshed[-1] and fallback.pending not in submitted
 
 
-async def test_three_uncertain_answers_do_not_make_any_login_posts(auto):
+async def test_five_uncertain_answers_do_not_make_any_login_posts(auto):
     auto.recognizer.solve.return_value = None
     fallback = await auto.service.execute(123)
     assert fallback is auto.refreshed[-1]
-    assert auto.recognizer.solve.await_count == 3 and auto.refresh.execute.await_count == 2
+    assert auto.recognizer.solve.await_count == 5 and auto.refresh.execute.await_count == 4
     auto.complete.execute.assert_not_awaited()
+
+
+@pytest.mark.parametrize("rejected", [False, True])
+async def test_auto_login_can_succeed_on_the_fifth_fresh_captcha(auto, rejected):
+    if rejected:
+        auto.complete.execute.side_effect = [ObisCaptchaError() for _ in range(4)] + [None]
+    else:
+        auto.recognizer.solve.side_effect = [None, None, None, None, "qinug"]
+    assert await auto.service.execute(123) is None
+    assert auto.refresh.execute.await_count == 4
+    assert auto.recognizer.solve.await_count == 5
+    assert auto.complete.execute.await_count == (5 if rejected else 1)
+    assert auto.complete.execute.await_args.args[1] is auto.refreshed[-1].pending
+    images = [call.args[0] for call in auto.recognizer.solve.await_args_list]
+    assert len(set(images)) == 5
 
 
 @pytest.mark.parametrize("error", [ObisLoginError(), ObisParseError(), httpx.ReadTimeout("timeout")])
@@ -123,29 +146,26 @@ async def test_local_recognizer_offloads_cpu_and_preserves_abstention(monkeypatc
     assert threads and threads[0] != main_thread
 
 
-async def test_poll_recovers_expired_session_and_resumes_refresh_without_a_reminder():
-    grades, attendance, transcript, sessions, login, sender = [AsyncMock() for _ in range(6)]
-    grades.execute.side_effect = [ObisSessionExpiredError(), RefreshResult([], ["grade"])]
-    attendance.execute.return_value = RefreshResult([], ["skip"])
-    login.execute.return_value = None
-    await PollObisUserUseCase(grades, attendance, transcript, sessions, login).execute(123, True, True, sender)
-    login.execute.assert_awaited_once_with(123)
-    assert grades.execute.await_count == 2
-    sender.exam_grade_changed.assert_awaited_once_with("grade")
-    sender.lesson_skips_changed.assert_awaited_once_with("skip")
-    sessions.expire.assert_not_awaited()
-    sender.session_expired.assert_not_awaited()
+@pytest.mark.parametrize("notify", [False, True])
+async def test_poll_consumes_manual_outcome_and_only_sends_a_claimed_notice(notify):
+    grades, attendance, transcript, access, sender = [AsyncMock() for _ in range(5)]
+    grades.execute.side_effect = ObisManualLoginRequiredError()
+    access.claim_manual_login_notice.return_value = notify
+    await PollObisUserUseCase(grades, attendance, transcript, access).execute(123, True, True, sender)
+    access.claim_manual_login_notice.assert_awaited_once_with(123)
+    assert sender.session_expired.await_count == int(notify)
+    attendance.execute.assert_not_awaited()
+    transcript.execute.assert_not_awaited()
 
 
-async def test_poll_transport_failure_preserves_session_and_does_not_repeat_login():
-    grades, attendance, transcript, sessions, login, sender = [AsyncMock() for _ in range(6)]
-    grades.execute.side_effect = ObisSessionExpiredError()
-    login.execute.side_effect = httpx.ReadTimeout("timeout")
-    with pytest.raises(httpx.ReadTimeout):
-        await PollObisUserUseCase(grades, attendance, transcript, sessions, login).execute(123, True, True, sender)
-    login.execute.assert_awaited_once()
-    sessions.expire.assert_not_awaited()
+async def test_poll_consumes_deferred_outcome_without_requesting_manual_login():
+    grades, attendance, transcript, access, sender = [AsyncMock() for _ in range(5)]
+    grades.execute.side_effect = ObisRetryLaterError()
+    await PollObisUserUseCase(grades, attendance, transcript, access).execute(123, True, True, sender)
+    access.claim_manual_login_notice.assert_not_awaited()
     sender.session_expired.assert_not_awaited()
+    attendance.execute.assert_not_awaited()
+    transcript.execute.assert_not_awaited()
 
 
 async def test_real_solver_form_cookies_and_encrypted_database_login(session, monkeypatch):
@@ -183,8 +203,10 @@ async def test_real_solver_form_cookies_and_encrypted_database_login(session, mo
     sessions = ObisSessions(ObisSessionRepository(session), cipher)
     client = ObisClient()
     service = AutoLoginObisUseCase(
-        StartObisLoginUseCase(account, client, cipher),
-        CompleteObisLoginUseCase(account, store, client, cipher, ObisSnapshotRepository(session), sessions),
+        StartObisLoginUseCase(account, client, cipher, store),
+        CompleteObisLoginUseCase(
+            account, store, client, cipher, ObisSnapshotRepository(session), sessions, ObisAuthStateRepository(session)
+        ),
         RefreshObisCaptchaUseCase(client),
         LocalCaptchaRecognizer(),
     )

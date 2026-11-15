@@ -5,6 +5,7 @@ from manashelper.modules.eders.application.models import ActivityKind
 from manashelper.modules.eders.application.tracking import EdersTrackingService
 from manashelper.modules.eders.errors import EdersCompletionUnavailableError, EdersLoginError
 from manashelper.modules.eders.infrastructure.client import EdersClient
+from manashelper.modules.obis.application.access import ObisAccessService
 from manashelper.modules.obis.application.credentials import ObisCredentialsQuery
 
 
@@ -13,6 +14,7 @@ class SetActivityCompletionUseCase:
     credentials: ObisCredentialsQuery
     eders_client: EdersClient
     tracking: EdersTrackingService
+    obis_access: ObisAccessService
 
     async def execute(self, user_id: int, activity_id: int, completed: bool) -> None:
         await self.tracking.get_settings(user_id)
@@ -30,8 +32,9 @@ class SetActivityCompletionUseCase:
         try:
             await self.eders_client.set_activity_completion(student_number, activity_id, completed)
         except EdersLoginError:
-            credentials = await self.credentials.get_credentials(user_id)
-            await self.eders_client.set_activity_completion(
-                student_number, activity_id, completed, credentials.plain_password
-            )
+
+            async def complete_via_sso(cookies: dict[str, str]) -> None:
+                await self.eders_client.set_activity_completion(student_number, activity_id, completed, cookies)
+
+            await self.obis_access.with_session(user_id, complete_via_sso)
         await self.tracking.set_activity_completion(user_id, marker, activity_id, completed)

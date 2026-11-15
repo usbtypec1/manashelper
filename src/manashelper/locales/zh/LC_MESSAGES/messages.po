@@ -565,10 +565,10 @@ msgid "obis.logged_in"
 msgstr "已登录 OBIS ✅ 成绩和考勤将在 15 分钟内更新。"
 
 msgid "obis.session_expired"
-msgstr "你的 OBIS 会话已结束，成绩和考勤不再更新。请重新登录——只需输入图片中的验证码。"
+msgstr "无法自动登录 OBIS，成绩和考勤更新已暂停。请点击“登录”以检查账号信息或输入图片验证码。"
 
 msgid "obis.session_required"
-msgstr "要加载 OBIS 数据，请登录并输入图片中的验证码。"
+msgstr "要加载 OBIS 数据，请点击“登录”。机器人会尝试自动登录，必要时请你输入图片验证码。"
 
 msgid "menu.settings"
 msgstr "⚙️ 设置"

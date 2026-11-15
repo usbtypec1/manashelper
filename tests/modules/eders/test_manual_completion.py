@@ -27,6 +27,7 @@ from manashelper.modules.eders.presentation.router import on_eders_completion
 from manashelper.modules.eders.presentation.sender import TelegramEdersNotificationSender
 from manashelper.platform.i18n.catalog import i18n
 from tests.modules.eders.factories import NOW, item
+from tests.modules.obis.factories import SESSION_COOKIES, passthrough_access
 
 
 @pytest.fixture(autouse=True)
@@ -40,7 +41,7 @@ def scenario(completed=False):
     credentials.get_student_number.return_value = "fake-student"
     credentials.get_credentials.return_value = SimpleNamespace(plain_password="fake-password")
     tracking.get_snapshot.return_value = EdersSnapshot((item(manual_completion=True, completed=completed),), NOW)
-    return SetActivityCompletionUseCase(credentials, client, tracking)
+    return SetActivityCompletionUseCase(credentials, client, tracking, passthrough_access())
 
 
 @pytest.mark.parametrize("completed", [True, False])
@@ -93,16 +94,17 @@ async def test_failed_completion_preserves_local_state(error):
     service.credentials.get_credentials.assert_not_awaited()
 
 
-async def test_only_direct_login_failure_decrypts_obis_password():
+async def test_only_direct_login_failure_uses_shared_obis_session():
     service = scenario()
     service.eders_client.set_activity_completion.side_effect = [EdersLoginError(), None]
     await service.execute(42, 20, True)
-    service.credentials.get_credentials.assert_awaited_once_with(42)
+    service.credentials.get_credentials.assert_not_awaited()
+    service.obis_access.with_session.assert_awaited_once()
     assert service.eders_client.set_activity_completion.await_args_list[-1].args == (
         "fake-student",
         20,
         True,
-        "fake-password",
+        SESSION_COOKIES,
     )
 
 

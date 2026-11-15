@@ -21,9 +21,8 @@ from manashelper.modules.eders.infrastructure.parser import (
     parse_enrolled_courses,
 )
 from manashelper.modules.eders.infrastructure.urls import EDERS_BASE_URL
-from manashelper.modules.obis.errors import ObisLoginError, ObisParseError
-from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL
-from manashelper.modules.obis.infrastructure.client import login as obis_login
+from manashelper.modules.obis.errors import ObisSessionExpiredError
+from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL, OBIS_HOST
 
 COURSES_METHOD = "core_course_get_enrolled_courses_by_timeline_classification"
 COMPLETION_METHOD = "core_completion_update_activity_completion_status_manually"
@@ -125,20 +124,27 @@ class EdersClient:
         except (EdersFetchError, EdersUnsafeUrlError) as error:
             raise EdersLoginError(str(error)) from None
 
-    async def login_via_obis(self, client: httpx.AsyncClient, student_number: str, plain_password: str) -> str:
-        try:
-            await obis_login(client, student_number, plain_password)
-            response = await _request(client, f"{OBIS_BASE_URL}/site/eders", "sso")
-            # Some deployments render the SSO link instead of redirecting.
-            if response.url.host == urlsplit(OBIS_BASE_URL).hostname:
-                for link in BeautifulSoup(response.text, "lxml").select("a[href]"):
-                    href = link.get("href")
-                    if isinstance(href, str) and urlsplit(href).path == "/auth/userkey/login.php":
-                        response = await _request(client, urljoin(str(response.url), href), "sso")
-                        break
-        except (httpx.HTTPError, ObisLoginError, ObisParseError):
-            raise EdersFetchError("OBIS authentication failed") from None
-        return _sesskey(response.text)
+    async def login_via_obis(self, client: httpx.AsyncClient, cookies: dict[str, str]) -> str:
+        for name, value in cookies.items():
+            client.cookies.set(name, value, domain=OBIS_HOST)
+        response = await _request(client, f"{OBIS_BASE_URL}/site/eders", "sso")
+        if response.url.host == OBIS_HOST:
+            soup = BeautifulSoup(response.text, "lxml")
+            if response.url.path.rstrip("/") == "/site/login" or soup.select_one("input[name='LoginForm[username]']"):
+                raise ObisSessionExpiredError
+            for link in soup.select("a[href]"):
+                href = link.get("href")
+                if isinstance(href, str) and urlsplit(href).path == "/auth/userkey/login.php":
+                    response = await _request(client, urljoin(str(response.url), href), "sso")
+                    break
+        sesskey = _sesskey(response.text)
+        cookies.clear()
+        cookies.update(
+            (cookie.name, cookie.value)
+            for cookie in client.cookies.jar
+            if cookie.domain.lstrip(".") == OBIS_HOST and cookie.value is not None
+        )
+        return sesskey
 
     async def _courses(self, client: httpx.AsyncClient, sesskey: str) -> list[EdersCourse]:
         courses: dict[int, EdersCourse] = {}
@@ -192,15 +198,15 @@ class EdersClient:
             offset = next_offset
 
     async def set_activity_completion(
-        self, student_number: str, activity_id: int, completed: bool, obis_password: str | None = None
+        self, student_number: str, activity_id: int, completed: bool, obis_cookies: dict[str, str] | None = None
     ) -> None:
         for attempt in range(2):
             try:
                 async with new_http_client() as client:
-                    if obis_password is None:
+                    if obis_cookies is None:
                         sesskey = await self.login(client, student_number)
                     else:
-                        sesskey = await self.login_via_obis(client, student_number, obis_password)
+                        sesskey = await self.login_via_obis(client, obis_cookies)
                     try:
                         response = await client.post(
                             f"{EDERS_BASE_URL}/lib/ajax/service.php",
@@ -234,16 +240,16 @@ class EdersClient:
                 if attempt:
                     raise
 
-    async def fetch_snapshot(self, student_number: str, obis_password: str | None = None) -> EdersSnapshot:
+    async def fetch_snapshot(self, student_number: str, obis_cookies: dict[str, str] | None = None) -> EdersSnapshot:
         # One short-lived session per snapshot, one retry of the whole snapshot.
         # Partial results must not be treated as a successful observation.
         for attempt in range(2):
             try:
                 async with new_http_client() as client:
-                    if obis_password is None:
+                    if obis_cookies is None:
                         sesskey = await self.login(client, student_number)
                     else:
-                        sesskey = await self.login_via_obis(client, student_number, obis_password)
+                        sesskey = await self.login_via_obis(client, obis_cookies)
                     profile = await _request(client, f"{EDERS_BASE_URL}/user/profile.php", "read")
                     timezone = parse_account_timezone(profile.text)
                     courses = await self._courses(client, sesskey)
