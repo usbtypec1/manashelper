@@ -15,6 +15,7 @@ from manashelper.modules.obis.application.models import (
     Snapshot,
 )
 from manashelper.modules.obis.errors import (
+    ObisRetryLaterError,
     ObisSessionExpiredError,
     ObisSnapshotNotReadyError,
     UserHasNoCredentialsError,
@@ -65,7 +66,7 @@ async def test_failed_refresh_keeps_last_successful_snapshot(cached_obis):
     service, client, user = cached_obis
     previous = (await service.grades.execute(user.id)).lessons
     client.fetch_exam_grades_html.side_effect = httpx.ReadTimeout("upstream unavailable")
-    with pytest.raises(httpx.ReadTimeout):
+    with pytest.raises(ObisRetryLaterError):
         await service.grades.execute(user.id)
     assert await service.results.get_exam_grades(user.id) == previous
 

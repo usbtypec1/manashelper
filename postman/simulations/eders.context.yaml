@@ -1,12 +1,13 @@
 purpose:
-  stands_in_for: Eders Moodle form login, legacy OBIS SSO fallback, course AJAX and read-only pages.
+  stands_in_for: Eders Moodle form login, CAPTCHA-authenticated OBIS sessions and cookie-based SSO, course AJAX and read-only pages.
   unblocks: Local verification of direct and fallback Eders authentication without real student credentials.
 assumptions:
   - id: direct-moodle-form-login
     status: supported
     claim: The anonymous Eders login page exposes a POST form with anchor, logintoken, username and password.
     reason: These fields and the form action were inspected on the real anonymous login page.
-    verification: On 2026-10-29, GET returned HTTP 200; parsed form action was the HTTPS login/index.php URL.
+    verification: >-
+      On 2026-10-29, GET returned HTTP 200; parsed form action was the HTTPS login/index.php URL.
     source: https://eders.manas.edu.kg/login/index.php
     updated_at: "2026-10-29"
   - id: shared-password-success-redirect
@@ -110,7 +111,8 @@ assumptions:
     status: supported
     claim: The caller reads the authenticated detailed transcript and derives F1, FF and GPA achievement progress from its semester structure; malformed HTML or an HTTP 500 preserves the previous successful progress.
     reason: The supplied local transcript was parsed without copying personal data into tests. A synthetic fixture with its nested table structure was served through the existing repository-owned OBIS/Eders mock to the real httpx client.
-    verification: On 2026-11-04, all 20 HTTP flow tests passed, including two transcript cases. Each used fresh CSRF/login/cookie requests before GET /vs-ders/transkript-detailed, persisted three expected awards in PostgreSQL, then retained prior progress after modeled HTTP/parse failure. No live student login was performed. Final combined suite: 845 passed, 5 unrelated optional tests skipped; fingerprint gamification-webhook-2026-11-04.
+    verification: >-
+      On 2026-11-04, all 20 HTTP flow tests passed, including two transcript cases. Each used fresh CSRF/login/cookie requests before GET /vs-ders/transkript-detailed, persisted three expected awards in PostgreSQL, then retained prior progress after modeled HTTP/parse failure. No live student login was performed. Final combined suite: 845 passed, 5 unrelated optional tests skipped; fingerprint gamification-webhook-2026-11-04.
     source: tests/modules/eders/test_eders_http_flow.py; tests/fixtures/obis/transcript.html; src/manashelper/modules/obis/infrastructure/transcript_parser.py; postman/mocks/eders/default.js
     updated_at: "2026-11-04"
   - id: opt-in-academic-achievements-local-contract
@@ -149,7 +151,31 @@ assumptions:
       tests/modules/eders/test_manual_completion.py; postman/mocks/eders/default.js;
       https://github.com/moodle/moodle/blob/MOODLE_405_STABLE/completion/classes/external.php
     updated_at: "2026-11-04"
+  - id: shared-obis-session-and-five-captchas-local-contract
+    status: supported
+    claim: In the local scenarios, the caller creates an OBIS session automatically, reuses and updates its cookies, and tries up to five fresh CAPTCHA challenges before requiring manual input.
+    reason: Real HTTP clients, the local recognizer and PostgreSQL persistence completed the repository-owned synthetic scenarios.
+    verification: >-
+      On 2026-11-15, the updated HTTP suite passed 34 cases, and the added expired-saved-session case
+      passed separately. Simulation request events confirmed distinct login forms and CAPTCHA cookies,
+      success on the fifth challenge, bounded exhaustion, authenticated result reads without a new login,
+      cookie rotation persistence and one recovery after an expired saved session.
+      Eders SSO used existing OBIS cookies through site/eders, auth/userkey/login.php and my/index.php,
+      with no separate OBIS password POST. Direct Moodle login and completion failure scenarios remained covered.
+      These results establish caller behavior against synthetic fixtures, not live university availability.
+      Owner discovery was skipped: this reused the existing repository-owned mock.
+      The final complete repository run passed 1405 tests with 8 unrelated optional tests skipped.
+      Fingerprint obis-shared-session-2026-11-15.
+    source: >-
+      tests/modules/eders/test_eders_http_flow.py; tests/modules/obis/test_access.py;
+      tests/modules/obis/test_auto_login.py; postman/mocks/eders/default.js;
+      src/manashelper/modules/obis/application/access.py.
+    updated_at: "2026-11-15"
 fingerprints:
+  - id: obis-shared-session-2026-11-15
+    date: "2026-11-15"
+    commit: "c82b92ac28c75bdd92fd14e0ad3f40a1c94c526a (working tree changes)"
+    cli: "1.75.0"
   - id: eders-completion-toggle-2026-11-04
     date: "2026-11-04"
     commit: "a1c7cca438196580cb471ef28a5e921eacfe2507 (working tree changes)"

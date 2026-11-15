@@ -33,6 +33,13 @@ class ObisSessions:
         encrypted = self.cipher.encrypt(json.dumps(cookies, sort_keys=True))
         await self.store.save(user_id, StoredObisSession(encrypted, datetime.now(UTC)))
 
+    async def update_cookies(self, user_id: int, cookies: dict[str, str]) -> None:
+        session = await self.store.get(user_id)
+        if session is None:
+            raise ObisSessionExpiredError
+        encrypted = self.cipher.encrypt(json.dumps(cookies, sort_keys=True))
+        await self.store.save(user_id, StoredObisSession(encrypted, session.created_at))
+
     async def expire(self, user_id: int) -> timedelta | None:
         """Forget the session; return its age when one existed."""
         session = await self.store.delete(user_id)

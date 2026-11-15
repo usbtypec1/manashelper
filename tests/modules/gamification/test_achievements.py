@@ -386,14 +386,14 @@ async def test_iron_attendance_requires_a_clean_snapshot_from_november_or_april(
     assert "iron_attendance" in await repo.get_awards(991001)
 
 
-async def test_critic_after_one_hundred_rated_menus(session):
+async def test_critic_after_thirty_rated_menus(session):
     repo = await seed(session)
     record = RecordActivityUseCase(repo, build_awards(session))
-    for _ in range(99):
+    for _ in range(29):
         await record.execute(991001, "rating")
     assert "critic" not in await repo.get_awards(991001)
     card = next(card for card in (await GamificationQuery(repo).profile(991001)).achievements if card.key == "critic")
-    assert (card.current, card.target) == (99, 100)
+    assert (card.current, card.target) == (29, 30)
     await record.execute(991001, "rating")
-    assert (await repo.get_progress(991001))[3] == 100
+    assert (await repo.get_progress(991001))[3] == 30
     assert "critic" in await repo.get_awards(991001)

@@ -287,6 +287,12 @@ msgstr "Year {number}"
 msgid "common.private_chat_only"
 msgstr "This feature is only available in a private chat with the bot."
 
+msgid "common.rate_limit"
+msgstr "⏳ Too many requests in a row. Please wait a little."
+
+msgid "common.rate_limit_group"
+msgstr "{sender} (ID: <code>{sender_id}</code>)\n⏳ Too many requests in a row. Please wait a little."
+
 msgid "menu.marketplace"
 msgstr "🛒 Marketplace"
 
@@ -565,10 +571,10 @@ msgid "obis.logged_in"
 msgstr "Logged in to OBIS ✅ Grades and attendance will update within 15 minutes."
 
 msgid "obis.session_expired"
-msgstr "Your OBIS session has ended, so grades and attendance are no longer updating. Log in again — you'll only need the code from the image."
+msgstr "Could not log in to OBIS automatically. Grade and attendance updates are paused. Tap Log in to check your credentials or enter the image code."
 
 msgid "obis.session_required"
-msgstr "To load your OBIS data, log in and enter the code from the image."
+msgstr "To load your OBIS data, tap Log in. The bot will try automatically and ask for the image code if needed."
 
 msgid "menu.settings"
 msgstr "⚙️ Settings"
@@ -1170,7 +1176,7 @@ msgid "gamification.critic.name"
 msgstr "Critic"
 
 msgid "gamification.critic.description"
-msgstr "Rate the cafeteria menu on 100 different days."
+msgstr "Rate the cafeteria menu on 30 different days."
 
 msgid "gamification.einstein.name"
 msgstr "Einstein"
@@ -1906,3 +1912,9 @@ msgstr "Add at least one course."
 
 msgid "miniapp.ui.free_time_periods"
 msgstr "periods: {count}"
+
+msgid "obis.logging_in"
+msgstr "Signing in to OBIS…"
+
+msgid "obis.captcha_auto_fallback"
+msgstr "Automatic sign-in could not recognize this CAPTCHA confidently. Enter the text from the image to continue."

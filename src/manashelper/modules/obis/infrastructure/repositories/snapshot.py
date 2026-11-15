@@ -1,11 +1,12 @@
 import json
 from dataclasses import asdict
+from datetime import UTC, datetime
 
-from sqlalchemy import delete, select
+from sqlalchemy import and_, delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.modules.obis.application.models import ExamModel, LessonAttendanceModel, LessonExamsModel, Snapshot
-from manashelper.modules.obis.infrastructure.models.session import ObisSession
+from manashelper.modules.obis.infrastructure.models.auth_state import ObisAuthState
 from manashelper.modules.obis.infrastructure.models.snapshot import ObisSnapshot
 from manashelper.modules.obis.infrastructure.models.user_exam_grade import UserExamGrade
 from manashelper.modules.obis.infrastructure.models.user_lesson_attendance import UserLessonAttendance
@@ -59,10 +60,23 @@ class ObisSnapshotRepository:
             await self._session.execute(delete(model).where(model.user_id == user_id))
 
     async def get_poll_user_ids(self) -> list[int]:
-        # Only an open captcha login can be polled; OBIS rejects password-only logins.
+        now = datetime.now(UTC)
         query = (
             select(User.id)
-            .join(ObisSession, ObisSession.user_id == User.id)
-            .where(User.student_number.is_not(None), User.encrypted_password.is_not(None))
+            .outerjoin(ObisAuthState, ObisAuthState.user_id == User.id)
+            .where(
+                User.student_number.is_not(None),
+                User.student_number != "",
+                User.encrypted_password.is_not(None),
+                User.encrypted_password != "",
+                or_(
+                    ObisAuthState.user_id.is_(None),
+                    and_(
+                        ObisAuthState.manual_required.is_(False),
+                        or_(ObisAuthState.retry_at.is_(None), ObisAuthState.retry_at <= now),
+                    ),
+                    and_(ObisAuthState.manual_required.is_(True), ObisAuthState.notified.is_(False)),
+                ),
+            )
         )
         return list((await self._session.scalars(query)).all())

@@ -2,9 +2,9 @@ from dataclasses import dataclass
 
 from manashelper.modules.gamification.application.queries import GamificationQuery
 from manashelper.modules.gamification.application.use_cases.record_transcript import RecordTranscriptUseCase
+from manashelper.modules.obis.application.access import ObisAccessService
 from manashelper.modules.obis.application.credentials import ObisCredentialsQuery, get_results_credentials
 from manashelper.modules.obis.application.ports import CredentialsStore, ResultsSource
-from manashelper.modules.obis.application.sessions import ObisSessions
 
 
 @dataclass(frozen=True, slots=True)
@@ -12,7 +12,7 @@ class RefreshObisTranscriptUseCase:
     credentials: ObisCredentialsQuery
     store: CredentialsStore
     source: ResultsSource
-    sessions: ObisSessions
+    access: ObisAccessService
     record: RecordTranscriptUseCase
     gamification: GamificationQuery
 
@@ -21,5 +21,5 @@ class RefreshObisTranscriptUseCase:
             return
         await self.store.lock(user_id)
         credentials = await get_results_credentials(self.credentials, user_id)
-        transcript = await self.source.fetch_transcript(await self.sessions.get_cookies(user_id))
+        transcript = await self.access.with_session(user_id, self.source.fetch_transcript)
         await self.record.execute(user_id, credentials.student_number, transcript)

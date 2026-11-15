@@ -23,10 +23,10 @@ from manashelper.modules.notifications.application.use_cases.toggle_notification
 from manashelper.modules.notifications.settings import NotificationSetting
 from manashelper.modules.obis.application.models import ObisCaptcha, ObisLoginAttempt, PendingObisLogin
 from manashelper.modules.obis.application.queries import ObisResultsQuery
+from manashelper.modules.obis.application.use_cases.auto_login_obis import AutoLoginObisUseCase
 from manashelper.modules.obis.application.use_cases.clear_obis_credentials import ClearObisCredentialsUseCase
 from manashelper.modules.obis.application.use_cases.complete_obis_login import CompleteObisLoginUseCase
 from manashelper.modules.obis.application.use_cases.refresh_obis_captcha import RefreshObisCaptchaUseCase
-from manashelper.modules.obis.application.use_cases.start_obis_login import StartObisLoginUseCase
 from manashelper.modules.obis.errors import (
     ObisCaptchaError,
     ObisLoginError,
@@ -103,6 +103,14 @@ async def _ask_captcha(message: Message, state: FSMContext, captcha: ObisCaptcha
     await message.answer_photo(
         BufferedInputFile(captcha.image, "captcha.png"), caption=caption, reply_markup=build_captcha_keyboard()
     )
+
+
+async def _show_login_outcome(message: Message, state: FSMContext, captcha: ObisCaptcha | None) -> None:
+    if captcha is not None:
+        await _ask_captcha(message, state, captcha, _("obis.captcha_auto_fallback"))
+        return
+    await state.clear()
+    await message.answer(_("obis.logged_in"), reply_markup=build_obis_settings_keyboard(has_credentials=True))
 
 
 @menu_router.message(TranslatedText("menu.obis"))
@@ -423,7 +431,7 @@ async def on_student_number_entered(message: Message, state: FSMContext) -> None
 async def on_password_entered(
     message: Message,
     state: FSMContext,
-    start_obis_login: FromDishka[StartObisLoginUseCase],
+    auto_login: FromDishka[AutoLoginObisUseCase],
 ) -> None:
     password = message.text.strip() if message.text else ""
     data = await state.get_data()
@@ -437,8 +445,14 @@ async def on_password_entered(
         await message.answer(_("common.error_retry"))
         return
 
+    await message.answer(_("obis.logging_in"))
     try:
-        captcha = await start_obis_login.execute(message.from_user.id, student_number, password)
+        captcha = await auto_login.execute(message.from_user.id, student_number, password)
+    except ObisLoginError:
+        await state.clear()
+        await state.set_state(ObisCredentialsForm.student_number)
+        await message.answer(_("obis.login_failed"), reply_markup=build_cancel_keyboard())
+        return
     except UserNotFoundError:
         await state.clear()
         await message.answer(_("common.start_required"))
@@ -448,20 +462,26 @@ async def on_password_entered(
         await state.clear()
         await message.answer(_("obis.fetch_failed"))
         return
-    await _ask_captcha(message, state, captcha, _("obis.captcha_prompt"))
+    await _show_login_outcome(message, state, captcha)
 
 
 @router.callback_query(ObisCallback.filter(F.action == ObisAction.LOGIN))
 @flags.private_chat_only
 async def on_login(
-    callback_query: CallbackQuery, state: FSMContext, start_obis_login: FromDishka[StartObisLoginUseCase]
+    callback_query: CallbackQuery, state: FSMContext, auto_login: FromDishka[AutoLoginObisUseCase]
 ) -> None:
     await callback_query.answer()
     message = callback_query.message
     if not isinstance(message, Message):
         return
+    await state.clear()
+    await message.answer(_("obis.logging_in"))
     try:
-        captcha = await start_obis_login.execute(callback_query.from_user.id)
+        captcha = await auto_login.execute(callback_query.from_user.id)
+    except ObisLoginError:
+        await state.set_state(ObisCredentialsForm.student_number)
+        await message.answer(_("obis.login_failed"), reply_markup=build_cancel_keyboard())
+        return
     except UserNotFoundError:
         await message.answer(_("common.start_required"))
         return
@@ -472,7 +492,7 @@ async def on_login(
         logger.warning("Failed to open OBIS login form", exc_info=True)
         await message.answer(_("obis.fetch_failed"))
         return
-    await _ask_captcha(message, state, captcha, _("obis.captcha_prompt"))
+    await _show_login_outcome(message, state, captcha)
 
 
 @router.callback_query(

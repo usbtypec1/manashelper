@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from manashelper.modules.obis.application.credentials import ObisCredentialsQuery
 from manashelper.modules.obis.application.models import PendingObisLogin, StoredCredentials
 from manashelper.modules.obis.application.ports import (
+    AuthStateStore,
     CredentialsStore,
     ObisAuthenticator,
     PasswordCipher,
@@ -20,6 +21,7 @@ class CompleteObisLoginUseCase:
     cipher: PasswordCipher
     snapshots: SnapshotStore
     sessions: ObisSessions
+    auth_states: AuthStateStore
 
     async def execute(self, user_id: int, pending: PendingObisLogin, captcha_code: str) -> None:
         await self.store.lock(user_id)
@@ -37,3 +39,4 @@ class CompleteObisLoginUseCase:
             await self.store.save(user_id, credentials)
             await self.snapshots.reset(user_id)
         await self.sessions.save(user_id, cookies)
+        await self.auth_states.delete(user_id)

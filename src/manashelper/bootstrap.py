@@ -24,6 +24,7 @@ def load_models() -> None:
     )
     from manashelper.modules.gamification.infrastructure.models.achievement import GamificationProgress, UserAchievement
     from manashelper.modules.notifications.orm import NotificationSettings
+    from manashelper.modules.obis.infrastructure.models.auth_state import ObisAuthState
     from manashelper.modules.obis.infrastructure.models.session import ObisSession
     from manashelper.modules.obis.infrastructure.models.snapshot import ObisSnapshot
     from manashelper.modules.obis.infrastructure.models.user_exam_grade import UserExamGrade

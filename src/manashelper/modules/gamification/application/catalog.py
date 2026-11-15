@@ -22,7 +22,7 @@ ACHIEVEMENTS = (
     Achievement("phoenix", "👍", 1),
     Achievement("stability", "🧘", 3),
     Achievement("iron_attendance", "🔒", 1),
-    Achievement("critic", "🧐", 100),
+    Achievement("critic", "🧐", 30),
     Achievement("einstein", "⚛️", 1),
 )
 

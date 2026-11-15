@@ -4,6 +4,7 @@ import base64
 import os
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
+from uuid import uuid4
 
 import httpx
 import pytest
@@ -13,9 +14,14 @@ from manashelper.modules.eders.infrastructure import client as eders_client
 from manashelper.modules.eders.infrastructure.repositories.eders import EdersRepository
 from manashelper.modules.eders.infrastructure.serialization import serialize_snapshot
 from manashelper.modules.obis.application.credentials import ObisCredentialsQuery
-from manashelper.modules.obis.errors import ObisLoginError, ObisParseError
+from manashelper.modules.obis.errors import (
+    ObisLoginError,
+    ObisManualLoginRequiredError,
+    ObisParseError,
+    ObisRetryLaterError,
+)
 from manashelper.modules.obis.infrastructure import client as obis_client
-from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL, ObisClient
+from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL, OBIS_HOST, ObisClient
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
 from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
 from manashelper.modules.users.infrastructure.models.user import User
@@ -57,17 +63,21 @@ class SimulationTransport(httpx.AsyncBaseTransport):
 
 def install_client(monkeypatch, mode="normal"):
     transports = []
+    flow = uuid4().hex
 
-    def factory():
+    def factory(cookies=None):
         transport = SimulationTransport()
         transports.append(transport)
-        return httpx.AsyncClient(
+        client = httpx.AsyncClient(
             base_url=OBIS_BASE_URL,
             follow_redirects=True,
             transport=transport,
-            headers={"x-fixture-mode": mode},
+            headers={"x-fixture-mode": mode, "x-fixture-flow": flow},
             timeout=5,
         )
+        for name, value in (cookies or {}).items():
+            client.cookies.set(name, value, domain=OBIS_HOST)
+        return client
 
     monkeypatch.setattr(eders_client, "new_http_client", factory)
     return transports
@@ -116,8 +126,8 @@ async def test_http_manual_completion_uses_authenticated_json_contract(monkeypat
 @pytest.mark.parametrize("completed", [True, False])
 async def test_http_manual_completion_supports_obis_sso(monkeypatch, completed):
     transports = install_client(monkeypatch)
-    await make_eders_client().set_activity_completion("fake-student", 20, completed, "fake-password")
-    assert transports[0].paths[0] == ("GET", "/site/login")
+    await make_eders_client().set_activity_completion("fake-student", 20, completed, {"obis": "fixture"})
+    assert transports[0].paths[0] == ("GET", "/site/eders")
     assert transports[0].paths[-1] == ("POST", "/lib/ajax/service.php")
 
 
@@ -152,14 +162,26 @@ def install_obis_client(monkeypatch, mode="normal"):
     return transports
 
 
-async def test_obis_http_verification_uses_a_fresh_login_for_each_call(monkeypatch):
+async def test_obis_http_explicit_login_uses_fresh_captcha_forms(monkeypatch):
     transports = install_obis_client(monkeypatch)
     client = ObisClient()
-    await client.verify_credentials("fake-student", "fake-password")
-    await client.verify_credentials("fake-student", "fake-password")
-    assert len(transports) == 2
+    for _ in range(2):
+        challenge = await client.start_login()
+        assert challenge.expected_hash == 3347 and challenge.captcha_image
+        cookies = await client.complete_login(challenge.attempt, "fake-student", "fake-password", "qinug")
+        assert cookies["obis"] == "fixture"
+    assert len(transports) == 4
     assert all(
-        transport.paths == [("GET", "/site/login"), ("POST", "/site/login"), ("GET", "/")] for transport in transports
+        transport.paths == expected
+        for transport, expected in zip(
+            transports,
+            [
+                [("GET", "/site/login"), ("GET", "/site/captcha")],
+                [("POST", "/site/login"), ("GET", "/")],
+            ]
+            * 2,
+            strict=True,
+        )
     )
 
 
@@ -171,7 +193,7 @@ async def test_obis_http_credentials_grades_and_attendance_run_through_real_clie
     await session.flush()
     obis = ObisClient()
     service = build_obis(session, obis, crypto)
-    await service.save.execute(user.id, "fake-student", "fake-password")
+    await service.login(user.id, "fake-student", "fake-password", code="qinug")
     assert user.encrypted_password != "fake-password" and crypto.decrypt(user.encrypted_password) == "fake-password"
     grades = (await service.grades.execute(user.id)).lessons
     attendance = (await service.attendance.execute(user.id)).lessons
@@ -179,9 +201,9 @@ async def test_obis_http_credentials_grades_and_attendance_run_through_real_clie
     assert attendance[0].theory_skips_percentage == 12.5 and attendance[0].practice_skips_percentage == 6.25
     assert await service.results.get_exam_grades(user.id) == grades
     assert await service.results.get_attendance(user.id) == attendance
-    assert len(transports) == 3
-    assert transports[1].paths[-1] == ("GET", "/vs-ders/taken-grades")
-    assert transports[2].paths[-1] == ("GET", "/vs-ders/taken-lessons")
+    assert len(transports) == 4
+    assert transports[2].paths == [("GET", "/vs-ders/taken-grades")]
+    assert transports[3].paths == [("GET", "/vs-ders/taken-lessons")]
 
 
 @pytest.mark.parametrize(
@@ -191,11 +213,14 @@ async def test_obis_http_credentials_grades_and_attendance_run_through_real_clie
 async def test_obis_http_failure_preserves_error_type(monkeypatch, mode, error):
     install_obis_client(monkeypatch, mode)
     with pytest.raises(error):
-        await ObisClient().fetch_exam_grades_html("fake-student", "fake-password")
+        client = ObisClient()
+        challenge = await client.start_login()
+        cookies = await client.complete_login(challenge.attempt, "fake-student", "fake-password", "qinug")
+        await client.fetch_exam_grades_html(cookies)
 
 
 @pytest.mark.parametrize(
-    "failure_mode,error", [("html-error", httpx.HTTPStatusError), ("transcript-malformed", ObisParseError)]
+    "failure_mode,error", [("html-error", ObisRetryLaterError), ("transcript-malformed", ObisParseError)]
 )
 async def test_obis_transcript_http_awards_and_failed_refresh_preserves_progress(
     session, monkeypatch, failure_mode, error
@@ -219,10 +244,12 @@ async def test_obis_transcript_http_awards_and_failed_refresh_preserves_progress
     credentials = ObisCredentialsRepository(session)
     repo = AchievementRepository(session)
     await repo.set_enabled(user.id, True)
+    obis = build_obis(session, ObisClient(), crypto)
     refresh = RefreshObisTranscriptUseCase(
         ObisCredentialsQuery(credentials, crypto),
         credentials,
         ObisResultsSource(ObisClient()),
+        obis.access,
         RecordTranscriptUseCase(repo, build_awards(session)),
         GamificationQuery(repo),
     )
@@ -231,8 +258,9 @@ async def test_obis_transcript_http_awards_and_failed_refresh_preserves_progress
     before = await repo.academic_progress(user.id)
     assert before[0] and before[1] is not None and before[2] is not None
     assert set(await repo.get_awards(user.id)) == {"formula_one", "champion", "comeback"}
-    assert transports[0].paths == [
+    assert [path for transport in transports for path in transport.paths] == [
         ("GET", "/site/login"),
+        ("GET", "/site/captcha"),
         ("POST", "/site/login"),
         ("GET", "/"),
         ("GET", "/vs-ders/transkript-detailed"),
@@ -241,6 +269,73 @@ async def test_obis_transcript_http_awards_and_failed_refresh_preserves_progress
     with pytest.raises(error):
         await refresh.execute(user.id)
     assert await repo.academic_progress(user.id) == before
+
+
+@pytest.mark.parametrize("mode", ["captcha-fifth-success", "captcha-rejected"])
+async def test_obis_http_automatic_login_tries_five_fresh_captchas(session, monkeypatch, mode):
+    transports = install_obis_client(monkeypatch, mode)
+    crypto = CryptoService(SimpleNamespace(obis_encryption_key=base64.b64encode(bytes(range(32))).decode()))
+    user = User(
+        id=975107,
+        full_name="Five captcha attempts",
+        student_number="fake-student",
+        encrypted_password=crypto.encrypt("fake-password"),
+    )
+    session.add(user)
+    await session.flush()
+    service = build_obis(session, ObisClient(), crypto)
+    if mode == "captcha-fifth-success":
+        assert await service.auto_login.execute(user.id) is None
+        assert await service.sessions.has_session(user.id)
+    else:
+        manual = await service.auto_login.execute(user.id)
+        assert manual is not None
+        assert not await service.sessions.has_session(user.id)
+    paths = [path for transport in transports for path in transport.paths]
+    assert paths.count(("POST", "/site/login")) == 5
+    assert paths.count(("GET", "/site/captcha")) == (6 if mode == "captcha-rejected" else 5)
+    challenges = [
+        transport.paths for transport in transports if transport.paths and transport.paths[0] == ("GET", "/site/login")
+    ]
+    assert len(challenges) == (6 if mode == "captcha-rejected" else 5)
+
+
+async def test_obis_http_rotated_cookies_are_persisted_without_another_login(session, monkeypatch):
+    transports = install_obis_client(monkeypatch, "cookie-rotation")
+    crypto = CryptoService(SimpleNamespace(obis_encryption_key=base64.b64encode(bytes(range(32))).decode()))
+    user = User(
+        id=975108,
+        full_name="Cookie rotation",
+        student_number="fake-student",
+        encrypted_password=crypto.encrypt("fake-password"),
+    )
+    session.add(user)
+    await session.flush()
+    service = build_obis(session, ObisClient(), crypto)
+    await service.grades.execute(user.id)
+    assert (await service.sessions.get_cookies(user.id))["obis"] == "rotated"
+    await service.attendance.execute(user.id)
+    assert [path for transport in transports for path in transport.paths].count(("POST", "/site/login")) == 1
+
+
+async def test_obis_http_expired_saved_session_recovers_before_retrying_data(session, monkeypatch):
+    transports = install_obis_client(monkeypatch)
+    crypto = CryptoService(SimpleNamespace(obis_encryption_key=base64.b64encode(bytes(range(32))).decode()))
+    user = User(
+        id=975109,
+        full_name="Expired saved session",
+        student_number="fake-student",
+        encrypted_password=crypto.encrypt("fake-password"),
+    )
+    session.add(user)
+    await session.flush()
+    service = build_obis(session, ObisClient(), crypto)
+    await service.sessions.save(user.id, {"obis": "expired"})
+    result = await service.grades.execute(user.id)
+    assert result.lessons and (await service.sessions.get_cookies(user.id))["obis"] == "fixture"
+    paths = [path for transport in transports for path in transport.paths]
+    assert paths.count(("POST", "/site/login")) == 1
+    assert paths.count(("GET", "/vs-ders/taken-grades")) == 2
 
 
 async def test_eders_background_refresh_persists_snapshot_and_read_survives_upstream_failure(session, monkeypatch):
@@ -285,10 +380,12 @@ async def test_new_achievements_through_real_http_refresh_with_opt_in_and_failur
     repo = AchievementRepository(session)
     credentials = ObisCredentialsRepository(session)
     client = ObisClient()
+    obis = build_obis(session, client, crypto)
     refresh = RefreshObisTranscriptUseCase(
         ObisCredentialsQuery(credentials, crypto),
         credentials,
         ObisResultsSource(client),
+        obis.access,
         RecordTranscriptUseCase(repo, build_awards(session)),
         GamificationQuery(repo),
     )
@@ -303,10 +400,10 @@ async def test_new_achievements_through_real_http_refresh_with_opt_in_and_failur
     assert set(awards) == {"formula_one", "champion", "comeback", "eldin_balasy", "thin_ice"}
     before = await repo.attendance_progress(user.id)
     assert before == (True, 5)
-    assert transports[0].paths[-1] == ("GET", "/vs-ders/transkript-detailed")
-    assert transports[1].paths[-1] == ("GET", "/vs-ders/taken-lessons")
+    assert transports[2].paths == [("GET", "/vs-ders/transkript-detailed")]
+    assert transports[3].paths == [("GET", "/vs-ders/taken-lessons")]
     install_obis_client(monkeypatch, "html-error")
-    with pytest.raises(httpx.HTTPStatusError):
+    with pytest.raises(ObisRetryLaterError):
         await attendance.execute(user.id)
     assert await repo.attendance_progress(user.id) == before
     assert await repo.get_awards(user.id) == awards
@@ -316,7 +413,7 @@ async def test_new_achievements_through_real_http_refresh_with_opt_in_and_failur
     "mode", ["eders-login-denied", "eders-token-missing", "eders-login-unavailable", "eders-sso-link"]
 )
 async def test_http_failed_direct_login_falls_back_to_obis_sso(session, monkeypatch, mode):
-    transports = install_client(monkeypatch, mode)
+    transports = install_obis_client(monkeypatch, mode)
     crypto = CryptoService(SimpleNamespace(obis_encryption_key=base64.b64encode(bytes(range(32))).decode()))
     user = User(
         id=975103,
@@ -328,7 +425,9 @@ async def test_http_failed_direct_login_falls_back_to_obis_sso(session, monkeypa
     await session.flush()
     account = ObisCredentialsQuery(ObisCredentialsRepository(session), crypto)
     tracking = build_eders_tracking_service(EdersRepository(session), UsersQuery(UserRepository(session)), AsyncMock())
-    service = build_eders_service(account, make_eders_client(), tracking)
+    obis = build_obis(session, ObisClient(), crypto)
+    await obis.sessions.save(user.id, {"obis": "fixture"})
+    service = build_eders_service(account, make_eders_client(), tracking, obis_access=obis.access)
     snapshot = await service.refresh_snapshot(user.id)
     await session.flush()
 
@@ -337,14 +436,12 @@ async def test_http_failed_direct_login_falls_back_to_obis_sso(session, monkeypa
     assert len(transports) == 2
     assert transports[0].paths[0] == ("GET", "/login/index.php")
     assert all(path == "/login/index.php" for _, path in transports[0].paths)
-    assert transports[1].paths[:6] == [
-        ("GET", "/site/login"),
-        ("POST", "/site/login"),
-        ("GET", "/"),
+    assert transports[1].paths[:3] == [
         ("GET", "/site/eders"),
         ("GET", "/auth/userkey/login.php"),
         ("GET", "/my/index.php"),
     ]
+    assert not any(path == "/site/login" for transport in transports for _, path in transport.paths)
     assert transports[1].paths.count(("POST", "/lib/ajax/service.php")) == 2
     assert await tracking.pending_events(user.id, snapshot.fetched_at) == []
     serialized = serialize_snapshot(snapshot)
@@ -365,12 +462,15 @@ async def test_http_both_login_paths_fail_without_replacing_previous_snapshot(se
     await session.flush()
     account = ObisCredentialsQuery(ObisCredentialsRepository(session), crypto)
     tracking = build_eders_tracking_service(EdersRepository(session), UsersQuery(UserRepository(session)), AsyncMock())
-    service = build_eders_service(account, make_eders_client(), tracking)
+    obis = build_obis(session, ObisClient(), crypto)
+    service = build_eders_service(account, make_eders_client(), tracking, obis_access=obis.access)
     previous = await service.refresh_snapshot(user.id)
     await session.flush()
-    transports = install_client(monkeypatch, mode)
-    with pytest.raises(EdersFetchError):
+    if mode == "sso-expired":
+        await obis.sessions.save(user.id, {"obis": "fixture"})
+    transports = install_obis_client(monkeypatch, mode)
+    with pytest.raises((EdersFetchError, ObisManualLoginRequiredError)):
         await service.refresh_snapshot(user.id)
     assert await service.get_snapshot(user.id) == previous
-    assert len(transports) == (3 if mode == "sso-expired" else 2)
+    assert len(transports) == 3
     assert not any(path == "/lib/ajax/service.php" for transport in transports for _, path in transport.paths)

@@ -36,7 +36,14 @@ from manashelper.modules.eders.presentation.keyboards import (
     build_eders_menu_keyboard,
     build_eders_settings_keyboard,
 )
-from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
+from manashelper.modules.obis.errors import (
+    ObisLoginError,
+    ObisManualLoginRequiredError,
+    ObisParseError,
+    ObisRetryLaterError,
+    UserHasNoCredentialsError,
+    UserNotFoundError,
+)
 from manashelper.modules.obis.presentation.keyboards import build_no_credentials_keyboard
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
@@ -71,7 +78,14 @@ async def on_eders_completion(
     except (UserHasNoCredentialsError, ObisLoginError):
         await callback.answer(_("obis.credentials_missing"), show_alert=True)
         return
-    except (EdersFetchError, EdersParseError, EdersUnsafeUrlError, ObisParseError):
+    except (
+        EdersFetchError,
+        EdersParseError,
+        EdersUnsafeUrlError,
+        ObisParseError,
+        ObisManualLoginRequiredError,
+        ObisRetryLaterError,
+    ):
         await callback.answer(_("eders.completion_failed"), show_alert=True)
         return
 
@@ -158,7 +172,14 @@ async def _show_eders_view(
     except ObisLoginError:
         await message.answer(_("obis.credentials_invalid"), reply_markup=build_no_credentials_keyboard())
         return
-    except (EdersFetchError, EdersParseError, EdersUnsafeUrlError, ObisParseError):
+    except (
+        EdersFetchError,
+        EdersParseError,
+        EdersUnsafeUrlError,
+        ObisParseError,
+        ObisManualLoginRequiredError,
+        ObisRetryLaterError,
+    ):
         await message.answer(_("eders.fetch_failed"), reply_markup=keyboard)
         return
     if query.strip():

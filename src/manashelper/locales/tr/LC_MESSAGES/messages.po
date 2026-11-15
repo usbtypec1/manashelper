@@ -290,6 +290,12 @@ msgstr "{number}. sınıf"
 msgid "common.private_chat_only"
 msgstr "Bu özellik yalnızca bot ile özel sohbette kullanılabilir."
 
+msgid "common.rate_limit"
+msgstr "⏳ Art arda çok fazla istek gönderdiniz. Lütfen biraz bekleyin."
+
+msgid "common.rate_limit_group"
+msgstr "{sender} (ID: <code>{sender_id}</code>)\n⏳ Art arda çok fazla istek gönderdiniz. Lütfen biraz bekleyin."
+
 msgid "menu.marketplace"
 msgstr "🛒 Pazar Yeri"
 
@@ -566,10 +572,10 @@ msgid "obis.logged_in"
 msgstr "OBIS'e giriş yapıldı ✅ Notlar ve devamsızlık 15 dakika içinde güncellenecek."
 
 msgid "obis.session_expired"
-msgstr "OBIS oturumunuz sona erdi, bu yüzden notlar ve devamsızlık artık güncellenmiyor. Tekrar giriş yapın — yalnızca resimdeki kod gerekecek."
+msgstr "OBIS'e otomatik giriş yapılamadı. Not ve devamsızlık güncellemeleri duraklatıldı. Bilgilerinizi kontrol etmek veya resimdeki kodu girmek için Giriş yap'a dokunun."
 
 msgid "obis.session_required"
-msgstr "OBIS verilerinizi yüklemek için giriş yapın ve resimdeki kodu girin."
+msgstr "OBIS verilerinizi yüklemek için Giriş yap'a dokunun. Bot otomatik giriş yapmayı deneyecek ve gerekirse resimdeki kodu isteyecek."
 
 msgid "menu.settings"
 msgstr "⚙️ Ayarlar"
@@ -1148,7 +1154,7 @@ msgid "gamification.critic.name"
 msgstr "Eleştirmen"
 
 msgid "gamification.critic.description"
-msgstr "Yemek menüsünü 100 farklı gün puanla."
+msgstr "Yemek menüsünü 30 farklı gün puanla."
 
 msgid "gamification.einstein.name"
 msgstr "Einstein"
@@ -1905,3 +1911,9 @@ msgstr "En az bir sınıf ekleyin."
 
 msgid "miniapp.ui.free_time_periods"
 msgstr "ders saati: {count}"
+
+msgid "obis.logging_in"
+msgstr "OBIS sistemine giriş yapılıyor…"
+
+msgid "obis.captcha_auto_fallback"
+msgstr "Otomatik giriş için CAPTCHA güvenilir biçimde okunamadı. Devam etmek için görseldeki metni gir."

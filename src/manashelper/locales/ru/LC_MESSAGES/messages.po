@@ -287,6 +287,12 @@ msgstr "{number} курс"
 msgid "common.private_chat_only"
 msgstr "Эта функция доступна только в личном чате с ботом."
 
+msgid "common.rate_limit"
+msgstr "⏳ Слишком много запросов подряд. Подождите немного."
+
+msgid "common.rate_limit_group"
+msgstr "{sender} (ID: <code>{sender_id}</code>)\n⏳ Слишком много запросов подряд. Подождите немного."
+
 msgid "menu.marketplace"
 msgstr "🛒 Барахолка"
 
@@ -563,10 +569,10 @@ msgid "obis.logged_in"
 msgstr "Вход в OBIS выполнен ✅ Оценки и посещаемость обновятся в течение 15 минут."
 
 msgid "obis.session_expired"
-msgstr "Сессия OBIS завершилась, поэтому оценки и посещаемость больше не обновляются. Войдите снова — понадобится только код с картинки."
+msgstr "Не удалось автоматически войти в OBIS. Обновление оценок и посещаемости приостановлено. Нажмите «Войти», чтобы проверить данные или ввести код с картинки."
 
 msgid "obis.session_required"
-msgstr "Чтобы загрузить данные из OBIS, войдите и введите код с картинки."
+msgstr "Чтобы загрузить данные из OBIS, нажмите «Войти». Бот попробует войти автоматически и при необходимости попросит код с картинки."
 
 msgid "menu.settings"
 msgstr "⚙️ Настройки"
@@ -1149,7 +1155,7 @@ msgid "gamification.critic.name"
 msgstr "Критик"
 
 msgid "gamification.critic.description"
-msgstr "Оцени йемек за 100 разных дней."
+msgstr "Оцени йемек за 30 разных дней."
 
 msgid "gamification.einstein.name"
 msgstr "Эйнштейн"
@@ -1906,3 +1912,9 @@ msgstr "Добавьте хотя бы один курс."
 
 msgid "miniapp.ui.free_time_periods"
 msgstr "пар: {count}"
+
+msgid "obis.logging_in"
+msgstr "Входим в OBIS…"
+
+msgid "obis.captcha_auto_fallback"
+msgstr "Не удалось уверенно распознать капчу для автоматического входа. Введи текст с картинки."

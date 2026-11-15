@@ -1,6 +1,5 @@
 import base64
 import hashlib
-from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -49,6 +48,7 @@ from manashelper.modules.obis.application.ports import (
 )
 from manashelper.modules.obis.application.queries import ObisResultsQuery
 from manashelper.modules.obis.application.sessions import ObisSessions
+from manashelper.modules.obis.application.use_cases.auto_login_obis import AutoLoginObisUseCase
 from manashelper.modules.obis.application.use_cases.clear_obis_credentials import ClearObisCredentialsUseCase
 from manashelper.modules.obis.application.use_cases.complete_obis_login import CompleteObisLoginUseCase
 from manashelper.modules.obis.application.use_cases.poll_obis_user import PollObisUserUseCase
@@ -61,11 +61,11 @@ from manashelper.modules.obis.errors import (
     ObisCaptchaError,
     ObisLoginError,
     ObisParseError,
-    ObisSessionExpiredError,
     UserHasNoCredentialsError,
     UserNotFoundError,
 )
 from manashelper.modules.obis.infrastructure import crypto as crypto_module
+from manashelper.modules.obis.infrastructure.captcha import LocalCaptchaRecognizer
 from manashelper.modules.obis.infrastructure.client import ObisClient
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
 from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
@@ -83,7 +83,7 @@ from manashelper.modules.users.provider import UsersProvider
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from tests.modules.eders.application_factories import build_eders_service
-from tests.modules.obis.factories import build_obis
+from tests.modules.obis.factories import build_obis, passthrough_access
 
 KEY = bytes(range(32))
 
@@ -203,7 +203,7 @@ async def test_first_grade_snapshot_is_silent_and_subsequent_changes_notify(sess
         student_number="student", plain_password="password", credential_marker="marker"
     )
     service = RefreshObisGradesUseCase(
-        account, AsyncMock(), source, AsyncMock(), AsyncMock(), UserExamGradeRepository(session)
+        account, AsyncMock(), source, passthrough_access(), AsyncMock(), UserExamGradeRepository(session)
     )
     first = (await service.execute(975001)).changes
     assert first == []
@@ -233,7 +233,13 @@ async def test_attendance_baseline_is_silent_and_only_known_increases_notify(ses
         student_number="student", plain_password="password", credential_marker="marker"
     )
     service = RefreshObisAttendanceUseCase(
-        account, AsyncMock(), source, AsyncMock(), AsyncMock(), UserLessonAttendanceRepository(session), AsyncMock()
+        account,
+        AsyncMock(),
+        source,
+        passthrough_access(),
+        AsyncMock(),
+        UserLessonAttendanceRepository(session),
+        AsyncMock(),
     )
     assert (await service.execute(975001)).changes == []
     await session.flush()
@@ -468,6 +474,7 @@ async def test_obis_provider_preserves_app_request_scopes_and_model_registry():
     assert Base.metadata.tables["obis_user_exam_grades"] is UserExamGrade.__table__
     assert Base.metadata.tables["obis_user_lesson_attendance"] is UserLessonAttendance.__table__
     dependencies = (
+        AutoLoginObisUseCase,
         ObisCredentialsRepository,
         ObisCredentialsQuery,
         ObisResultsQuery,
@@ -497,6 +504,7 @@ async def test_obis_provider_preserves_app_request_scopes_and_model_registry():
         NotificationsProvider(),
     ) as container:
         client, crypto = await container.get(ObisClient), await container.get(CryptoService)
+        recognizer = await container.get(LocalCaptchaRecognizer)
         source = await container.get(ResultsSource)
         async with container() as request:
             first = [await request.get(dependency) for dependency in dependencies]
@@ -510,6 +518,7 @@ async def test_obis_provider_preserves_app_request_scopes_and_model_registry():
             assert await request.get(AttendanceStore) is await request.get(UserLessonAttendanceRepository)
             assert client is await request.get(ObisAuthenticator)
             assert crypto is await request.get(PasswordCipher)
+            assert recognizer is await request.get(LocalCaptchaRecognizer)
         async with container() as request:
             for dependency, instance in zip(dependencies, first, strict=True):
                 assert instance is not await request.get(dependency)
@@ -517,6 +526,39 @@ async def test_obis_provider_preserves_app_request_scopes_and_model_registry():
             assert source is await request.get(ResultsSource)
             assert client is await request.get(ObisAuthenticator)
             assert crypto is await request.get(PasswordCipher)
+            assert recognizer is await request.get(LocalCaptchaRecognizer)
+
+
+@pytest.mark.parametrize("wrong_credentials", [False, True])
+async def test_password_step_automatically_logs_in_without_asking_for_captcha(monkeypatch, wrong_credentials):
+    user, message, _, request, state = _form_context(monkeypatch)
+    await state.set_state(router.ObisCredentialsForm.password)
+    await state.update_data(student_number="student")
+    service = AsyncMock()
+    service.execute.return_value = None
+    if wrong_credentials:
+        service.execute.side_effect = ObisLoginError()
+    with i18n.context(), i18n.use_locale("en"):
+        await router.on_password_entered(message.model_copy(update={"text": "password"}), state, service)
+        methods = [call.args[1] for call in request.await_args_list]
+        assert methods[0].__api_method__ == "deleteMessage"
+        assert all(method.__api_method__ != "sendPhoto" for method in methods)
+        assert methods[-1].text == i18n.gettext("obis.login_failed" if wrong_credentials else "obis.logged_in")
+    service.execute.assert_awaited_once_with(user.id, "student", "password")
+    assert await state.get_state() == (router.ObisCredentialsForm.student_number.state if wrong_credentials else None)
+    assert "password" not in await state.get_data()
+
+
+async def test_login_button_reuses_saved_credentials_and_finishes_without_a_photo(monkeypatch):
+    user, _, callback, request, state = _form_context(monkeypatch)
+    service = AsyncMock()
+    service.execute.return_value = None
+    with i18n.context(), i18n.use_locale("ru"):
+        await router.on_login(callback, state, service)
+        assert request.await_args.args[1].text == i18n.gettext("obis.logged_in")
+    service.execute.assert_awaited_once_with(user.id)
+    assert await state.get_state() is None
+    assert all(call.args[1].__api_method__ != "sendPhoto" for call in request.await_args_list)
 
 
 def test_obis_polling_refreshes_every_fifteen_minutes():
@@ -526,18 +568,20 @@ def test_obis_polling_refreshes_every_fifteen_minutes():
     assert matching[0].args == ("container", "bot")
 
 
-@pytest.mark.parametrize("age", [timedelta(hours=3), None])
-async def test_expired_session_is_forgotten_and_reported_only_when_it_existed(age):
+@pytest.mark.parametrize("pending", [True, False])
+async def test_manual_login_notice_is_sent_only_when_claimed(pending):
+    from manashelper.modules.obis.errors import ObisManualLoginRequiredError
+
     grades = AsyncMock(spec=RefreshObisGradesUseCase)
     attendance = AsyncMock(spec=RefreshObisAttendanceUseCase)
-    grades.execute.side_effect = ObisSessionExpiredError
-    sessions = AsyncMock(spec=ObisSessions)
-    sessions.expire.return_value = age
+    grades.execute.side_effect = ObisManualLoginRequiredError
+    access = AsyncMock()
+    access.claim_manual_login_notice.return_value = pending
     sender = AsyncMock()
-    await PollObisUserUseCase(grades, attendance, AsyncMock(), sessions).execute(975001, True, True, sender)
-    sessions.expire.assert_awaited_once_with(975001)
+    await PollObisUserUseCase(grades, attendance, AsyncMock(), access).execute(975001, True, True, sender)
+    access.claim_manual_login_notice.assert_awaited_once_with(975001)
     attendance.execute.assert_not_awaited()
-    assert sender.session_expired.await_count == int(age is not None)
+    assert sender.session_expired.await_count == int(pending)
 
 
 async def test_session_expired_notification_uses_recipient_locale_and_login_button():

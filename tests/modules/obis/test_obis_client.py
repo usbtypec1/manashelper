@@ -67,7 +67,7 @@ async def test_complete_login_submits_captcha_and_returns_rotated_session_cookie
     routes[("POST", "/site/login")] = httpx.Response(
         302, headers={"location": "/", "set-cookie": "PHPSESSID=authenticated; path=/; secure; HttpOnly"}
     )
-    routes[("GET", "/")] = httpx.Response(200, text="<html>home</html>")
+    routes[("GET", "/")] = httpx.Response(200, text='<a href="/site/logout" data-method="post">Logout</a>')
 
     cookies = await ObisClient().complete_login(ATTEMPT, "student", "password", "Ab3x9")
 
@@ -95,6 +95,24 @@ async def test_complete_login_distinguishes_captcha_and_credential_failures(obis
     routes[("POST", "/site/login")] = response
     with pytest.raises(error):
         await ObisClient().complete_login(ATTEMPT, "student", "password", "wrong")
+
+
+@pytest.mark.parametrize("page", ["<html>maintenance</html>", '<a href="https://evil.example/logout">Logout</a>'])
+async def test_complete_login_requires_a_confirmed_authenticated_page(obis, page):
+    routes, _ = obis
+    routes[("POST", "/site/login")] = httpx.Response(302, headers={"location": "/"})
+    routes[("GET", "/")] = httpx.Response(200, text=page)
+    with pytest.raises(ObisParseError):
+        await ObisClient().complete_login(ATTEMPT, "student", "password", "abcde")
+
+
+async def test_start_login_passes_the_inline_hash_to_recognition(obis):
+    routes, _ = obis
+    routes[("GET", "/site/login")] = httpx.Response(
+        200, text=_login_page() + '<script>yii.validation.captcha(value,messages,{"hash":3347});</script>'
+    )
+    routes[("GET", "/site/captcha")] = httpx.Response(200, content=b"png", headers={"content-type": "image/png"})
+    assert (await ObisClient().start_login()).expected_hash == 3347
 
 
 async def test_fetch_uses_saved_session_and_detects_expiry(obis):

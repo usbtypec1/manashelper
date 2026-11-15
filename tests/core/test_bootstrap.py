@@ -21,6 +21,7 @@ EXPECTED_TABLES = {
     "food_menu_notification_settings",
     "notification_settings",
     "obis_sessions",
+    "obis_auth_states",
     "obis_snapshots",
     "obis_user_exam_grades",
     "obis_user_lesson_attendance",

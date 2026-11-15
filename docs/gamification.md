@@ -39,7 +39,7 @@ rows remain stored, but only keys in the active achievement catalog contribute t
 - Iron attendance requires a current attendance snapshot whose every reported theory/practice percentage is 0
   (subjects without any percentage are ignored; an empty snapshot never qualifies). It is checked only in
   November–January and April–June (Bishkek time), because early-semester snapshots are trivially clean.
-- Critic counts a user's first rating of each daily menu (100 menus); changing an existing score does not count.
+- Critic counts a user's first rating of each daily menu (30 menus); changing an existing score does not count.
 - I'll be back (`phoenix`): the last chronological attempt of a course code is a passing letter grade (AA–DD) and the code was
   failed (F1/FF) earlier. Failed codes are remembered per academic account marker in `failed_courses`,
   because OBIS may overwrite a failed row with the retake result.

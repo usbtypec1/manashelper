@@ -87,6 +87,7 @@ class ObisLoginAttempt:
 class ObisLoginChallenge:
     attempt: ObisLoginAttempt
     captcha_image: bytes = field(repr=False)
+    expected_hash: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,12 +103,22 @@ class PendingObisLogin:
 class ObisCaptcha:
     pending: PendingObisLogin
     image: bytes = field(repr=False)
+    expected_hash: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class StoredObisSession:
     encrypted_cookies: str = field(repr=False)
     created_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class StoredObisAuthState:
+    manual_required: bool
+    reason: str
+    failures: int = 0
+    retry_at: datetime | None = None
+    notified: bool = False
 
 
 @dataclass(frozen=True, slots=True)

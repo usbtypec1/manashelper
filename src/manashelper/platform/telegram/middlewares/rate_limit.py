@@ -3,11 +3,14 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from aiogram import BaseMiddleware
+from aiogram.enums import ChatType, ParseMode
 from aiogram.types import CallbackQuery, Message, TelegramObject
 
+from manashelper.localization.locale import DEFAULT_LOCALE
+from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.html import escape_html
 from manashelper.platform.telegram.middlewares.token_bucket import TokenBucket
 
-_RATE_LIMIT_TEXT = "⏳ Слишком много запросов подряд. Подождите немного."
 _WARNING_COOLDOWN_SECONDS = 3.0
 
 
@@ -44,10 +47,12 @@ class RateLimitMiddleware(BaseMiddleware):
         return None
 
     async def _reject(self, event: TelegramObject, chat_id: int) -> None:
+        # Rate limiting runs before locale resolution; keep the existing default language.
+        text = i18n.gettext("common.rate_limit", locale=DEFAULT_LOCALE.value)
         if isinstance(event, CallbackQuery):
             # Always answer, even without alert text, so the tap doesn't leave the button
             # spinning on the user's client.
-            await event.answer(_RATE_LIMIT_TEXT, show_alert=False)
+            await event.answer(text, show_alert=False)
             return
 
         if not isinstance(event, Message):
@@ -59,4 +64,22 @@ class RateLimitMiddleware(BaseMiddleware):
         if now - self._last_warned_at.get(chat_id, 0.0) < _WARNING_COOLDOWN_SECONDS:
             return
         self._last_warned_at[chat_id] = now
-        await event.answer(_RATE_LIMIT_TEXT)
+        if event.chat.type in (ChatType.GROUP, ChatType.SUPERGROUP):
+            # Anonymous administrators and channel posts expose only the sender chat.
+            if event.sender_chat is not None:
+                sender = event.sender_chat
+                name = f"@{sender.username}" if sender.username else sender.title or str(sender.id)
+                sender_id = sender.id
+            elif event.from_user is not None:
+                user = event.from_user
+                name = f"@{user.username}" if user.username else user.full_name
+                sender_id = user.id
+            else:
+                await event.answer(text)
+                return
+            text = i18n.gettext("common.rate_limit_group", locale=DEFAULT_LOCALE.value).format(
+                sender=escape_html(name), sender_id=sender_id
+            )
+            await event.answer(text, parse_mode=ParseMode.HTML)
+            return
+        await event.answer(text)

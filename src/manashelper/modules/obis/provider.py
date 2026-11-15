@@ -1,9 +1,12 @@
 from dishka import Provider, Scope, provide
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from manashelper.modules.obis.application.access import ObisAccessService
 from manashelper.modules.obis.application.credentials import ObisCredentialsQuery
 from manashelper.modules.obis.application.ports import (
     AttendanceStore,
+    AuthStateStore,
+    CaptchaRecognizer,
     CredentialsStore,
     ExamGradeStore,
     ObisAuthenticator,
@@ -14,6 +17,7 @@ from manashelper.modules.obis.application.ports import (
 )
 from manashelper.modules.obis.application.queries import ObisResultsQuery
 from manashelper.modules.obis.application.sessions import ObisSessions
+from manashelper.modules.obis.application.use_cases.auto_login_obis import AutoLoginObisUseCase
 from manashelper.modules.obis.application.use_cases.clear_obis_credentials import ClearObisCredentialsUseCase
 from manashelper.modules.obis.application.use_cases.complete_obis_login import CompleteObisLoginUseCase
 from manashelper.modules.obis.application.use_cases.poll_obis_user import PollObisUserUseCase
@@ -22,8 +26,10 @@ from manashelper.modules.obis.application.use_cases.refresh_obis_captcha import 
 from manashelper.modules.obis.application.use_cases.refresh_obis_grades import RefreshObisGradesUseCase
 from manashelper.modules.obis.application.use_cases.refresh_obis_transcript import RefreshObisTranscriptUseCase
 from manashelper.modules.obis.application.use_cases.start_obis_login import StartObisLoginUseCase
+from manashelper.modules.obis.infrastructure.captcha import LocalCaptchaRecognizer
 from manashelper.modules.obis.infrastructure.client import ObisClient
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
+from manashelper.modules.obis.infrastructure.repositories.auth_state import ObisAuthStateRepository
 from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
 from manashelper.modules.obis.infrastructure.repositories.session import ObisSessionRepository
 from manashelper.modules.obis.infrastructure.repositories.snapshot import ObisSnapshotRepository
@@ -37,10 +43,13 @@ class ObisProvider(Provider):
 
     client = provide(ObisClient, scope=Scope.APP)
     crypto = provide(CryptoService, scope=Scope.APP)
+    captcha = provide(LocalCaptchaRecognizer, scope=Scope.APP)
     credentials_repository = provide(ObisCredentialsRepository)
     credentials = provide(ObisCredentialsQuery)
     session_repository = provide(ObisSessionRepository)
     sessions = provide(ObisSessions)
+    auth_state_repository = provide(ObisAuthStateRepository)
+    access = provide(ObisAccessService)
     grades = provide(UserExamGradeRepository)
     attendance = provide(UserLessonAttendanceRepository)
     results = provide(ObisResultsQuery)
@@ -50,6 +59,7 @@ class ObisProvider(Provider):
     start_login = provide(StartObisLoginUseCase)
     refresh_captcha = provide(RefreshObisCaptchaUseCase)
     complete_login = provide(CompleteObisLoginUseCase)
+    auto_login = provide(AutoLoginObisUseCase)
     clear_credentials = provide(ClearObisCredentialsUseCase)
     polling = provide(PollObisUserUseCase)
 
@@ -58,11 +68,19 @@ class ObisProvider(Provider):
         return client
 
     @provide(scope=Scope.APP)
+    def recognizer(self, captcha: LocalCaptchaRecognizer) -> CaptchaRecognizer:
+        return captcha
+
+    @provide(scope=Scope.APP)
     def cipher(self, crypto: CryptoService) -> PasswordCipher:
         return crypto
 
     @provide
     def credential_store(self, repository: ObisCredentialsRepository) -> CredentialsStore:
+        return repository
+
+    @provide
+    def auth_states(self, repository: ObisAuthStateRepository) -> AuthStateStore:
         return repository
 
     @provide

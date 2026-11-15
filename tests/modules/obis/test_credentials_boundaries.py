@@ -29,7 +29,7 @@ PENDING = PendingObisLogin("student", "ciphertext", ATTEMPT)
 
 def _complete(store, authenticator, cipher, snapshots, sessions):
     return CompleteObisLoginUseCase(
-        ObisCredentialsQuery(store, cipher), store, authenticator, cipher, snapshots, sessions
+        ObisCredentialsQuery(store, cipher), store, authenticator, cipher, snapshots, sessions, AsyncMock()
     )
 
 
@@ -114,7 +114,7 @@ async def test_unknown_user_never_logs_in_or_writes():
     with pytest.raises(UserNotFoundError):
         await _complete(store, authenticator, cipher, AsyncMock(), sessions).execute(123, PENDING, "code")
     with pytest.raises(UserNotFoundError):
-        await StartObisLoginUseCase(ObisCredentialsQuery(store, cipher), authenticator, cipher).execute(
+        await StartObisLoginUseCase(ObisCredentialsQuery(store, cipher), authenticator, cipher, store).execute(
             123, "student", "password"
         )
     authenticator.start_login.assert_not_awaited()
@@ -132,7 +132,7 @@ async def test_start_login_encrypts_new_password_or_reuses_saved_account(saved):
     authenticator.start_login.return_value = ObisLoginChallenge(ATTEMPT, b"png")
     cipher = Mock(spec=PasswordCipher)
     cipher.encrypt.return_value = "new"
-    use_case = StartObisLoginUseCase(ObisCredentialsQuery(store, cipher), authenticator, cipher)
+    use_case = StartObisLoginUseCase(ObisCredentialsQuery(store, cipher), authenticator, cipher, store)
 
     captcha = await use_case.execute(123, "another", "password")
     assert captcha.pending == PendingObisLogin("another", "new", ATTEMPT) and captcha.image == b"png"

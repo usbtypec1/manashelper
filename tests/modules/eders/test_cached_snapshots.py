@@ -13,6 +13,7 @@ from manashelper.modules.obis.errors import UserHasNoCredentialsError
 from manashelper.modules.users.infrastructure.models.user import User
 from tests.modules.eders.application_factories import build_eders_service
 from tests.modules.eders.factories import NOW, item
+from tests.modules.obis.factories import SESSION_COOKIES, passthrough_access
 
 
 async def test_eders_cache_miss_never_fetches_and_empty_snapshot_is_ready(tracking):
@@ -91,13 +92,14 @@ async def test_only_login_failure_uses_obis_fallback_and_preserves_cached_snapsh
     credentials.get_credentials.return_value = ObisCredentials("student", "obis-password", "ciphertext-marker")
     previous = EdersSnapshot((item(),), NOW - timedelta(minutes=15))
     client.fetch_snapshot.return_value = previous
-    service = build_eders_service(credentials, client, tracking)
+    access = passthrough_access()
+    service = build_eders_service(credentials, client, tracking, access)
     await service.refresh_snapshot(980_001)
     client.reset_mock()
     current = EdersSnapshot((), NOW)
     client.fetch_snapshot.side_effect = [EdersLoginError("form failed"), failure or current]
     if isinstance(failure, UserHasNoCredentialsError):
-        credentials.get_credentials.side_effect = failure
+        access.with_session.side_effect = failure
 
     if failure:
         with pytest.raises(type(failure)):
@@ -108,8 +110,9 @@ async def test_only_login_failure_uses_obis_fallback_and_preserves_cached_snapsh
         assert await service.get_snapshot(980_001) == current
         state = await session.get(EdersState, 980_001)
         assert state.credential_marker == hashlib.sha256(b"student").hexdigest()
-    credentials.get_credentials.assert_awaited_once_with(980_001)
+    credentials.get_credentials.assert_not_awaited()
+    access.with_session.assert_awaited_once()
     assert client.fetch_snapshot.await_args_list[0].args == ("student",)
     if not isinstance(failure, UserHasNoCredentialsError):
-        assert client.fetch_snapshot.await_args_list[1].args == ("student", "obis-password")
+        assert client.fetch_snapshot.await_args_list[1].args == ("student", SESSION_COOKIES)
         assert client.fetch_snapshot.await_count == 2
