@@ -151,7 +151,7 @@ async def test_obis_user_poll_keeps_locale_fallback_and_failure_isolation(monkey
     attendance.execute.return_value = RefreshResult([], [object()])
     dependencies = {
         LocaleQuery: build_locale_service(users),
-        PollObisUserUseCase: PollObisUserUseCase(grades, attendance, AsyncMock(), AsyncMock()),
+        PollObisUserUseCase: PollObisUserUseCase(grades, attendance, AsyncMock(), AsyncMock(), AsyncMock()),
         ThemeQuery: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
         OutboxService: AsyncMock(spec=OutboxService),
     }

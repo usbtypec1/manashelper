@@ -1909,3 +1909,9 @@ msgstr "Жок дегенде бир курс кошуңуз."
 
 msgid "miniapp.ui.free_time_periods"
 msgstr "сабак: {count}"
+
+msgid "obis.logging_in"
+msgstr "OBIS системасына кирүүдө…"
+
+msgid "obis.captcha_auto_fallback"
+msgstr "Автоматтык кирүү үчүн капчаны так таануу мүмкүн болгон жок. Сүрөттөгү текстти киргиз."

@@ -87,6 +87,7 @@ class ObisLoginAttempt:
 class ObisLoginChallenge:
     attempt: ObisLoginAttempt
     captcha_image: bytes = field(repr=False)
+    expected_hash: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,6 +103,7 @@ class PendingObisLogin:
 class ObisCaptcha:
     pending: PendingObisLogin
     image: bytes = field(repr=False)
+    expected_hash: int | None = None
 
 
 @dataclass(frozen=True, slots=True)

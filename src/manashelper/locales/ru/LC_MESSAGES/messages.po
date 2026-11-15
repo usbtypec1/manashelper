@@ -1906,3 +1906,9 @@ msgstr "Добавьте хотя бы один курс."
 
 msgid "miniapp.ui.free_time_periods"
 msgstr "пар: {count}"
+
+msgid "obis.logging_in"
+msgstr "Входим в OBIS…"
+
+msgid "obis.captcha_auto_fallback"
+msgstr "Не удалось уверенно распознать капчу для автоматического входа. Введи текст с картинки."

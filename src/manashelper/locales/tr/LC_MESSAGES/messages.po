@@ -1905,3 +1905,9 @@ msgstr "En az bir sınıf ekleyin."
 
 msgid "miniapp.ui.free_time_periods"
 msgstr "ders saati: {count}"
+
+msgid "obis.logging_in"
+msgstr "OBIS sistemine giriş yapılıyor…"
+
+msgid "obis.captcha_auto_fallback"
+msgstr "Otomatik giriş için CAPTCHA güvenilir biçimde okunamadı. Devam etmek için görseldeki metni gir."

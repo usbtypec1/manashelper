@@ -1906,3 +1906,9 @@ msgstr "Add at least one course."
 
 msgid "miniapp.ui.free_time_periods"
 msgstr "periods: {count}"
+
+msgid "obis.logging_in"
+msgstr "Signing in to OBIS…"
+
+msgid "obis.captcha_auto_fallback"
+msgstr "Automatic sign-in could not recognize this CAPTCHA confidently. Enter the text from the image to continue."

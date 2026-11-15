@@ -3,8 +3,10 @@ import httpx
 from manashelper.modules.obis.application.models import ObisLoginAttempt, ObisLoginChallenge
 from manashelper.modules.obis.errors import ObisCaptchaError, ObisLoginError, ObisParseError, ObisSessionExpiredError
 from manashelper.modules.obis.infrastructure.parser import (
+    has_authenticated_logout,
     has_captcha_error,
     is_login_page,
+    parse_login_page_captcha_hash,
     parse_login_page_captcha_url,
     parse_login_page_csrf_token,
 )
@@ -62,7 +64,11 @@ class ObisClient:
             image.raise_for_status()
             if not image.headers.get("content-type", "").startswith("image/"):
                 raise ObisParseError("OBIS captcha is not an image.")
-            return ObisLoginChallenge(ObisLoginAttempt(session_cookies(client), csrf_token), image.content)
+            return ObisLoginChallenge(
+                ObisLoginAttempt(session_cookies(client), csrf_token),
+                image.content,
+                parse_login_page_captcha_hash(page.text),
+            )
 
     async def complete_login(
         self, attempt: ObisLoginAttempt, student_number: str, plain_password: str, captcha_code: str
@@ -85,6 +91,13 @@ class ObisClient:
                 if has_captcha_error(response.text):
                     raise ObisCaptchaError("Invalid OBIS captcha")
                 raise ObisLoginError("Invalid OBIS credentials")
+            if (
+                response.url.scheme != "https"
+                or response.url.host != OBIS_HOST
+                or response.url.port not in (None, 443)
+                or not has_authenticated_logout(response.text, str(response.url))
+            ):
+                raise ObisParseError("OBIS login success could not be confirmed")
             return session_cookies(client)
 
     async def fetch_transcript_html(self, cookies: dict[str, str]) -> str:

@@ -150,8 +150,10 @@ Unexpected errors abort that user and are logged by the job, without stopping th
 The first grade snapshot and attendance's first row are silent. Later new or changed nonempty grades notify.
 Saving completes the captcha login before assigning either credential field, so login/captcha/encryption failures
 preserve both previous values and the previous session even if caught inside a committed scope. Only users with
-a session are polled; when OBIS redirects a fetch to its login page, polling deletes the session and sends one
-localized reminder with a login button (cached results stay visible). Preserve 15-minute polling (it also keeps
+a session are polled; when OBIS redirects a fetch to its login page, polling first attempts automatic login
+and resumes the refresh once. If recovery needs manual input or credentials fail, it deletes the session
+and sends one localized reminder with a login button (cached results stay visible). Transport failures preserve
+the session for the next scheduled poll. Preserve 15-minute polling (it also keeps
 the session alive), FSM, password masking and encryption format.
 
 OBIS and Eders user screens read persisted snapshots only, including Study week. Background jobs refresh both
@@ -223,8 +225,14 @@ revision flags; omit `--autogenerate` for a handwritten migration. Never rewrite
   meal/day toggle disables the selection immediately. Missing rows mean enabled; saved preferences must be preserved.
 
 - OBIS credentials are verified with a real captcha login before storage and encrypted with AES-GCM through
-  `CryptoService`. The credentials form uses aiogram FSM and in-process `MemoryStorage`: student number, password,
-  then a captcha photo. FSM keeps only plain pending-login values with the password encrypted. A wrong captcha or
+  `CryptoService`. After student number/password or the Login button, AutoLoginObisUseCase uses the vendored
+  yii-captcha-solver 0.1.1 sources in OBIS infrastructure, imported directly without a separate package build.
+  The internal library only recognizes image bytes and a Yii hash, returning `str | None`;
+  it has no CLI, HTTP client or report writer. Its APP adapter runs CPU work in threads with bounded concurrency.
+  Three fresh challenges are tried at most; uncertain answers are not posted. Only definitive captcha rejection
+  permits another POST. Credential, transport and unknown-response errors do not retry. Successful login requires
+  a same-origin authenticated logout control. The existing captcha FSM/photo is a manual fallback after exhaustion
+  or a missing hash. FSM keeps only pending-login values with the password encrypted. A wrong manual captcha or
   expired form (HTTP 400) shows a new captcha; wrong credentials restart at the student number. OBIS fetches reuse
   the saved session cookies and raise ObisSessionExpiredError when OBIS asks for a login.
   Grade/attendance pages use FSM caches keyed by message ID; page navigation must not re-fetch OBIS or mix results

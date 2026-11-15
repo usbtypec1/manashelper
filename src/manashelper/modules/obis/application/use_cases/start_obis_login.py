@@ -25,4 +25,4 @@ class StartObisLoginUseCase:
             encrypted_password = self.cipher.encrypt(plain_password)
         challenge = await self.authenticator.start_login()
         pending = PendingObisLogin(student_number, encrypted_password, challenge.attempt)
-        return ObisCaptcha(pending, challenge.captcha_image)
+        return ObisCaptcha(pending, challenge.captcha_image, challenge.expected_hash)

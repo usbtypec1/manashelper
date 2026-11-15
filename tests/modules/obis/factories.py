@@ -63,5 +63,5 @@ def build_obis(session, client, crypto):
         complete=complete,
         login=login,
         clear=ClearObisCredentialsUseCase(account, store, snapshots, sessions),
-        poll=PollObisUserUseCase(grades, attendance, AsyncMock(), sessions),
+        poll=PollObisUserUseCase(grades, attendance, AsyncMock(), sessions, AsyncMock()),
     )

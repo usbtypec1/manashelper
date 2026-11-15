@@ -1,4 +1,7 @@
+import json
+import re
 from dataclasses import dataclass
+from urllib.parse import urljoin, urlsplit
 
 from bs4 import BeautifulSoup
 from bs4.element import Tag
@@ -56,6 +59,31 @@ def is_login_page(html: str) -> bool:
 def has_captcha_error(html: str) -> bool:
     feedback = BeautifulSoup(html, "lxml").select_one(".field-loginform-verifycode .invalid-feedback")
     return feedback is not None and bool(feedback.get_text(strip=True))
+
+
+def has_authenticated_logout(html: str, page_url: str) -> bool:
+    origin = urlsplit(page_url)[:2]
+    soup = BeautifulSoup(html, "lxml")
+    for element in soup.select("a[href], form[action]"):
+        target = element.get("href" if element.name == "a" else "action")
+        if isinstance(target, str):
+            url = urlsplit(urljoin(page_url, target))
+            if url[:2] == origin and url.path.rstrip("/").endswith("/logout"):
+                return True
+    return False
+
+
+def parse_login_page_captcha_hash(html: str) -> int | None:
+    """Keep older forms without a client-side hash available for manual login."""
+    pattern = r"\byii\.validation\.captcha\s*\([^,]+,[^,]+,\s*"
+    for match in re.finditer(pattern, html):
+        try:
+            options, _ = json.JSONDecoder().raw_decode(html[match.end() :])
+        except ValueError:
+            continue
+        if isinstance(options, dict) and type(options.get("hash")) is int:
+            return int(options["hash"])
+    return None
 
 
 def parse_exam_grades_page(html: str) -> list[ScrapedLessonExams]:

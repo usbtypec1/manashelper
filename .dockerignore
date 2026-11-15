@@ -2,6 +2,7 @@
 .gitignore
 .idea
 *.md
+!src/manashelper/modules/obis/infrastructure/yii_captcha/data/*.md
 
 .venv
 __pycache__/

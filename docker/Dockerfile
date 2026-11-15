@@ -19,9 +19,9 @@ RUN uv sync --frozen --no-dev
 
 # Compile gettext catalogs (locales/**/LC_MESSAGES/*.po -> *.mo) — .mo files are gitignored
 # build artifacts, so this must happen before the image can serve translated strings.
-RUN uv run pybabel compile -d src/manashelper/locales
+RUN uv run --frozen --no-dev pybabel compile -d src/manashelper/locales
 COPY frontend/scripts ./frontend/scripts
-RUN uv run python frontend/scripts/export_messages.py
+RUN uv run --frozen --no-dev python frontend/scripts/export_messages.py
 
 # The frontend is compiled once; Bun does not run in the application container.
 FROM oven/bun:1.4.3 AS frontend

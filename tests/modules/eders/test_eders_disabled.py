@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 from textwrap import dedent
@@ -41,5 +42,7 @@ def test_disabled_feature_has_no_entry_points_or_jobs(monkeypatch):
         commands = {c.command for c in build_private_commands(Locale.RU)}
         assert not {'eders', 'materials', 'week', 'eders_settings'} & commands
     """)
-    result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
+    # Windows removes empty values from the inherited native environment. Pass
+    # the mapping explicitly so the empty override cannot fall back to .env.
+    result = subprocess.run([sys.executable, "-c", script], env=dict(os.environ), capture_output=True, text=True)
     assert result.returncode == 0, result.stderr

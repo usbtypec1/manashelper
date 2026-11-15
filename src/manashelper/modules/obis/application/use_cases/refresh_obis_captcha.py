@@ -11,4 +11,6 @@ class RefreshObisCaptchaUseCase:
     async def execute(self, pending: PendingObisLogin) -> ObisCaptcha:
         # A fresh form also recovers from an expired CSRF token or server-side captcha state.
         challenge = await self.authenticator.start_login()
-        return ObisCaptcha(replace(pending, attempt=challenge.attempt), challenge.captcha_image)
+        return ObisCaptcha(
+            replace(pending, attempt=challenge.attempt), challenge.captcha_image, challenge.expected_hash
+        )

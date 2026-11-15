@@ -68,6 +68,12 @@ class ObisAuthenticator(Protocol):
         ...
 
 
+class CaptchaRecognizer(Protocol):
+    async def solve(self, image: bytes, expected_hash: int) -> str | None:
+        """Return a recognized answer, or None when the image is unsupported or uncertain."""
+        ...
+
+
 class SessionStore(Protocol):
     async def get(self, user_id: int) -> StoredObisSession | None: ...
 

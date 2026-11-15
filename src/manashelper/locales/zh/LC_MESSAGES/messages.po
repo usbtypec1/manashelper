@@ -1898,3 +1898,9 @@ msgstr "请至少添加一个课程。"
 
 msgid "miniapp.ui.free_time_periods"
 msgstr "{count} 节课"
+
+msgid "obis.logging_in"
+msgstr "正在登录 OBIS…"
+
+msgid "obis.captcha_auto_fallback"
+msgstr "自动登录无法可靠识别此验证码。请输入图片中的文字以继续。"

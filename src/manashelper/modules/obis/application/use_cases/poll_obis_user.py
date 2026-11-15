@@ -7,6 +7,7 @@ import httpx
 from manashelper.modules.obis.application.models import RefreshResult
 from manashelper.modules.obis.application.ports import ObisNotificationSender
 from manashelper.modules.obis.application.sessions import ObisSessions
+from manashelper.modules.obis.application.use_cases.auto_login_obis import AutoLoginObisUseCase
 from manashelper.modules.obis.application.use_cases.refresh_obis_attendance import RefreshObisAttendanceUseCase
 from manashelper.modules.obis.application.use_cases.refresh_obis_grades import RefreshObisGradesUseCase
 from manashelper.modules.obis.application.use_cases.refresh_obis_transcript import RefreshObisTranscriptUseCase
@@ -34,6 +35,7 @@ class PollObisUserUseCase:
     refresh_obis_attendance: RefreshObisAttendanceUseCase
     refresh_obis_transcript: RefreshObisTranscriptUseCase
     sessions: ObisSessions
+    auto_login: AutoLoginObisUseCase
 
     async def execute(
         self, user_id: int, check_exam_grades: bool, check_lesson_skips: bool, sender: ObisNotificationSender
@@ -41,8 +43,22 @@ class PollObisUserUseCase:
         try:
             await self._refresh(user_id, check_exam_grades, check_lesson_skips, sender)
         except ObisSessionExpiredError:
+            try:
+                if await self.auto_login.execute(user_id) is None:
+                    await self._refresh(user_id, check_exam_grades, check_lesson_skips, sender)
+                    return
+            except (
+                UserNotFoundError,
+                UserHasNoCredentialsError,
+                ObisLoginError,
+                ObisParseError,
+                ObisSessionExpiredError,
+            ):
+                logger.warning("Automatic OBIS session recovery failed for user %s", user_id)
+            # Transport errors propagate: preserve the saved session and let the next
+            # scheduled poll recover, without blindly repeating an uncertain POST.
             age = await self.sessions.expire(user_id)
-            # Only a deleted session notifies, so each captcha login produces at most one reminder.
+            # Request manual intervention once only when automatic recovery is unavailable.
             if age is not None:
                 logger.info("OBIS session for user %s expired after %s", user_id, age)
                 await sender.session_expired()
