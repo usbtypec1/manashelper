@@ -6,13 +6,15 @@ from aiogram import F, Router, flags
 from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, LinkPreviewOptions, Message
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions, Message
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
+from manashelper.localization.locale import Locale
 from manashelper.modules.eders.application.eders import EdersQuery, filter_activities
 from manashelper.modules.eders.application.models import DeadlineFilter, EdersSnapshot
 from manashelper.modules.eders.application.tracking import EdersTrackingService
+from manashelper.modules.eders.application.use_cases.issue_eders_login_link import IssueEdersLoginLinkUseCase
 from manashelper.modules.eders.application.use_cases.set_activity_completion import SetActivityCompletionUseCase
 from manashelper.modules.eders.application.use_cases.toggle_eders_setting import ToggleEdersSettingUseCase
 from manashelper.modules.eders.errors import (
@@ -45,6 +47,7 @@ from manashelper.modules.obis.errors import (
     UserNotFoundError,
 )
 from manashelper.modules.obis.presentation.keyboards import build_no_credentials_keyboard
+from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
 from manashelper.platform.telegram.navigation import build_navigation_keyboard
@@ -54,6 +57,35 @@ menu_router = Router(name="eders_menu")
 SNAPSHOT_KEY = "eders_snapshot"
 SNAPSHOT_OPENED_AT_KEY = "eders_snapshot_opened_at"
 SNAPSHOT_TTL = timedelta(minutes=15)
+
+
+@menu_router.callback_query(EdersMenuCallback.filter(F.action == EdersAction.LOGIN))
+@flags.private_chat_only
+async def on_eders_login(
+    callback: CallbackQuery,
+    issue_link: FromDishka[IssueEdersLoginLinkUseCase],
+) -> None:
+    message = callback.message
+    if not isinstance(message, Message) or message.chat.id != callback.from_user.id:
+        await callback.answer(_("eders.login_failed"), show_alert=True)
+        return
+    try:
+        url = await issue_link.execute(callback.from_user.id, Locale(i18n.current_locale))
+    except (UserNotFoundError, UserHasNoCredentialsError):
+        await callback.answer(_("obis.credentials_missing"), show_alert=True)
+        return
+    except EdersFetchError:
+        await callback.answer(_("eders.login_failed"), show_alert=True)
+        return
+    await callback.answer()
+    await message.answer(
+        _("eders.login_link_note"),
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text=_("eders.quick_login"), url=url)]]
+        ),
+        protect_content=True,
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
+    )
 
 
 @router.callback_query(EdersCompletionCallback.filter())

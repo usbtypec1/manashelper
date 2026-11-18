@@ -21,7 +21,7 @@ from manashelper.modules.notifications.application.use_cases.toggle_notification
     ToggleNotificationSettingUseCase,
 )
 from manashelper.modules.notifications.settings import NotificationSetting
-from manashelper.modules.obis.application.models import ObisCaptcha, ObisLoginAttempt, PendingObisLogin
+from manashelper.modules.obis.application.models import ObisCaptcha, ObisLoginAttempt, PendingObisLogin, Snapshot
 from manashelper.modules.obis.application.queries import ObisResultsQuery
 from manashelper.modules.obis.application.use_cases.auto_login_obis import AutoLoginObisUseCase
 from manashelper.modules.obis.application.use_cases.clear_obis_credentials import ClearObisCredentialsUseCase
@@ -42,7 +42,11 @@ from manashelper.modules.obis.presentation.callbacks import (
     ObisNotificationSettingCallback,
     ObisResultsPageCallback,
 )
-from manashelper.modules.obis.presentation.formatter import format_attendance_pages, format_exam_grades_pages
+from manashelper.modules.obis.presentation.formatter import (
+    format_attendance_pages,
+    format_exam_grades_pages,
+    format_snapshot_updated,
+)
 from manashelper.modules.obis.presentation.keyboards import (
     build_cancel_keyboard,
     build_captcha_keyboard,
@@ -172,7 +176,7 @@ async def _show_obis_results[T](
     message: Message,
     state: FSMContext,
     results: ObisResultsQuery,
-    fetch: Callable[[int], Awaitable[list[T]]],
+    fetch: Callable[[int], Awaitable[Snapshot[T]]],
     format_results: Callable[[list[T]], list[str]],
     loading_text: str,
     *,
@@ -183,7 +187,7 @@ async def _show_obis_results[T](
         return False
     sent = await message.answer(loading_text, parse_mode=None)
     try:
-        lessons = await fetch(recipient_id)
+        snapshot = await fetch(recipient_id)
     except UserNotFoundError:
         await sent.edit_text(_("common.start_required"))
         return False
@@ -212,7 +216,8 @@ async def _show_obis_results[T](
     except Exception:
         await sent.edit_text(_("obis.fetch_failed"), reply_markup=build_obis_results_keyboard(0, 1))
         raise
-    pages = format_results(lessons)
+    updated = format_snapshot_updated(snapshot.fetched_at)
+    pages = [f"{page}\n\n{updated}" for page in format_results(snapshot.lessons)]
     if len(pages) > 1:
         data = await state.get_data()
         snapshots: dict[str, list[str]] = dict(data.get(RESULTS_KEY, {}))

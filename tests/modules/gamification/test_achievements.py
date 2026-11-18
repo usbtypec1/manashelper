@@ -283,13 +283,14 @@ def semester(key: str, gpa: str | None, *rows: tuple[str, str, str]) -> Transcri
     return TranscriptSemester(key, credits, points, tuple(TranscriptCourse(*row) for row in rows))
 
 
-async def test_phoenix_requires_a_later_pass_and_remembers_overwritten_failures(session):
+@pytest.mark.parametrize("failed_grade", ["F1", "FF", "FD"])
+async def test_phoenix_requires_a_later_pass_and_remembers_overwritten_failures(session, failed_grade):
     repo = await seed(session)
     record = RecordTranscriptUseCase(repo, build_awards(session))
     # A failed improvement attempt after a pass is not a comeback.
     semesters = (
         semester("2024-2025:fall", "3", ("MAT-1", "Math", "CC")),
-        semester("2024-2025:spring", "3", ("MAT-1", "Math", "FF")),
+        semester("2024-2025:spring", "3", ("MAT-1", "Math", failed_grade)),
     )
     await record.execute(991001, "fixture-student", Transcript(semesters, Decimal(3)))
     assert "phoenix" not in await repo.get_awards(991001)
@@ -300,17 +301,20 @@ async def test_phoenix_requires_a_later_pass_and_remembers_overwritten_failures(
 
     repo = await seed(session, 991002)
     semesters = (
-        semester("2024-2025:fall", "3", ("PHY-1", "Physics", "F1")),
+        semester("2024-2025:fall", "3", ("PHY-1", "Physics", failed_grade)),
         semester("2024-2025:spring", "3", ("PHY-1", "Physics", "BA")),
     )
     await record.execute(991002, "fixture-student", Transcript(semesters, Decimal(3)))
     assert "phoenix" in await repo.get_awards(991002)
+    if failed_grade == "FD":
+        assert {"formula_one", "champion", "einstein"}.isdisjoint(await repo.get_awards(991002))
 
 
-async def test_phoenix_forgets_failures_of_another_account(session):
+@pytest.mark.parametrize("failed_grade", ["F1", "FF", "FD"])
+async def test_phoenix_forgets_failures_of_another_account(session, failed_grade):
     repo = await seed(session)
     record = RecordTranscriptUseCase(repo, build_awards(session))
-    failed = (semester("2024-2025:fall", "3", ("MAT-1", "Math", "FF")),)
+    failed = (semester("2024-2025:fall", "3", ("MAT-1", "Math", failed_grade)),)
     await record.execute(991001, "previous-student", Transcript(failed, Decimal(3)))
     passed = (semester("2024-2025:fall", "3", ("MAT-1", "Math", "BB")),)
     await record.execute(991001, "fixture-student", Transcript(passed, Decimal(3)))

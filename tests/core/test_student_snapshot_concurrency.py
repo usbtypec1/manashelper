@@ -86,7 +86,10 @@ async def test_cached_reads_do_not_wait_for_background_http_fetch(engine, featur
             try:
                 await asyncio.wait_for(entered.wait(), timeout=2)
                 cached = await asyncio.wait_for(read(user_id), timeout=1)
-                assert cached == ([] if feature == "obis" else EdersSnapshot((), now))
+                if feature == "obis":
+                    assert cached.lessons == [] and cached.fetched_at == now
+                else:
+                    assert cached == EdersSnapshot((), now)
                 assert not task.done()
             finally:
                 release.set()

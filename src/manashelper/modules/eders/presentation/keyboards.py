@@ -2,6 +2,7 @@ from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from manashelper.core.config import get_settings
 from manashelper.modules.eders.application.models import DeadlineFilter
 from manashelper.modules.eders.application.tracking import EdersSetting, EdersSettings
 from manashelper.modules.eders.presentation.callbacks import (
@@ -35,7 +36,16 @@ def build_eders_completion_keyboard(activity_id: int, completed: bool) -> Inline
         text=_("eders.mark_undone") if completed else _("eders.mark_done"),
         callback_data=EdersCompletionCallback(activity_id=activity_id, completed=not completed),
     )
+    builder.attach(build_eders_login_keyboard())
     return builder.as_markup()
+
+
+def build_eders_login_keyboard() -> InlineKeyboardBuilder:
+    builder = InlineKeyboardBuilder()
+    settings = get_settings()
+    if settings.public_url and settings.eders_enabled:
+        builder.button(text=_("eders.quick_login"), callback_data=EdersMenuCallback(action=EdersAction.LOGIN))
+    return builder
 
 
 def build_eders_keyboard(selected: DeadlineFilter, page: int, count: int) -> InlineKeyboardMarkup:

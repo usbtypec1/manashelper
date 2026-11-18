@@ -10,6 +10,7 @@ from manashelper.modules.gamification.infrastructure.repositories.achievement im
 from manashelper.modules.obis.application.models import Transcript, TranscriptSemester
 
 FAILING_GRADES = frozenset({"F1", "FF"})
+RETAKE_GRADES = FAILING_GRADES | {"FD"}
 PASSING_GRADES = frozenset({"AA", "BA", "BB", "CB", "CC", "DC", "DD"})
 # Physics in Russian/Kyrgyz, Turkish (including "fiziği") and English, but not the
 # "physical" adjective used by physical chemistry, geography or education.
@@ -95,7 +96,7 @@ class RecordTranscriptUseCase:
             if course.code and course.grade:
                 attempts.setdefault(course.code, []).append(course.grade)
         failed = set(progress.failed_courses if same_account else ())
-        failed |= {code for code, results in attempts.items() if FAILING_GRADES.intersection(results)}
+        failed |= {code for code, results in attempts.items() if RETAKE_GRADES.intersection(results)}
         progress.failed_courses = sorted(failed)
         if any(code in attempts and attempts[code][-1] in PASSING_GRADES for code in failed):
             await self.awards.execute(user_id, "phoenix", now)

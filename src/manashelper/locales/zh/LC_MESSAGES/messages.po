@@ -1125,11 +1125,35 @@ msgstr "岌岌可危"
 msgid "gamification.thin_ice.description"
 msgstr "在同一学期的五门不同课程中，理论课或实践课的缺勤率达到至少 18.75%。"
 
+msgid "obis.last_updated"
+msgstr "最后更新：{updated_at}（比什凯克）"
+
+msgid "eders.quick_login"
+msgstr "⚡ 登录 Eders"
+
+msgid "eders.login_link_note"
+msgstr "这是个人一次性链接，60 秒后失效。请勿分享。新链接会使旧链接失效。"
+
+msgid "eders.login_opening"
+msgstr "正在打开 Eders…"
+
+msgid "eders.login_expired"
+msgstr "链接已失效或已使用。请通过机器人通知中的按钮获取新链接。"
+
+msgid "eders.login_javascript"
+msgstr "请在浏览器中启用 JavaScript 以登录。"
+
+msgid "eders.login_obis_required"
+msgstr "请先在机器人设置中登录 OBIS，然后获取新的 Eders 链接。"
+
+msgid "eders.login_failed"
+msgstr "暂时无法快速登录。请稍后通过机器人获取新链接重试。"
+
 msgid "gamification.phoenix.name"
 msgstr "I'll be back"
 
 msgid "gamification.phoenix.description"
-msgstr "在曾获得 F1 或 FF 的课程中重新取得及格成绩。"
+msgstr "在曾获得 FD、F1 或 FF 的课程中重新取得及格成绩。"
 
 msgid "gamification.stability.name"
 msgstr "稳定发挥"
@@ -1853,7 +1877,7 @@ msgid "schedule.query_too_short_retry"
 msgstr "查询太短。请点击下方的搜索按钮重试。"
 
 msgid "schedule.free_time.mini_app"
-msgstr "👥 共同空闲时间（Mini App）"
+msgstr "👥 共同空闲时间"
 
 msgid "schedule.change_room"
 msgstr "🚪 教室：{previous} → {new}"

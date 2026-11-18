@@ -1,8 +1,10 @@
 from collections.abc import Iterator, Mapping
+from datetime import datetime
 
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.i18n import ngettext
 
+from manashelper.core.time import BISHKEK_TZ
 from manashelper.localization.weekdays import weekday_abbr
 from manashelper.modules.obis.application.models import LessonAttendanceModel, LessonExamsModel
 from manashelper.modules.obis.application.notification import ExamGradeChange, LessonSkipChange, SkipType
@@ -13,6 +15,10 @@ from manashelper.modules.schedule.application.time_ranges import format_minutes
 SUBJECTS_PER_PAGE = 2
 MAX_PAGE_BODY_CHARS = 1600
 MAX_PAGE_BODY_LINES = 10
+
+
+def format_snapshot_updated(fetched_at: datetime) -> str:
+    return _("obis.last_updated").format(updated_at=fetched_at.astimezone(BISHKEK_TZ).strftime("%d.%m.%Y %H:%M"))
 
 
 def _split_block(block: str) -> Iterator[str]:

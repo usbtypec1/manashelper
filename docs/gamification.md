@@ -41,16 +41,16 @@ rows remain stored, but only keys in the active achievement catalog contribute t
   November–January and April–June (Bishkek time), because early-semester snapshots are trivially clean.
 - Critic counts a user's first rating of each daily menu (30 menus); changing an existing score does not count.
 - I'll be back (`phoenix`): the last chronological attempt of a course code is a passing letter grade (AA–DD) and the code was
-  failed (F1/FF) earlier. Failed codes are remembered per academic account marker in `failed_courses`,
+  failed (FD/F1/FF) earlier. Failed codes are remembered per academic account marker in `failed_courses`,
   because OBIS may overwrite a failed row with the retake result.
 - Stability: three consecutive fall/spring semesters with official totals and a semester GPA (points/credits,
   rounded half-up to 0.01) of at least 3.00. Summer school and semesters without totals are skipped, not breaks.
 - Einstein: F1/FF in a course whose transcript name contains physics in Russian/Kyrgyz, Turkish or English
   (`физик`, `fizik`/`fiziği`, `physic`), excluding the adjectives `fiziksel`, `физикалык` and `physical`.
-- Existing food/night views and publications are not backfilled. Historical F1/FF in the transcript are eligible.
+- Existing food/night views and publications are not backfilled. Historical final grades are eligible under each achievement's rules.
 
 The existing 15-minute OBIS poll also fetches `/vs-ders/transkript-detailed`. Notification toggles do not stop
-synchronization or achievements. F1/FF come only from the transcript's final letter-grade column.
+synchronization or achievements. FD/F1/FF come only from the transcript's final letter-grade column.
 The parser reads each course row's code, name and final grade, official semester credit/point totals and overall GPA. The baseline is the weighted sum of
 previous semesters' points divided by credits, rounded half-up to two decimal places. It is frozen on the first
 successful observation of the latest semester/account. Compare OBIS's overall GPA to it using Decimal:

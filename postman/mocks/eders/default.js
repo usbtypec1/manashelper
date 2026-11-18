@@ -8,6 +8,8 @@ const methodname = 'core_course_get_enrolled_courses_by_timeline_classification'
 const completionMethod = 'core_completion_update_activity_completion_status_manually';
 let challengeSequence = 0;
 const submittedByFlow = new Map();
+const browserKeys = new Set();
+let browserKeySequence = 0;
 const loginPage = (csrf, error = '') => '<form action="/site/login" method="post">' +
   '<input name="_csrf" value="' + csrf + '"><input name="LoginForm[username]">' +
   '<img id="loginform-verifycode-image" src="/site/captcha?v=' + csrf + '">' +
@@ -48,12 +50,22 @@ http.createServer(async (req, res) => {
   }
   if (url.pathname === '/site/eders') {
     if (!hasObisSession(req)) return send(302, '', {location: '/site/login'});
+    if (req.headers['x-fixture-mode'] === 'browser-login') {
+      const key = 'browser-' + (++browserKeySequence);
+      browserKeys.add(key);
+      return send(302, '', {location: 'https://eders.manas.edu.kg/auth/userkey/login.php?key=' + key,
+                           'set-cookie': 'obis=rotated; Path=/'});
+    }
     const destination = 'https://eders.manas.edu.kg/auth/userkey/login.php?key=fake-sso';
     if (req.headers['x-fixture-mode'] === 'eders-sso-link')
       return send(200, '<a href="' + destination + '">Eders</a>');
     return send(302, '', {location: destination});
   }
   if (url.pathname === '/auth/userkey/login.php') {
+    if (url.searchParams.get('key')?.startsWith('browser-')) {
+      if (!browserKeys.delete(url.searchParams.get('key'))) return send(401, 'Spent fake browser key');
+      return send(303, '', {location: '/my/index.php?lang=ru', 'set-cookie': 'MoodleSession=fixture; Path=/; HttpOnly; Secure'});
+    }
     if (url.searchParams.get('key') !== 'fake-sso') return send(401, 'Fake SSO key required');
     return send(303, '', {location: '/my/index.php?lang=ru', 'set-cookie': 'MoodleSession=fixture; Path=/'});
   }

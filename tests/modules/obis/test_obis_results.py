@@ -1,4 +1,5 @@
 import asyncio
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 import httpx
@@ -11,7 +12,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.methods import AnswerCallbackQuery, EditMessageText, SendMessage
 from aiogram.types import CallbackQuery, Chat, Message, User
 
-from manashelper.modules.obis.application.models import ExamModel, LessonAttendanceModel, LessonExamsModel
+from manashelper.modules.obis.application.models import ExamModel, LessonAttendanceModel, LessonExamsModel, Snapshot
 from manashelper.modules.obis.errors import (
     ObisLoginError,
     ObisParseError,
@@ -64,13 +65,17 @@ def _methods(request, method_type):
     return [call.args[1] for call in request.await_args_list if isinstance(call.args[1], method_type)]
 
 
-def _lessons(kind, count=5):
+def _snapshot(kind, count=5):
     if kind == "grades":
-        return [
+        lessons = [
             LessonExamsModel(f"Math <b>& algebra {index}", f"MAT{index}", [ExamModel("Midterm <test>", "95")])
             for index in range(count)
         ]
-    return [LessonAttendanceModel(f"Physics {index}", f"PHY{index}", 25.0, None, 0, None) for index in range(count)]
+    else:
+        lessons = [
+            LessonAttendanceModel(f"Physics {index}", f"PHY{index}", 25.0, None, 0, None) for index in range(count)
+        ]
+    return Snapshot("marker", lessons, datetime(2026, 11, 17, 18, 30, tzinfo=UTC))
 
 
 def _handler_and_fetch(service, kind):
@@ -100,7 +105,7 @@ async def test_loading_message_appears_before_fetch_and_is_replaced_with_compact
         assert len(_methods(request, SendMessage)) == 1
         started.set()
         await release.wait()
-        return _lessons(kind)
+        return _snapshot(kind)
 
     fetch.side_effect = load
     await state.update_data(student_number="existing-form-data")
@@ -119,6 +124,7 @@ async def test_loading_message_appears_before_fetch_and_is_replaced_with_compact
     assert final.message_id == 41
     assert final.parse_mode is None
     assert "page 1/3" in final.text.lower()
+    assert "Last updated: 18.11.2026 00:30 (Bishkek)" in final.text
     assert "algebra 2" not in final.text and "Physics 2" not in final.text
     next_button = final.reply_markup.inline_keyboard[0][0]
     assert ObisResultsPageCallback.unpack(next_button.callback_data).page == 1
@@ -136,7 +142,7 @@ async def test_single_page_and_empty_results_keep_menu_buttons_without_paginatio
     message, state, request = _context(monkeypatch)
     service = AsyncMock()
     handler, fetch = _handler_and_fetch(service, kind)
-    fetch.return_value = _lessons(kind, count)
+    fetch.return_value = _snapshot(kind, count)
     with i18n.context(), i18n.use_locale("ru"):
         await handler(message, state, service)
         final = _methods(request, EditMessageText)[0]
@@ -184,8 +190,8 @@ async def test_fetch_error_replaces_loading_message_with_actionable_error(
 async def test_pages_are_bound_to_each_message_and_do_not_refetch_obis(monkeypatch) -> None:
     message, state, request = _context(monkeypatch)
     service = AsyncMock()
-    service.get_exam_grades.return_value = _lessons("grades")
-    service.get_attendance.return_value = _lessons("attendance")
+    service.get_exam_grades.return_value = _snapshot("grades")
+    service.get_attendance.return_value = _snapshot("attendance")
     with i18n.context(), i18n.use_locale("en"):
         await on_exams_button(message, state, service, AsyncMock())
         await _attendance_button(message, state, service)
@@ -193,6 +199,7 @@ async def test_pages_are_bound_to_each_message_and_do_not_refetch_obis(monkeypat
         await on_obis_results_page(_callback(message, 42), ObisResultsPageCallback(page=2), state, AsyncMock())
     edits = _methods(request, EditMessageText)
     grades, attendance = edits[-2:]
+    assert all("Last updated: 18.11.2026 00:30 (Bishkek)" in edit.text for edit in edits)
     assert grades.message_id == 41
     assert "Math <b>& algebra 2" in grades.text
     assert "Physics" not in grades.text
@@ -222,7 +229,7 @@ async def test_missing_or_out_of_range_page_answers_without_editing(monkeypatch,
 async def test_saved_results_are_bounded_and_keep_latest_messages(monkeypatch) -> None:
     message, state, request = _context(monkeypatch)
     service = AsyncMock()
-    service.get_exam_grades.return_value = _lessons("grades")
+    service.get_exam_grades.return_value = _snapshot("grades")
     with i18n.context(), i18n.use_locale("en"):
         for _ in range(MAX_SAVED_RESULTS + 1):
             await on_exams_button(message, state, service, AsyncMock())
@@ -289,7 +296,7 @@ async def test_missing_session_without_snapshot_offers_captcha_login(monkeypatch
 async def test_cached_results_offer_login_only_without_session(monkeypatch, has_session) -> None:
     message, state, request = _context(monkeypatch)
     service = AsyncMock()
-    service.get_exam_grades.return_value = _lessons("grades")
+    service.get_exam_grades.return_value = _snapshot("grades")
     service.has_session.return_value = has_session
     login = ObisCallback(action=ObisAction.LOGIN).pack()
     with i18n.context(), i18n.use_locale("en"):

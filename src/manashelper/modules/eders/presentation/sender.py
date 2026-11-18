@@ -7,7 +7,7 @@ from aiogram.types import LinkPreviewOptions
 from manashelper.localization.locale import Locale
 from manashelper.modules.eders.application.tracking import EdersEvent
 from manashelper.modules.eders.presentation.formatter import format_eders_event, format_material_events
-from manashelper.modules.eders.presentation.keyboards import build_eders_completion_keyboard
+from manashelper.modules.eders.presentation.keyboards import build_eders_completion_keyboard, build_eders_login_keyboard
 from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.outbox.service import OutboxService
@@ -27,7 +27,9 @@ class TelegramEdersNotificationSender:
                 (format_eders_event(event), [event]) for event in events if not event.event_type.startswith("material_")
             )
         for text, batch in messages:
-            keyboard = None
+            with i18n.context(), i18n.use_locale(locale.value), i18n.use_theme(theme):
+                login = build_eders_login_keyboard()
+                keyboard = login.as_markup() if login.export() else None
             if len(batch) == 1 and not batch[0].event_type.startswith("material_"):
                 activity = batch[0].activity
                 if activity.manual_completion:

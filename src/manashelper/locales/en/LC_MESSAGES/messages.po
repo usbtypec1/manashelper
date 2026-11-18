@@ -1154,11 +1154,35 @@ msgstr "On the edge"
 msgid "gamification.thin_ice.description"
 msgstr "Reach at least 18.75% absence in theory or practice for five different subjects in one semester."
 
+msgid "obis.last_updated"
+msgstr "Last updated: {updated_at} (Bishkek)"
+
+msgid "eders.quick_login"
+msgstr "⚡ Log in to Eders"
+
+msgid "eders.login_link_note"
+msgstr "This personal one-time link expires in 60 seconds. Do not share it. A new link replaces the previous one."
+
+msgid "eders.login_opening"
+msgstr "Opening Eders…"
+
+msgid "eders.login_expired"
+msgstr "This link has expired or has already been used. Get a new one using the button in the bot notification."
+
+msgid "eders.login_javascript"
+msgstr "Enable JavaScript in your browser to log in."
+
+msgid "eders.login_obis_required"
+msgstr "Log in to OBIS in the bot settings first, then get a new Eders link."
+
+msgid "eders.login_failed"
+msgstr "Quick login is unavailable right now. Try later with a new link from the bot."
+
 msgid "gamification.phoenix.name"
 msgstr "I'll be back"
 
 msgid "gamification.phoenix.description"
-msgstr "Pass a course with a positive grade after previously receiving F1 or FF in it."
+msgstr "Pass a course with a positive grade after previously receiving FD, F1 or FF in it."
 
 msgid "gamification.stability.name"
 msgstr "Stability"
@@ -1215,10 +1239,10 @@ msgid "schedule.change_courses"
 msgstr "📚 Change courses"
 
 msgid "schedule.mini_app"
-msgstr "📱 Choose courses in Mini App"
+msgstr "📱 Choose courses"
 
 msgid "settings.mini_app"
-msgstr "📱 Settings in Mini App"
+msgstr "📱 Settings"
 
 msgid "miniapp.ui.title"
 msgstr "Settings"
@@ -1861,7 +1885,7 @@ msgid "schedule.query_too_short_retry"
 msgstr "The query is too short. Tap the search button below and try again."
 
 msgid "schedule.free_time.mini_app"
-msgstr "👥 Common free time (Mini App)"
+msgstr "👥 Common free time"
 
 msgid "schedule.change_room"
 msgstr "🚪 Room: {previous} → {new}"

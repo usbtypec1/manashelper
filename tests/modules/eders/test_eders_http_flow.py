@@ -199,8 +199,8 @@ async def test_obis_http_credentials_grades_and_attendance_run_through_real_clie
     attendance = (await service.attendance.execute(user.id)).lessons
     assert grades[0].exams[0].score == "80" and grades[0].lesson_code == "MATH"
     assert attendance[0].theory_skips_percentage == 12.5 and attendance[0].practice_skips_percentage == 6.25
-    assert await service.results.get_exam_grades(user.id) == grades
-    assert await service.results.get_attendance(user.id) == attendance
+    assert (await service.results.get_exam_grades(user.id)).lessons == grades
+    assert (await service.results.get_attendance(user.id)).lessons == attendance
     assert len(transports) == 4
     assert transports[2].paths == [("GET", "/vs-ders/taken-grades")]
     assert transports[3].paths == [("GET", "/vs-ders/taken-lessons")]
@@ -474,3 +474,46 @@ async def test_http_both_login_paths_fail_without_replacing_previous_snapshot(se
     assert await service.get_snapshot(user.id) == previous
     assert len(transports) == 3
     assert not any(path == "/lib/ajax/service.php" for transport in transports for _, path in transport.paths)
+
+
+async def test_browser_login_hands_native_key_to_separate_browser_without_exposing_obis_session(session, monkeypatch):
+    from urllib.parse import urlsplit
+
+    from pydantic import SecretStr
+
+    from manashelper.core.config import Settings
+    from manashelper.localization.locale import Locale
+    from manashelper.modules.eders.application.browser_login import EdersLoginTokens
+    from manashelper.modules.eders.application.use_cases.issue_eders_login_link import IssueEdersLoginLinkUseCase
+    from manashelper.modules.eders.application.use_cases.redeem_eders_login_link import RedeemEdersLoginLinkUseCase
+    from manashelper.modules.eders.errors import InvalidEdersLoginLinkError
+
+    transports = install_client(monkeypatch, "browser-login")
+    crypto = CryptoService(SimpleNamespace(obis_encryption_key=base64.b64encode(bytes(range(32))).decode()))
+    user = User(
+        id=975120,
+        full_name="Browser fixture",
+        student_number="fake-student",
+        encrypted_password=crypto.encrypt("fake-password"),
+    )
+    session.add(user)
+    await session.flush()
+    credentials = ObisCredentialsRepository(session)
+    obis = build_obis(session, ObisClient(), crypto)
+    await obis.sessions.save(user.id, {"obis": "fixture"})
+    tokens = EdersLoginTokens()
+    config = Settings.model_construct(public_url="https://bot.example.com", eders_password=SecretStr("fake-password"))
+    link = await IssueEdersLoginLinkUseCase(credentials, tokens, config).execute(user.id, Locale.RU)
+    redeem = RedeemEdersLoginLinkUseCase(credentials, tokens, make_eders_client(), obis.access)
+    destination = await redeem.execute(urlsplit(link).fragment)
+    assert transports[0].paths == [("GET", "/site/eders")]
+    assert await obis.sessions.get_cookies(user.id) == {"obis": "rotated"}
+    with pytest.raises(InvalidEdersLoginLinkError):
+        await redeem.execute(urlsplit(link).fragment)
+    async with eders_client.new_http_client() as browser:
+        response = await browser.get(destination)
+        assert response.status_code == 200 and response.url.path == "/my/index.php"
+        assert browser.cookies.get("MoodleSession") == "fixture"
+        assert browser.cookies.get("obis") is None
+        assert (await browser.get(destination)).status_code == 401
+    assert transports[1].paths[:2] == [("GET", "/auth/userkey/login.php"), ("GET", "/my/index.php")]

@@ -1136,11 +1136,35 @@ msgstr "Кыл учунда"
 msgid "gamification.thin_ice.description"
 msgstr "Бир семестрде беш башка сабактын теориясынан же практикасынан кеминде 18,75% калтыр."
 
+msgid "obis.last_updated"
+msgstr "Жаңыртылган убактысы: {updated_at} (Бишкек)"
+
+msgid "eders.quick_login"
+msgstr "⚡ Edersʼке кирүү"
+
+msgid "eders.login_link_note"
+msgstr "Бул жеке бир жолку шилтеме 60 секунд жарактуу. Башкаларга бербе. Жаңы шилтеме мурункусун алмаштырат."
+
+msgid "eders.login_opening"
+msgstr "Eders ачылууда…"
+
+msgid "eders.login_expired"
+msgstr "Шилтеменин мөөнөтү бүттү же колдонулган. Боттун билдирүүсүндөгү баскычтан жаңысын ал."
+
+msgid "eders.login_javascript"
+msgstr "Кирүү үчүн браузерде JavaScriptʼти иштет."
+
+msgid "eders.login_obis_required"
+msgstr "Адегенде боттун жөндөөлөрүндө OBISʼке кир, андан кийин жаңы Eders шилтемесин ал."
+
+msgid "eders.login_failed"
+msgstr "Ыкчам кирүү азыр жеткиликсиз. Кийинчерээк боттон жаңы шилтеме алып көр."
+
 msgid "gamification.phoenix.name"
 msgstr "I'll be back"
 
 msgid "gamification.phoenix.description"
-msgstr "Мурда F1 же FF алган сабагыңды оң баа менен жап."
+msgstr "Мурда FD, F1 же FF алган сабагыңды оң баа менен жап."
 
 msgid "gamification.stability.name"
 msgstr "Туруктуулук"
@@ -1218,10 +1242,10 @@ msgid "schedule.change_courses"
 msgstr "📚 Сабактарды өзгөртүү"
 
 msgid "schedule.mini_app"
-msgstr "📱 Mini Appʼтан сабактарды тандоо"
+msgstr "📱 Сабактарды тандоо"
 
 msgid "settings.mini_app"
-msgstr "📱 Mini Appʼтагы жөндөөлөр"
+msgstr "📱 Жөндөөлөр"
 
 msgid "miniapp.ui.title"
 msgstr "Жөндөөлөр"
@@ -1864,7 +1888,7 @@ msgid "schedule.query_too_short_retry"
 msgstr "Суроо өтө кыска. Төмөнкү издөө баскычын басып, кайра аракет кылыңыз."
 
 msgid "schedule.free_time.mini_app"
-msgstr "👥 Жалпы бош убакыт (Mini App)"
+msgstr "👥 Жалпы бош убакыт"
 
 msgid "schedule.change_room"
 msgstr "🚪 Аудитория: {previous} → {new}"

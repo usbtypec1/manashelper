@@ -1,7 +1,7 @@
 import logging
 import re
 from datetime import UTC, datetime
-from urllib.parse import parse_qs, urljoin, urlsplit
+from urllib.parse import parse_qs, urlencode, urljoin, urlsplit
 
 import httpx
 from bs4 import BeautifulSoup
@@ -28,6 +28,26 @@ COURSES_METHOD = "core_course_get_enrolled_courses_by_timeline_classification"
 COMPLETION_METHOD = "core_completion_update_activity_completion_status_manually"
 LOGIN_URL = f"{EDERS_BASE_URL}/login/index.php"
 COURSES_URL = f"{EDERS_BASE_URL}/my/courses.php"
+USERKEY_PATH = "/auth/userkey/login.php"
+
+
+def browser_sso_url(value: str) -> str:
+    """Only return Eders' native login endpoint, dropping unrelated redirect parameters."""
+    try:
+        url = urlsplit(urljoin(OBIS_BASE_URL, value))
+    except ValueError:
+        raise EdersUnsafeUrlError("Malformed browser SSO destination") from None
+    keys = parse_qs(url.query, keep_blank_values=True).get("key", [])
+    if (
+        url.scheme != "https"
+        or url.netloc != "eders.manas.edu.kg"
+        or url.path != USERKEY_PATH
+        or url.fragment
+        or len(keys) != 1
+        or not keys[0]
+    ):
+        raise EdersUnsafeUrlError("Invalid browser SSO destination")
+    return f"{EDERS_BASE_URL}{USERKEY_PATH}?{urlencode({'key': keys[0]})}"
 
 
 def new_http_client() -> httpx.AsyncClient:
@@ -95,6 +115,41 @@ def _sesskey(html: str) -> str:
 class EdersClient:
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
+
+    async def create_browser_login_url(self, cookies: dict[str, str]) -> str:
+        if not self._settings.eders_enabled:
+            raise EdersFetchError("Eders is disabled")
+        async with new_http_client() as client:
+            for name, value in cookies.items():
+                client.cookies.set(name, value, domain=OBIS_HOST)
+            try:
+                # The browser must consume the native key and receive its own Moodle
+                # cookies. Following this redirect here would spend the key on the bot.
+                response = await client.get(f"{OBIS_BASE_URL}/site/eders", follow_redirects=False)
+                if response.is_redirect:
+                    destination = response.headers.get("location", "")
+                    redirected = urlsplit(urljoin(OBIS_BASE_URL, destination))
+                    if redirected.hostname == OBIS_HOST and redirected.path.rstrip("/") == "/site/login":
+                        raise ObisSessionExpiredError
+                    return browser_sso_url(destination)
+                response.raise_for_status()
+                soup = BeautifulSoup(response.text, "lxml")
+                if soup.select_one("input[name='LoginForm[username]']"):
+                    raise ObisSessionExpiredError
+                for link in soup.select("a[href]"):
+                    href = link.get("href")
+                    if isinstance(href, str) and urlsplit(href).path == USERKEY_PATH:
+                        return browser_sso_url(href)
+                raise EdersFetchError("Missing browser SSO link")
+            except ValueError:
+                raise EdersUnsafeUrlError("Malformed browser SSO response") from None
+            finally:
+                cookies.clear()
+                cookies.update(
+                    (cookie.name, cookie.value)
+                    for cookie in client.cookies.jar
+                    if cookie.domain.lstrip(".") == OBIS_HOST and cookie.value is not None
+                )
 
     async def login(self, client: httpx.AsyncClient, student_number: str) -> str:
         password = self._settings.eders_password
