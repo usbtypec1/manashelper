@@ -1934,3 +1934,105 @@ msgstr "正在登录 OBIS…"
 
 msgid "obis.captcha_auto_fallback"
 msgstr "自动登录无法可靠识别此验证码。请输入图片中的文字以继续。"
+
+msgid "theme.gta_vi"
+msgstr "🌴 GTA VI"
+
+msgid "gta_vi.common.welcome"
+msgstr "🌴 欢迎来到海滨城。你的校园故事从这里开始。"
+
+msgid "gta_vi.menu.food"
+msgstr "🍔 校园食堂"
+
+msgid "gta_vi.menu.study"
+msgstr "🗺 校园任务"
+
+msgid "gta_vi.menu.schedule"
+msgstr "📍 上课路线"
+
+msgid "gta_vi.menu.marketplace"
+msgstr "🏷 城市集市"
+
+msgid "gta_vi.menu.settings"
+msgstr "🎛 设置面板"
+
+msgid "gta_vi.menu.achievements"
+msgstr "🏆 校园成就"
+
+msgid "gta_vi.theme.selected"
+msgstr "🌴 已启用主题：{theme}"
+
+msgid "gta_vi.food.day_selection_title"
+msgstr "🍔 食堂站"
+
+msgid "gta_vi.food.choose_day"
+msgstr "📍 选一天去食堂看看。"
+
+msgid "gta_vi.food.menu_header"
+msgstr "🍔 食堂站 · {weekday}，{date}"
+
+msgid "gta_vi.food.dish"
+msgstr "▪️ {index}. {name} · <b>{calories}</b> 千卡"
+
+msgid "gta_vi.food.rich_dish"
+msgstr "▪️ {index}. {name} · {calories} 千卡"
+
+msgid "gta_vi.food.total_calories"
+msgstr "⛽ 上路补给：{calories} 千卡"
+
+msgid "gta_vi.food.rating"
+msgstr "⭐ 食堂口碑：{average}（{count}）"
+
+msgid "gta_vi.food.rating_thanks"
+msgstr "📻 评分已收到，感谢你的反馈！"
+
+msgid "gta_vi.food.open_menu"
+msgstr "🍔 查看食堂菜单"
+
+msgid "gta_vi.food.enjoy_meal"
+msgstr "🌴 在这里歇一会儿，祝你用餐愉快！"
+
+msgid "gta_vi.schedule.no_classes"
+msgstr "🌴 今天的路线没有课程。"
+
+msgid "gta_vi.schedule.changes_header"
+msgstr "📻 <b>校园广播：课表有变</b>"
+
+msgid "gta_vi.obis.new_grade"
+msgstr "📻 校园广播：「{lesson}」有新成绩\n{exam}：{score}"
+
+msgid "gta_vi.obis.skip_recorded"
+msgstr "📻 考勤简报：「{lesson}」有一次缺勤（{skip_type}）"
+
+msgid "gta_vi.eders.reminder_day"
+msgstr "⏳ 校园任务：距离 Eders 截止还有一天"
+
+msgid "gta_vi.eders.reminder_two_hours"
+msgstr "⏳ 校园任务：距离 Eders 截止还有两小时"
+
+msgid "gta_vi.eders.opened_notification"
+msgstr "📻 校园广播：Eders 有新开放的活动"
+
+msgid "gta_vi.eders.changed_notification"
+msgstr "📻 校园广播：Eders 截止时间有变"
+
+msgid "gta_vi.eders.material_new"
+msgstr "📻 校园广播：新学习资料"
+
+msgid "gta_vi.eders.material_changed"
+msgstr "📻 校园广播：学习资料已更新"
+
+msgid "gta_vi.miniapp.ui.title"
+msgstr "🌴 校园控制面板"
+
+msgid "gta_vi.miniapp.ui.free_time"
+msgstr "🗺 共同空闲时段"
+
+msgid "gta_vi.miniapp.ui.saved"
+msgstr "📻 设置已保存"
+
+msgid "gta_vi.gamification.ui.collection"
+msgstr "🏆 我的成就"
+
+msgid "gta_vi.gamification.ui.leaderboard"
+msgstr "🏁 校园排行榜"

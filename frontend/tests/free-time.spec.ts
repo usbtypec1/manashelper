@@ -31,9 +31,11 @@ test('common free time follows the URL selection, catalog additions and reloads'
 })
 
 test('common free time starts from tracked courses and explains an empty selection', async ({ page, request }) => {
-  const fixture = await (await request.get('/_fixture/init-data?preferences=1&locale=en')).json()
+  const fixture = await (await request.get('/_fixture/init-data?preferences=1&locale=en&theme=gta_vi')).json()
   await mockTelegram(page, fixture)
   await page.goto('/app/free-time')
+  await expect(page.locator('html')).toHaveAttribute('data-bot-theme', 'gta_vi')
+  await expect(page.getByRole('heading', { name: '🗺 Common free time', exact: true })).toBeVisible()
   await expect(page.getByText('Add at least one course.', { exact: true })).toBeVisible()
   await expect(page.locator('article.day')).toHaveCount(0)
 })

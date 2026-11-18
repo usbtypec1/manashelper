@@ -1945,3 +1945,105 @@ msgstr "OBIS системасына кирүүдө…"
 
 msgid "obis.captcha_auto_fallback"
 msgstr "Автоматтык кирүү үчүн капчаны так таануу мүмкүн болгон жок. Сүрөттөгү текстти киргиз."
+
+msgid "theme.gta_vi"
+msgstr "🌴 GTA VI"
+
+msgid "gta_vi.common.welcome"
+msgstr "🌴 Шаарга кош келдиң. Кампустагы окуяң ушул жерден башталат."
+
+msgid "gta_vi.menu.food"
+msgstr "🍔 Ашкана"
+
+msgid "gta_vi.menu.study"
+msgstr "🗺 Окуу тапшырмалары"
+
+msgid "gta_vi.menu.schedule"
+msgstr "📍 Сабактардын маршруту"
+
+msgid "gta_vi.menu.marketplace"
+msgstr "🏷 Шаар базары"
+
+msgid "gta_vi.menu.settings"
+msgstr "🎛 Жөндөөлөр панели"
+
+msgid "gta_vi.menu.achievements"
+msgstr "🏆 Кампустагы жетишкендиктер"
+
+msgid "gta_vi.theme.selected"
+msgstr "🌴 Тема иштетилди: {theme}"
+
+msgid "gta_vi.food.day_selection_title"
+msgstr "🍔 Ашкана аялдамасы"
+
+msgid "gta_vi.food.choose_day"
+msgstr "📍 Ашканага бара турган күндү танда."
+
+msgid "gta_vi.food.menu_header"
+msgstr "🍔 Ашкана аялдамасы · {weekday}, {date}"
+
+msgid "gta_vi.food.dish"
+msgstr "▪️ {index}. {name} · <b>{calories}</b> ккал"
+
+msgid "gta_vi.food.rich_dish"
+msgstr "▪️ {index}. {name} · {calories} ккал"
+
+msgid "gta_vi.food.total_calories"
+msgstr "⛽ Жолго энергия: {calories} ккал"
+
+msgid "gta_vi.food.rating"
+msgstr "⭐ Ашкананын рейтинги: {average} ({count})"
+
+msgid "gta_vi.food.rating_thanks"
+msgstr "📻 Бааң кабыл алынды. Пикириң үчүн рахмат!"
+
+msgid "gta_vi.food.open_menu"
+msgstr "🍔 Ашкананын менюсун ачуу"
+
+msgid "gta_vi.food.enjoy_meal"
+msgstr "🌴 Бир аз тыныгып ал. Тамагың таттуу болсун!"
+
+msgid "gta_vi.schedule.no_classes"
+msgstr "🌴 Бүгүн маршрутта сабак жок."
+
+msgid "gta_vi.schedule.changes_header"
+msgstr "📻 <b>Кампус радиосу: жадыбал өзгөрдү</b>"
+
+msgid "gta_vi.obis.new_grade"
+msgstr "📻 Кампус радиосу: «{lesson}» сабагынан жаңы баа\n{exam}: {score}"
+
+msgid "gta_vi.obis.skip_recorded"
+msgstr "📻 Катышуу маалыматы: «{lesson}» сабагында калтырган сабак катталды ({skip_type})"
+
+msgid "gta_vi.eders.reminder_day"
+msgstr "⏳ Окуу тапшырмасы: Eders мөөнөтүнө бир күн калды"
+
+msgid "gta_vi.eders.reminder_two_hours"
+msgstr "⏳ Окуу тапшырмасы: Eders мөөнөтүнө эки саат калды"
+
+msgid "gta_vi.eders.opened_notification"
+msgstr "📻 Кампус радиосу: Eders’те иш-аракет ачылды"
+
+msgid "gta_vi.eders.changed_notification"
+msgstr "📻 Кампус радиосу: Eders мөөнөтү өзгөрдү"
+
+msgid "gta_vi.eders.material_new"
+msgstr "📻 Кампус радиосу: жаңы материал"
+
+msgid "gta_vi.eders.material_changed"
+msgstr "📻 Кампус радиосу: материал жаңырды"
+
+msgid "gta_vi.miniapp.ui.title"
+msgstr "🌴 Кампус панели"
+
+msgid "gta_vi.miniapp.ui.free_time"
+msgstr "🗺 Жадыбалдагы жалпы бош убакыт"
+
+msgid "gta_vi.miniapp.ui.saved"
+msgstr "📻 Жөндөөлөр сакталды"
+
+msgid "gta_vi.gamification.ui.collection"
+msgstr "🏆 Менин жетишкендиктерим"
+
+msgid "gta_vi.gamification.ui.leaderboard"
+msgstr "🏁 Кампустун рейтинги"

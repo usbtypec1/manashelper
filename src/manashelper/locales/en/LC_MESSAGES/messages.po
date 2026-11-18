@@ -1942,3 +1942,105 @@ msgstr "Signing in to OBIS…"
 
 msgid "obis.captcha_auto_fallback"
 msgstr "Automatic sign-in could not recognize this CAPTCHA confidently. Enter the text from the image to continue."
+
+msgid "theme.gta_vi"
+msgstr "🌴 GTA VI"
+
+msgid "gta_vi.common.welcome"
+msgstr "🌴 Welcome to the city. Your campus story starts here."
+
+msgid "gta_vi.menu.food"
+msgstr "🍔 Cafeteria"
+
+msgid "gta_vi.menu.study"
+msgstr "🗺 Campus missions"
+
+msgid "gta_vi.menu.schedule"
+msgstr "📍 Class route"
+
+msgid "gta_vi.menu.marketplace"
+msgstr "🏷 City market"
+
+msgid "gta_vi.menu.settings"
+msgstr "🎛 Control panel"
+
+msgid "gta_vi.menu.achievements"
+msgstr "🏆 Campus achievements"
+
+msgid "gta_vi.theme.selected"
+msgstr "🌴 Theme activated: {theme}"
+
+msgid "gta_vi.food.day_selection_title"
+msgstr "🍔 Cafeteria stop"
+
+msgid "gta_vi.food.choose_day"
+msgstr "📍 Pick a day for your cafeteria stop."
+
+msgid "gta_vi.food.menu_header"
+msgstr "🍔 Cafeteria stop · {weekday}, {date}"
+
+msgid "gta_vi.food.dish"
+msgstr "▪️ {index}. {name} · <b>{calories}</b> kcal"
+
+msgid "gta_vi.food.rich_dish"
+msgstr "▪️ {index}. {name} · {calories} kcal"
+
+msgid "gta_vi.food.total_calories"
+msgstr "⛽ Energy for the road: {calories} kcal"
+
+msgid "gta_vi.food.rating"
+msgstr "⭐ Cafeteria reviews: {average} ({count})"
+
+msgid "gta_vi.food.rating_thanks"
+msgstr "📻 Rating received. Thanks for the report!"
+
+msgid "gta_vi.food.open_menu"
+msgstr "🍔 Open the cafeteria menu"
+
+msgid "gta_vi.food.enjoy_meal"
+msgstr "🌴 Take a pit stop. Enjoy your meal!"
+
+msgid "gta_vi.schedule.no_classes"
+msgstr "🌴 No classes on the route today."
+
+msgid "gta_vi.schedule.changes_header"
+msgstr "📻 <b>Campus radio: timetable changes</b>"
+
+msgid "gta_vi.obis.new_grade"
+msgstr "📻 Campus radio: new grade for «{lesson}»\n{exam}: {score}"
+
+msgid "gta_vi.obis.skip_recorded"
+msgstr "📻 Attendance report: an absence in «{lesson}» ({skip_type})"
+
+msgid "gta_vi.eders.reminder_day"
+msgstr "⏳ Campus mission: one day until the Eders deadline"
+
+msgid "gta_vi.eders.reminder_two_hours"
+msgstr "⏳ Campus mission: two hours until the Eders deadline"
+
+msgid "gta_vi.eders.opened_notification"
+msgstr "📻 Campus radio: an Eders activity is now open"
+
+msgid "gta_vi.eders.changed_notification"
+msgstr "📻 Campus radio: the Eders deadline has changed"
+
+msgid "gta_vi.eders.material_new"
+msgstr "📻 Campus radio: new material"
+
+msgid "gta_vi.eders.material_changed"
+msgstr "📻 Campus radio: material updated"
+
+msgid "gta_vi.miniapp.ui.title"
+msgstr "🌴 Campus control panel"
+
+msgid "gta_vi.miniapp.ui.free_time"
+msgstr "🗺 Common free time"
+
+msgid "gta_vi.miniapp.ui.saved"
+msgstr "📻 Settings saved"
+
+msgid "gta_vi.gamification.ui.collection"
+msgstr "🏆 My achievements"
+
+msgid "gta_vi.gamification.ui.leaderboard"
+msgstr "🏁 Campus leaderboard"

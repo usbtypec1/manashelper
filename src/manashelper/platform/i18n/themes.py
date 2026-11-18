@@ -2,6 +2,8 @@ from collections.abc import Callable
 
 from manashelper.localization.theme import Theme
 
+_THEME_SUFFIXES = {Theme.PICKME: "🎀", Theme.DEADINSIDE: "🥀", Theme.GTA_VI: "🌴"}
+
 # Decorate interface text before dynamic data is interpolated; keep user content and status values intact.
 _HALLOWEEN_ICONS = {
     "common.welcome": ("", "🎃"),
@@ -73,8 +75,10 @@ _HALLOWEEN_ICONS = {
 def decorate_translation(key: str, text: str, theme: Theme) -> str:
     # Keep factual fragments (dates, grades, submission states, achievement rules)
     # readable; theme all other interface copy, including validation and empty states.
+    suffix = _THEME_SUFFIXES.get(theme)
     if (
-        theme in {Theme.PICKME, Theme.DEADINSIDE}
+        suffix is not None
+        and not (theme == Theme.GTA_VI and key.startswith(("miniapp.ui.", "gamification.ui.")))
         and key.startswith(
             (
                 "common.",
@@ -106,6 +110,7 @@ def decorate_translation(key: str, text: str, theme: Theme) -> str:
             "theme.halloween",
             "theme.pickme",
             "theme.deadinside",
+            "theme.gta_vi",
             "schedule.course_year",
             "schedule.search_course",
             "schedule.search_weekday",
@@ -155,7 +160,7 @@ def decorate_translation(key: str, text: str, theme: Theme) -> str:
             "miniapp.ui.sunday",
         }
     ):
-        return f"{text} {'🥀' if theme == Theme.DEADINSIDE else '🎀'}"
+        return f"{text} {suffix}"
     if theme == Theme.HALLOWEEN and key in _HALLOWEEN_ICONS:
         original, replacement = _HALLOWEEN_ICONS[key]
         if original:
