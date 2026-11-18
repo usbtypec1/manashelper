@@ -23,7 +23,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.localization.theme import Theme
 from manashelper.modules.food_menu.application.daily_menu import DailyMenuModel, DailyMenuQuery, DishModel
+from manashelper.modules.food_menu.application.dish_rating import DishRatingQuery
 from manashelper.modules.food_menu.application.use_cases.rate_daily_menu import RateDailyMenuUseCase
+from manashelper.modules.food_menu.application.use_cases.rate_dish import RateDishUseCase
 from manashelper.modules.food_menu.infrastructure.models.daily_menu import DailyMenu
 from manashelper.modules.food_menu.infrastructure.models.daily_menu_rating import DailyMenuRating
 from manashelper.modules.food_menu.infrastructure.models.dish import Dish
@@ -31,26 +33,28 @@ from manashelper.modules.food_menu.infrastructure.repositories.daily_menu import
 from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_rating import (
     DailyMenuRatingRepository,
 )
+from manashelper.modules.food_menu.infrastructure.repositories.dish_rating import DishRatingRepository
 from manashelper.modules.food_menu.presentation.callbacks import FoodMenuOpenCallback, FoodMenuRatingCallback
 from manashelper.modules.food_menu.presentation.food_menu_formatter import (
     build_daily_menu_rich_message,
     refresh_daily_menu_rating,
 )
 from manashelper.modules.food_menu.presentation.keyboards.food_menu import (
-    build_food_menu_settings_buttons,
+    build_food_navigation_buttons,
     build_menu_rating_buttons,
 )
 from manashelper.modules.food_menu.presentation.routers.food_menu import on_food_menu_rating_callback, send_daily_menu
 from manashelper.modules.food_menu.presentation.sender import TelegramFoodMenuSender
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.platform.i18n.catalog import i18n
-from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from tests.modules.food_menu.application_factories import build_daily_menu_service
 from tests.modules.users.application_factories import build_locale_service
 
 
 def _service(session: AsyncSession) -> DailyMenuQuery:
-    return build_daily_menu_service(DailyMenuRepository(session), DailyMenuRatingRepository(session))
+    return build_daily_menu_service(
+        DailyMenuRepository(session), DailyMenuRatingRepository(session), DishRatingRepository(session)
+    )
 
 
 async def _seed(session: AsyncSession) -> tuple[DailyMenu, DailyMenu]:
@@ -126,7 +130,7 @@ def _received(menu: DailyMenuModel, *, broadcast: bool = False) -> RichMessage:
         outgoing = build_daily_menu_rich_message(
             menu,
             build_menu_rating_buttons(menu.id, menu.user_rating),
-            build_food_menu_settings_buttons() if broadcast else [],
+            build_food_navigation_buttons() if broadcast else [],
         )
 
     def convert(block, path):
@@ -167,7 +171,9 @@ def test_rich_message_has_only_one_rating_row_for_the_whole_menu_and_preserves_p
         outgoing = refresh_daily_menu_rating(received, menu, build_menu_rating_buttons(menu.id, menu.user_rating))
         bot = Bot(token="123456:development-placeholder")
         payload = bot.session.prepare_value(outgoing, bot=bot, files={}, _dumps_json=False)
-        assert payload["blocks"][2]["text"] == "1. Soup <b>& rice — 150 kcal\n2. Salad — 100 kcal"
+        assert payload["blocks"][2]["text"] == (
+            "1. Soup <b>& rice — 150 kcal · No ratings yet\n2. Salad — 100 kcal · No ratings yet"
+        )
         assert [block["photo"]["media"] for block in payload["blocks"][1]["blocks"]] == [
             "cached-photo-1-0",
             "cached-photo-1-1",
@@ -271,8 +277,6 @@ async def test_menu_delivery_and_broadcast_keep_ratings_without_auto_delete_cont
     ]
     assert [row.buttons[0].callback_data for row in requested_settings] == [
         FoodMenuOpenCallback().pack(),
-        SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS).pack(),
-        "navigation:main",
     ]
 
     bot = AsyncMock()
@@ -290,19 +294,46 @@ async def test_menu_delivery_and_broadcast_keep_ratings_without_auto_delete_cont
     assert len(rating_rows) == 1
     assert all(button.style is None for button in rating_rows[0].buttons)
     broadcast_settings = [block for block in rich.blocks if block.type == "buttons" and len(block.buttons) != 5]
-    assert [len(row.buttons) for row in broadcast_settings] == [1]
-    assert (
-        broadcast_settings[0].buttons[0].callback_data
-        == SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS).pack()
-    )
+    assert not broadcast_settings
 
 
 async def test_only_first_rating_of_each_menu_counts_as_activity(session: AsyncSession) -> None:
     first, second = await _seed(session)
     activity = AsyncMock()
-    rate = RateDailyMenuUseCase(DailyMenuRepository(session), DailyMenuRatingRepository(session), activity)
+    rate = RateDailyMenuUseCase(
+        DailyMenuRepository(session), DailyMenuRatingRepository(session), activity, DishRatingRepository(session)
+    )
     await rate.execute(900_001, first.id, 5)
     changed = await rate.execute(900_001, first.id, 2)
     await rate.execute(900_001, second.id, 4)
     assert changed.ratings_count == 1 and changed.average_rating == 2
     assert activity.execute.await_args_list == [((900_001, "rating"),), ((900_001, "rating"),)]
+
+
+async def test_dish_rating_prioritizes_fewer_votes_and_keeps_first_score(session: AsyncSession) -> None:
+    first, _ = await _seed(session)
+    popular, unrated = first.dishes
+    ratings = DishRatingRepository(session)
+    query = DishRatingQuery(ratings)
+    awards = AsyncMock()
+    rate = RateDishUseCase(ratings, query, awards)
+    await ratings.add_score(popular.id, 900_002, 3)
+
+    candidate = await query.next_unrated(900_001)
+    assert candidate is not None and candidate.id == unrated.id
+    with pytest.raises(ValueError):
+        await rate.execute(900_001, unrated.id, 6)
+    candidate = await rate.execute(900_001, unrated.id, 5)
+    assert candidate is not None and candidate.id == popular.id
+    await rate.execute(900_001, unrated.id, 1)
+    assert await rate.execute(900_001, popular.id, 5) is None
+    awards.execute.assert_not_awaited()
+
+    menu = await _service(session).get_daily_menu_by_date(first.date)
+    assert {dish.id: (dish.average_rating, dish.ratings_count) for dish in menu.dishes} == {
+        popular.id: (4.0, 2),
+        unrated.id: (5.0, 1),
+    }
+    with i18n.context(), i18n.use_locale("en"):
+        rich = build_daily_menu_rich_message(menu, build_menu_rating_buttons(menu.id), [])
+    assert any("⭐ 4.0/5 (2)" in str(getattr(block, "text", "")) for block in rich.blocks)

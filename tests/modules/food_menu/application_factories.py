@@ -21,26 +21,18 @@ from manashelper.modules.food_menu.application.use_cases.toggle_food_menu_meal_f
 from manashelper.modules.food_menu.application.use_cases.toggle_food_menu_weekday import ToggleFoodMenuWeekdayUseCase
 
 
-def build_daily_menu_service(daily_menu_repository, daily_menu_rating_repository):
+def build_daily_menu_service(daily_menu_repository, daily_menu_rating_repository, dish_ratings):
     query = DailyMenuQuery(daily_menu_repository)
+    get_daily_menu = GetDailyMenuUseCase(daily_menu_repository, daily_menu_rating_repository, AsyncMock(), dish_ratings)
     return SimpleNamespace(
         get_available_dates=query.get_available_dates,
-        get_daily_menu_by_date=GetDailyMenuUseCase(
-            daily_menu_repository=daily_menu_repository,
-            daily_menu_rating_repository=daily_menu_rating_repository,
-            activity=AsyncMock(),
-        ).execute,
-        get_daily_menu_by_skipping_days=GetDailyMenuByOffsetUseCase(
-            get_daily_menu=GetDailyMenuUseCase(
-                daily_menu_repository=daily_menu_repository,
-                daily_menu_rating_repository=daily_menu_rating_repository,
-                activity=AsyncMock(),
-            )
-        ).execute,
+        get_daily_menu_by_date=get_daily_menu.execute,
+        get_daily_menu_by_skipping_days=GetDailyMenuByOffsetUseCase(get_daily_menu).execute,
         set_rating=RateDailyMenuUseCase(
             daily_menu_repository=daily_menu_repository,
             daily_menu_rating_repository=daily_menu_rating_repository,
             activity=AsyncMock(),
+            dish_ratings=dish_ratings,
         ).execute,
     )
 

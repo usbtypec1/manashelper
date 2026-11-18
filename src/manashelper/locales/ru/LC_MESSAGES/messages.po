@@ -2044,3 +2044,24 @@ msgstr "🏆 Мои достижения"
 
 msgid "gta_vi.gamification.ui.leaderboard"
 msgstr "🏁 Рейтинг кампуса"
+
+msgid "food.rate_dishes"
+msgstr "Оценить блюда"
+
+msgid "food.rate_dish_prompt"
+msgstr "Оцени это блюдо от 1 до 5."
+
+msgid "food.dish_no_ratings"
+msgstr "Пока нет оценок"
+
+msgid "food.dish_ratings_complete"
+msgstr "Не осталось блюд без твоей оценки."
+
+msgid "food.dish_rating_unavailable"
+msgstr "Эта оценка блюда недоступна."
+
+msgid "gamification.dish_completion.name"
+msgstr "Коллекционер вкусов"
+
+msgid "gamification.dish_completion.description"
+msgstr "Оцени все блюда в каталоге."

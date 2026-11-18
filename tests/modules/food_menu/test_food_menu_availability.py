@@ -10,6 +10,7 @@ from manashelper.modules.food_menu.infrastructure.repositories.daily_menu import
 from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_rating import (
     DailyMenuRatingRepository,
 )
+from manashelper.modules.food_menu.infrastructure.repositories.dish_rating import DishRatingRepository
 from manashelper.platform.i18n.catalog import i18n
 from tests.modules.food_menu.application_factories import build_daily_menu_service
 
@@ -32,7 +33,9 @@ async def test_availability_includes_only_published_dates_in_five_day_window_and
     ]
     session.add_all(menus)
     await session.flush()
-    service = build_daily_menu_service(DailyMenuRepository(session), DailyMenuRatingRepository(session))
+    service = build_daily_menu_service(
+        DailyMenuRepository(session), DailyMenuRatingRepository(session), DishRatingRepository(session)
+    )
     available = await service.get_available_dates()
     assert available.today == today
     assert available.dates == [today + timedelta(days=offset) for offset in (0, 2, 4)]
@@ -43,7 +46,9 @@ async def test_availability_includes_only_published_dates_in_five_day_window_and
 
 async def test_availability_is_empty_when_no_menu_is_published(session: AsyncSession, monkeypatch) -> None:
     monkeypatch.setattr(daily_menu_module, "datetime", _Clock)
-    service = build_daily_menu_service(DailyMenuRepository(session), DailyMenuRatingRepository(session))
+    service = build_daily_menu_service(
+        DailyMenuRepository(session), DailyMenuRatingRepository(session), DishRatingRepository(session)
+    )
     assert (await service.get_available_dates()).dates == []
 
 

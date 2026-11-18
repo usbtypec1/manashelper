@@ -2036,3 +2036,24 @@ msgstr "🏆 我的成就"
 
 msgid "gta_vi.gamification.ui.leaderboard"
 msgstr "🏁 校园排行榜"
+
+msgid "food.rate_dishes"
+msgstr "给菜品评分"
+
+msgid "food.rate_dish_prompt"
+msgstr "请为这道菜打 1 到 5 分。"
+
+msgid "food.dish_no_ratings"
+msgstr "暂无评分"
+
+msgid "food.dish_ratings_complete"
+msgstr "你已评完所有可评分的菜品。"
+
+msgid "food.dish_rating_unavailable"
+msgstr "无法为这道菜评分。"
+
+msgid "gamification.dish_completion.name"
+msgstr "美味收藏家"
+
+msgid "gamification.dish_completion.description"
+msgstr "为目录中的每道菜评分。"

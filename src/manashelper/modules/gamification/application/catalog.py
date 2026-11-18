@@ -8,6 +8,9 @@ class Achievement:
     target: int | float
 
 
+# Add to ACHIEVEMENTS when ready to expose and award it.
+DISH_COMPLETION_ACHIEVEMENT = Achievement("dish_completion", "🍽", 1)
+
 ACHIEVEMENTS = (
     Achievement("night_owl", "🌚", 3),
     Achievement("foodie", "😋", 50),

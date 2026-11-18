@@ -1,6 +1,7 @@
 from dishka import Provider, Scope, provide
 
 from manashelper.modules.food_menu.application.daily_menu import DailyMenuQuery
+from manashelper.modules.food_menu.application.dish_rating import DishRatingQuery
 from manashelper.modules.food_menu.application.food_menu_notification_settings import (
     FoodMenuSettingsQuery,
 )
@@ -14,6 +15,7 @@ from manashelper.modules.food_menu.application.use_cases.enable_food_menu_notifi
 from manashelper.modules.food_menu.application.use_cases.get_daily_menu import GetDailyMenuUseCase
 from manashelper.modules.food_menu.application.use_cases.get_daily_menu_by_offset import GetDailyMenuByOffsetUseCase
 from manashelper.modules.food_menu.application.use_cases.rate_daily_menu import RateDailyMenuUseCase
+from manashelper.modules.food_menu.application.use_cases.rate_dish import RateDishUseCase
 from manashelper.modules.food_menu.application.use_cases.sync_food_menus import SyncFoodMenusUseCase
 from manashelper.modules.food_menu.application.use_cases.toggle_food_menu_meal import ToggleFoodMenuMealUseCase
 from manashelper.modules.food_menu.application.use_cases.toggle_food_menu_meal_for_week import (
@@ -27,6 +29,7 @@ from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_rating
     DailyMenuRatingRepository,
 )
 from manashelper.modules.food_menu.infrastructure.repositories.dish import DishRepository
+from manashelper.modules.food_menu.infrastructure.repositories.dish_rating import DishRatingRepository
 from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notification_settings import (
     FoodMenuNotificationSettingsRepository,
 )
@@ -56,6 +59,9 @@ class FoodMenuProvider(Provider):
     menus = provide(DailyMenuRepository)
     ratings = provide(DailyMenuRatingRepository)
     dishes = provide(DishRepository)
+    dish_ratings = provide(DishRatingRepository)
+    dish_rating_query = provide(DishRatingQuery)
+    rate_dish = provide(RateDishUseCase)
     notification_settings = provide(FoodMenuNotificationSettingsRepository)
     daily_menu = provide(DailyMenuQuery)
     sync = provide(SyncFoodMenusUseCase)

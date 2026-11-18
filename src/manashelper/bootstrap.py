@@ -19,6 +19,7 @@ def load_models() -> None:
     from manashelper.modules.food_menu.infrastructure.models.daily_menu import DailyMenu, daily_menu_dishes
     from manashelper.modules.food_menu.infrastructure.models.daily_menu_rating import DailyMenuRating
     from manashelper.modules.food_menu.infrastructure.models.dish import Dish
+    from manashelper.modules.food_menu.infrastructure.models.dish_rating import DishRating
     from manashelper.modules.food_menu.infrastructure.models.food_menu_notification_settings import (
         FoodMenuNotificationSettings,
     )

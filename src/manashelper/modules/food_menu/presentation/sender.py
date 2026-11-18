@@ -5,7 +5,6 @@ from aiogram.methods import SendRichMessage
 from manashelper.modules.food_menu.application.daily_menu import DailyMenuModel
 from manashelper.modules.food_menu.presentation.food_menu_formatter import build_daily_menu_rich_message
 from manashelper.modules.food_menu.presentation.keyboards.food_menu import (
-    build_food_menu_settings_buttons,
     build_menu_rating_buttons,
 )
 from manashelper.modules.users.application.locale import LocaleQuery
@@ -32,7 +31,7 @@ class TelegramFoodMenuSender:
             rich_message = build_daily_menu_rich_message(
                 daily_menu,
                 build_menu_rating_buttons(daily_menu.id),
-                build_food_menu_settings_buttons(),
+                [],
             )
         await self._outbox.enqueue(
             user_id,
