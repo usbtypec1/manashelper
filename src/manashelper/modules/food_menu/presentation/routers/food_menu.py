@@ -5,17 +5,26 @@ from aiogram import Router
 from aiogram.enums import ChatMemberStatus, ChatType
 from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 from aiogram.filters import Command, CommandObject
-from aiogram.types import CallbackQuery, EphemeralMessageParameters, InputRichBlockButtons, Message, ReplyParameters
+from aiogram.types import CallbackQuery, EphemeralMessageParameters, Message, ReplyParameters
 from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
 from manashelper.core.time import BISHKEK_TZ
-from manashelper.modules.food_menu.application.daily_menu import DailyMenuNotFoundError, DailyMenuQuery
+from manashelper.modules.food_menu.application.daily_menu import (
+    MENU_DAY_BUTTON_LIMIT,
+    DailyMenuNotFoundError,
+    DailyMenuQuery,
+    DishModel,
+)
+from manashelper.modules.food_menu.application.dish_rating import DishRatingQuery
 from manashelper.modules.food_menu.application.use_cases.get_daily_menu import GetDailyMenuUseCase
 from manashelper.modules.food_menu.application.use_cases.get_daily_menu_by_offset import GetDailyMenuByOffsetUseCase
 from manashelper.modules.food_menu.application.use_cases.rate_daily_menu import RateDailyMenuUseCase
+from manashelper.modules.food_menu.application.use_cases.rate_dish import RateDishUseCase
 from manashelper.modules.food_menu.presentation.callbacks import (
     FOOD_MENU_DAY_TO_SKIP_DAYS,
+    DishRatingCallback,
+    DishRatingOpenCallback,
     FoodMenuCallback,
     FoodMenuDateCallback,
     FoodMenuOpenCallback,
@@ -23,12 +32,15 @@ from manashelper.modules.food_menu.presentation.callbacks import (
 )
 from manashelper.modules.food_menu.presentation.food_menu_formatter import (
     build_daily_menu_rich_message,
+    build_dish_rating_prompt,
     build_menu_day_selection,
     build_menu_launcher,
     format_not_found,
     refresh_daily_menu_rating,
 )
 from manashelper.modules.food_menu.presentation.keyboards.food_menu import (
+    build_dish_rating_buttons,
+    build_dish_rating_open_button,
     build_food_navigation_buttons,
     build_menu_day_buttons,
     build_menu_open_button,
@@ -85,10 +97,10 @@ async def _show_day_prompt(
         await _send_menu_launcher(message)
         return
     availability = await daily_menu_query.get_available_dates()
-    day_buttons = build_menu_day_buttons(availability.dates, availability.today)
+    day_buttons = build_menu_day_buttons(availability.dates[:MENU_DAY_BUTTON_LIMIT], availability.today)
     rich_message = build_menu_day_selection(day_buttons, show_usage=show_usage)
-    if message.chat.type == ChatType.PRIVATE and rich_message.blocks is not None:
-        rich_message.blocks.append(InputRichBlockButtons(buttons=build_food_navigation_buttons(private_chat=True)[1:]))
+    if rich_message.blocks is not None:
+        rich_message.blocks.append(build_dish_rating_open_button())
     await message.answer_rich(
         rich_message=rich_message,
         ephemeral_message_parameters=parameters,
@@ -137,7 +149,7 @@ async def send_daily_menu(
         rich_message=build_daily_menu_rich_message(
             daily_menu,
             build_menu_rating_buttons(daily_menu.id, daily_menu.user_rating),
-            build_food_navigation_buttons(private_chat=message.chat.type == ChatType.PRIVATE),
+            build_food_navigation_buttons(),
         ),
         ephemeral_message_parameters=parameters,
         reply_parameters=reply_parameters,
@@ -268,3 +280,39 @@ async def on_food_menu_rating_callback(
         except TelegramAPIError:
             logger.warning("Failed to refresh menu rating message", exc_info=True)
     await callback_query.answer(_("food.rating_thanks"))
+
+
+async def _show_dish_rating(callback_query: CallbackQuery, message: Message, dish: DishModel | None) -> None:
+    parameters, reply_parameters = await _response_parameters(message, callback_query)
+    if dish is None:
+        await message.answer(
+            _("food.dish_ratings_complete"), ephemeral_message_parameters=parameters, reply_parameters=reply_parameters
+        )
+        return
+    await message.answer_rich(
+        rich_message=build_dish_rating_prompt(dish, build_dish_rating_buttons(dish.id)),
+        ephemeral_message_parameters=parameters,
+        reply_parameters=reply_parameters,
+    )
+
+
+@router.callback_query(DishRatingOpenCallback.filter())
+async def on_dish_rating_open(callback_query: CallbackQuery, query: FromDishka[DishRatingQuery]) -> None:
+    if isinstance(callback_query.message, Message):
+        dish = await query.next_unrated(callback_query.from_user.id)
+        await _show_dish_rating(callback_query, callback_query.message, dish)
+    await callback_query.answer()
+
+
+@router.callback_query(DishRatingCallback.filter())
+async def on_dish_rating(
+    callback_query: CallbackQuery, callback_data: DishRatingCallback, rate_dish: FromDishka[RateDishUseCase]
+) -> None:
+    if isinstance(callback_query.message, Message):
+        try:
+            dish = await rate_dish.execute(callback_query.from_user.id, callback_data.dish_id, callback_data.rating)
+        except ValueError:
+            await callback_query.answer(_("food.dish_rating_unavailable"), show_alert=True)
+            return
+        await _show_dish_rating(callback_query, callback_query.message, dish)
+    await callback_query.answer()

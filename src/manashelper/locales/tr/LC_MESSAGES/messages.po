@@ -2043,3 +2043,24 @@ msgstr "🏆 Başarılarım"
 
 msgid "gta_vi.gamification.ui.leaderboard"
 msgstr "🏁 Kampüs sıralaması"
+
+msgid "food.rate_dishes"
+msgstr "Yemekleri değerlendir"
+
+msgid "food.rate_dish_prompt"
+msgstr "Bu yemeğe 1 ile 5 arasında puan ver."
+
+msgid "food.dish_no_ratings"
+msgstr "Henüz puan yok"
+
+msgid "food.dish_ratings_complete"
+msgstr "Puanlamadığın yemek kalmadı."
+
+msgid "food.dish_rating_unavailable"
+msgstr "Bu yemek puanlanamıyor."
+
+msgid "gamification.dish_completion.name"
+msgstr "Lezzet Koleksiyoncusu"
+
+msgid "gamification.dish_completion.description"
+msgstr "Katalogdaki tüm yemekleri puanla."

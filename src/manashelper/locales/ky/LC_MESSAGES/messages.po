@@ -2047,3 +2047,24 @@ msgstr "🏆 Менин жетишкендиктерим"
 
 msgid "gta_vi.gamification.ui.leaderboard"
 msgstr "🏁 Кампустун рейтинги"
+
+msgid "food.rate_dishes"
+msgstr "Тамактарды баалоо"
+
+msgid "food.rate_dish_prompt"
+msgstr "Бул тамакка 1ден 5ке чейин баа бер."
+
+msgid "food.dish_no_ratings"
+msgstr "Азырынча баа жок"
+
+msgid "food.dish_ratings_complete"
+msgstr "Бааланбаган тамак калган жок."
+
+msgid "food.dish_rating_unavailable"
+msgstr "Бул бааны берүү мүмкүн эмес."
+
+msgid "gamification.dish_completion.name"
+msgstr "Даам жыйноочу"
+
+msgid "gamification.dish_completion.description"
+msgstr "Каталогдогу бардык тамактарды баала."

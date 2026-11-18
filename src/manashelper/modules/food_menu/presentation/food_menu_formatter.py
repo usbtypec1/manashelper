@@ -22,7 +22,7 @@ from aiogram.types import (
 from aiogram.utils.i18n import gettext as _
 
 from manashelper.localization.weekdays import weekday_full
-from manashelper.modules.food_menu.application.daily_menu import DailyMenuModel, localized_dish_name
+from manashelper.modules.food_menu.application.daily_menu import DailyMenuModel, DishModel, localized_dish_name
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.html import escape_html
 
@@ -42,6 +42,7 @@ def format_daily_menu(daily_menu: DailyMenuModel) -> str:
             _("food.dish").format(
                 index=index, name=escape_html(localized_dish_name(dish, i18n.current_locale)), calories=dish.calories
             )
+            + _format_dish_rating(dish)
         )
         total_calories += dish.calories
 
@@ -75,6 +76,24 @@ def build_photos(caption: str, daily_menu: DailyMenuModel) -> list[MediaGroupIte
     return photos
 
 
+def _format_dish_rating(dish: DishModel) -> str:
+    if not dish.ratings_count:
+        return f" · {_('food.dish_no_ratings')}"
+    return f" · ⭐ {dish.average_rating:.1f}/5 ({dish.ratings_count})"
+
+
+def build_dish_rating_prompt(dish: DishModel, buttons: InputRichBlockButtons) -> InputRichMessage:
+    return InputRichMessage(
+        blocks=[
+            InputRichBlockSectionHeading(size=2, text=localized_dish_name(dish, i18n.current_locale)),
+            InputRichBlockPhoto(photo=InputMediaPhoto(media=dish.photo_url)),
+            InputRichBlockParagraph(text=_("food.rate_dish_prompt")),
+            buttons,
+        ],
+        skip_entity_detection=True,
+    )
+
+
 def _format_menu_rating(daily_menu: DailyMenuModel) -> str:
     if daily_menu.ratings_count:
         return _("food.rich_rating").format(average=f"{daily_menu.average_rating:.1f}", count=daily_menu.ratings_count)
@@ -100,7 +119,7 @@ def build_menu_launcher(open_button: InputRichBlockButtons) -> InputRichMessage:
 def build_daily_menu_rich_message(
     daily_menu: DailyMenuModel,
     rating_buttons: InputRichBlockButtons,
-    settings_buttons: list[RichMessageButton],
+    navigation_buttons: list[RichMessageButton],
 ) -> InputRichMessage:
     blocks: list[InputRichBlockUnion] = [
         InputRichBlockSectionHeading(
@@ -123,6 +142,7 @@ def build_daily_menu_rich_message(
             _("food.rich_dish").format(
                 index=index, name=localized_dish_name(dish, i18n.current_locale), calories=dish.calories
             )
+            + _format_dish_rating(dish)
         )
     blocks.append(InputRichBlockParagraph(text="\n".join(dish_lines)))
     blocks.extend(
@@ -137,7 +157,7 @@ def build_daily_menu_rich_message(
             InputRichBlockParagraph(text=_("food.enjoy_meal")),
         ]
     )
-    blocks.extend(InputRichBlockButtons(buttons=[button]) for button in settings_buttons)
+    blocks.extend(InputRichBlockButtons(buttons=[button]) for button in navigation_buttons)
     # Block text is plain RichText, so dish names cannot inject HTML or links.
     return InputRichMessage(blocks=blocks, skip_entity_detection=True)
 

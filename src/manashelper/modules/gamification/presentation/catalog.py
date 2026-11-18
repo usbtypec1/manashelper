@@ -24,6 +24,7 @@ def achievement_strings() -> dict[str, tuple[str, str]]:
         "stability": (_("gamification.stability.name"), _("gamification.stability.description")),
         "iron_attendance": (_("gamification.iron_attendance.name"), _("gamification.iron_attendance.description")),
         "critic": (_("gamification.critic.name"), _("gamification.critic.description")),
+        "dish_completion": (_("gamification.dish_completion.name"), _("gamification.dish_completion.description")),
         "einstein": (_("gamification.einstein.name"), _("gamification.einstein.description")),
     }
 

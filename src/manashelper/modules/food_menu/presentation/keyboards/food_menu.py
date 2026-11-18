@@ -8,17 +8,13 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from manashelper.localization.theme import Theme
 from manashelper.localization.weekdays import weekday_full
 from manashelper.modules.food_menu.presentation.callbacks import (
+    DishRatingCallback,
+    DishRatingOpenCallback,
     FoodMenuDateCallback,
     FoodMenuOpenCallback,
     FoodMenuRatingCallback,
 )
 from manashelper.platform.i18n.catalog import i18n
-from manashelper.platform.telegram.callbacks import (
-    NavigationAction,
-    NavigationCallback,
-    SettingsAction,
-    SettingsCallback,
-)
 
 _RATING_LABELS = {1: "1️⃣", 2: "2️⃣", 3: "3️⃣", 4: "4️⃣", 5: "5️⃣"}
 
@@ -66,25 +62,25 @@ def build_menu_open_button() -> InputRichBlockButtons:
     )
 
 
-def build_food_navigation_buttons(*, private_chat: bool) -> list[RichMessageButton]:
-    buttons = [RichMessageButton(text=_("common.back"), callback_data=FoodMenuOpenCallback().pack())]
-    if private_chat:
-        buttons.extend(build_food_menu_settings_buttons())
-        buttons.append(
+def build_food_navigation_buttons() -> list[RichMessageButton]:
+    return [RichMessageButton(text=_("common.back"), callback_data=FoodMenuOpenCallback().pack())]
+
+
+def build_dish_rating_open_button() -> InputRichBlockButtons:
+    return InputRichBlockButtons(
+        buttons=[RichMessageButton(text=_("food.rate_dishes"), callback_data=DishRatingOpenCallback().pack())]
+    )
+
+
+def build_dish_rating_buttons(dish_id: uuid.UUID) -> InputRichBlockButtons:
+    return InputRichBlockButtons(
+        buttons=[
             RichMessageButton(
-                text=_("common.back_to_menu"), callback_data=NavigationCallback(action=NavigationAction.MAIN).pack()
+                text=_rating_label(score), callback_data=DishRatingCallback(dish_id=dish_id, rating=score).pack()
             )
-        )
-    return buttons
-
-
-def build_food_menu_settings_buttons() -> list[RichMessageButton]:
-    return [
-        RichMessageButton(
-            text=_("menu.settings"),
-            callback_data=SettingsCallback(action=SettingsAction.BACK_TO_SETTINGS).pack(),
-        )
-    ]
+            for score in range(1, 6)
+        ]
+    )
 
 
 def build_menu_rating_buttons(daily_menu_id: uuid.UUID, user_rating: int | None = None) -> InputRichBlockButtons:

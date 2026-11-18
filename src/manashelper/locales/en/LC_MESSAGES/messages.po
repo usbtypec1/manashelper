@@ -2044,3 +2044,24 @@ msgstr "🏆 My achievements"
 
 msgid "gta_vi.gamification.ui.leaderboard"
 msgstr "🏁 Campus leaderboard"
+
+msgid "food.rate_dishes"
+msgstr "Rate dishes"
+
+msgid "food.rate_dish_prompt"
+msgstr "Rate this dish from 1 to 5."
+
+msgid "food.dish_no_ratings"
+msgstr "No ratings yet"
+
+msgid "food.dish_ratings_complete"
+msgstr "There are no unrated dishes left."
+
+msgid "food.dish_rating_unavailable"
+msgstr "This dish rating is unavailable."
+
+msgid "gamification.dish_completion.name"
+msgstr "Dish Collector"
+
+msgid "gamification.dish_completion.description"
+msgstr "Rate every dish in the catalog."

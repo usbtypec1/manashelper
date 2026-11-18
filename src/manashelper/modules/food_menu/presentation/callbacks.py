@@ -36,6 +36,15 @@ class FoodMenuRatingCallback(CallbackData, prefix="food_menu_rating"):
     rating: int
 
 
+class DishRatingOpenCallback(CallbackData, prefix="food_dish_open"):
+    pass
+
+
+class DishRatingCallback(CallbackData, prefix="food_dish_rate"):
+    dish_id: uuid.UUID
+    rating: int
+
+
 class FoodMenuNotificationDayCallback(CallbackData, prefix="food_menu_notification_day"):
     weekday: int
     meal: FoodMenuMeal

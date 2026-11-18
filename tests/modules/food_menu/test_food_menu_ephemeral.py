@@ -13,8 +13,10 @@ from manashelper.modules.food_menu.application.daily_menu import (
     DailyMenuAvailability,
     DailyMenuModel,
     DailyMenuNotFoundError,
+    DishModel,
 )
 from manashelper.modules.food_menu.presentation.callbacks import (
+    DishRatingCallback,
     FoodMenuCallback,
     FoodMenuDateCallback,
     FoodMenuDay,
@@ -25,6 +27,8 @@ from manashelper.modules.food_menu.presentation.food_menu_formatter import build
 from manashelper.modules.food_menu.presentation.keyboards.food_menu import build_menu_rating_buttons
 from manashelper.modules.food_menu.presentation.routers.food_menu import (
     cmd_yemek,
+    on_dish_rating,
+    on_dish_rating_open,
     on_food_menu_date_callback,
     on_food_menu_day_callback,
     on_food_menu_open_callback,
@@ -195,6 +199,7 @@ async def test_ephemeral_command_usage_and_day_picker_remain_private(monkeypatch
     assert prompt.ephemeral_message_parameters.receiver_user_id == USER.id
     assert prompt.reply_parameters.ephemeral_message_id == 11
     rows = [block for block in prompt.rich_message.blocks if block.type == "buttons"]
+    assert rows.pop().buttons[0].callback_data == "food_dish_open"
     assert [FoodMenuDateCallback.unpack(row.buttons[0].callback_data).menu_date for row in rows] == [
         today.isoformat(),
         (today + timedelta(days=6)).isoformat(),
@@ -219,8 +224,9 @@ async def test_open_button_shows_ephemeral_rich_day_selection_without_admin_righ
     assert sent.ephemeral_message_parameters.callback_query_id == callback.id
     assert sent.ephemeral_message_parameters.replace_callback_query_message is True
     rows = [block for block in sent.rich_message.blocks if block.type == "buttons"]
+    assert rows.pop().buttons[0].callback_data == "food_dish_open"
     assert [FoodMenuDateCallback.unpack(row.buttons[0].callback_data).menu_date for row in rows] == [
-        menu_date.isoformat() for menu_date in dates
+        menu_date.isoformat() for menu_date in dates[:3]
     ]
     if not days:
         assert "No menus" in sent.rich_message.blocks[1].text
@@ -273,6 +279,7 @@ async def test_day_picker_is_ephemeral_in_groups_and_normal_in_private_chat(monk
     assert (prompt.ephemeral_message_parameters is None) is (chat_type == "private")
     assert prompt.reply_parameters is None
     rows = [block for block in prompt.rich_message.blocks if block.type == "buttons"]
+    assert rows.pop().buttons[0].callback_data == "food_dish_open"
     assert rows[0].buttons[0].callback_data == FoodMenuDateCallback(menu_date=today.isoformat()).pack()
 
 
@@ -305,3 +312,24 @@ async def test_ephemeral_rating_uses_ephemeral_edit_and_preserves_personal_selec
     row = next(block for block in edited.rich_message.blocks if block.type == "buttons")
     assert row.buttons[3].style == "success"
     service.set_rating.assert_awaited_once_with(USER.id, menu.id, 4)
+
+
+async def test_group_dish_rating_flow_is_private_and_uses_callback_user(monkeypatch) -> None:
+    bot, request = _bot(monkeypatch)
+    message = Message(message_id=42, date=0, chat=Chat(id=CHAT_ID, type="supergroup")).as_(bot)
+    callback = CallbackQuery(id="dish", from_user=USER, chat_instance="chat", message=message).as_(bot)
+    dish = DishModel(uuid.uuid4(), "Soup", "https://example.com/soup.jpg", 200)
+    query = SimpleNamespace(next_unrated=AsyncMock(return_value=dish))
+    rate = SimpleNamespace(execute=AsyncMock(return_value=None))
+    with i18n.context(), i18n.use_locale("en"):
+        await on_dish_rating_open(callback, query)
+        prompt = _methods(request, SendRichMessage)[0]
+        assert prompt.ephemeral_message_parameters.receiver_user_id == USER.id
+        buttons = prompt.rich_message.blocks[-1].buttons
+        assert [DishRatingCallback.unpack(button.callback_data).rating for button in buttons] == list(range(1, 6))
+        await on_dish_rating(callback, DishRatingCallback.unpack(buttons[-1].callback_data), rate)
+    query.next_unrated.assert_awaited_once_with(USER.id)
+    rate.execute.assert_awaited_once_with(USER.id, dish.id, 5)
+    completion = _methods(request, SendMessage)[0]
+    assert completion.ephemeral_message_parameters.receiver_user_id == USER.id
+    assert completion.text == "There are no unrated dishes left."

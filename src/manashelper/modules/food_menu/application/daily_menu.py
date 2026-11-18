@@ -1,14 +1,16 @@
 import uuid
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
 from manashelper.core.time import BISHKEK_TZ
 from manashelper.modules.food_menu.infrastructure.models.daily_menu import DailyMenu
 from manashelper.modules.food_menu.infrastructure.models.daily_menu_rating import DailyMenuRating
+from manashelper.modules.food_menu.infrastructure.models.dish import Dish
 from manashelper.modules.food_menu.infrastructure.repositories.daily_menu import DailyMenuRepository
 
 MENU_LOOKAHEAD_DAYS = 5
+MENU_DAY_BUTTON_LIMIT = 3
 
 
 class DailyMenuNotFoundError(Exception):
@@ -33,6 +35,8 @@ class DishModel:
     name_ru: str | None = None
     name_ky: str | None = None
     name_zh: str | None = None
+    average_rating: float = 0.0
+    ratings_count: int = 0
 
 
 def localized_dish_name(dish: DishModel, locale: str) -> str:
@@ -51,23 +55,31 @@ class DailyMenuModel:
     user_rating: int | None = None
 
 
-def to_model(daily_menu: DailyMenu, ratings: Sequence[DailyMenuRating], user_id: int | None) -> DailyMenuModel:
+def to_dish_model(dish: Dish, average_rating: float = 0.0, ratings_count: int = 0) -> DishModel:
+    return DishModel(
+        id=dish.id,
+        name_tr=dish.name_tr,
+        name_en=dish.name_en,
+        name_ru=dish.name_ru,
+        name_ky=dish.name_ky,
+        name_zh=dish.name_zh,
+        photo_url=(dish.upscaled_photo_url or "").strip() or dish.photo_url,
+        calories=dish.calories,
+        average_rating=average_rating,
+        ratings_count=ratings_count,
+    )
+
+
+def to_model(
+    daily_menu: DailyMenu,
+    ratings: Sequence[DailyMenuRating],
+    user_id: int | None,
+    dish_ratings: Mapping[uuid.UUID, tuple[float, int]],
+) -> DailyMenuModel:
     return DailyMenuModel(
         id=daily_menu.id,
         date=daily_menu.date,
-        dishes=[
-            DishModel(
-                id=dish.id,
-                name_tr=dish.name_tr,
-                name_en=dish.name_en,
-                name_ru=dish.name_ru,
-                name_ky=dish.name_ky,
-                name_zh=dish.name_zh,
-                photo_url=(dish.upscaled_photo_url or "").strip() or dish.photo_url,
-                calories=dish.calories,
-            )
-            for dish in daily_menu.dishes
-        ],
+        dishes=[to_dish_model(dish, *dish_ratings.get(dish.id, (0.0, 0))) for dish in daily_menu.dishes],
         average_rating=sum(rating.score for rating in ratings) / len(ratings) if ratings else 0.0,
         ratings_count=len(ratings),
         views_count=daily_menu.views_count,
