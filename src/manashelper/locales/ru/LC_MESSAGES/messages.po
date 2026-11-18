@@ -1133,11 +1133,35 @@ msgstr "На грани"
 msgid "gamification.thin_ice.description"
 msgstr "Набери минимум 18,75% пропусков по теории или практике у пяти разных предметов в одном семестре."
 
+msgid "obis.last_updated"
+msgstr "Обновлено: {updated_at} (Бишкек)"
+
+msgid "eders.quick_login"
+msgstr "⚡ Войти в Eders"
+
+msgid "eders.login_link_note"
+msgstr "Личная одноразовая ссылка действует 60 секунд. Не передавай её другим. Новая ссылка заменяет предыдущую."
+
+msgid "eders.login_opening"
+msgstr "Открываем Eders…"
+
+msgid "eders.login_expired"
+msgstr "Ссылка недействительна или уже использована. Получи новую по кнопке в уведомлении бота."
+
+msgid "eders.login_javascript"
+msgstr "Для быстрого входа включи JavaScript в браузере."
+
+msgid "eders.login_obis_required"
+msgstr "Сначала войди в OBIS через настройки бота, затем получи новую ссылку Eders."
+
+msgid "eders.login_failed"
+msgstr "Быстрый вход сейчас недоступен. Попробуй позже, получив новую ссылку в боте."
+
 msgid "gamification.phoenix.name"
 msgstr "I'll be back"
 
 msgid "gamification.phoenix.description"
-msgstr "Закрой положительной оценкой предмет, по которому раньше получил F1 или FF."
+msgstr "Закрой положительной оценкой предмет, по которому раньше получил FD, F1 или FF."
 
 msgid "gamification.stability.name"
 msgstr "Стабильность"
@@ -1215,10 +1239,10 @@ msgid "schedule.change_courses"
 msgstr "📚 Изменить уроки"
 
 msgid "schedule.mini_app"
-msgstr "📱 Выбрать уроки в Mini App"
+msgstr "📱 Выбрать уроки"
 
 msgid "settings.mini_app"
-msgstr "📱 Настройки в Mini App"
+msgstr "📱 Настройки"
 
 msgid "miniapp.ui.title"
 msgstr "Настройки"
@@ -1861,7 +1885,7 @@ msgid "schedule.query_too_short_retry"
 msgstr "Слишком короткий запрос. Нажмите кнопку поиска ниже и попробуйте снова."
 
 msgid "schedule.free_time.mini_app"
-msgstr "👥 Общие окна (Mini App)"
+msgstr "👥 Общие окна"
 
 msgid "schedule.change_room"
 msgstr "🚪 Аудитория: {previous} → {new}"

@@ -1132,11 +1132,35 @@ msgstr "Sınırda"
 msgid "gamification.thin_ice.description"
 msgstr "Bir yarıyılda beş farklı dersin teori veya uygulama kısmında en az %18,75 devamsızlığa ulaş."
 
+msgid "obis.last_updated"
+msgstr "Son güncelleme: {updated_at} (Bişkek)"
+
+msgid "eders.quick_login"
+msgstr "⚡ Edersʼe giriş yap"
+
+msgid "eders.login_link_note"
+msgstr "Bu kişisel, tek kullanımlık bağlantı 60 saniye geçerlidir. Başkalarıyla paylaşma. Yeni bağlantı öncekinin yerini alır."
+
+msgid "eders.login_opening"
+msgstr "Eders açılıyor…"
+
+msgid "eders.login_expired"
+msgstr "Bağlantının süresi dolmuş veya daha önce kullanılmış. Bot bildirimindeki düğmeden yeni bir bağlantı al."
+
+msgid "eders.login_javascript"
+msgstr "Giriş yapmak için tarayıcında JavaScriptʼi etkinleştir."
+
+msgid "eders.login_obis_required"
+msgstr "Önce bot ayarlarından OBISʼe giriş yap, ardından yeni bir Eders bağlantısı al."
+
+msgid "eders.login_failed"
+msgstr "Hızlı giriş şu anda kullanılamıyor. Daha sonra bottan yeni bir bağlantı alarak tekrar dene."
+
 msgid "gamification.phoenix.name"
 msgstr "I'll be back"
 
 msgid "gamification.phoenix.description"
-msgstr "Daha önce F1 veya FF aldığın bir dersi geçer notla tamamla."
+msgstr "Daha önce FD, F1 veya FF aldığın bir dersi geçer notla tamamla."
 
 msgid "gamification.stability.name"
 msgstr "İstikrar"
@@ -1214,10 +1238,10 @@ msgid "schedule.change_courses"
 msgstr "📚 Dersleri değiştir"
 
 msgid "schedule.mini_app"
-msgstr "📱 Mini Appʼte ders seç"
+msgstr "📱 Ders seç"
 
 msgid "settings.mini_app"
-msgstr "📱 Mini App ayarları"
+msgstr "📱 Ayarlar"
 
 msgid "miniapp.ui.title"
 msgstr "Ayarlar"
@@ -1860,7 +1884,7 @@ msgid "schedule.query_too_short_retry"
 msgstr "Sorgu çok kısa. Aşağıdaki arama düğmesine basıp tekrar deneyin."
 
 msgid "schedule.free_time.mini_app"
-msgstr "👥 Ortak boş saatler (Mini App)"
+msgstr "👥 Ortak boş saatler"
 
 msgid "schedule.change_room"
 msgstr "🚪 Derslik: {previous} → {new}"

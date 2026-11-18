@@ -20,20 +20,28 @@ class ObisSnapshotRepository:
     async def _get(self, user_id: int, kind: str) -> ObisSnapshot | None:
         return await self._session.get(ObisSnapshot, (user_id, kind), populate_existing=True)
 
-    async def get_exam_grades(self, user_id: int, marker: str) -> list[LessonExamsModel] | None:
+    async def get_exam_grades(self, user_id: int, marker: str) -> Snapshot[LessonExamsModel] | None:
         snapshot = await self._get(user_id, "grades")
         if snapshot is None or snapshot.credential_marker != marker:
             return None
-        return [
-            LessonExamsModel(row["lesson_name"], row["lesson_code"], [ExamModel(**exam) for exam in row["exams"]])
-            for row in json.loads(snapshot.payload)
-        ]
+        return Snapshot(
+            snapshot.credential_marker,
+            [
+                LessonExamsModel(row["lesson_name"], row["lesson_code"], [ExamModel(**exam) for exam in row["exams"]])
+                for row in json.loads(snapshot.payload)
+            ],
+            snapshot.fetched_at,
+        )
 
-    async def get_attendance(self, user_id: int, marker: str) -> list[LessonAttendanceModel] | None:
+    async def get_attendance(self, user_id: int, marker: str) -> Snapshot[LessonAttendanceModel] | None:
         snapshot = await self._get(user_id, "attendance")
         if snapshot is None or snapshot.credential_marker != marker:
             return None
-        return [LessonAttendanceModel(**row) for row in json.loads(snapshot.payload)]
+        return Snapshot(
+            snapshot.credential_marker,
+            [LessonAttendanceModel(**row) for row in json.loads(snapshot.payload)],
+            snapshot.fetched_at,
+        )
 
     async def save_exam_grades(self, user_id: int, snapshot: Snapshot[LessonExamsModel]) -> None:
         await self._save(user_id, "grades", snapshot)

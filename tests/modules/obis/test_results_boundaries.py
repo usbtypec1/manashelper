@@ -9,6 +9,7 @@ from manashelper.modules.obis.application.models import (
     ExamModel,
     LessonAttendanceModel,
     LessonExamsModel,
+    Snapshot,
 )
 from manashelper.modules.obis.application.ports import (
     AttendanceStore,
@@ -110,8 +111,9 @@ async def test_cached_reads_pass_account_marker(kind):
     read.assert_awaited_once_with(123, "marker")
     with pytest.raises(ObisSessionExpiredError):
         await getattr(ObisResultsQuery(credentials, store, _sessions(active=False)), f"get_{kind}")(123)
-    read.return_value = []
-    assert await getattr(query, f"get_{kind}")(123) == []
+    snapshot = Snapshot("marker", [], datetime(2026, 11, 17, tzinfo=UTC))
+    read.return_value = snapshot
+    assert await getattr(query, f"get_{kind}")(123) == snapshot
 
 
 @pytest.mark.parametrize("kind", ["exam_grades", "attendance"])

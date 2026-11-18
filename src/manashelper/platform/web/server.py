@@ -10,6 +10,7 @@ from dishka import AsyncContainer
 from pydantic import ValidationError
 
 from manashelper.core.config import Settings
+from manashelper.modules.eders.presentation.browser_login import register_browser_login_routes
 from manashelper.modules.gamification.application.queries import GamificationQuery
 from manashelper.modules.gamification.presentation.catalog import localize_leaderboard, localize_profile, ui_strings
 from manashelper.modules.users.application.locale import LocaleQuery
@@ -42,7 +43,7 @@ def create_web_app(bot: Bot, dispatcher: Dispatcher, container: AsyncContainer, 
             error.headers["X-Content-Type-Options"] = "nosniff"
             raise
         response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
         if request.path.startswith("/api/"):
             response.headers["Cache-Control"] = "no-store"
         return response
@@ -102,6 +103,7 @@ def create_web_app(bot: Bot, dispatcher: Dispatcher, container: AsyncContainer, 
     app.router.add_get("/api/gamification/me", gamification)
     app.router.add_get("/api/gamification/leaderboard", gamification)
     register_preferences_routes(app, container, settings)
+    register_browser_login_routes(app, container, settings)
     app.router.add_get("/app", index)
     app.router.add_get("/app/", index)
     if (STATIC_DIR / "assets").is_dir():

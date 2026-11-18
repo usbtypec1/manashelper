@@ -26,6 +26,7 @@ from manashelper.modules.notifications import router as notification_routes
 from manashelper.modules.notifications.callbacks import NotificationSettingCallback
 from manashelper.modules.notifications.keyboards import build_notifications_keyboard
 from manashelper.modules.notifications.settings import NotificationSetting, NotificationSettingsSummary
+from manashelper.modules.obis.application.models import Snapshot
 from manashelper.modules.obis.presentation import router as obis
 from manashelper.modules.obis.presentation.callbacks import ObisAction, ObisCallback
 from manashelper.modules.obis.presentation.keyboards import build_obis_menu_keyboard
@@ -77,7 +78,10 @@ async def test_study_feature_menu_views_notifications_and_back(monkeypatch, loca
         get_settings=AsyncMock(return_value=EdersSettings(True, True, True, True, True)),
         toggle=AsyncMock(return_value=EdersSettings(False, True, True, True, True)),
     )
-    obis_service = AsyncMock(get_attendance=AsyncMock(return_value=[]), get_exam_grades=AsyncMock(return_value=[]))
+    snapshot = Snapshot("marker", [], datetime.now(UTC))
+    obis_service = AsyncMock(
+        get_attendance=AsyncMock(return_value=snapshot), get_exam_grades=AsyncMock(return_value=snapshot)
+    )
     settings_service = AsyncMock(
         get_settings=AsyncMock(return_value=NotificationSettingsSummary(True, True, True)),
         toggle_setting=AsyncMock(return_value=NotificationSettingsSummary(True, False, True)),

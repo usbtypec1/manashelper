@@ -11,6 +11,7 @@ class EdersAction(StrEnum):
     MATERIALS = "materials"
     DEADLINES = "deadlines"
     NOTIFICATIONS = "notifications"
+    LOGIN = "login"
 
 
 class EdersMenuCallback(CallbackData, prefix="eders_menu"):

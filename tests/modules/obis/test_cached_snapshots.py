@@ -56,24 +56,30 @@ async def test_cache_miss_never_fetches_and_successful_refresh_is_read_from_stor
     attendance = (await service.attendance.execute(user.id)).lessons
     await session.flush()
     client.reset_mock()
-    assert await service.results.get_exam_grades(user.id) == grades
-    assert await service.results.get_attendance(user.id) == attendance
+    assert (await service.results.get_exam_grades(user.id)).lessons == grades
+    assert (await service.results.get_attendance(user.id)).lessons == attendance
     client.fetch_exam_grades_html.assert_not_awaited()
     client.fetch_attendance_html.assert_not_awaited()
 
 
-async def test_failed_refresh_keeps_last_successful_snapshot(cached_obis):
+@pytest.mark.parametrize("kind", ["grades", "attendance"])
+async def test_failed_refresh_keeps_last_successful_snapshot(cached_obis, kind):
     service, client, user = cached_obis
-    previous = (await service.grades.execute(user.id)).lessons
-    client.fetch_exam_grades_html.side_effect = httpx.ReadTimeout("upstream unavailable")
+    refresh = service.grades if kind == "grades" else service.attendance
+    read = service.results.get_exam_grades if kind == "grades" else service.results.get_attendance
+    fetch = client.fetch_exam_grades_html if kind == "grades" else client.fetch_attendance_html
+    await refresh.execute(user.id)
+    previous = await read(user.id)
+    fetch.side_effect = httpx.ReadTimeout("upstream unavailable")
     with pytest.raises(ObisRetryLaterError):
-        await service.grades.execute(user.id)
-    assert await service.results.get_exam_grades(user.id) == previous
+        await refresh.execute(user.id)
+    assert await read(user.id) == previous
 
 
 async def test_queue_failure_rolls_back_snapshot_and_baseline_together(session, cached_obis):
     service, client, user = cached_obis
-    previous = (await service.grades.execute(user.id)).lessons
+    await service.grades.execute(user.id)
+    previous = await service.results.get_exam_grades(user.id)
     await session.flush()
     client.fetch_exam_grades_html.return_value = client.fetch_exam_grades_html.return_value.replace("80", "85")
     sender = AsyncMock()
@@ -163,7 +169,7 @@ async def test_snapshot_payload_keeps_legacy_format(session, cached_obis, kind, 
     session.add(row)
     await session.flush()
     read = service.results.get_exam_grades if kind == "grades" else service.results.get_attendance
-    assert await read(user.id) == expected
+    assert await read(user.id) == Snapshot(marker, expected, fetched_at)
 
     repository = ObisSnapshotRepository(session)
     save = repository.save_exam_grades if kind == "grades" else repository.save_attendance
@@ -196,10 +202,10 @@ async def test_expired_session_notifies_once_stops_polling_and_keeps_cached_resu
     await service.poll.execute(user.id, True, True, sender)
     sender.session_expired.assert_awaited_once_with()
     assert user.id not in await service.results.get_poll_user_ids()
-    assert await service.results.get_exam_grades(user.id) == grades
+    assert (await service.results.get_exam_grades(user.id)).lessons == grades
     assert not await service.results.has_session(user.id)
 
     await service.login(user.id)
     await session.flush()
     assert user.id in await service.results.get_poll_user_ids()
-    assert await service.results.get_exam_grades(user.id) == grades
+    assert (await service.results.get_exam_grades(user.id)).lessons == grades
