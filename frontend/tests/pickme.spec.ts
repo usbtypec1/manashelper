@@ -12,9 +12,17 @@ for (const theme of [
     achievements: '🥀 Маленькие победы во мраке', leaderboard: '🥀 Те, кто смог',
     decoration: '🥀', lightAccent: '#843d55', darkAccent: '#d99aaa',
   },
+  {
+    key: 'gta_vi', title: '🌴 Панель кампуса', saved: '📻 Настройки сохранены',
+    achievements: '🏆 Достижения кампуса', leaderboard: '🏁 Рейтинг кампуса',
+    decoration: '', lightAccent: '#963352', darkAccent: '#ffad8a',
+  },
 ]) {
   for (const view of ['settings', 'courses', 'achievements']) {
     test(`saved ${theme.key} theme reaches ${view} in both Telegram appearances`, async ({ page, request }) => {
+      if (theme.key === 'gta_vi' && test.info().project.name === 'mobile') {
+        await page.setViewportSize({ width: 280, height: 800 })
+      }
       const fixture = await (await request.get(`/_fixture/init-data?theme=${theme.key}&locale=ru${view === 'achievements' ? '' : '&preferences=1'}`)).json()
       await mockTelegram(page, { ...fixture, colorScheme: 'light' })
       await page.goto(`/app/?view=${view}`)
@@ -39,7 +47,7 @@ for (const theme of [
         await expect(page.getByRole('heading', { name: theme.achievements })).toBeVisible()
         await page.getByRole('button', { name: /Обжора/ }).click()
         await expect(page.getByRole('dialog')).toContainText('Посмотри йемек 50 раз')
-        await expect(page.getByRole('dialog')).toContainText(`Пока не получена ${theme.decoration}`)
+        await expect(page.getByRole('dialog').getByText(`Пока не получена ${theme.decoration}`.trim(), { exact: true })).toBeVisible()
         await page.screenshot({ animations: 'disabled', path: `test-results/${theme.key}-detail-light-${test.info().project.name}.png` })
         await page.keyboard.press('Escape')
         await expect(page.getByRole('dialog')).not.toBeVisible()

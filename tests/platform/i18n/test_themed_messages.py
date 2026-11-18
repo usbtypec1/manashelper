@@ -42,7 +42,7 @@ from tests.modules.users.application_factories import build_locale_service, buil
 from tests.paths import PROJECT_ROOT
 
 
-@pytest.mark.parametrize("selected,icon", [(Theme.PICKME, "🎀"), (Theme.DEADINSIDE, "🥀")])
+@pytest.mark.parametrize("selected,icon", [(Theme.PICKME, "🎀"), (Theme.DEADINSIDE, "🥀"), (Theme.GTA_VI, "🌴")])
 async def test_broadcast_uses_recipient_theme_for_wrapper_and_buttons_without_rewriting_body(selected, icon):
     outbox = AsyncMock()
     locales = SimpleNamespace(get_locale=AsyncMock(return_value=Locale.RU))
@@ -90,6 +90,7 @@ def test_food_theme_covers_message_and_controls_without_changing_data(menu, loca
         rich = build_menu(menu)
         text = "\n".join(block.text for block in rich.blocks if hasattr(block, "text"))
         assert rich.blocks[0].text.startswith("🎃 ") == (theme == Theme.HALLOWEEN)
+        assert rich.blocks[0].text.startswith("🍔 ") == (theme == Theme.GTA_VI)
         assert "31.10.2026" in text
         assert "Soup <b>& rice 🎃" in text and "Salad" in text
         assert all(
@@ -112,9 +113,11 @@ def test_food_theme_covers_message_and_controls_without_changing_data(menu, loca
                 Theme.HALLOWEEN: "🎃 1",
                 Theme.PICKME: "💗 1",
                 Theme.DEADINSIDE: "🖤 1",
+                Theme.GTA_VI: "⭐ 1",
             }[theme]
         )
         plain = format_daily_menu(menu)
+        assert plain.startswith("🍔 ") == (theme == Theme.GTA_VI)
         assert "Soup &lt;b&gt;&amp; rice 🎃" in plain
         assert "250" in plain
         picker = build_menu_day_selection(build_menu_day_buttons([menu.date], menu.date))
@@ -154,7 +157,7 @@ def test_explicit_locale_uses_that_locales_themed_catalog():
 
 
 @pytest.mark.parametrize("source", ["food", "schedule", "obis", "eders"])
-@pytest.mark.parametrize("selected", [Theme.HALLOWEEN, Theme.PICKME, Theme.DEADINSIDE])
+@pytest.mark.parametrize("selected", [theme for theme in Theme if theme != Theme.BASIC])
 async def test_background_delivery_uses_each_recipients_saved_theme_and_restores_context(
     session, menu, source, selected
 ):
@@ -200,12 +203,16 @@ async def test_background_delivery_uses_each_recipients_saved_theme_and_restores
         messages = [call.args[1][0].rich_message.blocks[0].text for call in bot.enqueue.await_args_list]
     else:
         messages = [call.args[1][0].text for call in bot.enqueue.await_args_list]
-    if selected in {Theme.PICKME, Theme.DEADINSIDE}:
+    if selected != Theme.HALLOWEEN:
+        icons = {
+            Theme.PICKME: ("💌", "🍓", "💗", "🎀"),
+            Theme.DEADINSIDE: ("🖤", "🥀", "🌑"),
+            Theme.GTA_VI: ("🍔",) if source == "food" else ("📻",),
+        }[selected]
         stride = 2 if source == "obis" else 1
         for offset in range(stride):
             themed, basic, repeated = messages[offset::stride]
             assert themed == repeated and themed != basic
-            icons = ("🖤", "🥀", "🌑") if selected == Theme.DEADINSIDE else ("💌", "🍓", "💗", "🎀")
             assert any(icon in themed for icon in icons)
         return
     if source == "food":
@@ -220,15 +227,17 @@ async def test_background_delivery_uses_each_recipients_saved_theme_and_restores
 
 
 @pytest.mark.parametrize("locale", list(Locale))
-def test_deadinside_catalogs_preserve_placeholders_and_factual_fragments(locale):
+@pytest.mark.parametrize("theme", [Theme.DEADINSIDE, Theme.GTA_VI])
+def test_themed_catalogs_preserve_placeholders_and_factual_fragments(locale, theme):
     with (PROJECT_ROOT / f"src/manashelper/locales/{locale.value}/LC_MESSAGES/messages.po").open(
         encoding="utf-8"
     ) as source:
         catalog = read_po(source)
+    prefix = f"{theme.value}."
     for message in catalog:
-        if not isinstance(message.id, str) or not message.id.startswith("deadinside."):
+        if not isinstance(message.id, str) or not message.id.startswith(prefix):
             continue
-        original = catalog.get(message.id.removeprefix("deadinside."))
+        original = catalog.get(message.id.removeprefix(prefix))
         assert original is not None and message.string
         expected = {field for _, field, _, _ in Formatter().parse(original.string) if field is not None}
         actual = {field for _, field, _, _ in Formatter().parse(message.string) if field is not None}
@@ -236,8 +245,14 @@ def test_deadinside_catalogs_preserve_placeholders_and_factual_fragments(locale)
     with i18n.context(), i18n.use_locale(locale.value):
         facts = ["eders.submitted", "eders.not_submitted", "ads.status_rejected", "gamification.foodie.description"]
         basic = [i18n.gettext(key) for key in facts]
-        with i18n.use_theme(Theme.DEADINSIDE):
+        with i18n.use_theme(theme):
             assert [i18n.gettext(key) for key in facts] == basic
-            assert i18n.gettext("theme.deadinside") == catalog.get("theme.deadinside").string
-            assert i18n.gettext("food.day_selection_title") == catalog.get("deadinside.food.day_selection_title").string
-            assert i18n.gettext("food.day_selection_title", locale="unsupported") == "🥀 Cafeteria chronicles"
+            assert i18n.gettext(f"theme.{theme.value}") == catalog.get(f"theme.{theme.value}").string
+            assert i18n.gettext("food.day_selection_title") == catalog.get(prefix + "food.day_selection_title").string
+            assert (
+                i18n.gettext("food.day_selection_title", locale="unsupported")
+                == {
+                    Theme.DEADINSIDE: "🥀 Cafeteria chronicles",
+                    Theme.GTA_VI: "🍔 Cafeteria stop",
+                }[theme]
+            )

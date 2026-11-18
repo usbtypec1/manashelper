@@ -1942,3 +1942,105 @@ msgstr "Входим в OBIS…"
 
 msgid "obis.captcha_auto_fallback"
 msgstr "Не удалось уверенно распознать капчу для автоматического входа. Введи текст с картинки."
+
+msgid "theme.gta_vi"
+msgstr "🌴 GTA VI"
+
+msgid "gta_vi.common.welcome"
+msgstr "🌴 Добро пожаловать в город. Здесь начинается твоя история в кампусе."
+
+msgid "gta_vi.menu.food"
+msgstr "🍔 Столовая"
+
+msgid "gta_vi.menu.study"
+msgstr "🗺 Учебные задания"
+
+msgid "gta_vi.menu.schedule"
+msgstr "📍 Маршрут занятий"
+
+msgid "gta_vi.menu.marketplace"
+msgstr "🏷 Городской рынок"
+
+msgid "gta_vi.menu.settings"
+msgstr "🎛 Панель настроек"
+
+msgid "gta_vi.menu.achievements"
+msgstr "🏆 Достижения кампуса"
+
+msgid "gta_vi.theme.selected"
+msgstr "🌴 Тема активирована: {theme}"
+
+msgid "gta_vi.food.day_selection_title"
+msgstr "🍔 Остановка у столовой"
+
+msgid "gta_vi.food.choose_day"
+msgstr "📍 Выбери день для остановки у столовой."
+
+msgid "gta_vi.food.menu_header"
+msgstr "🍔 Остановка у столовой · {weekday}, {date}"
+
+msgid "gta_vi.food.dish"
+msgstr "▪️ {index}. {name} · <b>{calories}</b> ккал"
+
+msgid "gta_vi.food.rich_dish"
+msgstr "▪️ {index}. {name} · {calories} ккал"
+
+msgid "gta_vi.food.total_calories"
+msgstr "⛽ Энергия в дорогу: {calories} ккал"
+
+msgid "gta_vi.food.rating"
+msgstr "⭐ Рейтинг столовой: {average} ({count})"
+
+msgid "gta_vi.food.rating_thanks"
+msgstr "📻 Оценка принята. Спасибо за отзыв!"
+
+msgid "gta_vi.food.open_menu"
+msgstr "🍔 Открыть меню столовой"
+
+msgid "gta_vi.food.enjoy_meal"
+msgstr "🌴 Время для пит-стопа. Приятного аппетита!"
+
+msgid "gta_vi.schedule.no_classes"
+msgstr "🌴 Сегодня на маршруте нет пар."
+
+msgid "gta_vi.schedule.changes_header"
+msgstr "📻 <b>Радио кампуса: изменения в расписании</b>"
+
+msgid "gta_vi.obis.new_grade"
+msgstr "📻 Радио кампуса: новая оценка по предмету «{lesson}»\n{exam}: {score}"
+
+msgid "gta_vi.obis.skip_recorded"
+msgstr "📻 Сводка посещаемости: пропуск по предмету «{lesson}» ({skip_type})"
+
+msgid "gta_vi.eders.reminder_day"
+msgstr "⏳ Учебное задание: до дедлайна в Eders остались сутки"
+
+msgid "gta_vi.eders.reminder_two_hours"
+msgstr "⏳ Учебное задание: до дедлайна в Eders осталось два часа"
+
+msgid "gta_vi.eders.opened_notification"
+msgstr "📻 Радио кампуса: открылась активность в Eders"
+
+msgid "gta_vi.eders.changed_notification"
+msgstr "📻 Радио кампуса: дедлайн в Eders изменился"
+
+msgid "gta_vi.eders.material_new"
+msgstr "📻 Радио кампуса: новый материал"
+
+msgid "gta_vi.eders.material_changed"
+msgstr "📻 Радио кампуса: материал обновился"
+
+msgid "gta_vi.miniapp.ui.title"
+msgstr "🌴 Панель кампуса"
+
+msgid "gta_vi.miniapp.ui.free_time"
+msgstr "🗺 Общие окна в расписании"
+
+msgid "gta_vi.miniapp.ui.saved"
+msgstr "📻 Настройки сохранены"
+
+msgid "gta_vi.gamification.ui.collection"
+msgstr "🏆 Мои достижения"
+
+msgid "gta_vi.gamification.ui.leaderboard"
+msgstr "🏁 Рейтинг кампуса"

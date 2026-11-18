@@ -1941,3 +1941,105 @@ msgstr "OBIS sistemine giriş yapılıyor…"
 
 msgid "obis.captcha_auto_fallback"
 msgstr "Otomatik giriş için CAPTCHA güvenilir biçimde okunamadı. Devam etmek için görseldeki metni gir."
+
+msgid "theme.gta_vi"
+msgstr "🌴 GTA VI"
+
+msgid "gta_vi.common.welcome"
+msgstr "🌴 Şehre hoş geldin. Kampüs hikâyen burada başlıyor."
+
+msgid "gta_vi.menu.food"
+msgstr "🍔 Yemekhane"
+
+msgid "gta_vi.menu.study"
+msgstr "🗺 Kampüs görevleri"
+
+msgid "gta_vi.menu.schedule"
+msgstr "📍 Ders rotası"
+
+msgid "gta_vi.menu.marketplace"
+msgstr "🏷 Şehir pazarı"
+
+msgid "gta_vi.menu.settings"
+msgstr "🎛 Kontrol paneli"
+
+msgid "gta_vi.menu.achievements"
+msgstr "🏆 Kampüs başarıları"
+
+msgid "gta_vi.theme.selected"
+msgstr "🌴 Tema etkin: {theme}"
+
+msgid "gta_vi.food.day_selection_title"
+msgstr "🍔 Yemekhane durağı"
+
+msgid "gta_vi.food.choose_day"
+msgstr "📍 Yemekhaneye uğrayacağın günü seç."
+
+msgid "gta_vi.food.menu_header"
+msgstr "🍔 Yemekhane durağı · {weekday}, {date}"
+
+msgid "gta_vi.food.dish"
+msgstr "▪️ {index}. {name} · <b>{calories}</b> kcal"
+
+msgid "gta_vi.food.rich_dish"
+msgstr "▪️ {index}. {name} · {calories} kcal"
+
+msgid "gta_vi.food.total_calories"
+msgstr "⛽ Yol enerjisi: {calories} kcal"
+
+msgid "gta_vi.food.rating"
+msgstr "⭐ Yemekhane puanı: {average} ({count})"
+
+msgid "gta_vi.food.rating_thanks"
+msgstr "📻 Puan alındı. Yorumun için teşekkürler!"
+
+msgid "gta_vi.food.open_menu"
+msgstr "🍔 Yemekhane menüsünü aç"
+
+msgid "gta_vi.food.enjoy_meal"
+msgstr "🌴 Mola vakti. Afiyet olsun!"
+
+msgid "gta_vi.schedule.no_classes"
+msgstr "🌴 Bugünkü rotada ders yok."
+
+msgid "gta_vi.schedule.changes_header"
+msgstr "📻 <b>Kampüs radyosu: ders programı değişti</b>"
+
+msgid "gta_vi.obis.new_grade"
+msgstr "📻 Kampüs radyosu: «{lesson}» dersinden yeni not\n{exam}: {score}"
+
+msgid "gta_vi.obis.skip_recorded"
+msgstr "📻 Yoklama raporu: «{lesson}» dersinde devamsızlık ({skip_type})"
+
+msgid "gta_vi.eders.reminder_day"
+msgstr "⏳ Kampüs görevi: Eders teslimine bir gün kaldı"
+
+msgid "gta_vi.eders.reminder_two_hours"
+msgstr "⏳ Kampüs görevi: Eders teslimine iki saat kaldı"
+
+msgid "gta_vi.eders.opened_notification"
+msgstr "📻 Kampüs radyosu: Eders’ta bir etkinlik açıldı"
+
+msgid "gta_vi.eders.changed_notification"
+msgstr "📻 Kampüs radyosu: Eders teslim tarihi değişti"
+
+msgid "gta_vi.eders.material_new"
+msgstr "📻 Kampüs radyosu: yeni materyal"
+
+msgid "gta_vi.eders.material_changed"
+msgstr "📻 Kampüs radyosu: materyal güncellendi"
+
+msgid "gta_vi.miniapp.ui.title"
+msgstr "🌴 Kampüs kontrol paneli"
+
+msgid "gta_vi.miniapp.ui.free_time"
+msgstr "🗺 Ortak boş zaman"
+
+msgid "gta_vi.miniapp.ui.saved"
+msgstr "📻 Ayarlar kaydedildi"
+
+msgid "gta_vi.gamification.ui.collection"
+msgstr "🏆 Başarılarım"
+
+msgid "gta_vi.gamification.ui.leaderboard"
+msgstr "🏁 Kampüs sıralaması"

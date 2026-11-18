@@ -10,8 +10,16 @@ from aiogram.utils.i18n import I18n
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale
 from manashelper.localization.theme import Theme
 from manashelper.platform.i18n.deadinside import deadinside_translation
+from manashelper.platform.i18n.gta_vi import gta_vi_translation
 from manashelper.platform.i18n.pickme import pickme_translation
 from manashelper.platform.i18n.themes import decorate_translation, halloween_translation
+
+_THEME_TRANSLATIONS = {
+    Theme.HALLOWEEN: halloween_translation,
+    Theme.PICKME: pickme_translation,
+    Theme.DEADINSIDE: deadinside_translation,
+    Theme.GTA_VI: gta_vi_translation,
+}
 
 
 class CatalogI18n(I18n):
@@ -53,20 +61,14 @@ class CatalogI18n(I18n):
         resolved_locale = locale if locale is not None else self.current_locale
         if resolved_locale not in self.locales:
             resolved_locale = Locale.EN.value
-        if self.current_theme == Theme.HALLOWEEN:
-            themed = halloween_translation(singular, partial(super().gettext, locale=resolved_locale))
-            if themed is not None:
-                return themed
-        if self.current_theme == Theme.PICKME:
-            themed = pickme_translation(singular, partial(super().gettext, locale=resolved_locale))
-            if themed is not None:
-                return themed
-        if self.current_theme == Theme.DEADINSIDE:
-            themed = deadinside_translation(singular, partial(super().gettext, locale=resolved_locale))
+        theme = self.current_theme
+        translate = _THEME_TRANSLATIONS.get(theme)
+        if translate is not None:
+            themed = translate(singular, partial(super().gettext, locale=resolved_locale))
             if themed is not None:
                 return themed
         text = super().gettext(singular, plural, n, resolved_locale)
-        return decorate_translation(singular, text, self._theme.get())
+        return decorate_translation(singular, text, theme)
 
 
 i18n = CatalogI18n(path=Path(__file__).resolve().parents[2] / "locales", default_locale=DEFAULT_LOCALE.value)

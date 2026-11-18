@@ -6,3 +6,4 @@ class Theme(StrEnum):
     HALLOWEEN = "halloween"
     PICKME = "pickme"
     DEADINSIDE = "deadinside"
+    GTA_VI = "gta_vi"

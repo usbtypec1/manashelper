@@ -228,7 +228,7 @@ async def test_free_time_compares_selected_courses_and_validates_ids():
 async def test_saved_bot_theme_reaches_both_miniapps_and_resets_without_leaking_context():
     async with application() as (client, container, _):
         headers = {"Authorization": authorization()}
-        for selected in (Theme.PICKME, Theme.DEADINSIDE, Theme.BASIC):
+        for selected in (Theme.PICKME, Theme.DEADINSIDE, Theme.GTA_VI, Theme.BASIC):
             async with container() as scope:
                 await (await scope.get(SetUserThemeUseCase)).execute(USER_ID, selected)
             with i18n.use_theme(Theme.HALLOWEEN):
@@ -248,7 +248,7 @@ async def test_saved_bot_theme_reaches_both_miniapps_and_resets_without_leaking_
                 assert preferences["ui"]["title"] == i18n.gettext("miniapp.ui.title")
                 assert achievements["ui"]["collection"] == i18n.gettext("gamification.ui.collection")
             assert all(
-                all(icon not in card["description"] for icon in ("🎀", "🥀", "🖤"))
+                all(icon not in card["description"] for icon in ("🎀", "🥀", "🖤", "🌴"))
                 for card in achievements["achievements"]
             )
 
