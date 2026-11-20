@@ -1280,6 +1280,153 @@ msgstr "Load more"
 msgid "miniapp.admin.refresh"
 msgstr "Refresh"
 
+msgid "miniapp.admin.active"
+msgstr "Active"
+
+msgid "miniapp.admin.stopped"
+msgstr "Bot stopped"
+
+msgid "miniapp.admin.filters"
+msgstr "User filters"
+
+msgid "miniapp.admin.search"
+msgstr "Search users"
+
+msgid "miniapp.admin.search_hint"
+msgstr "Name or @username"
+
+msgid "miniapp.admin.language"
+msgstr "Language"
+
+msgid "miniapp.admin.theme"
+msgstr "Theme"
+
+msgid "miniapp.admin.status"
+msgstr "Status"
+
+msgid "miniapp.admin.any_language"
+msgstr "Any language"
+
+msgid "miniapp.admin.any_theme"
+msgstr "Any theme"
+
+msgid "miniapp.admin.any_status"
+msgstr "Any status"
+
+msgid "miniapp.admin.no_matches"
+msgstr "No matching users."
+
+msgid "miniapp.admin.broadcasts"
+msgstr "Broadcasts"
+
+msgid "miniapp.admin.broadcast"
+msgstr "Broadcast"
+
+msgid "miniapp.admin.new_broadcast"
+msgstr "New broadcast"
+
+msgid "miniapp.admin.audience"
+msgstr "Audience"
+
+msgid "miniapp.admin.all"
+msgstr "All users"
+
+msgid "miniapp.admin.allowlist"
+msgstr "Allowlist"
+
+msgid "miniapp.admin.blocklist"
+msgstr "Blocklist"
+
+msgid "miniapp.admin.pick_users"
+msgstr "Find and select users"
+
+msgid "miniapp.admin.search_results"
+msgstr "Matching users"
+
+msgid "miniapp.admin.selected_count"
+msgstr "Selected users: {count}"
+
+msgid "miniapp.admin.remove_user"
+msgstr "Remove {name} from selection"
+
+msgid "miniapp.admin.eligibility"
+msgstr "The bot sends only to users who can currently receive broadcasts."
+
+msgid "miniapp.admin.variants"
+msgstr "Message variants"
+
+msgid "miniapp.admin.fallback"
+msgstr "Priority: language and theme, language only, theme only, any language and theme, then the first variant."
+
+msgid "miniapp.admin.message"
+msgstr "Message text"
+
+msgid "miniapp.admin.add_variant"
+msgstr "Add variant"
+
+msgid "miniapp.admin.remove_variant"
+msgstr "Remove variant"
+
+msgid "miniapp.admin.duplicate_variant"
+msgstr "Each language and theme combination can appear once."
+
+msgid "miniapp.admin.queue"
+msgstr "Queue broadcast"
+
+msgid "miniapp.admin.confirm_all"
+msgstr "Queue this broadcast for all eligible users?"
+
+msgid "miniapp.admin.confirm_allowlist"
+msgstr "Queue this broadcast only for eligible users among the {count} selected?"
+
+msgid "miniapp.admin.confirm_blocklist"
+msgstr "Queue this broadcast for all eligible users except the {count} selected?"
+
+msgid "miniapp.admin.invalid_broadcast"
+msgstr "Check the audience and message variants. Telegram limits the delivered text to 4096 characters."
+
+msgid "miniapp.admin.no_broadcasts"
+msgstr "No broadcasts yet."
+
+msgid "miniapp.admin.no_recipients"
+msgstr "No eligible recipients."
+
+msgid "miniapp.admin.deliveries"
+msgstr "Deliveries"
+
+msgid "miniapp.admin.attempts"
+msgstr "Attempts"
+
+msgid "miniapp.admin.pending"
+msgstr "Queued"
+
+msgid "miniapp.admin.processing"
+msgstr "Sending"
+
+msgid "miniapp.admin.sent"
+msgstr "Delivered"
+
+msgid "miniapp.admin.failed"
+msgstr "Failed"
+
+msgid "miniapp.admin.expired"
+msgstr "Expired"
+
+msgid "miniapp.admin.cancelled"
+msgstr "Cancelled"
+
+msgid "miniapp.admin.retry_deliveries"
+msgstr "Retry deliveries"
+
+msgid "miniapp.admin.confirm_retry"
+msgstr "Retry delivery to eligible recipients who have not received this broadcast?"
+
+msgid "miniapp.admin.retried_count"
+msgstr "Queued again: {count}"
+
+msgid "miniapp.admin.none_retried"
+msgstr "No eligible deliveries to retry."
+
 msgid "miniapp.ui.loading"
 msgstr "Loading…"
 

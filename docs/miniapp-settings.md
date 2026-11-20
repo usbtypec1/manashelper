@@ -60,8 +60,10 @@ A group chat ID gives no one access. An explicit empty array disables access.
 
 `GET /api/admin/users` authenticates signed Telegram initData and checks the allowed user IDs
 on every request. It returns up to 50 registered users ordered by Telegram ID, including users
-who stopped the bot. Each entry contains only `id` (a decimal string), `full_name` and nullable
-`username`. Pass the returned `next_cursor` as the `after` query parameter to read the next page.
+who stopped the bot. Each entry contains `id` (a decimal string), `full_name`, nullable `username`,
+`locale`, `theme` and `bot_stopped`. Search with `q` and filter by `locale`, `theme` or
+`status` (`active` or `stopped`). Filters apply before pagination. Pass the returned
+`next_cursor` as the `after` query parameter to read the next page with the same filters.
 A null cursor marks the end. Invalid authentication returns 401, a user outside the allowlist
 gets 403, and a malformed cursor returns 400. Responses use `Cache-Control: no-store`.
 
@@ -71,3 +73,35 @@ denies its requests even if Telegram still shows its previously configured butto
 The directory uses Telegram's live palette, MainButton to load more or retry, and
 SecondaryButton to refresh when another page is available. At the end of the list,
 refresh becomes the primary action. See the [Mini App interaction guidelines](miniapp-interactions.md).
+
+### Broadcasts
+
+`/app/admin/broadcasts` provides a composer, history and per-recipient delivery statuses. The picker
+uses the user directory and preserves selections while searching. The audience is all eligible users,
+only the chosen users, or all eligible users except the chosen users. Broadcast mutes, stopped bots
+and quiet hours are enforced by the shared outbox. The editor sends text with Telegram's delivery
+wrapper and the localized unsubscribe button.
+
+Create at `POST /api/admin/broadcasts` with a client-generated UUID `id`, an `audience`
+(`all`, `allowlist` or `blocklist`), decimal-string `user_ids` for an explicit list, and at least
+one `variants` entry with `text`, optional `locale` and optional `theme`. Each language and theme
+pair can appear once. The first matching variant wins in this order:
+
+1. Exact language and theme.
+2. Language only.
+3. Theme only.
+4. Unrestricted variant.
+5. First configured variant.
+
+The campaign and all queued deliveries commit together. Repeating the same request with the same ID
+returns the previous result. Reusing an ID with different content or as another author returns 409.
+
+- `GET /api/admin/broadcasts` returns history and counts by delivery status. Pass `next_cursor` as `before`.
+- `GET /api/admin/broadcasts/{id}` includes the saved variants, audience and counts.
+- `GET /api/admin/broadcasts/{id}/deliveries` shows Telegram IDs, statuses, attempts and error codes.
+  Pass `next_cursor` as `after`.
+- `POST /api/admin/broadcasts/{id}/retry` requeues failed, expired or cancelled deliveries for currently
+  eligible recipients. It preserves the original messages and attempt counters. Sent and active work
+  stay in place. The response includes the number requeued.
+
+Delivered means Telegram accepted the message. History is retained across regular outbox cleanup.

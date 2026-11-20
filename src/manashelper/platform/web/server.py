@@ -21,6 +21,7 @@ from manashelper.platform.telegram.webhook_context import webhook_processing
 from manashelper.platform.telegram.webhook_middleware import WebhookReceiptMiddleware
 from manashelper.platform.telegram.webhook_service import ConcurrentWebhookUpdateError
 from manashelper.platform.web.admin import register_admin_routes
+from manashelper.platform.web.admin_broadcasts import register_admin_broadcast_routes
 from manashelper.platform.web.auth import authenticate
 from manashelper.platform.web.preferences import register_preferences_routes
 
@@ -104,6 +105,7 @@ def create_web_app(bot: Bot, dispatcher: Dispatcher, container: AsyncContainer, 
     app.router.add_get("/api/gamification/me", gamification)
     app.router.add_get("/api/gamification/leaderboard", gamification)
     register_admin_routes(app, container, settings)
+    register_admin_broadcast_routes(app, container, settings)
     register_preferences_routes(app, container, settings)
     register_browser_login_routes(app, container, settings)
     app.router.add_get("/app", index)

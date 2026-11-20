@@ -4,12 +4,15 @@ import pytest
 from dishka import Provider, Scope, make_async_container, provide
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from manashelper.core.provider import CoreProvider
 from manashelper.modules.broadcast.application.use_cases.send_broadcast import SendBroadcastUseCase
 from manashelper.modules.broadcast.provider import BroadcastProvider
 from manashelper.modules.broadcast.service import BroadcastResult, BroadcastSender
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
 from manashelper.modules.notifications.repository import NotificationSettingsRepository
 from manashelper.modules.users.infrastructure.models.user import User
+from manashelper.modules.users.provider import UsersProvider
+from manashelper.platform.telegram.outbox.provider import OutboxProvider
 
 
 async def test_broadcast_reaches_every_registered_user(session: AsyncSession) -> None:
@@ -65,7 +68,9 @@ async def test_broadcast_use_case_retains_request_scope():
         def users(self) -> NotificationRecipientsQuery:
             return AsyncMock(spec=NotificationRecipientsQuery)
 
-    async with make_async_container(BroadcastProvider(), TestUsersProvider()) as container:
+    async with make_async_container(
+        CoreProvider(), UsersProvider(), OutboxProvider(), BroadcastProvider(), TestUsersProvider()
+    ) as container:
         async with container() as request:
             first = await request.get(SendBroadcastUseCase)
             assert first is await request.get(SendBroadcastUseCase)

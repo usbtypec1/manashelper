@@ -1,0 +1,72 @@
+.telegram-admin {
+  --admin-default-bg: #f2f2f7;
+  --admin-default-section: #fff;
+  --admin-default-text: #111114;
+  --admin-default-hint: #61616a;
+  --admin-default-divider: rgb(60 60 67 / 16%);
+  --admin-default-accent: #0067cc;
+  --admin-control: rgb(120 120 128 / 13%);
+  --admin-accent: var(--tg-theme-button-color, var(--admin-default-accent));
+  --admin-hint: var(--tg-theme-hint-color, var(--admin-default-hint));
+  --admin-divider: var(--tg-theme-section-separator-color, var(--admin-default-divider));
+  --admin-section: var(--tg-theme-section-bg-color, var(--tg-theme-bg-color, var(--admin-default-section)));
+  --accent: var(--admin-accent);
+  min-height: 100dvh;
+  background: var(--tg-theme-secondary-bg-color, var(--admin-default-bg));
+  color: var(--tg-theme-text-color, var(--admin-default-text));
+}
+html[data-theme='dark'] .telegram-admin {
+  --admin-default-bg: #111113;
+  --admin-default-section: #1c1c1e;
+  --admin-default-text: #fff;
+  --admin-default-hint: #adaeb6;
+  --admin-default-divider: rgb(235 235 245 / 16%);
+  --admin-default-accent: #61a9ff;
+}
+.admin-shell { --shell-inline: 16px; max-width: 680px; }
+.admin-header { display: grid; gap: 24px; margin-bottom: 20px; }
+.admin-header h1 { margin: 0; font-size: clamp(28px, 7vw, 34px); line-height: 1.12; letter-spacing: -.035em; }
+.admin-tabs { display: grid; grid-template-columns: 1fr 1fr; padding: 3px; border-radius: 12px; background: var(--admin-control); }
+.admin-tabs a {
+  display: grid;
+  place-items: center;
+  min-height: 40px;
+  padding: 6px;
+  color: inherit;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 9px;
+}
+.admin-tabs a[aria-current='page'] { background: var(--admin-section); box-shadow: 0 1px 3px rgb(0 0 0 / 10%); }
+.admin-card { background: var(--admin-section); border-radius: 16px; padding: 16px; margin: 0 0 16px; min-width: 0; }
+.admin-card h2 { margin: 0 0 12px; font-size: 19px; }
+.admin-hint { color: var(--admin-hint); font-size: 14px; line-height: 1.45; }
+.admin-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.admin-button {
+  display: inline-grid;
+  place-items: center;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  color: var(--admin-accent);
+  background: var(--admin-section);
+  text-decoration: none;
+  font-weight: 600;
+}
+.admin-button.primary { background: var(--admin-accent); color: var(--tg-theme-button-text-color, #fff); }
+.admin-button:disabled { opacity: .65; }
+.admin-field { display: grid; min-width: 0; gap: 6px; font-size: 14px; font-weight: 500; }
+.admin-field :is(input, select, textarea) {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--admin-divider);
+  border-radius: 10px;
+  background: var(--admin-section);
+  color: inherit;
+  font: inherit;
+}
+.admin-field textarea { min-height: 112px; resize: vertical; }

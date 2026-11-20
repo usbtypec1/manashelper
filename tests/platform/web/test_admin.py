@@ -65,10 +65,28 @@ async def test_admin_users_authenticates_and_pages_through_public_profile_fields
         assert response.headers["Cache-Control"] == "no-store"
         page = await response.json()
         assert [row["id"] for row in page["users"]] == [str(user_id) for user_id in range(first_id, first_id + 50)]
-        assert page["users"][0] == {"id": str(first_id), "full_name": f"Fixture <{first_id}>", "username": "fixture"}
+        assert page["users"][0] == {
+            "id": str(first_id),
+            "full_name": f"Fixture <{first_id}>",
+            "username": "fixture",
+            "locale": "ru",
+            "theme": "basic",
+            "bot_stopped": True,
+        }
         assert page["next_cursor"] == str(first_id + 49)
         response = await client.get(path, params={"after": page["next_cursor"]}, headers=headers)
         last_page = await response.json()
         assert [row["id"] for row in last_page["users"]] == [str(first_id + 50), str(first_id + 51)]
         assert last_page["users"][0]["username"] is None
         assert last_page["next_cursor"] is None
+
+        response = await client.get(
+            path,
+            params={"after": str(first_id - 1), "q": "@fix", "status": "stopped", "locale": "ru", "theme": "basic"},
+            headers=headers,
+        )
+        assert (await response.json())["users"] == [page["users"][0]]
+        response = await client.get(path, params={"after": str(first_id - 1), "locale": "en"}, headers=headers)
+        assert (await response.json())["users"] == []
+        for params in ({"theme": "unknown"}, {"status": "invalid"}, {"q": "x" * 129}):
+            assert (await client.get(path, params=params, headers=headers)).status == 400

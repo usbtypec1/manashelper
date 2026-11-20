@@ -1,12 +1,24 @@
+from dataclasses import dataclass
 from datetime import datetime, timedelta
+from uuid import UUID
 
-from sqlalchemy import delete, exists, or_, select, update
-from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import BigInteger, any_, cast, delete, exists, func, or_, select, update
+from sqlalchemy.dialects.postgresql import ARRAY, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from manashelper.platform.telegram.outbox.models import OutboxMessage, OutboxRateBucket
 from manashelper.platform.telegram.outbox.rate_limit import CHAT_BUCKET, GLOBAL_BUCKET, GROUP_BUCKET, TokenBucket
+
+RETRYABLE_STATUSES = ("failed", "expired", "cancelled")
+
+
+@dataclass(frozen=True, slots=True)
+class BatchDelivery:
+    user_id: int
+    status: str
+    attempts: int
+    last_error: str | None
 
 
 class OutboxRepository:
@@ -26,6 +38,59 @@ class OutboxRepository:
         }
         statement = insert(OutboxMessage).values(**values).on_conflict_do_nothing().returning(OutboxMessage.id)
         return (await self._session.execute(statement)).scalar_one_or_none() is not None
+
+    def add_batch(self, messages: list[OutboxMessage]) -> None:
+        self._session.add_all(messages)
+
+    async def batch_counts(self, batch_ids: list[UUID]) -> dict[UUID, dict[str, int]]:
+        if not batch_ids:
+            return {}
+        result = await self._session.execute(
+            select(OutboxMessage.batch_id, OutboxMessage.status, func.count())
+            .where(OutboxMessage.batch_id.in_(batch_ids))
+            .group_by(OutboxMessage.batch_id, OutboxMessage.status)
+        )
+        counts: dict[UUID, dict[str, int]] = {}
+        for batch_id, status, count in result.tuples():
+            if batch_id is not None:
+                counts.setdefault(batch_id, {})[status] = count
+        return counts
+
+    async def batch_deliveries(self, batch_id: UUID, *, after: int | None, limit: int) -> list[BatchDelivery]:
+        statement = (
+            select(OutboxMessage.user_id, OutboxMessage.status, OutboxMessage.attempts, OutboxMessage.last_error)
+            .where(OutboxMessage.batch_id == batch_id)
+            .order_by(OutboxMessage.user_id)
+            .limit(limit)
+        )
+        if after is not None:
+            statement = statement.where(OutboxMessage.user_id > after)
+        result = await self._session.execute(statement)
+        return [BatchDelivery(*row) for row in result.tuples()]
+
+    async def retry_batch(self, batch_id: UUID, user_ids: list[int], now: datetime) -> int:
+        if not user_ids:
+            return 0
+        statement = (
+            update(OutboxMessage)
+            .where(
+                OutboxMessage.batch_id == batch_id,
+                OutboxMessage.status.in_(RETRYABLE_STATUSES),
+                OutboxMessage.user_id == any_(cast(user_ids, ARRAY(BigInteger))),
+            )
+            .values(
+                status="pending",
+                available_at=now,
+                expires_at=now + timedelta(days=1),
+                failures=0,
+                finished_at=None,
+                lease_token=None,
+                locked_until=None,
+                last_error=None,
+            )
+            .returning(OutboxMessage.id)
+        )
+        return len((await self._session.scalars(statement)).all())
 
     async def next_message(self, now: datetime) -> OutboxMessage | None:
         earlier = aliased(OutboxMessage)
@@ -105,7 +170,11 @@ class OutboxRepository:
             )
             .values(status="expired", finished_at=now, lease_token=None, locked_until=None)
         )
-        await self._session.execute(delete(OutboxMessage).where(OutboxMessage.finished_at <= now - timedelta(days=1)))
+        await self._session.execute(
+            delete(OutboxMessage).where(
+                OutboxMessage.batch_id.is_(None), OutboxMessage.finished_at <= now - timedelta(days=1)
+            )
+        )
         await self._session.execute(
             delete(OutboxRateBucket).where(
                 OutboxRateBucket.key.like("%:chat:%"),

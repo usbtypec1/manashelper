@@ -2,13 +2,13 @@
 
 from datetime import UTC, datetime
 from itertools import count
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from aiogram import Bot, Dispatcher
 from aiohttp import web
 from dishka import Provider, Scope, make_async_container, provide
 from pydantic import SecretStr
-from sqlalchemy import text
+from sqlalchemy import text, update
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
 from manashelper.bootstrap import load_models
@@ -16,6 +16,7 @@ from manashelper.core.config import get_settings
 from manashelper.core.database import Base
 from manashelper.core.provider import CoreProvider
 from manashelper.localization.theme import Theme
+from manashelper.modules.broadcast.provider import BroadcastProvider
 from manashelper.modules.eders.provider import EdersProvider
 from manashelper.modules.food_menu.provider import FoodMenuProvider
 from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
@@ -29,6 +30,7 @@ from manashelper.modules.schedule.infrastructure.models.lesson import Lesson
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.provider import UsersProvider
+from manashelper.platform.telegram.outbox.models import OutboxMessage
 from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.web.server import create_web_app
 from tests.platform.web.factories import TOKEN, authorization
@@ -67,6 +69,7 @@ async def app() -> web.Application:
         UsersProvider(),
         GamificationProvider(),
         OutboxProvider(),
+        BroadcastProvider(),
         NotificationsProvider(),
         ObisProvider(),
         EdersProvider(),
@@ -151,8 +154,20 @@ async def app() -> web.Application:
                 await connection.execute(text(f'DROP SCHEMA "{schema}" CASCADE'))
             await admin_engine.dispose()
 
+    async def fail_broadcast(request: web.Request) -> web.Response:
+        batch_id = UUID(request.match_info["id"])
+        async with container() as scope:
+            session = await scope.get(AsyncSession)
+            await session.execute(
+                update(OutboxMessage)
+                .where(OutboxMessage.batch_id == batch_id, OutboxMessage.status == "pending")
+                .values(status="failed", attempts=1, finished_at=datetime.now(UTC), last_error="TelegramBadRequest")
+            )
+        return web.json_response({"ok": True})
+
     application.cleanup_ctx.append(lifecycle)
     application.router.add_get("/_fixture/init-data", fixture)
+    application.router.add_post("/_fixture/broadcasts/{id}/fail", fail_broadcast)
     return application
 
 

@@ -9,10 +9,22 @@ export class HttpError extends Error {
 }
 
 export async function getJson(path: string, rawInitData: string, signal?: AbortSignal): Promise<unknown> {
+  return requestJson(path, rawInitData, { signal })
+}
+
+export async function postJson(path: string, rawInitData: string, body?: unknown): Promise<unknown> {
+  return requestJson(path, rawInitData, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+  })
+}
+
+async function requestJson(path: string, rawInitData: string, options: RequestInit): Promise<unknown> {
   const response = await fetch(`/api/${path}`, {
+    ...options,
     cache: 'no-store',
-    headers: { Authorization: `tma ${rawInitData}` },
-    ...(signal ? { signal } : {}),
+    headers: { ...options.headers, Authorization: `tma ${rawInitData}` },
   })
   if (!response.ok) throw new HttpError(response.status)
   return response.json() as Promise<unknown>

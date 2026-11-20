@@ -30,7 +30,7 @@ test('admin opens the user directory with Telegram launch data and loads another
 
   await page.evaluate(() => window.telegramTest.changeTheme('light'))
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
-  await expect(users).toHaveCSS('color', 'rgb(0, 0, 0)')
+  await expect(users).toHaveCSS('color', 'rgb(17, 17, 20)')
   await expect(users.getByRole('row')).toHaveCount(loadedRows)
 
   await page.evaluate(() => window.telegramTest.emit('theme_changed', {

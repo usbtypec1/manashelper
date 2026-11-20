@@ -14,6 +14,7 @@ def load_models() -> None:
         AdvertisementContactView,
     )
     from manashelper.modules.advertisements.infrastructure.models.advertisement_media import AdvertisementMedia
+    from manashelper.modules.broadcast.infrastructure.models.campaign import BroadcastCampaign
     from manashelper.modules.eders.infrastructure.models.eders import EdersNotification, EdersState
     from manashelper.modules.feedback.orm import FeedbackMessage
     from manashelper.modules.food_menu.infrastructure.models.daily_menu import DailyMenu, daily_menu_dishes

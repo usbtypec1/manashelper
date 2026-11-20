@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import BigInteger, DateTime, Float, ForeignKey, Identity, Index, Integer, String
+from sqlalchemy import BigInteger, DateTime, Float, ForeignKey, Identity, Index, Integer, String, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -11,9 +11,19 @@ from manashelper.core.database import Base
 
 class OutboxMessage(Base):
     __tablename__ = "telegram_outbox"
-    __table_args__ = (Index("ix_telegram_outbox_ready", "status", "available_at"),)
+    __table_args__ = (
+        Index("ix_telegram_outbox_ready", "status", "available_at"),
+        Index(
+            "ix_telegram_outbox_batch_id_user_id",
+            "batch_id",
+            "user_id",
+            unique=True,
+            postgresql_where=text("batch_id IS NOT NULL"),
+        ),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    batch_id: Mapped[UUID | None]
     user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), index=True)
     category: Mapped[str] = mapped_column(String(32), default="notification", server_default="notification")
     methods: Mapped[list[dict[str, Any]]] = mapped_column(JSONB)

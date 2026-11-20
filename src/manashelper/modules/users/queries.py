@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from manashelper.modules.users.application.profile import UserProfile
+from manashelper.modules.users.application.profile import ProfileFilter, UserProfile
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 
 
@@ -19,8 +19,8 @@ class UsersQuery:
     async def get_active_ids(self) -> list[int]:
         return await self.users.get_active_ids()
 
-    async def list_profiles(self, *, after: int | None, limit: int) -> list[UserProfile]:
-        return await self.users.list_profiles(after=after, limit=limit)
+    async def list_profiles(self, *, after: int | None, limit: int, filters: ProfileFilter) -> list[UserProfile]:
+        return await self.users.list_profiles(after=after, limit=limit, filters=filters)
 
     async def exists(self, user_id: int) -> bool:
         return await self.users.get_by_id(user_id) is not None
