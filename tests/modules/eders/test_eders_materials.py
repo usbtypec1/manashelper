@@ -26,7 +26,7 @@ async def test_new_material_is_pending_until_sent_and_not_repeated(tracking):
     later = replace(snapshot, fetched_at=NOW + timedelta(hours=1))
     await tracking.observe(980_001, "a", later)
     assert [event.key for event in await tracking.pending_events(980_001, later.fetched_at)] == [first[0].key]
-    await tracking.mark_sent(980_001, first[0].key, later.fetched_at)
+    await tracking.mark_sent(980_001, [first[0].key], later.fetched_at)
     await tracking.observe(980_001, "a", replace(later, fetched_at=NOW + timedelta(hours=2)))
     assert await tracking.pending_events(980_001, later.fetched_at) == []
 

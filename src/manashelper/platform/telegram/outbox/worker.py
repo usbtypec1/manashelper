@@ -10,6 +10,7 @@ from manashelper.modules.notifications.queries import NotificationRecipientsQuer
 from manashelper.modules.users.application.use_cases.stop_bot_delivery import StopBotDeliveryUseCase
 from manashelper.platform.telegram.delivery import is_permanent_recipient_error
 from manashelper.platform.telegram.outbox.models import OutboxMessage
+from manashelper.platform.telegram.outbox.rate_limit import GLOBAL_BUCKET
 from manashelper.platform.telegram.outbox.repository import OutboxRepository
 from manashelper.platform.telegram.outbox.service import METHOD_TYPES, OutgoingMethod, is_night
 
@@ -17,6 +18,8 @@ logger = logging.getLogger(__name__)
 MAX_FAILURES = 12
 LEASE_SECONDS = 60
 REQUEST_TIMEOUT = 20
+BATCH_SIZE = int(GLOBAL_BUCKET.capacity)
+IDLE_POLL_SECONDS = 5.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,49 +53,55 @@ class OutboxWorker:
         self._stop_bot_delivery = stop_bot_delivery
         self._recipients = recipients
 
-    async def claim(self, bot_id: int, now: datetime) -> ClaimedMessage | None:
-        # Each claim commits before any HTTP request. A crashed worker's lease
-        # expires; the row can then be recovered by any process using SKIP LOCKED.
-        for _ in range(50):
-            row = await self._repository.next_message(now)
-            if row is None:
-                return None
-            if row.expires_at <= now:
-                finish(row, "expired", now)
-                continue
-            if not await self._recipients.allows_queued_delivery(row.user_id, row.category, now):
-                finish(row, "cancelled", now)
-                continue
-            delay = await self._repository.reserve(bot_id, row.user_id, now)
-            if delay > 0:
-                row.status = "pending"
-                row.lease_token = None
-                row.locked_until = None
-                row.available_at = now + timedelta(seconds=delay)
-                continue
-            try:
-                payload = row.methods[row.position]
-                method = METHOD_TYPES[payload["method"]].model_validate(payload["data"])
-            except (KeyError, IndexError, ValueError, TypeError):
-                row.last_error = "invalid_payload"
-                finish(row, "failed", now)
-                continue
-            if is_night(now):
-                method.disable_notification = True
-                # Replace the JSON value for SQLAlchemy change tracking. Keep the
-                # flag for retries and every remaining part, even after morning.
-                row.methods = [
-                    {**part, "data": {**part["data"], "disable_notification": True}}
-                    if position >= row.position
-                    else part
-                    for position, part in enumerate(row.methods)
-                ]
-            row.status = "processing"
-            row.lease_token = uuid4()
-            row.locked_until = now + timedelta(seconds=LEASE_SECONDS)
-            row.attempts += 1
-            return ClaimedMessage(row.id, row.lease_token, method, row.expires_at)
-        return None
+    async def claim_batch(self, bot_id: int, now: datetime, *, limit: int = BATCH_SIZE) -> list[ClaimedMessage]:
+        claims = []
+        for row in await self._repository.next_messages(now, min(limit, BATCH_SIZE)):
+            claim = await self._claim(row, bot_id, now)
+            if claim is not None:
+                claims.append(claim)
+        return claims
+
+    async def next_poll_delay(self, now: datetime) -> float:
+        next_at = await self._repository.next_attempt_at()
+        if next_at is None:
+            return IDLE_POLL_SECONDS
+        # Ready rows might be locked by another worker's claim transaction.
+        return min(IDLE_POLL_SECONDS, max(0.05, (next_at - now).total_seconds()))
+
+    async def _claim(self, row: OutboxMessage, bot_id: int, now: datetime) -> ClaimedMessage | None:
+        if row.expires_at <= now:
+            finish(row, "expired", now)
+            return None
+        if not await self._recipients.allows_queued_delivery(row.user_id, row.category, now):
+            finish(row, "cancelled", now)
+            return None
+        delay = await self._repository.reserve(bot_id, row.user_id, now)
+        if delay > 0:
+            row.status = "pending"
+            row.lease_token = None
+            row.locked_until = None
+            row.available_at = now + timedelta(seconds=delay)
+            return None
+        try:
+            payload = row.methods[row.position]
+            method = METHOD_TYPES[payload["method"]].model_validate(payload["data"])
+        except (KeyError, IndexError, ValueError, TypeError):
+            row.last_error = "invalid_payload"
+            finish(row, "failed", now)
+            return None
+        if is_night(now):
+            method.disable_notification = True
+            # Replace the JSON value for SQLAlchemy change tracking. Keep the
+            # flag for retries and every remaining part, even after morning.
+            row.methods = [
+                {**part, "data": {**part["data"], "disable_notification": True}} if position >= row.position else part
+                for position, part in enumerate(row.methods)
+            ]
+        row.status = "processing"
+        row.lease_token = uuid4()
+        row.locked_until = now + timedelta(seconds=LEASE_SECONDS)
+        row.attempts += 1
+        return ClaimedMessage(row.id, row.lease_token, method, row.expires_at)
 
     async def complete(self, claim: ClaimedMessage, now: datetime) -> None:
         row = await self._repository.get_locked(claim.id)

@@ -22,6 +22,8 @@ from manashelper.modules.eders.application.models import (
 from manashelper.modules.eders.errors import EdersLoginPageError, EdersParseError, EdersUnsafeUrlError
 from manashelper.modules.eders.infrastructure.urls import EDERS_BASE_URL, eders_id, safe_eders_url
 
+COURSE_ACTIVITY_PATHS = {f"/mod/{kind.value}/view.php" for kind in ActivityKind}
+
 
 def parse_enrolled_courses(payload: object) -> tuple[list[EdersCourse], int | None]:
     if not isinstance(payload, list) or len(payload) != 1 or not isinstance(payload[0], dict):
@@ -47,27 +49,28 @@ def parse_enrolled_courses(payload: object) -> tuple[list[EdersCourse], int | No
 
 
 @contextmanager
-def _page(html: str) -> Iterator[BeautifulSoup]:
+def _page(html: str) -> Iterator[tuple[BeautifulSoup, Tag]]:
     soup = BeautifulSoup(html, "lxml")
     try:
-        if soup.select_one("input[name=logintoken], input[name='LoginForm[username]']"):
+        if soup.find("input", attrs={"name": ["logintoken", "LoginForm[username]"]}) is not None:
             raise EdersLoginPageError("Authentication page instead of eders content")
-        if soup.select_one("#region-main") is None:
+        region = soup.find(id="region-main")
+        if not isinstance(region, Tag):
             raise EdersParseError("Missing eders content region")
-        if soup.select_one("#region-main .errorbox, #region-main .alert-danger"):
+        if region.select_one(".errorbox, .alert-danger"):
             raise EdersParseError("Eders error page")
-        yield soup
+        yield soup, region
     finally:
         # Break links between nodes before the next response arrives.
         soup.clear(decompose=True)
 
 
 def parse_courses(html: str) -> list[EdersCourse]:
-    with _page(html) as soup:
-        table = soup.select_one("#region-main table#overview-grade")
+    with _page(html) as (_, region):
+        table = region.select_one("table#overview-grade")
         if table is None:
             # Moodle renders a notification for an account with no grade-report courses.
-            empty = soup.select_one("#region-main .alert-info")
+            empty = region.select_one(".alert-info")
             if empty and empty.get_text(" ", strip=True) == "No courses":
                 return []
             raise EdersParseError("Missing eders course overview table")
@@ -97,13 +100,13 @@ def parse_courses(html: str) -> list[EdersCourse]:
 
 
 def parse_account_timezone(html: str) -> ZoneInfo | None:
-    with _page(html) as soup:
+    with _page(html) as (soup, _):
         return _account_timezone(soup)
 
 
 def _account_timezone(soup: BeautifulSoup) -> ZoneInfo | None:
     # Actual Eders pages expose the effective timezone in Moodle's configuration.
-    for script in soup.select("script"):
+    for script in soup.find_all("script"):
         match = re.search(r'"usertimezone"\s*:\s*("(?:[^"\\]|\\.)*")', script.get_text())
         if match:
             try:
@@ -245,15 +248,15 @@ def _manual_completion(node: Tag | BeautifulSoup, activity_id: int) -> bool | No
     return None
 
 
-def _completion(node: Tag | BeautifulSoup, activity_id: int) -> bool | None:
+def _completion(node: Tag, activity_id: int) -> tuple[bool | None, bool]:
     manual = _manual_completion(node, activity_id)
     if manual is not None:
-        return manual
+        return manual, True
     for block in node.select(".activity-completion"):
         text = block.get_text(" ", strip=True).casefold()
         if text in {"done", "mark as done"}:
-            return text == "done"
-    return None
+            return text == "done", False
+    return None, False
 
 
 def parse_course_activities(html: str, course: EdersCourse, timezone: ZoneInfo | None = None) -> list[EdersActivity]:
@@ -263,16 +266,16 @@ def parse_course_activities(html: str, course: EdersCourse, timezone: ZoneInfo |
 def parse_course_page(
     html: str, course: EdersCourse, timezone: ZoneInfo | None = None
 ) -> tuple[list[EdersActivity], ZoneInfo | None]:
-    with _page(html) as soup:
+    with _page(html) as (soup, region):
         course_timezone = _account_timezone(soup) or timezone
-        return _course_activities(soup, course, course_timezone), course_timezone
+        return _course_activities(region, course, course_timezone), course_timezone
 
 
-def _course_activities(soup: BeautifulSoup, course: EdersCourse, timezone: ZoneInfo | None) -> list[EdersActivity]:
-    if soup.select_one("#region-main .course-content") is None:
+def _course_activities(region: Tag, course: EdersCourse, timezone: ZoneInfo | None) -> list[EdersActivity]:
+    if region.find(class_="course-content") is None:
         raise EdersParseError("Missing eders course content")
     activities: dict[tuple[ActivityKind, int], EdersActivity] = {}
-    for item in soup.select(".course-content li.activity"):
+    for item in region.select(".course-content li.activity"):
         section_node = item.find_parent("li", class_="section")
         heading = section_node.select_one(".sectionname") if section_node else None
         section = heading.get_text(" ", strip=True) if heading else ""
@@ -282,6 +285,7 @@ def _course_activities(soup: BeautifulSoup, course: EdersCourse, timezone: ZoneI
             match = re.fullmatch(r"module-(\d+)", str(item.get("id", "")))
             if match and description:
                 identifier = int(match[1])
+                completed, _ = _completion(item, identifier)
                 activities[ActivityKind.LABEL, identifier] = EdersActivity(
                     identifier,
                     course,
@@ -290,7 +294,7 @@ def _course_activities(soup: BeautifulSoup, course: EdersCourse, timezone: ZoneI
                     f"{EDERS_BASE_URL}/course/view.php?id={course.id}#module-{identifier}",
                     section=section,
                     description=description,
-                    completed=_completion(item, identifier) is True,
+                    completed=completed is True,
                 )
             continue
         link = item.select_one(".activityname a[href], .activityinstance a[href]")
@@ -298,7 +302,7 @@ def _course_activities(soup: BeautifulSoup, course: EdersCourse, timezone: ZoneI
         if link is None or not isinstance(href, str):
             continue
         try:
-            url = safe_eders_url(href, {f"/mod/{kind.value}/view.php" for kind in ActivityKind})
+            url = safe_eders_url(href, COURSE_ACTIVITY_PATHS)
         except EdersUnsafeUrlError:
             continue
         kind = ActivityKind(urlsplit(url).path.split("/")[2])
@@ -310,6 +314,7 @@ def _course_activities(soup: BeautifulSoup, course: EdersCourse, timezone: ZoneI
                 name = name.removesuffix(hidden.get_text(" ", strip=True)).strip()
         opens, closes = _dates(item, timezone)
         identifier = eders_id(url)
+        completed, manual = _completion(item, identifier)
         activities[kind, identifier] = EdersActivity(
             identifier,
             course,
@@ -320,22 +325,22 @@ def _course_activities(soup: BeautifulSoup, course: EdersCourse, timezone: ZoneI
             closes,
             section=section,
             description=description,
-            completed=_completion(item, identifier) is True,
-            manual_completion=_manual_completion(item, identifier) is not None,
+            completed=completed is True,
+            manual_completion=manual,
         )
     return list(activities.values())
 
 
-def _assignment_status(soup: BeautifulSoup) -> tuple[SubmissionStatus, GradingStatus]:
+def _assignment_status(region: Tag, rows: list[Tag]) -> tuple[SubmissionStatus, GradingStatus]:
     submission = SubmissionStatus.UNKNOWN
-    if soup.select_one(".submissionstatussubmitted"):
+    if region.select_one(".submissionstatussubmitted"):
         submission = SubmissionStatus.SUBMITTED
-    elif soup.select_one(".submissionstatusdraft"):
+    elif region.select_one(".submissionstatusdraft"):
         submission = SubmissionStatus.DRAFT
-    elif soup.select_one(".submissionstatusnew, .submissionstatusreopened"):
+    elif region.select_one(".submissionstatusnew, .submissionstatusreopened"):
         submission = SubmissionStatus.NOT_SUBMITTED
     else:
-        for row in soup.select(".submissionstatustable tr"):
+        for row in rows:
             label, value = row.select_one("th"), row.select_one("td")
             if (
                 label
@@ -346,18 +351,17 @@ def _assignment_status(soup: BeautifulSoup) -> tuple[SubmissionStatus, GradingSt
             ):
                 submission = SubmissionStatus.NOT_SUBMITTED
     grading = GradingStatus.UNKNOWN
-    if soup.select_one(".submissiongraded"):
+    if region.select_one(".submissiongraded"):
         grading = GradingStatus.GRADED
-    elif soup.select_one(".submissionnotgraded"):
+    elif region.select_one(".submissionnotgraded"):
         grading = GradingStatus.NOT_GRADED
     return submission, grading
 
 
-def _quiz_status(soup: BeautifulSoup) -> tuple[SubmissionStatus, GradingStatus]:
+def _quiz_status(region: Tag) -> tuple[SubmissionStatus, GradingStatus]:
     # A completed attempt confirms that attempt's submission, not completion of the
     # entire quiz. An active later attempt takes precedence. Hidden grades stay unknown.
-    table = soup.select_one("table.quizattemptsummary")
-    modern = soup.select("table.quizreviewsummary")
+    modern = region.select("table.quizreviewsummary")
     if modern:
         attempts = []
         for summary in modern:
@@ -368,6 +372,7 @@ def _quiz_status(soup: BeautifulSoup) -> tuple[SubmissionStatus, GradingStatus]:
                     fields[label.get_text(" ", strip=True).casefold()] = cell.get_text(" ", strip=True)
             attempts.append(_attempt_status(fields.get("status", ""), fields.get("grade", "")))
         return _latest_attempt(attempts)
+    table = region.select_one("table.quizattemptsummary")
     if table is None:
         return SubmissionStatus.UNKNOWN, GradingStatus.UNKNOWN
     headers = [cell.get_text(" ", strip=True).casefold() for cell in table.select("thead th")]
@@ -410,25 +415,26 @@ def _latest_attempt(states: list[tuple[SubmissionStatus, GradingStatus]]) -> tup
 
 
 def parse_activity_details(html: str, activity: EdersActivity, timezone: ZoneInfo | None = None) -> EdersActivity:
-    with _page(html) as soup:
-        return _activity_details(soup, activity, timezone)
+    with _page(html) as (soup, region):
+        body = soup.body
+        if body is None or body.get("id") != f"page-mod-{activity.kind.value}-view":
+            raise EdersParseError("Unexpected eders activity page")
+        return _activity_details(region, activity, _account_timezone(soup) or timezone)
 
 
-def _activity_details(soup: BeautifulSoup, activity: EdersActivity, timezone: ZoneInfo | None) -> EdersActivity:
-    timezone = _account_timezone(soup) or timezone
-    body = soup.select_one("body")
-    expected = f"page-mod-{activity.kind.value}-view"
-    if body is None or body.get("id") != expected:
-        raise EdersParseError("Unexpected eders activity page")
-    opens, closes = _dates(soup.select_one("#region-main") or soup, timezone)
-    for row in soup.select(".submissionstatustable tr"):
+def _activity_details(region: Tag, activity: EdersActivity, timezone: ZoneInfo | None) -> EdersActivity:
+    opens, closes = _dates(region, timezone)
+    rows = region.select(".submissionstatustable tr")
+    for row in rows:
         label, value = row.select_one("th"), row.select_one("td")
         if label and value and label.get_text(" ", strip=True).casefold() in {"due date", "extension due date"}:
             closes = _merge_date(closes, _parse_date(value, timezone))
     opens = _merge_date(activity.opens, opens)
     closes = _merge_date(activity.closes, closes)
-    completed = _completion(soup.select_one("#region-main") or soup, activity.id)
-    submission, grading = _assignment_status(soup) if activity.kind == ActivityKind.ASSIGNMENT else _quiz_status(soup)
+    completed, manual = _completion(region, activity.id)
+    submission, grading = (
+        _assignment_status(region, rows) if activity.kind == ActivityKind.ASSIGNMENT else _quiz_status(region)
+    )
     mismatch = False
     if closes.instant is not None:
         for day, month, year in re.findall(r"\b(\d{1,2})[./](\d{1,2})[./](20\d{2})\b", activity.name):
@@ -445,6 +451,5 @@ def _activity_details(soup: BeautifulSoup, activity: EdersActivity, timezone: Zo
         grading=grading,
         title_date_mismatch=mismatch,
         completed=activity.completed if completed is None else completed,
-        manual_completion=activity.manual_completion
-        or _manual_completion(soup.select_one("#region-main") or soup, activity.id) is not None,
+        manual_completion=activity.manual_completion or manual,
     )

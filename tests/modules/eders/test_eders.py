@@ -119,6 +119,16 @@ def test_account_timezone_and_midnight_conversion_preserve_calendar_day() -> Non
     assert item.title_date_mismatch
 
 
+def test_assignment_status_ignores_markup_outside_the_main_content() -> None:
+    html = fixture("assignment").replace(
+        '<main id="region-main">',
+        '<aside class="submissionstatussubmitted submissiongraded"></aside><main id="region-main">',
+    )
+    result = parse_activity_details(html, activity())
+    assert result.submission is SubmissionStatus.DRAFT
+    assert result.grading is GradingStatus.NOT_GRADED
+
+
 def test_unverified_timezone_and_source_conflict_remain_unknown() -> None:
     item = parse_course_activities(fixture("course"), EdersCourse(10, "Course"))[0]
     assert item.closes.instant is None

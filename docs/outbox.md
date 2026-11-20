@@ -12,8 +12,10 @@ Between 22:00 (inclusive) and 08:00 (exclusive), Bishkek time, queued deliveries
 Claims also enable and persist it for remaining parts if daytime work reaches delivery at night.
 Once enabled, it survives retries and multipart delivery after 08:00. Explicit silent sends remain silent during the day.
 
-The scheduler starts one continuous worker per process. Claims use `FOR UPDATE SKIP LOCKED`, a random token and
-a 60-second lease. Claims and rate reservations commit before HTTP; results commit in a separate request scope.
+The scheduler starts one continuous worker per process. The worker selects up to five ready queue heads with
+`FOR UPDATE SKIP LOCKED`, at most one per recipient. Claims use a random token and a 60-second lease.
+Claims and rate reservations commit before the batch sends concurrently. Each result commits in its own request scope.
+An empty queue is polled every five seconds. A known earlier retry or lease expiry shortens the wait.
 Requests have a 20-second timeout. Expired leases recover after a crash; stale workers cannot acknowledge new leases.
 Postgres token buckets share capacity across processes and restarts: global 20 requests/second with capacity 5,
 private recipient 1/second with capacity 1, group recipient 1 every 3 seconds with capacity 1. Each compound

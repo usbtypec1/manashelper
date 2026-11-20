@@ -22,5 +22,6 @@ class PollEdersUserUseCase:
             return
         locale = await self.locales.get_locale(user_id)
         events = await self.tracking.pending_events(user_id, datetime.now(UTC))
-        async for event in sender.send(user_id, locale, events):
-            await self.tracking.mark_sent(user_id, event.key, datetime.now(UTC))
+        sent_keys = [event.key async for event in sender.send(user_id, locale, events)]
+        if sent_keys:
+            await self.tracking.mark_sent(user_id, sent_keys, datetime.now(UTC))

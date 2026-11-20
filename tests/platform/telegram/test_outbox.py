@@ -53,6 +53,44 @@ async def rows(context):
     return list((await context.session.scalars(select(OutboxMessage).order_by(OutboxMessage.id))).all())
 
 
+async def claim_one(worker, bot_id, now):
+    claims = await worker.claim_batch(bot_id, now, limit=1)
+    return claims[0] if claims else None
+
+
+async def test_batch_leases_only_one_message_per_recipient_and_preserves_fifo(context, monkeypatch):
+    now = context.now
+    freeze_enqueue_clock(monkeypatch, now)
+    assert await enqueue(context, 983001)
+    assert await enqueue(context, 983001)
+    assert await enqueue(context, 983002)
+    first, second, third = await rows(context)
+
+    claims = await context.worker.claim_batch(context.bot_id, now)
+    assert [claim.id for claim in claims] == [first.id, third.id]
+    assert second.attempts == 0
+    assert await context.worker.claim_batch(context.bot_id, now + timedelta(seconds=1)) == []
+    for claim in claims:
+        await context.worker.complete(claim, now)
+
+    following = await context.worker.claim_batch(context.bot_id, now + timedelta(seconds=1))
+    assert [claim.id for claim in following] == [second.id]
+
+
+async def test_idle_poll_is_five_seconds_but_due_retry_wakes_worker_earlier(context, monkeypatch):
+    now = context.now
+    freeze_enqueue_clock(monkeypatch, now)
+    assert await context.worker.next_poll_delay(now) == 5
+    assert await enqueue(context)
+    assert await enqueue(context)
+    first, following = await rows(context)
+    first.available_at = now + timedelta(seconds=2)
+    assert await context.worker.next_poll_delay(now) == pytest.approx(2)
+    assert following.available_at == now
+    first.locked_until = now + timedelta(seconds=4)
+    assert await context.worker.next_poll_delay(now) == pytest.approx(4)
+
+
 def freeze_enqueue_clock(monkeypatch, now):
     class Clock(datetime):
         @classmethod
@@ -101,7 +139,7 @@ async def test_daytime_queue_becomes_silent_at_night_and_stays_silent_on_morning
         983001, [SendPhoto(chat_id=983001, photo="photo"), SendMessage(chat_id=983001, text="Text")]
     )
     night = day + timedelta(seconds=1)
-    photo = await context.worker.claim(context.bot_id, night)
+    photo = await claim_one(context.worker, context.bot_id, night)
     assert photo.method.disable_notification is True
     await context.worker.fail(photo, TelegramNetworkError(photo.method, "Retry"), context.bot_id, night)
     await context.session.flush()
@@ -111,10 +149,10 @@ async def test_daytime_queue_becomes_silent_at_night_and_stays_silent_on_morning
     recreated = OutboxWorker(
         OutboxRepository(context.session), SimpleNamespace(execute=context.status.stop), context.recipients
     )
-    retry = await recreated.claim(context.bot_id, morning)
+    retry = await claim_one(recreated, context.bot_id, morning)
     assert retry.method.disable_notification is True
     await recreated.complete(retry, morning)
-    text = await recreated.claim(context.bot_id, morning + timedelta(seconds=1))
+    text = await claim_one(recreated, context.bot_id, morning + timedelta(seconds=1))
     assert isinstance(text.method, SendMessage) and text.method.disable_notification is True
 
 
@@ -135,7 +173,7 @@ async def test_expiration_and_stopped_recipients_never_send(context):
         await enqueue(context, expires_at=datetime(2099, 1, 1))
     assert await enqueue(context)
     await context.status.stop(983001)
-    assert await context.worker.claim(context.bot_id, context.now + timedelta(seconds=1)) is None
+    assert await claim_one(context.worker, context.bot_id, context.now + timedelta(seconds=1)) is None
     assert (await rows(context))[0].status == "cancelled"
     assert not await enqueue(context)
 
@@ -143,7 +181,7 @@ async def test_expiration_and_stopped_recipients_never_send(context):
 async def test_expired_row_does_not_block_the_next_recipient(context):
     await enqueue(context, expires_at=context.now + timedelta(seconds=1))
     await enqueue(context, 983002)
-    claim = await context.worker.claim(context.bot_id, context.now + timedelta(seconds=2))
+    (claim,) = await context.worker.claim_batch(context.bot_id, context.now + timedelta(seconds=2))
     assert claim.method.chat_id == 983002
     assert (await rows(context))[0].status == "expired"
 
@@ -155,7 +193,7 @@ async def test_blocked_user_skips_all_outbox_categories_and_existing_work(contex
     assert not await context.status.is_stopped(983001)
     assert not await enqueue(context, category="notification")
     assert 983001 not in await context.recipients.for_broadcasts()
-    claim = await context.worker.claim(context.bot_id, context.now + timedelta(seconds=1))
+    (claim,) = await context.worker.claim_batch(context.bot_id, context.now + timedelta(seconds=1))
     assert claim.method.chat_id == 983002
     assert (await rows(context))[0].status == "cancelled"
     assert await UserRepository(context.session).set_blocked(983001, False)
@@ -178,7 +216,7 @@ async def test_token_bucket_persists_global_and_per_chat_budgets(context):
 async def test_retry_after_survives_worker_recreation_and_pauses_other_recipients(context):
     await enqueue(context)
     now = context.now + timedelta(seconds=1)
-    claim = await context.worker.claim(context.bot_id, now)
+    claim = await claim_one(context.worker, context.bot_id, now)
     await context.worker.fail(
         claim, TelegramRetryAfter(claim.method, "Flood control", retry_after=10), context.bot_id, now
     )
@@ -186,11 +224,11 @@ async def test_retry_after_survives_worker_recreation_and_pauses_other_recipient
     recreated = OutboxWorker(
         OutboxRepository(context.session), SimpleNamespace(execute=context.status.stop), context.recipients
     )
-    assert await recreated.claim(context.bot_id, now + timedelta(seconds=9)) is None
+    assert await claim_one(recreated, context.bot_id, now + timedelta(seconds=9)) is None
     message = (await rows(context))[0]
     assert message.status == "pending" and message.available_at >= now + timedelta(seconds=10)
     assert not await context.status.is_stopped(983001)
-    assert await recreated.claim(context.bot_id, now + timedelta(seconds=12)) is not None
+    assert await claim_one(recreated, context.bot_id, now + timedelta(seconds=12)) is not None
 
 
 @pytest.mark.parametrize("failure_type", [TelegramServerError, TelegramNetworkError])
@@ -198,7 +236,7 @@ async def test_transient_failure_backoff_and_attempt_exhaustion(context, failure
     await enqueue(context)
     now = context.now + timedelta(seconds=1)
     for failure in range(1, MAX_FAILURES + 1):
-        claim = await context.worker.claim(context.bot_id, now)
+        claim = await claim_one(context.worker, context.bot_id, now)
         assert claim is not None
         await context.worker.fail(claim, failure_type(claim.method, "Synthetic failure"), context.bot_id, now)
         message = (await rows(context))[0]
@@ -215,7 +253,7 @@ async def test_transient_failure_backoff_and_attempt_exhaustion(context, failure
 async def test_retry_cannot_outlive_expiration(context):
     await enqueue(context, expires_at=context.now + timedelta(seconds=5))
     now = context.now + timedelta(seconds=1)
-    claim = await context.worker.claim(context.bot_id, now)
+    claim = await claim_one(context.worker, context.bot_id, now)
     await context.worker.fail(claim, TelegramRetryAfter(claim.method, "Flood", retry_after=30), context.bot_id, now)
     assert (await rows(context))[0].status == "expired"
 
@@ -224,7 +262,7 @@ async def test_retry_cannot_outlive_expiration(context):
 async def test_permanent_and_content_failures_are_terminal(context, permanent):
     await enqueue(context)
     now = context.now + timedelta(seconds=1)
-    claim = await context.worker.claim(context.bot_id, now)
+    claim = await claim_one(context.worker, context.bot_id, now)
     failure = (
         TelegramForbiddenError(claim.method, "Forbidden: bot was blocked by the user")
         if permanent
@@ -242,19 +280,19 @@ async def test_multipart_checkpoint_and_chat_fifo(context):
     )
     await enqueue(context)
     now = context.now + timedelta(seconds=1)
-    photo = await context.worker.claim(context.bot_id, now)
+    photo = await claim_one(context.worker, context.bot_id, now)
     assert isinstance(photo.method, SendPhoto)
     await context.worker.complete(photo, now)
-    text = await context.worker.claim(context.bot_id, now + timedelta(seconds=1))
+    text = await claim_one(context.worker, context.bot_id, now + timedelta(seconds=1))
     assert isinstance(text.method, SendMessage) and text.method.text == "Body"
     await context.worker.fail(
         text, TelegramServerError(text.method, "Failure"), context.bot_id, now + timedelta(seconds=1)
     )
-    assert await context.worker.claim(context.bot_id, now + timedelta(seconds=1)) is None
-    text_retry = await context.worker.claim(context.bot_id, now + timedelta(seconds=5))
+    assert await claim_one(context.worker, context.bot_id, now + timedelta(seconds=1)) is None
+    text_retry = await claim_one(context.worker, context.bot_id, now + timedelta(seconds=5))
     assert text_retry.id == photo.id and text_retry.method.text == "Body"
     await context.worker.complete(text_retry, now + timedelta(seconds=5))
-    following = await context.worker.claim(context.bot_id, now + timedelta(seconds=6))
+    following = await claim_one(context.worker, context.bot_id, now + timedelta(seconds=6))
     assert following.id > photo.id
     assert (await rows(context))[0].status == "sent"
 
@@ -262,9 +300,9 @@ async def test_multipart_checkpoint_and_chat_fifo(context):
 async def test_expired_lease_recovers_and_rejects_old_ack(context):
     await enqueue(context)
     now = context.now + timedelta(seconds=1)
-    first = await context.worker.claim(context.bot_id, now)
-    assert await context.worker.claim(context.bot_id, now + timedelta(seconds=1)) is None
-    recovered = await context.worker.claim(context.bot_id, now + timedelta(seconds=61))
+    first = await claim_one(context.worker, context.bot_id, now)
+    assert await claim_one(context.worker, context.bot_id, now + timedelta(seconds=1)) is None
+    recovered = await claim_one(context.worker, context.bot_id, now + timedelta(seconds=61))
     assert recovered.id == first.id and recovered.token != first.token
     await context.worker.complete(first, now + timedelta(seconds=62))
     assert (await rows(context))[0].status == "processing"
@@ -276,7 +314,7 @@ async def test_daily_cleanup_keeps_pending_and_recent_terminal_records(context):
     await enqueue(context)
     await enqueue(context, 983002, expires_at=context.now + timedelta(days=3))
     now = context.now + timedelta(seconds=1)
-    claim = await context.worker.claim(context.bot_id, now)
+    claim = await claim_one(context.worker, context.bot_id, now)
     await context.worker.complete(claim, now)
     await context.repository.cleanup(now + timedelta(hours=12))
     assert len(await rows(context)) == 2
@@ -289,7 +327,7 @@ async def test_source_cancellation_is_transactional(context):
     await enqueue(context, source_keys=["eders-event"])
     await context.service.cancel_sources(["eders-event"])
     assert (await rows(context))[0].status == "cancelled"
-    assert await context.worker.claim(context.bot_id, context.now + timedelta(seconds=1)) is None
+    assert await claim_one(context.worker, context.bot_id, context.now + timedelta(seconds=1)) is None
 
 
 @pytest.mark.parametrize("category", ["broadcast", "exam_grades", "lesson_skips", "schedule"])
@@ -303,7 +341,7 @@ async def test_delivery_rechecks_preferences_changed_after_enqueue(context, cate
         schedule_changes_enabled=False,
     )
     context.session.add(settings)
-    assert await context.worker.claim(context.bot_id, context.now + timedelta(seconds=1)) is None
+    assert await claim_one(context.worker, context.bot_id, context.now + timedelta(seconds=1)) is None
     assert (await rows(context))[0].status == "cancelled"
 
 
@@ -333,15 +371,15 @@ async def test_concurrent_workers_claim_distinct_rows_and_only_committed_message
             for user_id in user_ids:
                 await service.enqueue(user_id, [SendMessage(chat_id=user_id, text="Committed only")])
             _, worker = services(observer)
-            assert await worker.claim(bot_id, datetime.now(UTC)) is None
+            assert await claim_one(worker, bot_id, datetime.now(UTC)) is None
             await observer.commit()
             await producer.commit()
 
         async with sessions() as first, sessions() as second:
             _, first_worker = services(first)
             _, second_worker = services(second)
-            claim = await first_worker.claim(bot_id, datetime.now(UTC))
-            other_task = asyncio.create_task(second_worker.claim(bot_id, datetime.now(UTC)))
+            claim = await claim_one(first_worker, bot_id, datetime.now(UTC))
+            other_task = asyncio.create_task(claim_one(second_worker, bot_id, datetime.now(UTC)))
             await asyncio.sleep(0)
             await first.commit()
             other = await asyncio.wait_for(other_task, timeout=5)
