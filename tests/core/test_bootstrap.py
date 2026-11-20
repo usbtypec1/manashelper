@@ -17,6 +17,7 @@ EXPECTED_TABLES = {
     "food_daily_menu_dishes",
     "food_daily_menu_ratings",
     "food_daily_menus",
+    "food_dish_ratings",
     "food_dishes",
     "food_menu_notification_settings",
     "notification_settings",

@@ -95,6 +95,7 @@ def _verify_migration(connection):
         "telegram_processed_updates",
         "obis_sessions",
         "obis_auth_states",
+        "food_dish_ratings",
         "timetable_lesson_items",
         "timetable_rooms",
     }
@@ -197,9 +198,7 @@ def _verify_migration(connection):
 
         # Apply later additions before executing current ORM mappings, then prove
         # their downgrade preserves the data under this historical migration.
-        later_revisions = [
-            scripts.get_revision(name) for name in ("V26", "V27", "V28", "V29", "V30", "V31", "V32", "V33", "V34")
-        ]
+        later_revisions = list(scripts.iterate_revisions("heads", contact_migration.revision))[::-1]
         for later in later_revisions:
             later.module.upgrade()
         after = _snapshot(connection)

@@ -18,7 +18,7 @@ from aiogram.types import (
     RichMessage,
 )
 from aiogram.types import User as TelegramUser
-from sqlalchemy import select
+from sqlalchemy import insert, literal, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.localization.theme import Theme
@@ -29,6 +29,7 @@ from manashelper.modules.food_menu.application.use_cases.rate_dish import RateDi
 from manashelper.modules.food_menu.infrastructure.models.daily_menu import DailyMenu
 from manashelper.modules.food_menu.infrastructure.models.daily_menu_rating import DailyMenuRating
 from manashelper.modules.food_menu.infrastructure.models.dish import Dish
+from manashelper.modules.food_menu.infrastructure.models.dish_rating import DishRating
 from manashelper.modules.food_menu.infrastructure.repositories.daily_menu import DailyMenuRepository
 from manashelper.modules.food_menu.infrastructure.repositories.daily_menu_rating import (
     DailyMenuRatingRepository,
@@ -317,6 +318,13 @@ async def test_dish_rating_prioritizes_fewer_votes_and_keeps_first_score(session
     query = DishRatingQuery(ratings)
     awards = AsyncMock()
     rate = RateDishUseCase(ratings, query, awards)
+    # The queue includes the entire catalog. Only leave the two test dishes unrated.
+    await session.execute(
+        insert(DishRating).from_select(
+            ["dish_id", "user_id", "score"],
+            select(Dish.id, literal(900_001), literal(5)).where(Dish.id.not_in([popular.id, unrated.id])),
+        )
+    )
     await ratings.add_score(popular.id, 900_002, 3)
 
     candidate = await query.next_unrated(900_001)

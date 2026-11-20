@@ -25,7 +25,7 @@ from manashelper.modules.food_menu.presentation.food_menu_formatter import (
     refresh_daily_menu_rating,
 )
 from manashelper.modules.food_menu.presentation.keyboards.food_menu import (
-    build_food_menu_settings_buttons,
+    build_food_navigation_buttons,
     build_menu_day_buttons,
     build_menu_rating_buttons,
 )
@@ -79,7 +79,7 @@ def build_menu(menu):
     return build_daily_menu_rich_message(
         menu,
         build_menu_rating_buttons(menu.id, menu.user_rating),
-        build_food_menu_settings_buttons(),
+        build_food_navigation_buttons(),
     )
 
 

@@ -266,10 +266,11 @@ def test_users_standalone_import_uses_explicit_model_registration(module):
         "import importlib; from sqlalchemy.orm import configure_mappers; "
         f"importlib.import_module({module!r}); "
         "from manashelper.core.database import Base; "
-        "assert len(Base.metadata.tables) < 27; "
+        "assert set(Base.metadata.tables) == {'users', 'timetable_user_courses'}; "
         "from manashelper.bootstrap import load_models; load_models(); configure_mappers(); "
-        "assert len(Base.metadata.tables) == 33; "
-        "assert Base.metadata.tables['timetable_user_courses'].c.user_id.references(Base.metadata.tables['users'].c.id)"
+        "courses = Base.metadata.tables['timetable_user_courses']; "
+        "assert courses.c.user_id.references(Base.metadata.tables['users'].c.id); "
+        "assert courses.c.course_id.references(Base.metadata.tables['timetable_courses'].c.id)"
     )
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
