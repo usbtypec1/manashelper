@@ -8,7 +8,7 @@ test('legacy links redirect, SPA navigation preserves the WebView, and history r
   await expect(page).toHaveURL('/app/settings?launch=preserved#telegram-context')
   await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible()
   await page.evaluate(() => Object.assign(window, { sameWebView: true }))
-  await page.getByRole('button', { name: 'Courses', exact: true }).click()
+  await page.getByRole('link', { name: 'Courses', exact: true }).click()
   await expect(page).toHaveURL('/app/courses')
   await expect(page.getByRole('combobox', { name: 'Choose a faculty', exact: true })).toBeVisible()
   await page.goBack()
