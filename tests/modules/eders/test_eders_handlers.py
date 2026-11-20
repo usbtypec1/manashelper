@@ -222,7 +222,7 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
     assert [call.args[0] for call in outbox.enqueue.await_args_list] == [1, 3]
     assert "Напоминание eders" in outbox.enqueue.await_args_list[0].args[1][0].text
     assert "eders 截止提醒" in outbox.enqueue.await_args_list[1].args[1][0].text
-    assert tracking.mark_sent.await_count == 1 and tracking.mark_sent.call_args.args[:2] == (3, "key")
+    assert tracking.mark_sent.await_count == 1 and tracking.mark_sent.call_args.args[:2] == (3, ["key"])
 
 
 async def test_application_resolves_new_services_and_registers_fifteen_minute_polling() -> None:
@@ -306,7 +306,8 @@ async def test_job_groups_new_materials_and_acknowledges_all_events_only_on_succ
     outbox.enqueue.reset_mock()
     await poll_eders_job(scope)
     outbox.enqueue.assert_awaited_once()
-    assert [call.args[1] for call in tracking.mark_sent.await_args_list] == ["first", "second"]
+    tracking.mark_sent.assert_awaited_once()
+    assert tracking.mark_sent.call_args.args[:2] == (1, ["first", "second"])
 
 
 async def test_eders_settings_open_from_general_settings_and_keep_return_path_after_toggle(monkeypatch) -> None:

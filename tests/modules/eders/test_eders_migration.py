@@ -163,7 +163,7 @@ async def test_poll_eligibility_requires_only_student_number_and_access(session)
 
 
 @pytest.mark.parametrize("failure", ["rejected", "unexpected", "ack"])
-async def test_delivery_acknowledges_success_immediately_and_preserves_failure_boundary(failure):
+async def test_delivery_acknowledges_accepted_events_in_one_batch_and_preserves_failure_boundary(failure):
     service, tracking, locales, bot = AsyncMock(), AsyncMock(), AsyncMock(), AsyncMock()
     events = [
         EdersEvent("material-1", item(), "material_new", NOW, NOW),
@@ -181,12 +181,13 @@ async def test_delivery_acknowledges_success_immediately_and_preserves_failure_b
         if calls.count("send") == 2:
             if failure == "rejected":
                 return False
-            raise RuntimeError("transport failed")
+            if failure == "unexpected":
+                raise RuntimeError("transport failed")
         return object()
 
-    async def ack(user_id, key, now):
+    async def ack(user_id, keys, now):
         assert user_id == 42 and now.tzinfo is UTC
-        calls.append(key)
+        calls.extend(keys)
         if failure == "ack":
             raise RuntimeError("ack failed")
 
@@ -202,7 +203,7 @@ async def test_delivery_acknowledges_success_immediately_and_preserves_failure_b
                     AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
                 ),
             )
-            assert calls == ["send", "material-1", "material-2", "send", "send", "reminder-2"]
+            assert calls == ["send", "send", "send", "material-1", "material-2", "reminder-2"]
         else:
             with pytest.raises(RuntimeError, match="ack failed" if failure == "ack" else "transport failed"):
                 await poll.execute(
@@ -213,7 +214,9 @@ async def test_delivery_acknowledges_success_immediately_and_preserves_failure_b
                     ),
                 )
             assert calls == (
-                ["send", "material-1"] if failure == "ack" else ["send", "material-1", "material-2", "send"]
+                ["send", "send", "send", "material-1", "material-2", "reminder-1", "reminder-2"]
+                if failure == "ack"
+                else ["send", "send"]
             )
         assert i18n.current_locale == "ru"
     assert "新增资料" in bot.enqueue.await_args_list[0].args[1][0].text

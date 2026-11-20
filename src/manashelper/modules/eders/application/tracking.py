@@ -152,7 +152,7 @@ class EdersTrackingService:
         for event in plan_events(snapshot, previous, settings):
             key = hashlib.sha256(f"{marker}:{event.key}".encode()).hexdigest()
             planned[key] = replace(event, key=key)
-        existing = await self.eders_repository.get_notifications(user_id)
+        existing = await self.eders_repository.get_notifications(user_id, include_payload=False)
         stored = {event.event_key: event for event in existing}
         current = {activity_key(item): item for item in snapshot.activities}
         cancelled_keys = []
@@ -196,7 +196,7 @@ class EdersTrackingService:
                 stored_event.cancelled = True
                 if previous is None or not valid_material:
                     cancelled_keys.append(stored_event.event_key)
-            elif item:
+            elif item and stored_event.sent_at is None and stored_event.event_key not in planned:
                 stored_event.payload = serialize_snapshot(EdersSnapshot((item,), snapshot.fetched_at))
         for key, event in planned.items():
             if key in stored:
@@ -223,11 +223,9 @@ class EdersTrackingService:
 
     async def pending_events(self, user_id: int, now: datetime) -> list[EdersEvent]:
         settings = await get_eders_settings(self.eders_repository, self.users, user_id)
-        rows = await self.eders_repository.get_notifications(user_id)
+        rows = await self.eders_repository.get_due_notifications(user_id, now)
         candidates = []
         for row in rows:
-            if row.cancelled or row.sent_at or row.due_at > now:
-                continue
             enabled = {
                 "before_24": settings.day_before,
                 "before_2": settings.two_hours_before,
@@ -253,9 +251,7 @@ class EdersTrackingService:
                 EdersEvent(row.event_key, activity, row.event_type, row.event_time, row.due_at, row.previous_deadline)
             )
         nearer = {activity_key(event.activity) for event in candidates if event.event_type == "before_2"}
-        for row in rows:
-            if row.event_type == "before_24" and row.activity_key in nearer:
-                row.cancelled = True
+        await self.eders_repository.cancel_day_before_notifications(user_id, nearer)
         return [
             event
             for event in candidates
@@ -284,11 +280,8 @@ class EdersTrackingService:
                     keys.append(event.event_key)
             await self.outbox.cancel_sources(keys)
 
-    async def mark_sent(self, user_id: int, key: str, now: datetime) -> None:
-        for event in await self.eders_repository.get_notifications(user_id):
-            if event.event_key == key:
-                event.sent_at = now
-                return
+    async def mark_sent(self, user_id: int, keys: list[str], now: datetime) -> None:
+        await self.eders_repository.mark_sent(user_id, keys, now)
 
     async def get_poll_user_ids(self) -> list[int]:
         return await self.eders_repository.get_poll_user_ids()

@@ -21,11 +21,15 @@ assumptions:
       GET login/index.php, POST login/index.php (303), GET login/index.php?loginredirect=1 (303),
       GET my/courses.php (200). Full suite on a clean PostgreSQL 18 database: 664 passed, 5 skipped.
       These results establish caller behavior against the stand-in; real successful login remains unverified.
+      On 2026-11-20, after eliminating repeated HTML parsing, the same stand-in served profile, course and
+      activity requests with HTTP 200 and course AJAX with HTTP 200, 302 and 500. The Eders and Study Week
+      suite passed 306 tests with one optional corpus test skipped. A separate client regression test
+      counted one HTML parse per snapshot response and verified that session expiry still restarts the snapshot.
     source: >-
       User-provided login contract; postman/mocks/eders/default.js;
-      tests/modules/eders/test_eders_http_flow.py; tests/modules/eders/test_eders_login.py;
+      tests/modules/eders/test_eders_http_flow.py; tests/modules/eders/test_eders_login.py; tests/modules/eders/test_eders.py;
       fingerprint eders-direct-login-2026-10-29.
-    updated_at: "2026-10-29"
+    updated_at: "2026-11-20"
   - id: persisted-snapshots-survive-upstream-failure
     status: supported
     claim: In the local HTTP scenarios, saved OBIS and Eders results can be read without new upstream requests after refresh.

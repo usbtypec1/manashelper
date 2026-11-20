@@ -35,7 +35,7 @@ async def test_baseline_delivery_is_deduplicated_and_failed_delivery_remains_pen
     await tracking.observe(980_001, "account-a", later)
     retry = await tracking.pending_events(980_001, later.fetched_at)
     assert [event.key for event in retry] == [event.key for event in events]
-    await tracking.mark_sent(980_001, retry[0].key, later.fetched_at)
+    await tracking.mark_sent(980_001, [retry[0].key], later.fetched_at)
     await tracking.observe(980_001, "account-a", replace(later, fetched_at=later.fetched_at + timedelta(minutes=30)))
     assert await tracking.pending_events(980_001, later.fetched_at + timedelta(minutes=30)) == []
 
@@ -56,7 +56,7 @@ async def test_changed_deadline_cancels_old_schedule_and_records_old_and_new(tra
     assert [event.event_type for event in events] == ["changed"]
     assert events[0].previous_deadline == NOW + timedelta(days=3)
     assert events[0].event_time == NOW + timedelta(days=5)
-    await tracking.mark_sent(980_001, events[0].key, updated.fetched_at)
+    await tracking.mark_sent(980_001, [events[0].key], updated.fetched_at)
     await tracking.observe(980_001, "a", replace(updated, fetched_at=NOW + timedelta(days=2)))
     assert all(
         event.event_type != "before_24" for event in await tracking.pending_events(980_001, NOW + timedelta(days=2))
@@ -77,7 +77,7 @@ async def test_changes_cancel_a_reminder_already_accepted_into_outbox(tracking, 
         [SendMessage(chat_id=980_001, text="Reminder")],
         source_keys=[event.key],
     )
-    await tracking.mark_sent(980_001, event.key, crossing)
+    await tracking.mark_sent(980_001, [event.key], crossing)
     if change == "setting":
         await tracking.toggle(980_001, EdersSetting.TWO_HOURS_BEFORE)
     else:
@@ -135,7 +135,7 @@ async def test_after_outage_only_nearest_deadline_reminder_is_sent(tracking):
     await tracking.observe(980_001, "a", current)
     events = await tracking.pending_events(980_001, current.fetched_at)
     assert [event.event_type for event in events] == ["before_2"]
-    await tracking.mark_sent(980_001, events[0].key, current.fetched_at)
+    await tracking.mark_sent(980_001, [events[0].key], current.fetched_at)
     await tracking.observe(980_001, "a", replace(current, fetched_at=current.fetched_at + timedelta(minutes=30)))
     assert await tracking.pending_events(980_001, current.fetched_at + timedelta(minutes=30)) == []
 
@@ -177,7 +177,7 @@ async def test_repeated_deadline_change_is_a_new_notification(tracking):
         await tracking.observe(980_001, "a", EdersSnapshot((activity,), observed))
         events = await tracking.pending_events(980_001, observed)
         assert len(events) == 1 and events[0].event_type == "changed"
-        await tracking.mark_sent(980_001, events[0].key, observed)
+        await tracking.mark_sent(980_001, [events[0].key], observed)
 
 
 @pytest.mark.parametrize("delta", [timedelta(), timedelta(minutes=-1)])

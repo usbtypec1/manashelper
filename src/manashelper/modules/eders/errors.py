@@ -26,5 +26,9 @@ class EdersParseError(Exception):
     pass
 
 
+class EdersLoginPageError(EdersParseError):
+    """An Eders content request returned a login form."""
+
+
 class EdersUnsafeUrlError(Exception):
     """A link is outside the explicitly supported read-only endpoints."""

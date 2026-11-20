@@ -2,15 +2,29 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import BigInteger, any_, cast, delete, exists, func, or_, select, update
+from sqlalchemy import BigInteger, and_, any_, cast, delete, exists, func, or_, select, update
 from sqlalchemy.dialects.postgresql import ARRAY, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
+from sqlalchemy.sql.elements import ColumnElement
 
 from manashelper.platform.telegram.outbox.models import OutboxMessage, OutboxRateBucket
 from manashelper.platform.telegram.outbox.rate_limit import CHAT_BUCKET, GLOBAL_BUCKET, GROUP_BUCKET, TokenBucket
 
 RETRYABLE_STATUSES = ("failed", "expired", "cancelled")
+ACTIVE_STATUSES = ("pending", "processing")
+
+
+def _recipient_queue_head() -> ColumnElement[bool]:
+    earlier = aliased(OutboxMessage)
+    return and_(
+        OutboxMessage.status.in_(ACTIVE_STATUSES),
+        ~exists().where(
+            earlier.user_id == OutboxMessage.user_id,
+            earlier.id < OutboxMessage.id,
+            earlier.status.in_(ACTIVE_STATUSES),
+        ),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,25 +106,29 @@ class OutboxRepository:
         )
         return len((await self._session.scalars(statement)).all())
 
-    async def next_message(self, now: datetime) -> OutboxMessage | None:
-        earlier = aliased(OutboxMessage)
+    async def next_messages(self, now: datetime, limit: int) -> list[OutboxMessage]:
         statement = (
             select(OutboxMessage)
             .where(
-                OutboxMessage.status.in_(("pending", "processing")),
+                _recipient_queue_head(),
                 or_(OutboxMessage.available_at <= now, OutboxMessage.expires_at <= now),
                 or_(OutboxMessage.locked_until.is_(None), OutboxMessage.locked_until <= now),
-                ~exists().where(
-                    earlier.user_id == OutboxMessage.user_id,
-                    earlier.id < OutboxMessage.id,
-                    earlier.status.in_(("pending", "processing")),
-                ),
             )
             .order_by(OutboxMessage.available_at, OutboxMessage.id)
-            .limit(1)
+            .limit(limit)
             .with_for_update(skip_locked=True)
         )
-        return (await self._session.execute(statement)).scalar_one_or_none()
+        return list(await self._session.scalars(statement))
+
+    async def next_attempt_at(self) -> datetime | None:
+        # PostgreSQL's GREATEST ignores a NULL locked_until.
+        ready_at: ColumnElement[datetime] = func.greatest(
+            func.least(OutboxMessage.available_at, OutboxMessage.expires_at),
+            OutboxMessage.locked_until,
+            type_=OutboxMessage.available_at.type,
+        )
+        next_at: datetime | None = await self._session.scalar(select(func.min(ready_at)).where(_recipient_queue_head()))
+        return next_at
 
     async def get_locked(self, message_id: int) -> OutboxMessage | None:
         return await self._session.get(OutboxMessage, message_id, with_for_update=True, populate_existing=True)

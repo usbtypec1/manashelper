@@ -11,13 +11,14 @@ from manashelper.modules.eders.application.models import ActivityKind, EdersCour
 from manashelper.modules.eders.errors import (
     EdersFetchError,
     EdersLoginError,
+    EdersLoginPageError,
     EdersSessionExpiredError,
     EdersUnsafeUrlError,
 )
 from manashelper.modules.eders.infrastructure.parser import (
     parse_account_timezone,
     parse_activity_details,
-    parse_course_activities,
+    parse_course_page,
     parse_enrolled_courses,
 )
 from manashelper.modules.eders.infrastructure.urls import EDERS_BASE_URL
@@ -88,12 +89,12 @@ async def _request(
             continue
         if not response.is_success:
             raise EdersFetchError(f"Eders returned HTTP {response.status_code}")
-        if phase == "read" and BeautifulSoup(response.text, "lxml").select_one(
-            "input[name=logintoken], input[name='LoginForm[username]']"
-        ):
-            raise EdersSessionExpiredError("Eders session expired")
         return response
     raise EdersFetchError("Too many authentication redirects")
+
+
+async def _read_html(client: httpx.AsyncClient, url: str) -> str:
+    return (await _request(client, url, "read")).text
 
 
 def _sesskey(html: str) -> str:
@@ -305,19 +306,25 @@ class EdersClient:
                         sesskey = await self.login(client, student_number)
                     else:
                         sesskey = await self.login_via_obis(client, obis_cookies)
-                    profile = await _request(client, f"{EDERS_BASE_URL}/user/profile.php", "read")
-                    timezone = parse_account_timezone(profile.text)
+                    timezone = parse_account_timezone(await _read_html(client, f"{EDERS_BASE_URL}/user/profile.php"))
                     courses = await self._courses(client, sesskey)
                     activities = []
                     for course in courses:
-                        page = await _request(client, f"{EDERS_BASE_URL}/course/view.php?id={course.id}", "read")
-                        course_timezone = parse_account_timezone(page.text) or timezone
-                        for activity in parse_course_activities(page.text, course, course_timezone):
+                        course_activities, course_timezone = parse_course_page(
+                            await _read_html(client, f"{EDERS_BASE_URL}/course/view.php?id={course.id}"),
+                            course,
+                            timezone,
+                        )
+                        for activity in course_activities:
                             if activity.kind in {ActivityKind.ASSIGNMENT, ActivityKind.QUIZ}:
-                                details = await _request(client, activity.url, "read")
-                                activity = parse_activity_details(details.text, activity, course_timezone)
+                                activity = parse_activity_details(
+                                    await _read_html(client, activity.url), activity, course_timezone
+                                )
                             activities.append(activity)
                     return EdersSnapshot(tuple(activities), datetime.now(UTC), courses=tuple(courses))
+            except EdersLoginPageError:
+                if attempt:
+                    raise EdersSessionExpiredError("Eders session expired") from None
             except EdersSessionExpiredError:
                 if attempt:
                     raise
