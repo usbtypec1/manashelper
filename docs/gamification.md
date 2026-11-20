@@ -92,7 +92,8 @@ Foodie (Naruto at Ichiraku with ramen and stacked bowls), On the edge (tightrope
 Iron attendance (upright, front-facing Hannibal Lecter fusion wearing his restraint mask behind glass and bars),
 Critic (Anton Ego fusion stunned after tasting ratatouille against a plain background),
 I'll be back (only a gloved hand giving a thumbs-up above lava), Stability (a centered meditating monk),
-and Einstein (tongue-out portrait with wild white hair, E=mc² and a red FF on the chalkboard).
+Einstein (tongue-out portrait with wild white hair, E=mc² and a red FF on the chalkboard),
+and Pokémon (electric fennec mascot).
 The key mapping selects these images for earned medals and detail sheets; locked medals still use the atlas.
 Display names retain stable storage keys: `fall` is Negative growth, `thin_ice` is On the edge,
 and `phoenix` is I'll be back.
