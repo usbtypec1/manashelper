@@ -26,6 +26,15 @@ export const router = createRouter({
     { path: '/courses', name: 'courses', component: preferences, props: { tab: 'courses' }, meta: { backTo: 'settings' } },
     { path: '/free-time', name: 'free-time', component: () => import('./pages/FreeTimePage.vue') },
     { path: '/admin', name: 'admin', component: () => import('./pages/AdminUsersPage.vue') },
+    { path: '/admin/broadcasts', name: 'admin-broadcasts', component: () => import('./pages/AdminBroadcastsPage.vue') },
+    {
+      path: '/admin/broadcasts/new', name: 'admin-broadcast-new',
+      component: () => import('./pages/AdminBroadcastComposePage.vue'), meta: { backTo: 'admin-broadcasts' },
+    },
+    {
+      path: '/admin/broadcasts/:id', name: 'admin-broadcast',
+      component: () => import('./pages/AdminBroadcastDetailPage.vue'), meta: { backTo: 'admin-broadcasts' },
+    },
     {
       path: '/terms', name: 'terms', component: () => import('./TermsView.vue'),
       meta: {

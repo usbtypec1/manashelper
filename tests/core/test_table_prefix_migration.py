@@ -88,6 +88,7 @@ def _snapshot(connection):
 
 def _verify_migration(connection):
     historical_tables = set(Base.metadata.tables) - {
+        "broadcast_campaigns",
         "telegram_outbox",
         "telegram_outbox_rate_buckets",
         "gamification_progress",

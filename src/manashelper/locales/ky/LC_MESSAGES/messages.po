@@ -1283,6 +1283,168 @@ msgstr "Дагы жүктөө"
 msgid "miniapp.admin.refresh"
 msgstr "Жаңыртуу"
 
+msgid "miniapp.admin.active"
+msgstr "Активдүү"
+
+msgid "miniapp.admin.stopped"
+msgstr "Бот токтотулган"
+
+msgid "miniapp.admin.filters"
+msgstr "Колдонуучу чыпкалары"
+
+msgid "miniapp.admin.search"
+msgstr "Колдонуучуларды издөө"
+
+msgid "miniapp.admin.search_hint"
+msgstr "Аты же @username"
+
+msgid "miniapp.admin.language"
+msgstr "Тил"
+
+msgid "miniapp.admin.theme"
+msgstr "Тема"
+
+msgid "miniapp.admin.status"
+msgstr "Абалы"
+
+msgid "miniapp.admin.any_language"
+msgstr "Каалаган тил"
+
+msgid "miniapp.admin.any_theme"
+msgstr "Каалаган тема"
+
+msgid "miniapp.admin.any_status"
+msgstr "Каалаган абал"
+
+msgid "miniapp.admin.no_matches"
+msgstr "Колдонуучулар табылган жок."
+
+msgid "miniapp.admin.broadcasts"
+msgstr "Жөнөтүүлөр"
+
+msgid "miniapp.admin.broadcast"
+msgstr "Жөнөтүү"
+
+msgid "miniapp.admin.new_broadcast"
+msgstr "Жаңы жөнөтүү"
+
+msgid "miniapp.admin.audience"
+msgstr "Алуучулар"
+
+msgid "miniapp.admin.all"
+msgstr "Бардык колдонуучулар"
+
+msgid "miniapp.admin.allowlist"
+msgstr "Уруксат тизмеси"
+
+msgid "miniapp.admin.blocklist"
+msgstr "Тыюу тизмеси"
+
+msgid "miniapp.admin.pick_users"
+msgstr "Колдонуучуларды таап тандоо"
+
+msgid "miniapp.admin.search_results"
+msgstr "Издөө жыйынтыгы"
+
+msgid "miniapp.admin.selected_count"
+msgstr "Тандалган колдонуучулар: {count}"
+
+msgid "miniapp.admin.remove_user"
+msgstr "{name} колдонуучусун тандоодон алып салуу"
+
+msgid "miniapp.admin.eligibility"
+msgstr "Бот жөнөтүүнү азыр ала турган колдонуучуларга гана жиберет."
+
+msgid "miniapp.admin.variants"
+msgstr "Билдирүү варианттары"
+
+msgid "miniapp.admin.fallback"
+msgstr "Артыкчылык: тил жана тема, тил гана, тема гана, каалаган тил жана тема, андан соң биринчи вариант."
+
+msgid "miniapp.admin.message"
+msgstr "Билдирүүнүн тексти"
+
+msgid "miniapp.admin.add_variant"
+msgstr "Вариант кошуу"
+
+msgid "miniapp.admin.remove_variant"
+msgstr "Вариантты алып салуу"
+
+msgid "miniapp.admin.duplicate_variant"
+msgstr "Тил менен теманын ар бир жубуна бир вариант кошулат."
+
+msgid "miniapp.admin.queue"
+msgstr "Кезекке коюу"
+
+msgid "miniapp.admin.confirm_all"
+msgstr "Жөнөтүүнү ала турган бардык колдонуучулар үчүн кезекке коёлу беле?"
+
+msgid "miniapp.admin.confirm_allowlist"
+msgstr "Тандалган {count} колдонуучунун арасынан ала тургандар үчүн гана кезекке коёлу беле?"
+
+msgid "miniapp.admin.confirm_blocklist"
+msgstr "Тандалган {count} колдонуучудан башка ала турган адамдар үчүн кезекке коёлу беле?"
+
+msgid "miniapp.admin.invalid_broadcast"
+msgstr "Алуучуларды жана варианттарды текшериңиз. Даяр текст Telegram'дын 4096 белгилик чегинен ашпашы керек."
+
+msgid "miniapp.admin.no_broadcasts"
+msgstr "Азырынча жөнөтүү жок."
+
+msgid "miniapp.admin.no_recipients"
+msgstr "Ала турган колдонуучулар жок."
+
+msgid "miniapp.admin.deliveries"
+msgstr "Жеткирүү"
+
+msgid "miniapp.admin.attempts"
+msgstr "Аракеттер"
+
+msgid "miniapp.admin.pending"
+msgstr "Кезекте"
+
+msgid "miniapp.admin.processing"
+msgstr "Жөнөтүлүүдө"
+
+msgid "miniapp.admin.sent"
+msgstr "Жеткирилди"
+
+msgid "miniapp.admin.failed"
+msgstr "Ката"
+
+msgid "miniapp.admin.expired"
+msgstr "Мөөнөтү бүттү"
+
+msgid "miniapp.admin.cancelled"
+msgstr "Жокко чыгарылды"
+
+msgid "miniapp.admin.retry_deliveries"
+msgstr "Жеткирүүнү кайталоо"
+
+msgid "miniapp.admin.confirm_retry"
+msgstr "Бул жөнөтүүнү ала элек, азыр ала турган колдонуучуларга кайталап жиберелиби?"
+
+msgid "miniapp.admin.retried_count"
+msgstr "Кайра кезекке коюлду: {count}"
+
+msgid "miniapp.admin.none_retried"
+msgstr "Кайталоого ылайыктуу жеткирүү жок."
+
+msgid "miniapp.admin.blocked"
+msgstr "Бөгөттөлгөн"
+
+msgid "miniapp.admin.block_user"
+msgstr "Бөгөттөө"
+
+msgid "miniapp.admin.unblock_user"
+msgstr "Бөгөттөн чыгаруу"
+
+msgid "miniapp.admin.confirm_block"
+msgstr "{name} үчүн ботко жана Mini App'ка кирүүнү бөгөттөйбүзбү?"
+
+msgid "miniapp.admin.confirm_unblock"
+msgstr "{name} үчүн ботко жана Mini App'ка кирүүнү калыбына келтиребизби?"
+
 msgid "miniapp.ui.loading"
 msgstr "Жүктөлүүдө…"
 
@@ -2075,9 +2237,6 @@ msgstr "Тамактарды баалоо"
 msgid "food.rate_dish_prompt"
 msgstr "Бул тамакка 1ден 5ке чейин баа бер."
 
-msgid "food.dish_no_ratings"
-msgstr "Азырынча баа жок"
-
 msgid "food.dish_ratings_complete"
 msgstr "Бааланбаган тамак калган жок."
 
@@ -2089,3 +2248,39 @@ msgstr "Даам жыйноочу"
 
 msgid "gamification.dish_completion.description"
 msgstr "Каталогдогу бардык тамактарды баала."
+
+msgid "commands.pokemon"
+msgstr "«Покемон» жетишкендиги үчүн сүрөт жөнөтүү"
+
+msgid "gamification.pokemon.name"
+msgstr "Покемон"
+
+msgid "gamification.pokemon.description"
+msgstr "@yunbae менен сүрөткө түшүп, сүрөттү /pokemon аркылуу ботко жөнөт. Админ текшерип, жетишкендикти берет."
+
+msgid "gamification.pokemon.photo_prompt"
+msgstr "@yunbae менен чогуу түшкөн сүрөтүңдү жөнөт. Бот сүрөттү админге текшерүүгө жиберет."
+
+msgid "gamification.pokemon.already_earned"
+msgstr "«Покемон» жетишкендигин мурда алгансың."
+
+msgid "gamification.pokemon.photo_required"
+msgstr "Сүрөттү Telegram'да фото катары жөнөт."
+
+msgid "gamification.pokemon.submitted"
+msgstr "Сүрөт админге текшерүүгө жөнөтүлдү."
+
+msgid "gamification.pokemon.send_failed"
+msgstr "Сүрөт админге жөнөтүлгөн жок. Кайра жөнөтүп көр."
+
+msgid "gamification.pokemon.admin_photo"
+msgstr "{sender} «Покемонго» арыз берди. Сүрөттө жөнөтүүчү жана @yunbae бар экенин текшер."
+
+msgid "gamification.pokemon.grant"
+msgstr "Жетишкендикти берүү"
+
+msgid "gamification.pokemon.granted"
+msgstr "«Покемон» жетишкендиги берилди."
+
+msgid "gamification.pokemon.grant_unavailable"
+msgstr "Колдонуучу жетишкендикти мурда алган же азыр аны берүү мүмкүн эмес."

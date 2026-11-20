@@ -70,6 +70,6 @@ class FoodMenuNotificationSettingsRepository:
                 (FoodMenuNotificationSettings.user_id == User.id) & (FoodMenuNotificationSettings.weekday == weekday),
             )
             .where(column.is_distinct_from(False))
-            .where(User.bot_stopped.is_(False))
+            .where(User.delivery_enabled())
         )
         return list(result.scalars().all())

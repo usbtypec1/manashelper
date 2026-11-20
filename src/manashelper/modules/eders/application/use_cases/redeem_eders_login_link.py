@@ -5,6 +5,7 @@ from manashelper.modules.eders.errors import InvalidEdersLoginLinkError
 from manashelper.modules.eders.infrastructure.client import EdersClient
 from manashelper.modules.obis.application.access import ObisAccessService
 from manashelper.modules.obis.application.ports import CredentialsStore
+from manashelper.modules.users.queries import UsersQuery
 
 
 @dataclass(frozen=True, slots=True)
@@ -13,10 +14,13 @@ class RedeemEdersLoginLinkUseCase:
     tokens: EdersLoginTokens
     eders_client: EdersClient
     obis_access: ObisAccessService
+    users: UsersQuery
 
     async def execute(self, token: str) -> str:
         grant = self.tokens.consume(token)
         await self.credentials_store.lock(grant.user_id)
+        if await self.users.is_blocked(grant.user_id):
+            raise InvalidEdersLoginLinkError
         credentials = await self.credentials_store.get_by_user_id(grant.user_id)
         if (
             credentials is None

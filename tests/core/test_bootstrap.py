@@ -11,6 +11,7 @@ EXPECTED_TABLES = {
     "advertisement_channel_messages",
     "advertisement_contact_views",
     "advertisement_media",
+    "broadcast_campaigns",
     "eders_notifications",
     "eders_states",
     "feedback_messages",

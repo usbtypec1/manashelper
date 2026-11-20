@@ -92,8 +92,10 @@ async def test_all_achievement_sources_enqueue_once_on_first_award(session):
     # Repeated food and night checks after the thresholds must not notify again.
     await activity.execute(991101, "food", observed_at=start + timedelta(days=4))
     await activity.execute(991101, "grades", observed_at=start + timedelta(days=3))
+    assert await awards.execute(991101, "pokemon", start, granted_by=42)
+    assert not await awards.execute(991101, "pokemon", start, granted_by=42)
     rows = await queued(session)
-    assert len(rows) == len(ACHIEVEMENT_KEYS) == 15
+    assert len(rows) == len(ACHIEVEMENT_KEYS)
     assert {row.deduplication_key for row in rows} == {f"achievement:991101:{key}" for key in ACHIEVEMENT_KEYS}
     assert set(await repository.get_awards(991101)) == set(ACHIEVEMENT_KEYS)
     assert all(row.category == "achievement" and row.status == "pending" for row in rows)
@@ -137,7 +139,7 @@ async def test_disabled_and_stopped_users_do_not_receive_notifications(session, 
     repository = await setup_user(session, enabled=stopped, stopped=stopped)
     awards = build_awards(session)
     await awards.execute(991101, "seller", datetime.now(UTC))
-    await awards.execute(991101, "pokemon", datetime.now(UTC))
+    await awards.execute(991101, "dish_completion", datetime.now(UTC))
     assert await queued(session) == []
     assert set(await repository.get_awards(991101)) == ({"seller"} if stopped else set())
 

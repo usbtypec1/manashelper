@@ -9,8 +9,7 @@ from aiogram.utils.i18n import gettext as _
 from dishka import FromDishka
 
 from manashelper.core.config import Settings
-from manashelper.localization.locale import DEFAULT_LOCALE, Locale
-from manashelper.localization.theme import Theme
+from manashelper.localization.locale import DEFAULT_LOCALE
 from manashelper.modules.broadcast.application.use_cases.send_broadcast import SendBroadcastUseCase
 from manashelper.modules.broadcast.callbacks import BroadcastAction, BroadcastCallback
 from manashelper.modules.broadcast.content import BroadcastButton, InvalidBroadcastButtonsError, parse_buttons
@@ -19,7 +18,7 @@ from manashelper.modules.broadcast.keyboards import (
     build_broadcast_buttons_editor,
     build_broadcast_confirm_keyboard,
 )
-from manashelper.modules.broadcast.sender import TelegramBroadcastSender
+from manashelper.modules.broadcast.sender import TelegramBroadcastSender, broadcast_body_fits
 from manashelper.modules.broadcast.service import BroadcastSender
 from manashelper.modules.users.application.locale import LocaleQuery
 from manashelper.modules.users.application.theme import ThemeQuery
@@ -59,17 +58,6 @@ async def _show_preview(message: Message, state: FSMContext) -> None:
             await message.answer(preview, reply_markup=keyboard)
         if buttons is not None:
             await message.answer(_("broadcast.confirm_prompt"), reply_markup=controls)
-
-
-def _body_fits(body: str) -> bool:
-    for locale in Locale:
-        for theme in Theme:
-            with i18n.use_theme(theme):
-                preview = i18n.gettext("broadcast.preview", locale=locale.value).format(body=body)
-                delivered = i18n.gettext("broadcast.admin_message", locale=locale.value).format(body=body)
-                if max(len(preview.encode("utf-16-le")), len(delivered.encode("utf-16-le"))) // 2 > 4096:
-                    return False
-    return True
 
 
 async def _set_status(message: Message, text: str) -> None:
@@ -113,7 +101,7 @@ async def on_broadcast_message_entered(message: Message, state: FSMContext, sett
         if message.media_group_id:
             await message.answer(_("broadcast.single_photo_required"))
             return
-        if not _body_fits(body):
+        if not broadcast_body_fits(body):
             await message.answer(_("broadcast.too_long"))
             return
         await state.update_data({_BODY_STATE_KEY: body, _PHOTO_STATE_KEY: photo_id})

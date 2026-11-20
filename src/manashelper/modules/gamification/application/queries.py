@@ -52,6 +52,9 @@ class GamificationQuery:
     async def is_enabled(self, user_id: int) -> bool:
         return await self.repository.is_enabled(user_id)
 
+    async def has_award(self, user_id: int, key: str) -> bool:
+        return key in await self.repository.get_awards(user_id)
+
     async def profile(self, user_id: int) -> AchievementProfile:
         food, streak, night_date, ratings = await self.repository.get_progress(user_id)
         today = datetime.now(UTC).astimezone(BISHKEK_TZ).date()

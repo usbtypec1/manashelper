@@ -9,6 +9,7 @@ from manashelper.modules.obis.application.use_cases.poll_obis_user import PollOb
 from manashelper.modules.obis.presentation.sender import TelegramObisNotificationSender
 from manashelper.modules.users.application.locale import LocaleQuery
 from manashelper.modules.users.application.theme import ThemeQuery
+from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.telegram.outbox.service import OutboxService
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,8 @@ async def _poll_user_obis_notifications(
 ) -> None:
     try:
         async with container() as request_container:
+            if not await (await request_container.get(UsersQuery)).can_use_bot(user_id):
+                return
             poll_obis_user = await request_container.get(PollObisUserUseCase)
             locales = await request_container.get(LocaleQuery)
             locale = await locales.get_locale(user_id)

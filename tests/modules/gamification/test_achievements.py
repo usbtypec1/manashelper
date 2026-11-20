@@ -131,19 +131,19 @@ async def test_retired_awards_are_preserved_but_excluded_from_collection_and_ran
     # Retired awards must not affect score, eligibility or the tie-breaking time.
     session.add_all(
         [
-            UserAchievement(user_id=991001, achievement_key="pokemon", earned_at=now + timedelta(days=1), granted_by=5),
-            UserAchievement(user_id=991003, achievement_key="pokemon", earned_at=now, granted_by=5),
+            UserAchievement(user_id=991001, achievement_key="dish_completion", earned_at=now + timedelta(days=1)),
+            UserAchievement(user_id=991003, achievement_key="dish_completion", earned_at=now),
         ]
     )
     await session.flush()
-    assert not await repo.award(991002, "pokemon", now)
+    assert not await repo.award(991002, "dish_completion", now)
     assert list(await repo.get_awards(991001)) == ["seller"]
     assert await repo.ranking() == [(991001, "Synthetic achiever", 1, 1), (991002, "Synthetic achiever", 1, 1)]
     profile = await GamificationQuery(repo).profile(991003)
-    assert (profile.score, profile.total, profile.rank) == (0, 15, None)
-    assert "pokemon" not in {card.key for card in profile.achievements}
-    stored = await session.get(UserAchievement, (991001, "pokemon"))
-    assert stored is not None and stored.granted_by == 5 and stored.earned_at == now + timedelta(days=1)
+    assert (profile.score, profile.total, profile.rank) == (0, 16, None)
+    assert "dish_completion" not in {card.key for card in profile.achievements}
+    stored = await session.get(UserAchievement, (991001, "dish_completion"))
+    assert stored is not None and stored.earned_at == now + timedelta(days=1)
 
 
 async def test_default_off_blocks_all_writers_and_opt_out_preserves_progress(session):

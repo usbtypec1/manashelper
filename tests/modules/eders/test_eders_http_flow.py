@@ -487,6 +487,8 @@ async def test_browser_login_hands_native_key_to_separate_browser_without_exposi
     from manashelper.modules.eders.application.use_cases.issue_eders_login_link import IssueEdersLoginLinkUseCase
     from manashelper.modules.eders.application.use_cases.redeem_eders_login_link import RedeemEdersLoginLinkUseCase
     from manashelper.modules.eders.errors import InvalidEdersLoginLinkError
+    from manashelper.modules.users.infrastructure.repositories.user import UserRepository
+    from manashelper.modules.users.queries import UsersQuery
 
     transports = install_client(monkeypatch, "browser-login")
     crypto = CryptoService(SimpleNamespace(obis_encryption_key=base64.b64encode(bytes(range(32))).decode()))
@@ -504,7 +506,9 @@ async def test_browser_login_hands_native_key_to_separate_browser_without_exposi
     tokens = EdersLoginTokens()
     config = Settings.model_construct(public_url="https://bot.example.com", eders_password=SecretStr("fake-password"))
     link = await IssueEdersLoginLinkUseCase(credentials, tokens, config).execute(user.id, Locale.RU)
-    redeem = RedeemEdersLoginLinkUseCase(credentials, tokens, make_eders_client(), obis.access)
+    redeem = RedeemEdersLoginLinkUseCase(
+        credentials, tokens, make_eders_client(), obis.access, UsersQuery(UserRepository(session))
+    )
     destination = await redeem.execute(urlsplit(link).fragment)
     assert transports[0].paths == [("GET", "/site/eders")]
     assert await obis.sessions.get_cookies(user.id) == {"obis": "rotated"}

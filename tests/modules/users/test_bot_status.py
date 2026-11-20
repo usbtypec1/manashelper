@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -31,19 +32,22 @@ from tests.modules.users.application_factories import (
 )
 
 
-async def test_stopped_users_are_excluded_from_every_recipient_selection(session):
+async def test_stopped_and_blocked_users_are_excluded_from_every_recipient_selection(session):
     course = await session.scalar(select(Course).limit(1))
     assert course is not None
     active = User(id=946601, full_name="Active", tracked_courses=[course])
     stopped = User(id=946602, full_name="Stopped", bot_stopped=True, tracked_courses=[course])
-    session.add_all([active, stopped])
+    blocked = User(id=946605, full_name="Blocked", is_blocked=True, tracked_courses=[course])
+    session.add_all([active, stopped, blocked])
     await session.flush()
     queries = UsersQuery(UserRepository(session))
-    assert {active.id, stopped.id} <= set(await queries.get_all_ids())
-    assert active.id in await queries.get_active_ids() and stopped.id not in await queries.get_active_ids()
+    test_ids = {active.id, stopped.id, blocked.id}
+    assert test_ids <= set(await queries.get_all_ids())
+    assert set(await queries.get_active_ids()) & test_ids == {active.id}
     notifications = NotificationSettingsRepository(session)
     food = FoodMenuNotificationSettingsRepository(session)
     selections = [
+        await notifications.get_broadcast_recipient_ids(datetime.now(UTC)),
         await notifications.get_user_ids_with_exam_grades_enabled(),
         await notifications.get_user_ids_with_lesson_skips_enabled(),
         await notifications.get_user_ids_tracking_course_with_schedule_changes_enabled(course.id),
@@ -51,7 +55,7 @@ async def test_stopped_users_are_excluded_from_every_recipient_selection(session
         await food.get_user_ids_with_dinner_enabled_for_weekday(0),
     ]
     for ids in selections:
-        assert active.id in ids and stopped.id not in ids
+        assert set(ids) & test_ids == {active.id}
 
 
 async def test_private_interaction_resumes_bot_without_changing_preferences(session):
@@ -125,7 +129,7 @@ async def test_permanent_failure_persists_flag_and_suppresses_next_attempt(sessi
 )
 async def test_permanent_telegram_errors_mark_user_stopped(reason):
     status = AsyncMock(spec=build_bot_status_service(AsyncMock()))
-    status.is_stopped.return_value = False
+    status.is_delivery_disabled.return_value = False
     error = TelegramForbiddenError(method=SendMessage(chat_id=42, text="test"), message=reason)
     with pytest.raises(TelegramForbiddenError):
         await UserMessageDelivery(status, stop_bot_delivery=SimpleNamespace(execute=status.stop)).send(
@@ -137,7 +141,7 @@ async def test_permanent_telegram_errors_mark_user_stopped(reason):
 @pytest.mark.parametrize("kind", ["rate_limit", "server", "invalid_content"])
 async def test_temporary_or_content_errors_preserve_delivery_eligibility(kind):
     status = AsyncMock(spec=build_bot_status_service(AsyncMock()))
-    status.is_stopped.return_value = False
+    status.is_delivery_disabled.return_value = False
     method = SendMessage(chat_id=42, text="test")
     error = (
         TelegramRetryAfter(method=method, message="Too Many Requests", retry_after=1)

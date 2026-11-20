@@ -30,6 +30,7 @@ from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.provider import UsersProvider
+from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.telegram.outbox.service import OutboxService
@@ -111,6 +112,7 @@ async def test_poll_failure_aborts_only_current_user_and_preserves_call_order(fa
     tracking.pending_events.side_effect = pending
     dependencies = {
         EdersTrackingService: tracking,
+        UsersQuery: AsyncMock(can_use_bot=AsyncMock(return_value=True)),
         PollEdersUserUseCase: PollEdersUserUseCase(
             SimpleNamespace(execute=service.refresh_snapshot), tracking, locales
         ),
@@ -146,12 +148,13 @@ async def test_missing_user_is_rejected_before_state_creation():
     repository.get_state.assert_not_awaited()
 
 
-async def test_poll_eligibility_requires_only_student_number(session):
+async def test_poll_eligibility_requires_only_student_number_and_access(session):
     users = [
         User(id=976701, full_name="none"),
         User(id=976702, full_name="number", student_number="fixture"),
         User(id=976703, full_name="password", encrypted_password="fixture"),
         User(id=976704, full_name="both", student_number="fixture", encrypted_password="fixture"),
+        User(id=976705, full_name="blocked", student_number="fixture", is_blocked=True),
     ]
     session.add_all(users)
     await session.flush()

@@ -41,13 +41,19 @@ Leases, source-key deduplication and checkpoints cannot eliminate this external 
 
 ## Cleanup and operations
 
-Cleanup runs at startup and every 24 hours. It expires overdue records with inactive leases, deletes terminal
-records finished more than 24 hours ago and removes inactive per-chat buckets. Valid pending work and bot cooldowns
-survive cleanup. Inspect status, attempts, failures, available_at, expires_at, locked_until and last_error for diagnosis.
+Cleanup runs at startup and every 24 hours. It expires overdue records with inactive leases, deletes ungrouped
+terminal records finished more than 24 hours ago and removes inactive per-chat buckets. Valid pending work,
+retained broadcast batches and bot cooldowns survive cleanup. Inspect status, attempts, failures, available_at,
+expires_at, locked_until and last_error for diagnosis.
 Error fields contain class names or fixed codes, never payloads or bot tokens. Failed records are not replayed automatically.
 
 Migration `V27` only adds the outbox and bucket tables. Startup applies it normally. Stop producers/workers and
 drain or export pending work before downgrading to `V26`: the downgrade drops these two tables.
+
+Migration `V36` adds `broadcast_campaigns` and a nullable outbox `batch_id`. Each campaign retains
+one outbox row per recipient for delivery history and manual retry. The legacy command continues to use
+ungrouped rows. Back up the campaign history before downgrading to `V35`. That downgrade removes the
+campaign table and batch links while preserving the underlying outbox rows and their current delivery state.
 
 ## Verification
 

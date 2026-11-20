@@ -35,6 +35,7 @@ from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
 from manashelper.platform.telegram.middlewares.per_chat_ordering import PerChatOrderingMiddleware
 from manashelper.platform.telegram.middlewares.private_chat_only import PrivateChatOnlyMiddleware
 from manashelper.platform.telegram.middlewares.rate_limit import RateLimitMiddleware
+from manashelper.platform.telegram.middlewares.user_blocking import UserBlockingMiddleware
 from manashelper.platform.telegram.routers.navigation import router as navigation_router
 from manashelper.platform.telegram.routers.settings import router as settings_router
 from manashelper.platform.telegram.routers.start import router as start_router
@@ -92,6 +93,9 @@ def create_dispatcher(container: AsyncContainer) -> Dispatcher:
     # Explicit injection avoids auto_inject's conflict with startup callbacks.
     setup_dishka(container, dispatcher)
     inject_router(dispatcher)
+    # Inside the update observer, after Dishka and webhook receipts, before any
+    # message/callback observers and profile refreshes.
+    dispatcher.update.middleware(UserBlockingMiddleware())
 
     # Locale resolution needs Dishka's request container in middleware data.
     for observer in (dispatcher.message, dispatcher.callback_query):

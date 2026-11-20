@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.modules.gamification.application.catalog import ACHIEVEMENT_KEYS
+from manashelper.modules.gamification.application.catalog import ACHIEVEMENT_KEYS, POKEMON_KEY
 from manashelper.modules.gamification.infrastructure.models.achievement import GamificationProgress, UserAchievement
 from manashelper.modules.users.infrastructure.models.user import User
 
@@ -43,12 +43,14 @@ class AchievementRepository:
         progress.enabled = enabled
         await self.session.flush()
 
-    async def award(self, user_id: int, key: str, now: datetime) -> bool:
+    async def award(self, user_id: int, key: str, now: datetime, *, granted_by: int | None = None) -> bool:
+        if key == POKEMON_KEY and granted_by is None:
+            return False
         if key not in ACHIEVEMENT_KEYS or await self.lock_progress(user_id) is None:
             return False
         result = await self.session.scalar(
             insert(UserAchievement)
-            .values(user_id=user_id, achievement_key=key, earned_at=now)
+            .values(user_id=user_id, achievement_key=key, earned_at=now, granted_by=granted_by)
             .on_conflict_do_nothing()
             .returning(UserAchievement.achievement_key)
         )

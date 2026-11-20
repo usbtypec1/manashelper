@@ -6,9 +6,6 @@ Node is needed only for building the Vue/Vite frontend.
 
 ## Rules and persistence
 
-Pokemon is temporarily retired: its collection card and grant command are removed. Historical award
-rows remain stored, but only keys in the active achievement catalog contribute to scores, ranks and tie order.
-
 - Access is opt-in per user: `gamification_progress.enabled` defaults to false, including existing rows.
   A missing progress row is disabled. Only the configured admin chat can run
   `/gamification <Telegram user ID> on|off` for a registered user. Reopen the main menu afterward.
@@ -16,7 +13,10 @@ rows remain stored, but only keys in the active achievement catalog contribute t
   No activity progress or awards (including temporarily retired achievements) are recorded, and the transcript-only HTTP refresh is skipped.
   Regular OBIS synchronization continues. Disabling preserves awards/progress; enabling resumes them without
   backfilling missed activity. Academic history can qualify on the next successful refresh.
-- The collection contains fifteen achievements. One achievement = one point. Awards are permanent and unique per Telegram user/key.
+- The collection contains sixteen achievements. One achievement = one point. Awards are permanent and unique per Telegram user/key.
+- Pokémon: in a private chat, use `/pokemon` and send a photo of yourself with @yunbae. The bot sends it to the
+  configured admin chat. An admin reviews the photo and grants the award with its inline button. The award
+  records the admin's Telegram ID. Historical Pokémon awards count again and keep their original dates.
 - Each newly earned achievement queues a localized text notification with its name and condition in
   `telegram_outbox` (category `achievement`, 24-hour TTL). The award and queue entry commit together;
   failures roll both back. Repeated observations and existing awards do not enqueue again.

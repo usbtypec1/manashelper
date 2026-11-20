@@ -13,6 +13,7 @@ function useTelegramState(available: boolean) {
   return {
     available,
     rawInitData,
+    userId: computed(() => user.value?.id),
     languageCode: computed(() => user.value?.language_code?.split('-')[0] ?? 'en'),
     dialogBack: shallowRef<(() => void) | undefined>(),
   }

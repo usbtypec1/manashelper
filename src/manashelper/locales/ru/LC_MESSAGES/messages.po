@@ -1280,6 +1280,168 @@ msgstr "Загрузить ещё"
 msgid "miniapp.admin.refresh"
 msgstr "Обновить"
 
+msgid "miniapp.admin.active"
+msgstr "Активен"
+
+msgid "miniapp.admin.stopped"
+msgstr "Бот остановлен"
+
+msgid "miniapp.admin.filters"
+msgstr "Фильтры пользователей"
+
+msgid "miniapp.admin.search"
+msgstr "Поиск пользователей"
+
+msgid "miniapp.admin.search_hint"
+msgstr "Имя или @username"
+
+msgid "miniapp.admin.language"
+msgstr "Язык"
+
+msgid "miniapp.admin.theme"
+msgstr "Тема"
+
+msgid "miniapp.admin.status"
+msgstr "Статус"
+
+msgid "miniapp.admin.any_language"
+msgstr "Любой язык"
+
+msgid "miniapp.admin.any_theme"
+msgstr "Любая тема"
+
+msgid "miniapp.admin.any_status"
+msgstr "Любой статус"
+
+msgid "miniapp.admin.no_matches"
+msgstr "Пользователи не найдены."
+
+msgid "miniapp.admin.broadcasts"
+msgstr "Рассылки"
+
+msgid "miniapp.admin.broadcast"
+msgstr "Рассылка"
+
+msgid "miniapp.admin.new_broadcast"
+msgstr "Новая рассылка"
+
+msgid "miniapp.admin.audience"
+msgstr "Получатели"
+
+msgid "miniapp.admin.all"
+msgstr "Все пользователи"
+
+msgid "miniapp.admin.allowlist"
+msgstr "Белый список"
+
+msgid "miniapp.admin.blocklist"
+msgstr "Чёрный список"
+
+msgid "miniapp.admin.pick_users"
+msgstr "Найти и выбрать пользователей"
+
+msgid "miniapp.admin.search_results"
+msgstr "Результаты поиска"
+
+msgid "miniapp.admin.selected_count"
+msgstr "Выбрано пользователей: {count}"
+
+msgid "miniapp.admin.remove_user"
+msgstr "Убрать {name} из списка"
+
+msgid "miniapp.admin.eligibility"
+msgstr "Бот отправляет рассылку только тем, кто сейчас может её получить."
+
+msgid "miniapp.admin.variants"
+msgstr "Варианты сообщения"
+
+msgid "miniapp.admin.fallback"
+msgstr "Приоритет: язык и тема, только язык, только тема, любой язык и тема, затем первый вариант."
+
+msgid "miniapp.admin.message"
+msgstr "Текст сообщения"
+
+msgid "miniapp.admin.add_variant"
+msgstr "Добавить вариант"
+
+msgid "miniapp.admin.remove_variant"
+msgstr "Убрать вариант"
+
+msgid "miniapp.admin.duplicate_variant"
+msgstr "Для каждой пары языка и темы можно добавить один вариант."
+
+msgid "miniapp.admin.queue"
+msgstr "Поставить в очередь"
+
+msgid "miniapp.admin.confirm_all"
+msgstr "Поставить рассылку в очередь для всех доступных пользователей?"
+
+msgid "miniapp.admin.confirm_allowlist"
+msgstr "Поставить рассылку в очередь только для доступных получателей из {count} выбранных?"
+
+msgid "miniapp.admin.confirm_blocklist"
+msgstr "Поставить рассылку в очередь для всех доступных получателей, кроме {count} выбранных?"
+
+msgid "miniapp.admin.invalid_broadcast"
+msgstr "Проверьте получателей и варианты. Готовый текст сообщения должен помещаться в лимит Telegram в 4096 символов."
+
+msgid "miniapp.admin.no_broadcasts"
+msgstr "Рассылок пока нет."
+
+msgid "miniapp.admin.no_recipients"
+msgstr "Нет доступных получателей."
+
+msgid "miniapp.admin.deliveries"
+msgstr "Доставка"
+
+msgid "miniapp.admin.attempts"
+msgstr "Попытки"
+
+msgid "miniapp.admin.pending"
+msgstr "В очереди"
+
+msgid "miniapp.admin.processing"
+msgstr "Отправляется"
+
+msgid "miniapp.admin.sent"
+msgstr "Доставлено"
+
+msgid "miniapp.admin.failed"
+msgstr "Ошибка"
+
+msgid "miniapp.admin.expired"
+msgstr "Срок истёк"
+
+msgid "miniapp.admin.cancelled"
+msgstr "Отменено"
+
+msgid "miniapp.admin.retry_deliveries"
+msgstr "Повторить доставку"
+
+msgid "miniapp.admin.confirm_retry"
+msgstr "Повторить доставку доступным получателям, которые ещё не получили эту рассылку?"
+
+msgid "miniapp.admin.retried_count"
+msgstr "Повторно поставлено в очередь: {count}"
+
+msgid "miniapp.admin.none_retried"
+msgstr "Нет доступных получателей для повтора."
+
+msgid "miniapp.admin.blocked"
+msgstr "Заблокирован"
+
+msgid "miniapp.admin.block_user"
+msgstr "Заблокировать"
+
+msgid "miniapp.admin.unblock_user"
+msgstr "Разблокировать"
+
+msgid "miniapp.admin.confirm_block"
+msgstr "Заблокировать доступ к боту и Mini App для {name}?"
+
+msgid "miniapp.admin.confirm_unblock"
+msgstr "Восстановить доступ к боту и Mini App для {name}?"
+
 msgid "miniapp.ui.loading"
 msgstr "Загрузка…"
 
@@ -2072,9 +2234,6 @@ msgstr "Оценить блюда"
 msgid "food.rate_dish_prompt"
 msgstr "Оцени это блюдо от 1 до 5."
 
-msgid "food.dish_no_ratings"
-msgstr "Пока нет оценок"
-
 msgid "food.dish_ratings_complete"
 msgstr "Не осталось блюд без твоей оценки."
 
@@ -2086,3 +2245,39 @@ msgstr "Коллекционер вкусов"
 
 msgid "gamification.dish_completion.description"
 msgstr "Оцени все блюда в каталоге."
+
+msgid "commands.pokemon"
+msgstr "Отправить фото для ачивки «Покемон»"
+
+msgid "gamification.pokemon.name"
+msgstr "Покемон"
+
+msgid "gamification.pokemon.description"
+msgstr "Сфотографируйся с @yunbae и пришли снимок боту через /pokemon. Админ проверит фото и выдаст ачивку."
+
+msgid "gamification.pokemon.photo_prompt"
+msgstr "Пришли фото, на котором ты вместе с @yunbae. Бот отправит снимок админу на проверку."
+
+msgid "gamification.pokemon.already_earned"
+msgstr "У тебя уже есть ачивка «Покемон»."
+
+msgid "gamification.pokemon.photo_required"
+msgstr "Отправь снимок как фото в Telegram."
+
+msgid "gamification.pokemon.submitted"
+msgstr "Фото отправлено админу на проверку."
+
+msgid "gamification.pokemon.send_failed"
+msgstr "Не удалось отправить фото админу. Попробуй прислать его ещё раз."
+
+msgid "gamification.pokemon.admin_photo"
+msgstr "Заявка на «Покемона» от {sender}. Проверь, что на фото есть отправитель и @yunbae."
+
+msgid "gamification.pokemon.grant"
+msgstr "Выдать ачивку"
+
+msgid "gamification.pokemon.granted"
+msgstr "Ачивка «Покемон» выдана."
+
+msgid "gamification.pokemon.grant_unavailable"
+msgstr "У пользователя уже есть ачивка или сейчас её нельзя выдать."

@@ -1272,6 +1272,168 @@ msgstr "加载更多"
 msgid "miniapp.admin.refresh"
 msgstr "刷新"
 
+msgid "miniapp.admin.active"
+msgstr "活跃"
+
+msgid "miniapp.admin.stopped"
+msgstr "机器人已停用"
+
+msgid "miniapp.admin.filters"
+msgstr "用户筛选"
+
+msgid "miniapp.admin.search"
+msgstr "搜索用户"
+
+msgid "miniapp.admin.search_hint"
+msgstr "姓名或 @用户名"
+
+msgid "miniapp.admin.language"
+msgstr "语言"
+
+msgid "miniapp.admin.theme"
+msgstr "主题"
+
+msgid "miniapp.admin.status"
+msgstr "状态"
+
+msgid "miniapp.admin.any_language"
+msgstr "不限语言"
+
+msgid "miniapp.admin.any_theme"
+msgstr "不限主题"
+
+msgid "miniapp.admin.any_status"
+msgstr "不限状态"
+
+msgid "miniapp.admin.no_matches"
+msgstr "未找到匹配的用户。"
+
+msgid "miniapp.admin.broadcasts"
+msgstr "群发消息"
+
+msgid "miniapp.admin.broadcast"
+msgstr "群发详情"
+
+msgid "miniapp.admin.new_broadcast"
+msgstr "新建群发"
+
+msgid "miniapp.admin.audience"
+msgstr "收件人"
+
+msgid "miniapp.admin.all"
+msgstr "所有用户"
+
+msgid "miniapp.admin.allowlist"
+msgstr "白名单"
+
+msgid "miniapp.admin.blocklist"
+msgstr "黑名单"
+
+msgid "miniapp.admin.pick_users"
+msgstr "查找并选择用户"
+
+msgid "miniapp.admin.search_results"
+msgstr "搜索结果"
+
+msgid "miniapp.admin.selected_count"
+msgstr "已选用户：{count}"
+
+msgid "miniapp.admin.remove_user"
+msgstr "取消选择 {name}"
+
+msgid "miniapp.admin.eligibility"
+msgstr "机器人只会向当前可以接收群发消息的用户发送。"
+
+msgid "miniapp.admin.variants"
+msgstr "消息版本"
+
+msgid "miniapp.admin.fallback"
+msgstr "优先级依次为：语言和主题、仅语言、仅主题、不限语言和主题、首个版本。"
+
+msgid "miniapp.admin.message"
+msgstr "消息正文"
+
+msgid "miniapp.admin.add_variant"
+msgstr "添加版本"
+
+msgid "miniapp.admin.remove_variant"
+msgstr "移除版本"
+
+msgid "miniapp.admin.duplicate_variant"
+msgstr "每种语言和主题组合只能添加一个版本。"
+
+msgid "miniapp.admin.queue"
+msgstr "加入发送队列"
+
+msgid "miniapp.admin.confirm_all"
+msgstr "将此消息加入所有符合条件用户的发送队列？"
+
+msgid "miniapp.admin.confirm_allowlist"
+msgstr "仅向已选的 {count} 名用户中符合条件的用户发送？"
+
+msgid "miniapp.admin.confirm_blocklist"
+msgstr "向除已选 {count} 名用户之外的所有符合条件的用户发送？"
+
+msgid "miniapp.admin.invalid_broadcast"
+msgstr "请检查收件人和消息版本。Telegram 发送文本最多允许 4096 个字符。"
+
+msgid "miniapp.admin.no_broadcasts"
+msgstr "暂无群发消息。"
+
+msgid "miniapp.admin.no_recipients"
+msgstr "没有符合条件的收件人。"
+
+msgid "miniapp.admin.deliveries"
+msgstr "送达情况"
+
+msgid "miniapp.admin.attempts"
+msgstr "尝试次数"
+
+msgid "miniapp.admin.pending"
+msgstr "待发送"
+
+msgid "miniapp.admin.processing"
+msgstr "发送中"
+
+msgid "miniapp.admin.sent"
+msgstr "已送达"
+
+msgid "miniapp.admin.failed"
+msgstr "发送失败"
+
+msgid "miniapp.admin.expired"
+msgstr "已过期"
+
+msgid "miniapp.admin.cancelled"
+msgstr "已取消"
+
+msgid "miniapp.admin.retry_deliveries"
+msgstr "重试发送"
+
+msgid "miniapp.admin.confirm_retry"
+msgstr "向尚未收到此消息且符合条件的收件人重试发送？"
+
+msgid "miniapp.admin.retried_count"
+msgstr "重新加入队列：{count}"
+
+msgid "miniapp.admin.none_retried"
+msgstr "没有符合条件的发送可供重试。"
+
+msgid "miniapp.admin.blocked"
+msgstr "已封禁"
+
+msgid "miniapp.admin.block_user"
+msgstr "封禁"
+
+msgid "miniapp.admin.unblock_user"
+msgstr "解除封禁"
+
+msgid "miniapp.admin.confirm_block"
+msgstr "阻止 {name} 使用机器人和 Mini App？"
+
+msgid "miniapp.admin.confirm_unblock"
+msgstr "恢复 {name} 使用机器人和 Mini App 的权限？"
+
 msgid "miniapp.ui.loading"
 msgstr "加载中…"
 
@@ -2064,9 +2226,6 @@ msgstr "给菜品评分"
 msgid "food.rate_dish_prompt"
 msgstr "请为这道菜打 1 到 5 分。"
 
-msgid "food.dish_no_ratings"
-msgstr "暂无评分"
-
 msgid "food.dish_ratings_complete"
 msgstr "你已评完所有可评分的菜品。"
 
@@ -2078,3 +2237,39 @@ msgstr "美味收藏家"
 
 msgid "gamification.dish_completion.description"
 msgstr "为目录中的每道菜评分。"
+
+msgid "commands.pokemon"
+msgstr "提交「宝可梦」成就照片"
+
+msgid "gamification.pokemon.name"
+msgstr "宝可梦"
+
+msgid "gamification.pokemon.description"
+msgstr "与 @yunbae 合影，然后通过 /pokemon 把照片发给机器人。管理员审核后会授予成就。"
+
+msgid "gamification.pokemon.photo_prompt"
+msgstr "请发送你与 @yunbae 的合影。机器人会将照片发给管理员审核。"
+
+msgid "gamification.pokemon.already_earned"
+msgstr "你已经获得「宝可梦」成就。"
+
+msgid "gamification.pokemon.photo_required"
+msgstr "请以 Telegram 照片的形式发送图片。"
+
+msgid "gamification.pokemon.submitted"
+msgstr "照片已发给管理员审核。"
+
+msgid "gamification.pokemon.send_failed"
+msgstr "照片未能发给管理员，请重新发送。"
+
+msgid "gamification.pokemon.admin_photo"
+msgstr "{sender} 申请了「宝可梦」成就。请确认照片中有发送者和 @yunbae。"
+
+msgid "gamification.pokemon.grant"
+msgstr "授予成就"
+
+msgid "gamification.pokemon.granted"
+msgstr "已授予「宝可梦」成就。"
+
+msgid "gamification.pokemon.grant_unavailable"
+msgstr "该用户已获得此成就，或暂时无法获得。"

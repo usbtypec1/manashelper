@@ -30,5 +30,6 @@ def build_bot_status_service(users):
     query = BotStatusQuery(users)
     return SimpleNamespace(
         is_stopped=query.is_stopped,
+        is_delivery_disabled=query.is_delivery_disabled,
         stop=StopBotDeliveryUseCase(users=users).execute,
     )

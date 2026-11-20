@@ -148,6 +148,20 @@ async def test_expired_row_does_not_block_the_next_recipient(context):
     assert (await rows(context))[0].status == "expired"
 
 
+async def test_blocked_user_skips_all_outbox_categories_and_existing_work(context):
+    assert await enqueue(context, category="broadcast")
+    assert await enqueue(context, 983002, category="notification")
+    assert await UserRepository(context.session).set_blocked(983001, True)
+    assert not await context.status.is_stopped(983001)
+    assert not await enqueue(context, category="notification")
+    assert 983001 not in await context.recipients.for_broadcasts()
+    claim = await context.worker.claim(context.bot_id, context.now + timedelta(seconds=1))
+    assert claim.method.chat_id == 983002
+    assert (await rows(context))[0].status == "cancelled"
+    assert await UserRepository(context.session).set_blocked(983001, False)
+    assert await enqueue(context, category="notification")
+
+
 async def test_token_bucket_persists_global_and_per_chat_budgets(context):
     now = context.now
     assert await context.repository.reserve(context.bot_id, 983001, now) == 0

@@ -30,7 +30,7 @@ test('admin opens the user directory with Telegram launch data and loads another
 
   await page.evaluate(() => window.telegramTest.changeTheme('light'))
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
-  await expect(users).toHaveCSS('color', 'rgb(0, 0, 0)')
+  await expect(users).toHaveCSS('color', 'rgb(17, 17, 20)')
   await expect(users.getByRole('row')).toHaveCount(loadedRows)
 
   await page.evaluate(() => window.telegramTest.emit('theme_changed', {
@@ -85,4 +85,32 @@ test('a registered user without permission cannot see any profiles', async ({ pa
   await expect(page.getByRole('table')).toHaveCount(0)
   expect((await page.evaluate(buttonState, 'web_app_setup_main_button'))?.is_visible).not.toBe(true)
   expect((await page.evaluate(buttonState, 'web_app_setup_secondary_button'))?.is_visible).not.toBe(true)
+})
+
+test('administrator blocks and unblocks a user from the filtered directory', async ({ page, request }, testInfo) => {
+  const fixture = await (await request.get('/_fixture/init-data')).json()
+  await mockTelegram(page, fixture)
+  await page.goto('/app/admin')
+  const index = testInfo.project.name === 'mobile' ? 48 : 49
+  const name = 'Directory user ' + index
+  await page.getByRole('searchbox', { name: 'Search users' }).fill('@member_' + index)
+  const row = page.getByRole('row').filter({ hasText: name })
+
+  async function changeState(action: string) {
+    await row.getByRole('button', { name: action + ' ' + name, exact: true }).click()
+    await expect.poll(() => page.evaluate(() => {
+      const popup = window.telegramTest.events.filter(event => event.name === 'web_app_open_popup').at(-1)
+      return popup?.data
+    })).toMatchObject({ buttons: expect.arrayContaining([expect.objectContaining({ id: 'confirm', text: action })]) })
+    await page.evaluate(() => window.telegramTest.emit('popup_closed', { button_id: 'confirm' }))
+  }
+
+  await changeState('Block')
+  await expect(row.getByText('Blocked', { exact: true })).toBeVisible()
+  await page.getByRole('combobox', { name: 'Status', exact: true }).selectOption('blocked')
+  await expect(row.getByText('Blocked', { exact: true })).toBeVisible()
+  await changeState('Unblock')
+  await expect(page.getByText('No matching users.', { exact: true })).toBeVisible()
+  await page.getByRole('combobox', { name: 'Status', exact: true }).selectOption('active')
+  await expect(row.getByText('Active', { exact: true })).toBeVisible()
 })

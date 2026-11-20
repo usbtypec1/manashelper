@@ -1,12 +1,19 @@
 from datetime import datetime
 
-from sqlalchemy import or_, select
+from sqlalchemy import ColumnElement, Select, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
 from manashelper.modules.notifications.orm import NotificationSettings
 from manashelper.modules.schedule.infrastructure.models.associations import user_courses
 from manashelper.modules.users.infrastructure.models.user import User
+
+
+def _broadcast_allowed(now: datetime) -> ColumnElement[bool]:
+    return or_(
+        NotificationSettings.broadcast_muted_until.is_(None),
+        NotificationSettings.broadcast_muted_until <= now,
+    )
 
 
 class NotificationSettingsRepository:
@@ -32,18 +39,20 @@ class NotificationSettingsRepository:
         return settings
 
     async def get_broadcast_recipient_ids(self, now: datetime) -> list[int]:
-        result = await self._session.scalars(
-            select(User.id)
-            .outerjoin(NotificationSettings, NotificationSettings.user_id == User.id)
-            .where(User.bot_stopped.is_(False))
-            .where(
-                or_(
-                    NotificationSettings.broadcast_muted_until.is_(None),
-                    NotificationSettings.broadcast_muted_until <= now,
-                )
-            )
-        )
+        result = await self._session.scalars(self._broadcast_recipients(now).with_only_columns(User.id))
         return list(result.all())
+
+    async def get_broadcast_recipient_preferences(self, now: datetime) -> list[tuple[int, str | None, str]]:
+        result = await self._session.execute(self._broadcast_recipients(now))
+        return [(user_id, locale, theme) for user_id, locale, theme in result.tuples()]
+
+    @staticmethod
+    def _broadcast_recipients(now: datetime) -> Select[tuple[int, str | None, str]]:
+        return (
+            select(User.id, User.locale, User.theme)
+            .outerjoin(NotificationSettings, NotificationSettings.user_id == User.id)
+            .where(User.delivery_enabled(), _broadcast_allowed(now))
+        )
 
     async def get_user_ids_with_exam_grades_enabled(self) -> list[int]:
         return await self._get_user_ids_with_enabled(NotificationSettings.exam_grades_enabled)
@@ -52,15 +61,10 @@ class NotificationSettingsRepository:
         statement = (
             select(User.id)
             .outerjoin(NotificationSettings, NotificationSettings.user_id == User.id)
-            .where(User.id == user_id, User.bot_stopped.is_(False))
+            .where(User.id == user_id, User.delivery_enabled())
         )
         if category == "broadcast":
-            statement = statement.where(
-                or_(
-                    NotificationSettings.broadcast_muted_until.is_(None),
-                    NotificationSettings.broadcast_muted_until <= now,
-                )
-            )
+            statement = statement.where(_broadcast_allowed(now))
         else:
             flag = {
                 "exam_grades": NotificationSettings.exam_grades_enabled,
@@ -81,7 +85,7 @@ class NotificationSettingsRepository:
             .join(User, User.id == user_courses.c.user_id)
             .outerjoin(NotificationSettings, NotificationSettings.user_id == user_courses.c.user_id)
             .where(user_courses.c.course_id == course_id)
-            .where(User.bot_stopped.is_(False))
+            .where(User.delivery_enabled())
             .where(NotificationSettings.schedule_changes_enabled.is_distinct_from(False))
         )
         return list(result.scalars().all())
@@ -91,6 +95,6 @@ class NotificationSettingsRepository:
             select(User.id)
             .outerjoin(NotificationSettings, NotificationSettings.user_id == User.id)
             .where(column.is_distinct_from(False))
-            .where(User.bot_stopped.is_(False))
+            .where(User.delivery_enabled())
         )
         return list(result.scalars().all())

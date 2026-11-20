@@ -31,6 +31,8 @@ class EdersRepository:
         self._session.add(notification)
 
     async def get_poll_user_ids(self) -> list[int]:
-        query = select(User.id).where(User.student_number.is_not(None), User.student_number != "")
+        query = select(User.id).where(
+            User.is_blocked.is_(False), User.student_number.is_not(None), User.student_number != ""
+        )
         result = await self._session.execute(query)
         return list(result.scalars())

@@ -117,6 +117,7 @@ def test_root_composition_keeps_feedback_in_dispatcher_and_orm_registry(monkeypa
                 FoodMenuProvider(),
             ) as container:
                 dispatcher = create_dispatcher(container)
+                assert [type(item).__name__ for item in dispatcher.update.middleware] == ["UserBlockingMiddleware"]
                 for observer in (dispatcher.message, dispatcher.callback_query):
                     assert [type(item).__name__ for item in observer.outer_middleware] == [
                         "RateLimitMiddleware", "PerChatOrderingMiddleware", "ContainerMiddleware", "LocaleMiddleware"

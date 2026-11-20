@@ -4,6 +4,7 @@ from manashelper.modules.users.application.bot_status import BotStatusQuery
 from manashelper.modules.users.application.locale import LocaleQuery
 from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.modules.users.application.use_cases.resolve_user_locale import ResolveUserLocaleUseCase
+from manashelper.modules.users.application.use_cases.set_user_blocked import SetUserBlockedUseCase
 from manashelper.modules.users.application.use_cases.set_user_locale import SetUserLocaleUseCase
 from manashelper.modules.users.application.use_cases.set_user_theme import SetUserThemeUseCase
 from manashelper.modules.users.application.use_cases.stop_bot_delivery import StopBotDeliveryUseCase
@@ -17,6 +18,7 @@ class UsersProvider(Provider):
     stop_bot_delivery_use_case = provide(StopBotDeliveryUseCase)
 
     set_user_theme_use_case = provide(SetUserThemeUseCase)
+    set_user_blocked_use_case = provide(SetUserBlockedUseCase)
 
     set_user_locale_use_case = provide(SetUserLocaleUseCase)
 

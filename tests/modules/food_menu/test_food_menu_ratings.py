@@ -38,6 +38,7 @@ from manashelper.modules.food_menu.infrastructure.repositories.dish_rating impor
 from manashelper.modules.food_menu.presentation.callbacks import FoodMenuOpenCallback, FoodMenuRatingCallback
 from manashelper.modules.food_menu.presentation.food_menu_formatter import (
     build_daily_menu_rich_message,
+    format_daily_menu,
     refresh_daily_menu_rating,
 )
 from manashelper.modules.food_menu.presentation.keyboards.food_menu import (
@@ -172,9 +173,7 @@ def test_rich_message_has_only_one_rating_row_for_the_whole_menu_and_preserves_p
         outgoing = refresh_daily_menu_rating(received, menu, build_menu_rating_buttons(menu.id, menu.user_rating))
         bot = Bot(token="123456:development-placeholder")
         payload = bot.session.prepare_value(outgoing, bot=bot, files={}, _dumps_json=False)
-        assert payload["blocks"][2]["text"] == (
-            "1. Soup <b>& rice — 150 kcal · No ratings yet\n2. Salad — 100 kcal · No ratings yet"
-        )
+        assert payload["blocks"][2]["text"] == "1. Soup <b>& rice — 150 kcal\n2. Salad — 100 kcal"
         assert [block["photo"]["media"] for block in payload["blocks"][1]["blocks"]] == [
             "cached-photo-1-0",
             "cached-photo-1-1",
@@ -342,6 +341,11 @@ async def test_dish_rating_prioritizes_fewer_votes_and_keeps_first_score(session
         popular.id: (4.0, 2),
         unrated.id: (5.0, 1),
     }
+    await _service(session).set_rating(900_001, first.id, 3)
+    menu = await _service(session).get_daily_menu_by_date(first.date)
     with i18n.context(), i18n.use_locale("en"):
         rich = build_daily_menu_rich_message(menu, build_menu_rating_buttons(menu.id), [])
-    assert any("⭐ 4.0/5 (2)" in str(getattr(block, "text", "")) for block in rich.blocks)
+        for rendered in (format_daily_menu(menu), "\n".join(str(getattr(block, "text", "")) for block in rich.blocks)):
+            assert popular.name_tr in rendered and unrated.name_tr in rendered
+            assert "/5" not in rendered
+            assert "3.0" in rendered

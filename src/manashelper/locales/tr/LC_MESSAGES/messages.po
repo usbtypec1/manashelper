@@ -1279,6 +1279,168 @@ msgstr "Daha fazla yükle"
 msgid "miniapp.admin.refresh"
 msgstr "Yenile"
 
+msgid "miniapp.admin.active"
+msgstr "Etkin"
+
+msgid "miniapp.admin.stopped"
+msgstr "Bot durduruldu"
+
+msgid "miniapp.admin.filters"
+msgstr "Kullanıcı filtreleri"
+
+msgid "miniapp.admin.search"
+msgstr "Kullanıcı ara"
+
+msgid "miniapp.admin.search_hint"
+msgstr "Ad veya @kullanıcıadı"
+
+msgid "miniapp.admin.language"
+msgstr "Dil"
+
+msgid "miniapp.admin.theme"
+msgstr "Tema"
+
+msgid "miniapp.admin.status"
+msgstr "Durum"
+
+msgid "miniapp.admin.any_language"
+msgstr "Tüm diller"
+
+msgid "miniapp.admin.any_theme"
+msgstr "Tüm temalar"
+
+msgid "miniapp.admin.any_status"
+msgstr "Tüm durumlar"
+
+msgid "miniapp.admin.no_matches"
+msgstr "Eşleşen kullanıcı bulunamadı."
+
+msgid "miniapp.admin.broadcasts"
+msgstr "Toplu mesajlar"
+
+msgid "miniapp.admin.broadcast"
+msgstr "Toplu mesaj"
+
+msgid "miniapp.admin.new_broadcast"
+msgstr "Yeni toplu mesaj"
+
+msgid "miniapp.admin.audience"
+msgstr "Alıcılar"
+
+msgid "miniapp.admin.all"
+msgstr "Tüm kullanıcılar"
+
+msgid "miniapp.admin.allowlist"
+msgstr "İzin listesi"
+
+msgid "miniapp.admin.blocklist"
+msgstr "Engel listesi"
+
+msgid "miniapp.admin.pick_users"
+msgstr "Kullanıcıları bul ve seç"
+
+msgid "miniapp.admin.search_results"
+msgstr "Arama sonuçları"
+
+msgid "miniapp.admin.selected_count"
+msgstr "Seçilen kullanıcı sayısı: {count}"
+
+msgid "miniapp.admin.remove_user"
+msgstr "{name} kullanıcısını seçimden kaldır"
+
+msgid "miniapp.admin.eligibility"
+msgstr "Bot yalnızca şu anda toplu mesaj alabilen kullanıcılara gönderir."
+
+msgid "miniapp.admin.variants"
+msgstr "Mesaj seçenekleri"
+
+msgid "miniapp.admin.fallback"
+msgstr "Öncelik: dil ve tema, yalnızca dil, yalnızca tema, tüm diller ve temalar, ardından ilk seçenek."
+
+msgid "miniapp.admin.message"
+msgstr "Mesaj metni"
+
+msgid "miniapp.admin.add_variant"
+msgstr "Seçenek ekle"
+
+msgid "miniapp.admin.remove_variant"
+msgstr "Seçeneği kaldır"
+
+msgid "miniapp.admin.duplicate_variant"
+msgstr "Her dil ve tema birleşimi için tek seçenek eklenebilir."
+
+msgid "miniapp.admin.queue"
+msgstr "Sıraya al"
+
+msgid "miniapp.admin.confirm_all"
+msgstr "Bu mesaj tüm uygun kullanıcılar için sıraya alınsın mı?"
+
+msgid "miniapp.admin.confirm_allowlist"
+msgstr "Bu mesaj yalnızca seçilen {count} uygun kullanıcı için sıraya alınsın mı?"
+
+msgid "miniapp.admin.confirm_blocklist"
+msgstr "Bu mesaj seçilen {count} kullanıcı dışındaki tüm uygun kullanıcılar için sıraya alınsın mı?"
+
+msgid "miniapp.admin.invalid_broadcast"
+msgstr "Alıcıları ve seçenekleri kontrol edin. Gönderilen metin Telegram'ın 4096 karakter sınırına uymalıdır."
+
+msgid "miniapp.admin.no_broadcasts"
+msgstr "Henüz toplu mesaj yok."
+
+msgid "miniapp.admin.no_recipients"
+msgstr "Uygun alıcı yok."
+
+msgid "miniapp.admin.deliveries"
+msgstr "Teslimatlar"
+
+msgid "miniapp.admin.attempts"
+msgstr "Denemeler"
+
+msgid "miniapp.admin.pending"
+msgstr "Sırada"
+
+msgid "miniapp.admin.processing"
+msgstr "Gönderiliyor"
+
+msgid "miniapp.admin.sent"
+msgstr "Teslim edildi"
+
+msgid "miniapp.admin.failed"
+msgstr "Başarısız"
+
+msgid "miniapp.admin.expired"
+msgstr "Süresi doldu"
+
+msgid "miniapp.admin.cancelled"
+msgstr "İptal edildi"
+
+msgid "miniapp.admin.retry_deliveries"
+msgstr "Teslimatı yeniden dene"
+
+msgid "miniapp.admin.confirm_retry"
+msgstr "Bu mesajı henüz almayan uygun alıcılara yeniden gönderilsin mi?"
+
+msgid "miniapp.admin.retried_count"
+msgstr "Yeniden sıraya alındı: {count}"
+
+msgid "miniapp.admin.none_retried"
+msgstr "Yeniden denenecek uygun teslimat yok."
+
+msgid "miniapp.admin.blocked"
+msgstr "Engellendi"
+
+msgid "miniapp.admin.block_user"
+msgstr "Engelle"
+
+msgid "miniapp.admin.unblock_user"
+msgstr "Engeli kaldır"
+
+msgid "miniapp.admin.confirm_block"
+msgstr "{name} için bot ve Mini App erişimi engellensin mi?"
+
+msgid "miniapp.admin.confirm_unblock"
+msgstr "{name} için bot ve Mini App erişimi geri verilsin mi?"
+
 msgid "miniapp.ui.loading"
 msgstr "Yükleniyor…"
 
@@ -2071,9 +2233,6 @@ msgstr "Yemekleri değerlendir"
 msgid "food.rate_dish_prompt"
 msgstr "Bu yemeğe 1 ile 5 arasında puan ver."
 
-msgid "food.dish_no_ratings"
-msgstr "Henüz puan yok"
-
 msgid "food.dish_ratings_complete"
 msgstr "Puanlamadığın yemek kalmadı."
 
@@ -2085,3 +2244,39 @@ msgstr "Lezzet Koleksiyoncusu"
 
 msgid "gamification.dish_completion.description"
 msgstr "Katalogdaki tüm yemekleri puanla."
+
+msgid "commands.pokemon"
+msgstr "Pokémon başarımı için fotoğraf gönder"
+
+msgid "gamification.pokemon.name"
+msgstr "Pokémon"
+
+msgid "gamification.pokemon.description"
+msgstr "@yunbae ile fotoğraf çekil ve /pokemon komutuyla bota gönder. Yönetici fotoğrafı inceleyip başarımı verir."
+
+msgid "gamification.pokemon.photo_prompt"
+msgstr "@yunbae ile birlikte çekildiğin fotoğrafı gönder. Bot, incelemesi için fotoğrafı yöneticiye iletir."
+
+msgid "gamification.pokemon.already_earned"
+msgstr "Pokémon başarımını zaten kazandın."
+
+msgid "gamification.pokemon.photo_required"
+msgstr "Görseli Telegram’da fotoğraf olarak gönder."
+
+msgid "gamification.pokemon.submitted"
+msgstr "Fotoğraf inceleme için yöneticiye gönderildi."
+
+msgid "gamification.pokemon.send_failed"
+msgstr "Fotoğraf yöneticiye gönderilemedi. Tekrar göndermeyi dene."
+
+msgid "gamification.pokemon.admin_photo"
+msgstr "{sender} Pokémon başarımı için başvurdu. Gönderenin ve @yunbae’nin fotoğrafta olduğunu kontrol et."
+
+msgid "gamification.pokemon.grant"
+msgstr "Başarımı ver"
+
+msgid "gamification.pokemon.granted"
+msgstr "Pokémon başarımı verildi."
+
+msgid "gamification.pokemon.grant_unavailable"
+msgstr "Kullanıcı bu başarımı zaten aldı veya şu anda alamıyor."
