@@ -16,6 +16,10 @@
     "description": "commands.language"
   },
   {
+    "command": "pokemon",
+    "description": "commands.pokemon"
+  },
+  {
     "command": "hide_keyboard",
     "description": "commands.hide_keyboard"
   }

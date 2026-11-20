@@ -73,6 +73,7 @@ class ObisSnapshotRepository:
             select(User.id)
             .outerjoin(ObisAuthState, ObisAuthState.user_id == User.id)
             .where(
+                User.is_blocked.is_(False),
                 User.student_number.is_not(None),
                 User.student_number != "",
                 User.encrypted_password.is_not(None),

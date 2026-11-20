@@ -70,7 +70,8 @@ async def test_changed_or_removed_credentials_revoke_link_before_upstream_access
     assert urlsplit(url).query == "lang=ru"
     store.get_by_user_id.return_value = changed
     access, client = AsyncMock(), AsyncMock()
-    redeem = RedeemEdersLoginLinkUseCase(store, tokens, client, access)
+    users = AsyncMock(is_blocked=AsyncMock(return_value=False))
+    redeem = RedeemEdersLoginLinkUseCase(store, tokens, client, access, users)
     with pytest.raises(InvalidEdersLoginLinkError):
         await redeem.execute(urlsplit(url).fragment)
     store.lock.assert_awaited_once_with(42)

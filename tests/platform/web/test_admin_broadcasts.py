@@ -20,6 +20,7 @@ from manashelper.modules.notifications.repository import NotificationSettingsRep
 from manashelper.modules.users.application.bot_status import BotStatusQuery
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
+from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.telegram.outbox.models import OutboxMessage
 from manashelper.platform.telegram.outbox.repository import OutboxRepository
 from manashelper.platform.telegram.outbox.service import OutboxService
@@ -42,6 +43,7 @@ async def test_admin_queues_localized_broadcast_and_retries_only_eligible_delive
         User(id=910_103, full_name="Fallback", locale="tr", theme="basic"),
         User(id=910_104, full_name="Stopped", bot_stopped=True),
         User(id=910_105, full_name="Muted"),
+        User(id=910_107, full_name="Blocked", is_blocked=True),
         User(id=910_106, full_name="Not selected"),
     ]
     session.add_all(users)
@@ -50,8 +52,10 @@ async def test_admin_queues_localized_broadcast_and_retries_only_eligible_delive
     outbox = OutboxRepository(session)
     recipients = NotificationRecipientsQuery(NotificationSettingsRepository(session))
     campaigns = CampaignRepository(session)
-    sender = TelegramCampaignDelivery(OutboxService(outbox, BotStatusQuery(UserRepository(session))))
+    user_repository = UserRepository(session)
+    sender = TelegramCampaignDelivery(OutboxService(outbox, BotStatusQuery(user_repository)))
     services = {
+        UsersQuery: UsersQuery(user_repository),
         CreateCampaignUseCase: CreateCampaignUseCase(campaigns, recipients, sender),
         CampaignsQuery: CampaignsQuery(campaigns, outbox),
         RetryCampaignUseCase: RetryCampaignUseCase(campaigns, recipients, outbox),

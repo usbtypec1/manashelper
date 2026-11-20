@@ -21,7 +21,7 @@ from manashelper.modules.broadcast.application.queries import CampaignsQuery
 from manashelper.modules.broadcast.application.use_cases.create_campaign import CreateCampaignUseCase
 from manashelper.modules.broadcast.application.use_cases.retry_campaign import RetryCampaignUseCase
 from manashelper.modules.broadcast.sender import broadcast_body_fits
-from manashelper.platform.web.admin import parse_telegram_id, require_admin, user_cursor
+from manashelper.platform.web.admin import admin_scope, parse_telegram_id, user_cursor
 
 _PAGE_SIZE = 25
 _DELIVERY_PAGE_SIZE = 50
@@ -74,9 +74,8 @@ def _summary(campaign: Campaign, counts: dict[str, int]) -> dict[str, Any]:
 
 def register_admin_broadcast_routes(app: web.Application, container: AsyncContainer, settings: Settings) -> None:
     async def list_campaigns(request: web.Request) -> web.Response:
-        require_admin(request, settings)
-        before = request.query.get("before")
-        async with container() as scope:
+        async with admin_scope(request, container, settings) as (scope, _):
+            before = request.query.get("before")
             query = await scope.get(CampaignsQuery)
             try:
                 campaigns = await query.list_campaigns(
@@ -92,8 +91,7 @@ def register_admin_broadcast_routes(app: web.Application, container: AsyncContai
         )
 
     async def get_campaign(request: web.Request) -> web.Response:
-        require_admin(request, settings)
-        async with container() as scope:
+        async with admin_scope(request, container, settings) as (scope, _):
             query = await scope.get(CampaignsQuery)
             try:
                 campaign, counts = await query.get(_uuid(request.match_info["id"]))
@@ -108,12 +106,11 @@ def register_admin_broadcast_routes(app: web.Application, container: AsyncContai
         )
 
     async def create_campaign(request: web.Request) -> web.Response:
-        author_id = require_admin(request, settings)
-        try:
-            draft = _CreateCampaign.model_validate(await request.json()).draft()
-        except ValueError as error:
-            raise web.HTTPBadRequest() from error
-        async with container() as scope:
+        async with admin_scope(request, container, settings) as (scope, author_id):
+            try:
+                draft = _CreateCampaign.model_validate(await request.json()).draft()
+            except ValueError as error:
+                raise web.HTTPBadRequest() from error
             use_case = await scope.get(CreateCampaignUseCase)
             try:
                 campaign = await use_case.execute(author_id, draft)
@@ -122,10 +119,9 @@ def register_admin_broadcast_routes(app: web.Application, container: AsyncContai
         return web.json_response({"id": str(campaign.draft.id)}, status=201)
 
     async def list_deliveries(request: web.Request) -> web.Response:
-        require_admin(request, settings)
-        campaign_id = _uuid(request.match_info["id"])
-        after = user_cursor(request)
-        async with container() as scope:
+        async with admin_scope(request, container, settings) as (scope, _):
+            campaign_id = _uuid(request.match_info["id"])
+            after = user_cursor(request)
             query = await scope.get(CampaignsQuery)
             try:
                 deliveries = await query.deliveries(campaign_id, after=after, limit=_DELIVERY_PAGE_SIZE + 1)
@@ -144,8 +140,7 @@ def register_admin_broadcast_routes(app: web.Application, container: AsyncContai
         )
 
     async def retry_campaign(request: web.Request) -> web.Response:
-        require_admin(request, settings)
-        async with container() as scope:
+        async with admin_scope(request, container, settings) as (scope, _):
             use_case = await scope.get(RetryCampaignUseCase)
             try:
                 count = await use_case.execute(_uuid(request.match_info["id"]))

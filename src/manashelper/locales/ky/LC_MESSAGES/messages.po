@@ -1430,6 +1430,21 @@ msgstr "Кайра кезекке коюлду: {count}"
 msgid "miniapp.admin.none_retried"
 msgstr "Кайталоого ылайыктуу жеткирүү жок."
 
+msgid "miniapp.admin.blocked"
+msgstr "Бөгөттөлгөн"
+
+msgid "miniapp.admin.block_user"
+msgstr "Бөгөттөө"
+
+msgid "miniapp.admin.unblock_user"
+msgstr "Бөгөттөн чыгаруу"
+
+msgid "miniapp.admin.confirm_block"
+msgstr "{name} үчүн ботко жана Mini App'ка кирүүнү бөгөттөйбүзбү?"
+
+msgid "miniapp.admin.confirm_unblock"
+msgstr "{name} үчүн ботко жана Mini App'ка кирүүнү калыбына келтиребизби?"
+
 msgid "miniapp.ui.loading"
 msgstr "Жүктөлүүдө…"
 
@@ -2222,9 +2237,6 @@ msgstr "Тамактарды баалоо"
 msgid "food.rate_dish_prompt"
 msgstr "Бул тамакка 1ден 5ке чейин баа бер."
 
-msgid "food.dish_no_ratings"
-msgstr "Азырынча баа жок"
-
 msgid "food.dish_ratings_complete"
 msgstr "Бааланбаган тамак калган жок."
 
@@ -2236,3 +2248,39 @@ msgstr "Даам жыйноочу"
 
 msgid "gamification.dish_completion.description"
 msgstr "Каталогдогу бардык тамактарды баала."
+
+msgid "commands.pokemon"
+msgstr "«Покемон» жетишкендиги үчүн сүрөт жөнөтүү"
+
+msgid "gamification.pokemon.name"
+msgstr "Покемон"
+
+msgid "gamification.pokemon.description"
+msgstr "@yunbae менен сүрөткө түшүп, сүрөттү /pokemon аркылуу ботко жөнөт. Админ текшерип, жетишкендикти берет."
+
+msgid "gamification.pokemon.photo_prompt"
+msgstr "@yunbae менен чогуу түшкөн сүрөтүңдү жөнөт. Бот сүрөттү админге текшерүүгө жиберет."
+
+msgid "gamification.pokemon.already_earned"
+msgstr "«Покемон» жетишкендигин мурда алгансың."
+
+msgid "gamification.pokemon.photo_required"
+msgstr "Сүрөттү Telegram'да фото катары жөнөт."
+
+msgid "gamification.pokemon.submitted"
+msgstr "Сүрөт админге текшерүүгө жөнөтүлдү."
+
+msgid "gamification.pokemon.send_failed"
+msgstr "Сүрөт админге жөнөтүлгөн жок. Кайра жөнөтүп көр."
+
+msgid "gamification.pokemon.admin_photo"
+msgstr "{sender} «Покемонго» арыз берди. Сүрөттө жөнөтүүчү жана @yunbae бар экенин текшер."
+
+msgid "gamification.pokemon.grant"
+msgstr "Жетишкендикти берүү"
+
+msgid "gamification.pokemon.granted"
+msgstr "«Покемон» жетишкендиги берилди."
+
+msgid "gamification.pokemon.grant_unavailable"
+msgstr "Колдонуучу жетишкендикти мурда алган же азыр аны берүү мүмкүн эмес."

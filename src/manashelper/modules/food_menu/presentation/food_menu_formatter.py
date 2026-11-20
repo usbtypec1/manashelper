@@ -42,7 +42,6 @@ def format_daily_menu(daily_menu: DailyMenuModel) -> str:
             _("food.dish").format(
                 index=index, name=escape_html(localized_dish_name(dish, i18n.current_locale)), calories=dish.calories
             )
-            + _format_dish_rating(dish)
         )
         total_calories += dish.calories
 
@@ -74,12 +73,6 @@ def build_photos(caption: str, daily_menu: DailyMenuModel) -> list[MediaGroupIte
         for index, dish in enumerate(daily_menu.dishes)
     ]
     return photos
-
-
-def _format_dish_rating(dish: DishModel) -> str:
-    if not dish.ratings_count:
-        return f" · {_('food.dish_no_ratings')}"
-    return f" · ⭐ {dish.average_rating:.1f}/5 ({dish.ratings_count})"
 
 
 def build_dish_rating_prompt(dish: DishModel, buttons: InputRichBlockButtons) -> InputRichMessage:
@@ -142,7 +135,6 @@ def build_daily_menu_rich_message(
             _("food.rich_dish").format(
                 index=index, name=localized_dish_name(dish, i18n.current_locale), calories=dish.calories
             )
-            + _format_dish_rating(dish)
         )
     blocks.append(InputRichBlockParagraph(text="\n".join(dish_lines)))
     blocks.extend(

@@ -23,7 +23,7 @@ DESTINATION = "https://eders.manas.edu.kg/auth/userkey/login.php?key=fake-key"
 
 
 @asynccontextmanager
-async def application(error=None, public_url=ORIGIN):
+async def application(error=None, public_url=ORIGIN, *, blocked=False):
     credentials = StoredCredentials("student", "cipher")
     store = AsyncMock(get_by_user_id=AsyncMock(return_value=credentials))
     tokens = EdersLoginTokens()
@@ -37,7 +37,8 @@ async def application(error=None, public_url=ORIGIN):
             raise error
         return await operation({"obis": "private-session"})
 
-    redeem = RedeemEdersLoginLinkUseCase(store, tokens, upstream, AsyncMock(with_session=with_session))
+    users = AsyncMock(is_blocked=AsyncMock(return_value=blocked))
+    redeem = RedeemEdersLoginLinkUseCase(store, tokens, upstream, AsyncMock(with_session=with_session), users)
 
     @asynccontextmanager
     async def scope():
@@ -71,6 +72,13 @@ async def test_get_and_head_previews_do_not_consume_then_post_redirects_without_
         replay = await client.post(PATH, data={"token": token}, headers={"Origin": ORIGIN})
         assert replay.status == 410
         upstream.create_browser_login_url.assert_awaited_once_with({"obis": "private-session"})
+
+
+async def test_blocked_user_cannot_redeem_preexisting_browser_link():
+    async with application(blocked=True) as (client, token, upstream, _):
+        response = await client.post(PATH, data={"token": token}, headers={"Origin": ORIGIN})
+        assert response.status == 410
+        upstream.create_browser_login_url.assert_not_awaited()
 
 
 async def test_concurrent_redemption_performs_only_one_upstream_login():

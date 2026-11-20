@@ -5,6 +5,7 @@
   --admin-default-hint: #61616a;
   --admin-default-divider: rgb(60 60 67 / 16%);
   --admin-default-accent: #0067cc;
+  --admin-default-danger: #bd3028;
   --admin-control: rgb(120 120 128 / 13%);
   --admin-accent: var(--tg-theme-button-color, var(--admin-default-accent));
   --admin-hint: var(--tg-theme-hint-color, var(--admin-default-hint));
@@ -22,6 +23,7 @@ html[data-theme='dark'] .telegram-admin {
   --admin-default-hint: #adaeb6;
   --admin-default-divider: rgb(235 235 245 / 16%);
   --admin-default-accent: #61a9ff;
+  --admin-default-danger: #ff766a;
 }
 .admin-shell { --shell-inline: 16px; max-width: 680px; }
 .admin-header { display: grid; gap: 24px; margin-bottom: 20px; }

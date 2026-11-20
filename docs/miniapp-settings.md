@@ -61,8 +61,8 @@ A group chat ID gives no one access. An explicit empty array disables access.
 `GET /api/admin/users` authenticates signed Telegram initData and checks the allowed user IDs
 on every request. It returns up to 50 registered users ordered by Telegram ID, including users
 who stopped the bot. Each entry contains `id` (a decimal string), `full_name`, nullable `username`,
-`locale`, `theme` and `bot_stopped`. Search with `q` and filter by `locale`, `theme` or
-`status` (`active` or `stopped`). Filters apply before pagination. Pass the returned
+`locale`, `theme`, `bot_stopped` and `is_blocked`. Search with `q` and filter by `locale`, `theme` or
+`status` (`active`, `stopped` or `blocked`). Filters apply before pagination. Pass the returned
 `next_cursor` as the `after` query parameter to read the next page with the same filters.
 A null cursor marks the end. Invalid authentication returns 401, a user outside the allowlist
 gets 403, and a malformed cursor returns 400. Responses use `Cache-Control: no-store`.
@@ -73,6 +73,26 @@ denies its requests even if Telegram still shows its previously configured butto
 The directory uses Telegram's live palette, MainButton to load more or retry, and
 SecondaryButton to refresh when another page is available. At the end of the list,
 refresh becomes the primary action. See the [Mini App interaction guidelines](miniapp-interactions.md).
+
+### User blocking
+
+Admins block or unblock a user from the directory after confirmation. The API uses
+`PUT /api/admin/users/{id}/blocked` with a boolean `blocked`. The operation is idempotent.
+A missing user returns 404 and an admin cannot block their own account.
+
+Blocked users' messages and callback queries stop before command handlers, profile updates, and
+rate-limit replies. Messages sent on behalf of a chat are ignored because Telegram does not identify
+the individual sender. A valid Mini App session for a blocked user receives 403 from private routes.
+Previously issued Eders browser links fail when redeemed during the block.
+
+OBIS and Eders exclude blocked users when selecting polling candidates and again before starting
+each user's work. Notifications, campaigns and retry selection exclude these users. The outbox
+cancels queued work for them when attempting to claim it. Work already started, including a Telegram
+request already in flight, can finish. Blocking and unblocking preserve saved data and the user's
+separate bot delivery and notification settings.
+
+Migration `V37` adds the blocking flag with a default of false. Downgrading to `V36` drops the flag
+and removes blocking rules.
 
 ### Broadcasts
 

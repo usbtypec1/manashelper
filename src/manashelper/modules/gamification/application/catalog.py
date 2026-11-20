@@ -10,6 +10,7 @@ class Achievement:
 
 # Add to ACHIEVEMENTS when ready to expose and award it.
 DISH_COMPLETION_ACHIEVEMENT = Achievement("dish_completion", "🍽", 1)
+POKEMON_KEY = "pokemon"
 
 ACHIEVEMENTS = (
     Achievement("night_owl", "🌚", 3),
@@ -20,6 +21,7 @@ ACHIEVEMENTS = (
     Achievement("comeback", "📈", 0.2),
     Achievement("fall", "📉", 0.2),
     Achievement("seller", "💩", 1),
+    Achievement(POKEMON_KEY, "🐱", 1),
     Achievement("eldin_balasy", "🤓", 3),
     Achievement("thin_ice", "🥶", 5),
     Achievement("phoenix", "👍", 1),

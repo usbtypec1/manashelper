@@ -252,6 +252,10 @@ async def test_poll_selection_keeps_unnotified_manual_requests_and_due_retries(s
     assert user.id in await service.results.get_poll_user_ids()
     await states.save(user.id, StoredObisAuthState(True, "captcha"))
     assert user.id in await service.results.get_poll_user_ids()
+    user.is_blocked = True
+    assert user.id not in await service.results.get_poll_user_ids()
+    user.is_blocked = False
+    assert user.id in await service.results.get_poll_user_ids()
     await states.save(user.id, StoredObisAuthState(True, "captcha", notified=True))
     assert user.id not in await service.results.get_poll_user_ids()
 

@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onScopeDispose, ref } from 'vue'
 import AdminActions from '../features/admin/AdminActions.vue'
 import AdminShell from '../features/admin/AdminShell.vue'
+import { setUserBlocked, type UserProfile } from '../features/admin/api'
 import { locales, useAdminCopy } from '../features/admin/useAdminCopy'
 import { useAdminUsers } from '../features/admin/useAdminUsers'
+import { HttpError } from '../shared/api/http'
 import type { BottomAction } from '../shared/telegram/bottomButtons'
+import { confirmTelegramAction } from '../shared/telegram/confirmation'
 import { useTelegram } from '../shared/telegram/telegram'
 
-const { rawInitData } = useTelegram()
+const { rawInitData, userId } = useTelegram()
 const { copy, languageNames, themeNames } = useAdminCopy()
 const search = ref('')
 const language = ref('')
@@ -16,17 +19,53 @@ const botStatus = ref('')
 const filters = computed(() => ({ q: search.value.trim(), locale: language.value, theme: theme.value, status: botStatus.value }))
 const { status, users, nextCursor, pending, loadMore, refresh, retry } = useAdminUsers(rawInitData, filters)
 const filtered = computed(() => Object.values(filters.value).some(Boolean))
+const changingId = ref<string | null>(null)
+const changeFailed = ref(false)
+let disposed = false
+onScopeDispose(() => { disposed = true })
+
+function statusName(user: UserProfile) {
+  if (user.is_blocked) return 'blocked'
+  return user.bot_stopped ? 'stopped' : 'active'
+}
+
+async function changeBlocking(user: UserProfile) {
+  const initData = rawInitData.value
+  if (!initData || changingId.value !== null || pending.value !== null) return
+  const blocked = !user.is_blocked
+  const name = Array.from(user.full_name).slice(0, 64).join('')
+  const message = copy.value.admin[blocked ? 'confirm_block' : 'confirm_unblock'].replace('{name}', name)
+  const label = copy.value.admin[blocked ? 'block_user' : 'unblock_user']
+  changingId.value = user.id
+  changeFailed.value = false
+  try {
+    if (!await confirmTelegramAction(message, label) || disposed || rawInitData.value !== initData) return
+    const result = await setUserBlocked(initData, user.id, blocked)
+    if (disposed || rawInitData.value !== initData) return
+    const entry = users.value.find(profile => profile.id === user.id)
+    if (entry) entry.is_blocked = result
+    if (botStatus.value) await refresh()
+  } catch (error) {
+    if (disposed || rawInitData.value !== initData) return
+    if (error instanceof HttpError && error.unauthorized) await refresh()
+    else changeFailed.value = true
+  } finally {
+    changingId.value = null
+  }
+}
 
 const refreshAction = computed<BottomAction>(() => ({
-  text: copy.value.admin.refresh, run: refresh, disabled: pending.value !== null, loading: pending.value === 'refresh',
+  text: copy.value.admin.refresh, run: refresh, disabled: pending.value !== null || changingId.value !== null,
+  loading: pending.value === 'refresh',
 }))
 const primary = computed<BottomAction | null>(() => {
   if (status.value === 'error') {
-    return { text: copy.value.preferences.retry, run: retry, disabled: false, loading: false }
+    return { text: copy.value.preferences.retry, run: retry, disabled: changingId.value !== null, loading: false }
   }
   if (nextCursor.value !== null) {
     return {
-      text: copy.value.admin.load_more, run: loadMore, disabled: pending.value !== null, loading: pending.value === 'more',
+      text: copy.value.admin.load_more, run: loadMore, disabled: pending.value !== null || changingId.value !== null,
+      loading: pending.value === 'more',
     }
   }
   return users.value.length ? refreshAction.value : null
@@ -65,6 +104,7 @@ const secondary = computed(() => nextCursor.value !== null && status.value !== '
           <option value="">{{ copy.admin.any_status }}</option>
           <option value="active">{{ copy.admin.active }}</option>
           <option value="stopped">{{ copy.admin.stopped }}</option>
+          <option value="blocked">{{ copy.admin.blocked }}</option>
         </select>
       </label>
     </fieldset>
@@ -87,9 +127,20 @@ const secondary = computed(() => nextCursor.value !== null && status.value !== '
           </td>
           <td>
             <span class="telegram-id">{{ user.id }}</span>
-            <small class="delivery-state" :class="{ reachable: !user.bot_stopped }">
-              {{ user.bot_stopped ? copy.admin.stopped : copy.admin.active }}
+            <small class="delivery-state" :class="statusName(user)">
+              {{ copy.admin[statusName(user)] }}
             </small>
+            <button
+              v-if="user.id !== String(userId)"
+              type="button"
+              class="moderation-action"
+              :class="{ destructive: !user.is_blocked }"
+              :aria-label="`${copy.admin[user.is_blocked ? 'unblock_user' : 'block_user']} ${user.full_name}`"
+              :disabled="changingId !== null || pending !== null"
+              @click="changeBlocking(user)"
+            >
+              {{ copy.admin[user.is_blocked ? 'unblock_user' : 'block_user'] }}
+            </button>
           </td>
         </tr>
       </tbody>
@@ -104,6 +155,7 @@ const secondary = computed(() => nextCursor.value !== null && status.value !== '
     <p v-else-if="status === 'ready' && !users.length" class="admin-hint" role="status">
       {{ filtered ? copy.admin.no_matches : copy.admin.empty }}
     </p>
+    <p v-if="changeFailed" role="alert">{{ copy.preferences.error }}</p>
     <AdminActions :primary="primary" :secondary="secondary" :loading-text="copy.preferences.loading" />
   </AdminShell>
 </template>
@@ -132,7 +184,12 @@ th:last-child, .telegram-id { white-space: nowrap; font-variant-numeric: tabular
 }
 small { display: block; margin-top: 3px; font-size: 12px; color: var(--admin-hint); }
 .delivery-state { font-weight: 500; }
-.delivery-state.reachable { color: var(--admin-accent); }
+.delivery-state.active, .moderation-action { color: var(--admin-accent); }
+.moderation-action { min-height: 44px; padding: 4px 0; background: transparent; font-size: 12px; }
+.delivery-state.blocked, .moderation-action.destructive {
+  color: var(--tg-theme-destructive-text-color, var(--admin-default-danger));
+}
+.moderation-action:disabled { opacity: .65; }
 @media (max-width: 440px) {
   .directory-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

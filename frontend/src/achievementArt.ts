@@ -2,7 +2,9 @@
 // sprite cell in the fixed 4 × 3 atlas, or to the locked medal (cell 11) when it has no cell either.
 const images = import.meta.glob<string>('./assets/achievement-*.png', { eager: true, import: 'default' })
 
-const art: Record<string, { cell?: number; color: string }> = {
+type AchievementArt = { cell?: number; color: string; symbol?: string; image?: string }
+
+const art: Record<string, AchievementArt> = {
   night_owl: { cell: 0, color: '#c6b4ed' },
   foodie: { cell: 1, color: '#f5bea6' },
   cafeteria_boss: { cell: 2, color: '#b4dcca' },
@@ -11,6 +13,7 @@ const art: Record<string, { cell?: number; color: string }> = {
   comeback: { cell: 5, color: '#a8dfdb' },
   fall: { cell: 6, color: '#f2b0aa' },
   seller: { cell: 7, color: '#cdb9ea' },
+  pokemon: { symbol: '🐱', color: '#f4d098' },
   eldin_balasy: { cell: 9, color: '#edd6ae' },
   thin_ice: { cell: 10, color: '#add7f0' },
   phoenix: { color: '#f6b98f' },
@@ -20,7 +23,7 @@ const art: Record<string, { cell?: number; color: string }> = {
   einstein: { color: '#b8c6f0' },
 }
 
-export const achievementArt: Record<string, { cell?: number; color: string; image?: string }> = Object.fromEntries(
+export const achievementArt: Record<string, AchievementArt> = Object.fromEntries(
   Object.entries(art).map(([key, value]) => [
     key,
     { ...value, image: images[`./assets/achievement-${key.replaceAll('_', '-')}.png`] },

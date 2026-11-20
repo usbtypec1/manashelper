@@ -12,6 +12,7 @@ class UserProfile:
     locale: Locale
     theme: Theme
     bot_stopped: bool
+    is_blocked: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,3 +21,4 @@ class ProfileFilter:
     locale: Locale | None = None
     theme: Theme | None = None
     bot_stopped: bool | None = None
+    is_blocked: bool | None = None

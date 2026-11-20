@@ -59,7 +59,7 @@ class OutboxService:
         expires_at = expires_at or now + timedelta(days=1)
         if expires_at.tzinfo is None:
             raise ValueError("Outbox expiration must include a timezone")
-        if not methods or expires_at <= now or await self._status.is_stopped(user_id):
+        if not methods or expires_at <= now or await self._status.is_delivery_disabled(user_id):
             return False
         payload = [_method_payload(user_id, method) for method in methods]
         if source_keys and deduplication_key is None:

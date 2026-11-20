@@ -1426,6 +1426,21 @@ msgstr "Yeniden sıraya alındı: {count}"
 msgid "miniapp.admin.none_retried"
 msgstr "Yeniden denenecek uygun teslimat yok."
 
+msgid "miniapp.admin.blocked"
+msgstr "Engellendi"
+
+msgid "miniapp.admin.block_user"
+msgstr "Engelle"
+
+msgid "miniapp.admin.unblock_user"
+msgstr "Engeli kaldır"
+
+msgid "miniapp.admin.confirm_block"
+msgstr "{name} için bot ve Mini App erişimi engellensin mi?"
+
+msgid "miniapp.admin.confirm_unblock"
+msgstr "{name} için bot ve Mini App erişimi geri verilsin mi?"
+
 msgid "miniapp.ui.loading"
 msgstr "Yükleniyor…"
 
@@ -2218,9 +2233,6 @@ msgstr "Yemekleri değerlendir"
 msgid "food.rate_dish_prompt"
 msgstr "Bu yemeğe 1 ile 5 arasında puan ver."
 
-msgid "food.dish_no_ratings"
-msgstr "Henüz puan yok"
-
 msgid "food.dish_ratings_complete"
 msgstr "Puanlamadığın yemek kalmadı."
 
@@ -2232,3 +2244,39 @@ msgstr "Lezzet Koleksiyoncusu"
 
 msgid "gamification.dish_completion.description"
 msgstr "Katalogdaki tüm yemekleri puanla."
+
+msgid "commands.pokemon"
+msgstr "Pokémon başarımı için fotoğraf gönder"
+
+msgid "gamification.pokemon.name"
+msgstr "Pokémon"
+
+msgid "gamification.pokemon.description"
+msgstr "@yunbae ile fotoğraf çekil ve /pokemon komutuyla bota gönder. Yönetici fotoğrafı inceleyip başarımı verir."
+
+msgid "gamification.pokemon.photo_prompt"
+msgstr "@yunbae ile birlikte çekildiğin fotoğrafı gönder. Bot, incelemesi için fotoğrafı yöneticiye iletir."
+
+msgid "gamification.pokemon.already_earned"
+msgstr "Pokémon başarımını zaten kazandın."
+
+msgid "gamification.pokemon.photo_required"
+msgstr "Görseli Telegram’da fotoğraf olarak gönder."
+
+msgid "gamification.pokemon.submitted"
+msgstr "Fotoğraf inceleme için yöneticiye gönderildi."
+
+msgid "gamification.pokemon.send_failed"
+msgstr "Fotoğraf yöneticiye gönderilemedi. Tekrar göndermeyi dene."
+
+msgid "gamification.pokemon.admin_photo"
+msgstr "{sender} Pokémon başarımı için başvurdu. Gönderenin ve @yunbae’nin fotoğrafta olduğunu kontrol et."
+
+msgid "gamification.pokemon.grant"
+msgstr "Başarımı ver"
+
+msgid "gamification.pokemon.granted"
+msgstr "Pokémon başarımı verildi."
+
+msgid "gamification.pokemon.grant_unavailable"
+msgstr "Kullanıcı bu başarımı zaten aldı veya şu anda alamıyor."

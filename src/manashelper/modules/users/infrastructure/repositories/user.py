@@ -1,4 +1,4 @@
-from sqlalchemy import String, cast, func, or_, select
+from sqlalchemy import String, cast, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.localization.locale import DEFAULT_LOCALE, Locale
@@ -39,12 +39,25 @@ class UserRepository:
         return list(result.scalars().all())
 
     async def get_active_ids(self) -> list[int]:
-        result = await self._session.execute(select(User.id).where(User.bot_stopped.is_(False)))
+        result = await self._session.execute(select(User.id).where(User.delivery_enabled()))
         return list(result.scalars().all())
+
+    async def blocking_status(self, user_id: int) -> bool | None:
+        return (await self._session.scalars(select(User.is_blocked).where(User.id == user_id))).one_or_none()
+
+    async def delivery_disabled(self, user_id: int) -> bool:
+        enabled = await self._session.scalar(select(User.delivery_enabled()).where(User.id == user_id))
+        return enabled is False
+
+    async def set_blocked(self, user_id: int, blocked: bool) -> bool:
+        target = await self._session.scalar(
+            update(User).where(User.id == user_id).values(is_blocked=blocked).returning(User.id)
+        )
+        return target is not None
 
     async def list_profiles(self, *, after: int | None, limit: int, filters: ProfileFilter) -> list[UserProfile]:
         locale = func.coalesce(User.locale, DEFAULT_LOCALE.value)
-        query = select(User.id, User.full_name, User.username, locale, User.theme, User.bot_stopped)
+        query = select(User.id, User.full_name, User.username, locale, User.theme, User.bot_stopped, User.is_blocked)
         if filters.search:
             search = filters.search
             if search.startswith("@") and len(search) > 1:
@@ -63,12 +76,14 @@ class UserRepository:
             query = query.where(User.theme == filters.theme)
         if filters.bot_stopped is not None:
             query = query.where(User.bot_stopped.is_(filters.bot_stopped))
+        if filters.is_blocked is not None:
+            query = query.where(User.is_blocked.is_(filters.is_blocked))
         if after is not None:
             query = query.where(User.id > after)
         result = await self._session.execute(query.order_by(User.id).limit(limit))
         return [
-            UserProfile(user_id, full_name, username, Locale(language), Theme(theme), bot_stopped)
-            for user_id, full_name, username, language, theme, bot_stopped in result.tuples()
+            UserProfile(user_id, full_name, username, Locale(language), Theme(theme), bot_stopped, is_blocked)
+            for user_id, full_name, username, language, theme, bot_stopped, is_blocked in result.tuples()
         ]
 
     async def set_bot_stopped(self, user_id: int, stopped: bool) -> None:

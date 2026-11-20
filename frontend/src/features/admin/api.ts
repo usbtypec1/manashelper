@@ -1,4 +1,4 @@
-import { getJson, isRecord } from '../../shared/api/http'
+import { getJson, isRecord, putJson } from '../../shared/api/http'
 
 export type UserProfile = {
   id: string
@@ -7,6 +7,7 @@ export type UserProfile = {
   locale: string
   theme: string
   bot_stopped: boolean
+  is_blocked: boolean
 }
 
 export type UserFilters = {
@@ -19,7 +20,14 @@ export type UserFilters = {
 function isUserProfile(value: unknown): value is UserProfile {
   return isRecord(value) && typeof value.id === 'string' && typeof value.full_name === 'string'
     && (value.username === null || typeof value.username === 'string')
-    && typeof value.locale === 'string' && typeof value.theme === 'string' && typeof value.bot_stopped === 'boolean'
+    && typeof value.locale === 'string' && typeof value.theme === 'string'
+    && typeof value.bot_stopped === 'boolean' && typeof value.is_blocked === 'boolean'
+}
+
+export async function setUserBlocked(initData: string, userId: string, blocked: boolean): Promise<boolean> {
+  const data = await putJson(`admin/users/${encodeURIComponent(userId)}/blocked`, initData, { blocked })
+  if (!isRecord(data) || typeof data.is_blocked !== 'boolean') throw new Error('Invalid blocking status')
+  return data.is_blocked
 }
 
 export async function getUsers(initData: string, cursor: string | null, filters: UserFilters, signal: AbortSignal) {

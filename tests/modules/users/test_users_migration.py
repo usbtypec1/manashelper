@@ -151,6 +151,7 @@ async def test_obis_user_poll_keeps_locale_fallback_and_failure_isolation(monkey
     attendance.execute.return_value = RefreshResult([], [object()])
     dependencies = {
         LocaleQuery: build_locale_service(users),
+        UsersQuery: AsyncMock(can_use_bot=AsyncMock(return_value=True)),
         PollObisUserUseCase: PollObisUserUseCase(grades, attendance, AsyncMock(), AsyncMock()),
         ThemeQuery: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
         OutboxService: AsyncMock(spec=OutboxService),
@@ -182,6 +183,19 @@ async def test_obis_user_poll_keeps_locale_fallback_and_failure_isolation(monkey
         assert [call.args[1][0].text for call in send.await_args_list] == [
             i18n.gettext(key, locale=saved or DEFAULT_LOCALE.value) for key in ("menu.grades", "menu.attendance")
         ]
+
+
+async def test_obis_job_rechecks_user_access_before_starting_poll():
+    users = AsyncMock(can_use_bot=AsyncMock(return_value=False))
+    get = AsyncMock(return_value=users)
+
+    @asynccontextmanager
+    async def container():
+        yield SimpleNamespace(get=get)
+
+    await jobs._poll_user_obis_notifications(container, object(), 973001, True, True)
+    get.assert_awaited_once_with(UsersQuery)
+    users.can_use_bot.assert_awaited_once_with(973001)
 
 
 async def test_users_provider_scopes_and_orm_registry():

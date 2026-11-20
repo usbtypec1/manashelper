@@ -70,6 +70,11 @@ ADMIN_MESSAGES = (
     _("miniapp.admin.confirm_retry"),
     _("miniapp.admin.retried_count"),
     _("miniapp.admin.none_retried"),
+    _("miniapp.admin.blocked"),
+    _("miniapp.admin.block_user"),
+    _("miniapp.admin.unblock_user"),
+    _("miniapp.admin.confirm_block"),
+    _("miniapp.admin.confirm_unblock"),
 )
 
 messages = {}

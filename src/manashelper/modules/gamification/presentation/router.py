@@ -11,9 +11,11 @@ from manashelper.modules.gamification.application.use_cases.set_gamification_ena
     SetGamificationEnabledUseCase,
 )
 from manashelper.modules.gamification.presentation.keyboard import build_achievements_keyboard
+from manashelper.modules.gamification.presentation.pokemon import router as pokemon_router
 from manashelper.platform.telegram.filters.translated_text import TranslatedText
 
 router = Router(name="gamification")
+router.include_router(pokemon_router)
 
 
 @router.message(or_f(TranslatedText("menu.achievements_button"), TranslatedText("menu.achievements")))

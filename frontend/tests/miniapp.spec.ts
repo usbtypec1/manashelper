@@ -6,12 +6,12 @@ test('collection, detail, keyboard close and leaderboard use real authenticated 
   await mockTelegram(page, fixture)
   await page.goto('/app/')
   await expect(page.getByRole('heading', { name: 'Ачивки' })).toBeVisible()
-  await expect(page.locator('button.achievement')).toHaveCount(15)
-  await expect(page.getByRole('button', { name: /Покемон/ })).toHaveCount(0)
+  await expect(page.locator('button.achievement')).toHaveCount(16)
   await expect(page.locator('.collection')).toHaveCSS('display', 'grid')
   for (const [name, description] of [
     ['Элдин баласы', 'три итоговые оценки AA'],
     ['На грани', 'теории или практике'],
+    ['Покемон', 'с @yunbae и пришли снимок боту через /pokemon'],
   ]) {
     await page.getByRole('button', { name: new RegExp(name) }).click()
     await expect(page.getByRole('dialog')).toContainText(description)

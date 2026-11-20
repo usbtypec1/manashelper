@@ -1419,6 +1419,21 @@ msgstr "重新加入队列：{count}"
 msgid "miniapp.admin.none_retried"
 msgstr "没有符合条件的发送可供重试。"
 
+msgid "miniapp.admin.blocked"
+msgstr "已封禁"
+
+msgid "miniapp.admin.block_user"
+msgstr "封禁"
+
+msgid "miniapp.admin.unblock_user"
+msgstr "解除封禁"
+
+msgid "miniapp.admin.confirm_block"
+msgstr "阻止 {name} 使用机器人和 Mini App？"
+
+msgid "miniapp.admin.confirm_unblock"
+msgstr "恢复 {name} 使用机器人和 Mini App 的权限？"
+
 msgid "miniapp.ui.loading"
 msgstr "加载中…"
 
@@ -2211,9 +2226,6 @@ msgstr "给菜品评分"
 msgid "food.rate_dish_prompt"
 msgstr "请为这道菜打 1 到 5 分。"
 
-msgid "food.dish_no_ratings"
-msgstr "暂无评分"
-
 msgid "food.dish_ratings_complete"
 msgstr "你已评完所有可评分的菜品。"
 
@@ -2225,3 +2237,39 @@ msgstr "美味收藏家"
 
 msgid "gamification.dish_completion.description"
 msgstr "为目录中的每道菜评分。"
+
+msgid "commands.pokemon"
+msgstr "提交「宝可梦」成就照片"
+
+msgid "gamification.pokemon.name"
+msgstr "宝可梦"
+
+msgid "gamification.pokemon.description"
+msgstr "与 @yunbae 合影，然后通过 /pokemon 把照片发给机器人。管理员审核后会授予成就。"
+
+msgid "gamification.pokemon.photo_prompt"
+msgstr "请发送你与 @yunbae 的合影。机器人会将照片发给管理员审核。"
+
+msgid "gamification.pokemon.already_earned"
+msgstr "你已经获得「宝可梦」成就。"
+
+msgid "gamification.pokemon.photo_required"
+msgstr "请以 Telegram 照片的形式发送图片。"
+
+msgid "gamification.pokemon.submitted"
+msgstr "照片已发给管理员审核。"
+
+msgid "gamification.pokemon.send_failed"
+msgstr "照片未能发给管理员，请重新发送。"
+
+msgid "gamification.pokemon.admin_photo"
+msgstr "{sender} 申请了「宝可梦」成就。请确认照片中有发送者和 @yunbae。"
+
+msgid "gamification.pokemon.grant"
+msgstr "授予成就"
+
+msgid "gamification.pokemon.granted"
+msgstr "已授予「宝可梦」成就。"
+
+msgid "gamification.pokemon.grant_unavailable"
+msgstr "该用户已获得此成就，或暂时无法获得。"

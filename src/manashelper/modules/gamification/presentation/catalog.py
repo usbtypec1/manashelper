@@ -3,6 +3,7 @@ from typing import Any
 
 from aiogram.utils.i18n import gettext as _
 
+from manashelper.modules.gamification.application.catalog import POKEMON_KEY
 from manashelper.modules.gamification.application.queries import AchievementProfile, LeaderboardEntry
 from manashelper.platform.i18n.catalog import i18n
 
@@ -18,6 +19,7 @@ def achievement_strings() -> dict[str, tuple[str, str]]:
         "comeback": (_("gamification.comeback.name"), _("gamification.comeback.description")),
         "fall": (_("gamification.fall.name"), _("gamification.fall.description")),
         "seller": (_("gamification.seller.name"), _("gamification.seller.description")),
+        POKEMON_KEY: (_("gamification.pokemon.name"), _("gamification.pokemon.description")),
         "eldin_balasy": (_("gamification.eldin_balasy.name"), _("gamification.eldin_balasy.description")),
         "thin_ice": (_("gamification.thin_ice.name"), _("gamification.thin_ice.description")),
         "phoenix": (_("gamification.phoenix.name"), _("gamification.phoenix.description")),

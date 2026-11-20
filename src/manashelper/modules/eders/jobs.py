@@ -8,6 +8,7 @@ from manashelper.modules.eders.errors import EdersFetchError, EdersParseError, E
 from manashelper.modules.eders.presentation.sender import TelegramEdersNotificationSender
 from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
 from manashelper.modules.users.application.theme import ThemeQuery
+from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.telegram.outbox.service import OutboxService
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,8 @@ async def poll_eders_job(container: AsyncContainer) -> None:
     for user_id in user_ids:
         try:
             async with container() as request:
+                if not await (await request.get(UsersQuery)).can_use_bot(user_id):
+                    continue
                 poll_eders_user = await request.get(PollEdersUserUseCase)
                 themes = await request.get(ThemeQuery)
                 outbox = await request.get(OutboxService)

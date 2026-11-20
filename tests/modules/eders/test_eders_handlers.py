@@ -43,6 +43,7 @@ from manashelper.modules.study_week.application.use_cases.get_study_week import 
 from manashelper.modules.study_week.provider import StudyWeekProvider
 from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.modules.users.provider import UsersProvider
+from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.dispatcher import create_dispatcher
 from manashelper.platform.telegram.outbox.provider import OutboxProvider
@@ -181,7 +182,7 @@ async def test_week_without_tracked_courses_keeps_eders_dates() -> None:
 
 async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() -> None:
     service, tracking, locales = AsyncMock(), AsyncMock(), AsyncMock()
-    tracking.get_poll_user_ids.return_value = [1, 2, 3]
+    tracking.get_poll_user_ids.return_value = [1, 2, 3, 4]
     data = snapshot()
     event = EdersEvent("key", data.activities[0], "before_2", data.activities[0].closes.instant, data.fetched_at)
 
@@ -197,6 +198,7 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
     locales.get_locale.side_effect = recipient_locale
     tracking.pending_events.return_value = [event]
     dependencies = {
+        UsersQuery: AsyncMock(can_use_bot=AsyncMock(side_effect=lambda user_id: user_id != 4)),
         ThemeQuery: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
         OutboxService: AsyncMock(spec=OutboxService),
         EdersTrackingService: tracking,
@@ -216,6 +218,7 @@ async def test_job_isolates_failed_fetch_and_send_and_uses_recipient_locale() ->
     outbox = dependencies[OutboxService]
     outbox.enqueue.side_effect = [False, True]
     await poll_eders_job(container)
+    assert [call.args[0] for call in service.refresh_snapshot.await_args_list] == [1, 2, 3]
     assert [call.args[0] for call in outbox.enqueue.await_args_list] == [1, 3]
     assert "Напоминание eders" in outbox.enqueue.await_args_list[0].args[1][0].text
     assert "eders 截止提醒" in outbox.enqueue.await_args_list[1].args[1][0].text
@@ -282,6 +285,7 @@ async def test_job_groups_new_materials_and_acknowledges_all_events_only_on_succ
     tracking.pending_events.return_value = [first, second]
     locales.get_locale.return_value = Locale.EN
     dependencies = {
+        UsersQuery: AsyncMock(can_use_bot=AsyncMock(return_value=True)),
         ThemeQuery: AsyncMock(get_theme=AsyncMock(return_value=Theme.BASIC)),
         OutboxService: AsyncMock(spec=OutboxService),
         EdersTrackingService: tracking,

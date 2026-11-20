@@ -75,7 +75,7 @@ def create_web_app(bot: Bot, dispatcher: Dispatcher, container: AsyncContainer, 
     async def gamification(request: web.Request) -> web.Response:
         user_id = authenticate(request.headers.get("Authorization", ""), settings.telegram_bot_token)
         async with container() as scope:
-            if not await (await scope.get(UsersQuery)).exists(user_id):
+            if not await (await scope.get(UsersQuery)).can_use_bot(user_id):
                 raise web.HTTPForbidden()
             query = await scope.get(GamificationQuery)
             if not await query.is_enabled(user_id):

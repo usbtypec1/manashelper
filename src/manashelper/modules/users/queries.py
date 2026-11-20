@@ -25,6 +25,12 @@ class UsersQuery:
     async def exists(self, user_id: int) -> bool:
         return await self.users.get_by_id(user_id) is not None
 
+    async def is_blocked(self, user_id: int) -> bool:
+        return await self.users.blocking_status(user_id) is True
+
+    async def can_use_bot(self, user_id: int) -> bool:
+        return await self.users.blocking_status(user_id) is False
+
     async def get_username(self, user_id: int) -> str | None:
         user = await self.users.get_by_id(user_id)
         return user.username if user is not None else None

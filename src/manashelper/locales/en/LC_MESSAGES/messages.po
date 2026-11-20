@@ -1427,6 +1427,21 @@ msgstr "Queued again: {count}"
 msgid "miniapp.admin.none_retried"
 msgstr "No eligible deliveries to retry."
 
+msgid "miniapp.admin.blocked"
+msgstr "Blocked"
+
+msgid "miniapp.admin.block_user"
+msgstr "Block"
+
+msgid "miniapp.admin.unblock_user"
+msgstr "Unblock"
+
+msgid "miniapp.admin.confirm_block"
+msgstr "Block {name} from using the bot and Mini App?"
+
+msgid "miniapp.admin.confirm_unblock"
+msgstr "Restore bot and Mini App access for {name}?"
+
 msgid "miniapp.ui.loading"
 msgstr "Loading…"
 
@@ -2219,9 +2234,6 @@ msgstr "Rate dishes"
 msgid "food.rate_dish_prompt"
 msgstr "Rate this dish from 1 to 5."
 
-msgid "food.dish_no_ratings"
-msgstr "No ratings yet"
-
 msgid "food.dish_ratings_complete"
 msgstr "There are no unrated dishes left."
 
@@ -2233,3 +2245,39 @@ msgstr "Dish Collector"
 
 msgid "gamification.dish_completion.description"
 msgstr "Rate every dish in the catalog."
+
+msgid "commands.pokemon"
+msgstr "Submit a photo for Pokémon"
+
+msgid "gamification.pokemon.name"
+msgstr "Pokémon"
+
+msgid "gamification.pokemon.description"
+msgstr "Take a photo with @yunbae and send it to the bot with /pokemon. An admin will review it and grant the achievement."
+
+msgid "gamification.pokemon.photo_prompt"
+msgstr "Send a photo of yourself with @yunbae. The bot will send it to an admin for review."
+
+msgid "gamification.pokemon.already_earned"
+msgstr "You’ve already earned Pokémon."
+
+msgid "gamification.pokemon.photo_required"
+msgstr "Please send the image as a Telegram photo."
+
+msgid "gamification.pokemon.submitted"
+msgstr "Photo sent to the admin for review."
+
+msgid "gamification.pokemon.send_failed"
+msgstr "The photo couldn’t be sent. Please try sending it again."
+
+msgid "gamification.pokemon.admin_photo"
+msgstr "Pokémon submission from {sender}. Check that the photo shows the sender with @yunbae."
+
+msgid "gamification.pokemon.grant"
+msgstr "Grant achievement"
+
+msgid "gamification.pokemon.granted"
+msgstr "Pokémon granted."
+
+msgid "gamification.pokemon.grant_unavailable"
+msgstr "The user already has Pokémon or cannot receive it right now."

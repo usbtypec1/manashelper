@@ -40,7 +40,7 @@ class UserMessageDelivery:
         self._stop_bot_delivery = stop_bot_delivery
 
     async def send[T](self, user_id: int, action: Callable[[], Awaitable[T]]) -> T | None:
-        if await self._status.is_stopped(user_id):
+        if await self._status.is_delivery_disabled(user_id):
             return None
         try:
             return await action()

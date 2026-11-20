@@ -12,3 +12,6 @@ class BotStatusQuery:
     async def is_stopped(self, user_id: int) -> bool:
         user = await self.users.get_by_id(user_id)
         return user is not None and user.bot_stopped is True
+
+    async def is_delivery_disabled(self, user_id: int) -> bool:
+        return await self.users.delivery_disabled(user_id)

@@ -130,7 +130,7 @@ def register_preferences_routes(app: web.Application, container: AsyncContainer,
     async def authorized(request: web.Request) -> AsyncIterator[tuple[AsyncContainer, int]]:
         user_id = authenticate(request.headers.get("Authorization", ""), settings.telegram_bot_token)
         async with container() as scope:
-            if not await (await scope.get(UsersQuery)).exists(user_id):
+            if not await (await scope.get(UsersQuery)).can_use_bot(user_id):
                 raise web.HTTPForbidden()
             yield scope, user_id
 

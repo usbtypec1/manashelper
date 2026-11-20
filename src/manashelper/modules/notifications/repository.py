@@ -51,7 +51,7 @@ class NotificationSettingsRepository:
         return (
             select(User.id, User.locale, User.theme)
             .outerjoin(NotificationSettings, NotificationSettings.user_id == User.id)
-            .where(User.bot_stopped.is_(False), _broadcast_allowed(now))
+            .where(User.delivery_enabled(), _broadcast_allowed(now))
         )
 
     async def get_user_ids_with_exam_grades_enabled(self) -> list[int]:
@@ -61,7 +61,7 @@ class NotificationSettingsRepository:
         statement = (
             select(User.id)
             .outerjoin(NotificationSettings, NotificationSettings.user_id == User.id)
-            .where(User.id == user_id, User.bot_stopped.is_(False))
+            .where(User.id == user_id, User.delivery_enabled())
         )
         if category == "broadcast":
             statement = statement.where(_broadcast_allowed(now))
@@ -85,7 +85,7 @@ class NotificationSettingsRepository:
             .join(User, User.id == user_courses.c.user_id)
             .outerjoin(NotificationSettings, NotificationSettings.user_id == user_courses.c.user_id)
             .where(user_courses.c.course_id == course_id)
-            .where(User.bot_stopped.is_(False))
+            .where(User.delivery_enabled())
             .where(NotificationSettings.schedule_changes_enabled.is_distinct_from(False))
         )
         return list(result.scalars().all())
@@ -95,6 +95,6 @@ class NotificationSettingsRepository:
             select(User.id)
             .outerjoin(NotificationSettings, NotificationSettings.user_id == User.id)
             .where(column.is_distinct_from(False))
-            .where(User.bot_stopped.is_(False))
+            .where(User.delivery_enabled())
         )
         return list(result.scalars().all())

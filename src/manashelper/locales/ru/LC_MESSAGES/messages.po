@@ -1427,6 +1427,21 @@ msgstr "Повторно поставлено в очередь: {count}"
 msgid "miniapp.admin.none_retried"
 msgstr "Нет доступных получателей для повтора."
 
+msgid "miniapp.admin.blocked"
+msgstr "Заблокирован"
+
+msgid "miniapp.admin.block_user"
+msgstr "Заблокировать"
+
+msgid "miniapp.admin.unblock_user"
+msgstr "Разблокировать"
+
+msgid "miniapp.admin.confirm_block"
+msgstr "Заблокировать доступ к боту и Mini App для {name}?"
+
+msgid "miniapp.admin.confirm_unblock"
+msgstr "Восстановить доступ к боту и Mini App для {name}?"
+
 msgid "miniapp.ui.loading"
 msgstr "Загрузка…"
 
@@ -2219,9 +2234,6 @@ msgstr "Оценить блюда"
 msgid "food.rate_dish_prompt"
 msgstr "Оцени это блюдо от 1 до 5."
 
-msgid "food.dish_no_ratings"
-msgstr "Пока нет оценок"
-
 msgid "food.dish_ratings_complete"
 msgstr "Не осталось блюд без твоей оценки."
 
@@ -2233,3 +2245,39 @@ msgstr "Коллекционер вкусов"
 
 msgid "gamification.dish_completion.description"
 msgstr "Оцени все блюда в каталоге."
+
+msgid "commands.pokemon"
+msgstr "Отправить фото для ачивки «Покемон»"
+
+msgid "gamification.pokemon.name"
+msgstr "Покемон"
+
+msgid "gamification.pokemon.description"
+msgstr "Сфотографируйся с @yunbae и пришли снимок боту через /pokemon. Админ проверит фото и выдаст ачивку."
+
+msgid "gamification.pokemon.photo_prompt"
+msgstr "Пришли фото, на котором ты вместе с @yunbae. Бот отправит снимок админу на проверку."
+
+msgid "gamification.pokemon.already_earned"
+msgstr "У тебя уже есть ачивка «Покемон»."
+
+msgid "gamification.pokemon.photo_required"
+msgstr "Отправь снимок как фото в Telegram."
+
+msgid "gamification.pokemon.submitted"
+msgstr "Фото отправлено админу на проверку."
+
+msgid "gamification.pokemon.send_failed"
+msgstr "Не удалось отправить фото админу. Попробуй прислать его ещё раз."
+
+msgid "gamification.pokemon.admin_photo"
+msgstr "Заявка на «Покемона» от {sender}. Проверь, что на фото есть отправитель и @yunbae."
+
+msgid "gamification.pokemon.grant"
+msgstr "Выдать ачивку"
+
+msgid "gamification.pokemon.granted"
+msgstr "Ачивка «Покемон» выдана."
+
+msgid "gamification.pokemon.grant_unavailable"
+msgstr "У пользователя уже есть ачивка или сейчас её нельзя выдать."

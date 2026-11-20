@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import BigInteger, Boolean, String, false
+from sqlalchemy import BigInteger, Boolean, ColumnElement, String, and_, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -26,7 +26,12 @@ class User(Base):
     locale: Mapped[str | None] = mapped_column(String(2))
     theme: Mapped[str] = mapped_column(String(16), default="basic", server_default="basic")
     bot_stopped: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    is_blocked: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
 
     tracked_courses: Mapped[list["Course"]] = relationship(secondary=user_courses, back_populates="users")
+
+    @classmethod
+    def delivery_enabled(cls) -> ColumnElement[bool]:
+        return and_(cls.bot_stopped.is_(False), cls.is_blocked.is_(False))
