@@ -33,6 +33,7 @@ async def test_resources_close_on_exit_and_failures(failure: str | None, monkeyp
     monkeypatch.setattr(app, "create_dispatcher", create_dispatcher)
     monkeypatch.setattr(app, "create_scheduler", Mock(return_value=scheduler))
     monkeypatch.setattr(app, "setup_commands", setup_commands)
+    monkeypatch.setattr(app, "setup_admin_menu_buttons", AsyncMock())
 
     failures = {
         "dispatcher": create_dispatcher,
@@ -119,6 +120,8 @@ async def test_webhook_registers_after_binding_and_drains_before_scope_shutdown(
     monkeypatch.setattr(app, "create_dispatcher", Mock(return_value=dispatcher))
     monkeypatch.setattr(app, "create_scheduler", Mock(return_value=SimpleNamespace(start=Mock(), shutdown=Mock())))
     monkeypatch.setattr(app, "setup_commands", AsyncMock())
+    setup_admin_menu_buttons = AsyncMock()
+    monkeypatch.setattr(app, "setup_admin_menu_buttons", setup_admin_menu_buttons)
     monkeypatch.setattr(app, "create_web_app", Mock())
     monkeypatch.setattr(app.web, "AppRunner", Mock(return_value=runner))
     site = SimpleNamespace(start=AsyncMock())
@@ -139,6 +142,7 @@ async def test_webhook_registers_after_binding_and_drains_before_scope_shutdown(
     finally:
         loop.set_exception_handler(previous_handler)
     site.start.assert_awaited_once()
+    setup_admin_menu_buttons.assert_awaited_once_with(bot, settings)
     registration.assert_awaited_once_with(
         url="https://example.com/telegram/webhook",
         secret_token=settings.webhook_secret.get_secret_value(),

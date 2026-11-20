@@ -83,6 +83,8 @@ Use these locations as code is extracted; create directories only when they have
 
 ## Telegram and privacy
 
+- Follow [Telegram Mini App interaction guidelines](../docs/miniapp-interactions.md) when changing a screen.
+  Prefer native Telegram actions for screen-level commands and keep equivalent web controls for unsupported clients.
 - Define the WebApp bridge types and optional capabilities once in the Telegram adapter.
   Components must not repeat `Window` casts or independently install the same global SDK listeners.
   Use the pinned stable `@tma.js/sdk-vue` API (`useSignal` in 1.0.23); do not copy RC examples from `master`.

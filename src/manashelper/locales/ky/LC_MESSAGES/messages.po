@@ -1262,6 +1262,27 @@ msgstr "Сабактар"
 msgid "miniapp.ui.note"
 msgstr "Кайсы билдирүүлөрдү алууну тандаңыз. Өзгөртүүлөр дароо сакталат."
 
+msgid "miniapp.admin.title"
+msgstr "Башкаруу панели"
+
+msgid "miniapp.admin.users"
+msgstr "Колдонуучулар"
+
+msgid "miniapp.admin.name"
+msgstr "Аты"
+
+msgid "miniapp.admin.denied"
+msgstr "Башкаруу панелине кирүү укугуңуз жок."
+
+msgid "miniapp.admin.empty"
+msgstr "Азырынча катталган колдонуучулар жок."
+
+msgid "miniapp.admin.load_more"
+msgstr "Дагы жүктөө"
+
+msgid "miniapp.admin.refresh"
+msgstr "Жаңыртуу"
+
 msgid "miniapp.ui.loading"
 msgstr "Жүктөлүүдө…"
 

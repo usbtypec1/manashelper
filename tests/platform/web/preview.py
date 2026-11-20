@@ -40,7 +40,11 @@ async def app() -> web.Application:
     load_models()
     bot = Bot(TOKEN)
     settings = get_settings().model_copy(
-        update={"telegram_bot_token": TOKEN, "eders_password": SecretStr("fixture-eders-password")}
+        update={
+            "telegram_bot_token": TOKEN,
+            "eders_password": SecretStr("fixture-eders-password"),
+            "admin_user_ids": frozenset({PREVIEW_USER}),
+        }
     )
     schema = "miniapp_preview_" + uuid4().hex
     admin_engine = create_async_engine(settings.database_url)
@@ -126,6 +130,14 @@ async def app() -> web.Application:
             for key in ("foodie", "seller", "eldin_balasy"):
                 await repo.award(PREVIEW_USER, key, datetime.now(UTC))
             session.add(User(id=PREVIEW_USER - 1, full_name="Участник <Manas>", locale="tr"))
+            session.add_all(
+                User(
+                    id=PREVIEW_USER - 51 + index,
+                    full_name=f"Directory user {index + 1}",
+                    username=f"member_{index + 1}",
+                )
+                for index in range(50)
+            )
             await session.flush()
             await repo.set_enabled(PREVIEW_USER - 1, True)
             await repo.award(PREVIEW_USER - 1, "champion", datetime.now(UTC))

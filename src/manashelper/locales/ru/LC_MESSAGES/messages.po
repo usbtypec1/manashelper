@@ -1259,6 +1259,27 @@ msgstr "Уроки"
 msgid "miniapp.ui.note"
 msgstr "Выберите, о чём сообщать. Изменения сохраняются сразу."
 
+msgid "miniapp.admin.title"
+msgstr "Админка"
+
+msgid "miniapp.admin.users"
+msgstr "Пользователи"
+
+msgid "miniapp.admin.name"
+msgstr "Имя"
+
+msgid "miniapp.admin.denied"
+msgstr "У вас нет доступа к админке."
+
+msgid "miniapp.admin.empty"
+msgstr "Зарегистрированных пользователей пока нет."
+
+msgid "miniapp.admin.load_more"
+msgstr "Загрузить ещё"
+
+msgid "miniapp.admin.refresh"
+msgstr "Обновить"
+
 msgid "miniapp.ui.loading"
 msgstr "Загрузка…"
 

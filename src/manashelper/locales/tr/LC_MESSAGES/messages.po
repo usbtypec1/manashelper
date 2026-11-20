@@ -1258,6 +1258,27 @@ msgstr "Dersler"
 msgid "miniapp.ui.note"
 msgstr "Hangi bildirimleri alacağınızı seçin. Değişiklikler anında kaydedilir."
 
+msgid "miniapp.admin.title"
+msgstr "Yönetim paneli"
+
+msgid "miniapp.admin.users"
+msgstr "Kullanıcılar"
+
+msgid "miniapp.admin.name"
+msgstr "Ad"
+
+msgid "miniapp.admin.denied"
+msgstr "Yönetim paneline erişiminiz yok."
+
+msgid "miniapp.admin.empty"
+msgstr "Henüz kayıtlı kullanıcı yok."
+
+msgid "miniapp.admin.load_more"
+msgstr "Daha fazla yükle"
+
+msgid "miniapp.admin.refresh"
+msgstr "Yenile"
+
 msgid "miniapp.ui.loading"
 msgstr "Yükleniyor…"
 
