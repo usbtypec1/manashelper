@@ -24,11 +24,15 @@ Use these locations as code is extracted; create directories only when they have
 | `src/features/<feature>/` | Feature components, API functions, types, pure helpers and stateful composables. |
 | `src/shared/api/` | Common HTTP transport and request error handling. |
 | `src/shared/telegram/` | Typed Telegram WebApp access and lifecycle integration. |
-| `src/shared/i18n/` | Locale selection and access to generated translations. |
+| `src/shared/i18n/` | Locale selection and the generated translation catalog. |
+| `src/shared/styles/` | Global resets, theme tokens, shell layout, and styles used across sections. |
 | `src/shared/ui/` | Reusable UI with a feature-independent contract. |
-| `src/assets/` | Bundled visual assets; retain stable achievement-art mappings. |
+| `src/assets/<feature>/` | Bundled visual assets; retain stable achievement-art mappings. |
+| `tests/features/`, `tests/app/`, `tests/fixtures/` | Playwright specs grouped by feature, cross-feature app behavior, and reusable fixtures. |
 
 - Pages compose features; features may depend on shared code. Shared code must not import features or pages.
+- Group related route entries under `pages/` when a section has several screens. For example, `pages/admin/`
+  holds admin routes, while `features/admin/` holds shared admin UI and the code for `users/` and `broadcasts/`.
 - Keep each feature's rules and state with that feature. Coordinate separate features at the page level.
 - Share code when it has an actual common responsibility. A helper used once may stay beside its owner.
 - Start feature folders flat (`api.ts`, `types.ts`, `useCourseSelection.ts`, components); add nesting when useful.
@@ -105,7 +109,7 @@ Use these locations as code is extracted; create directories only when they have
 ## Localization and styling
 
 - English, Russian, Kyrgyz, Turkish and simplified Chinese `.po` catalogs are the source of user-facing copy.
-  Export with `frontend/scripts/export_messages.py`; do not edit generated `src/messages.json` or add a parallel
+  Export with `frontend/scripts/export_messages.py`; do not edit generated `src/shared/i18n/messages.json` or add a parallel
   handwritten translation dictionary. Keep new keys extractable by Babel and preserve placeholders.
 - Centralize locale normalization and English fallback. Validate external locale values against supported
   own keys. Set `document.documentElement.lang`; format dates/numbers with `Intl` or locale-aware native APIs.

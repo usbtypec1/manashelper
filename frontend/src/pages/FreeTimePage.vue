@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import messages from '../messages.json'
-import TermsLink from '../TermsLink.vue'
+import { normalizeLocale } from '../shared/i18n/locale'
+import messages from '../shared/i18n/messages.json'
+import TermsLink from '../features/terms/TermsLink.vue'
 import type { CatalogCourse, ComparedCourse, CourseLevel } from '../features/free-time/api'
 import { useFreeTime } from '../features/free-time/useFreeTime'
 import { useTelegram } from '../shared/telegram/telegram'
@@ -18,12 +19,9 @@ const {
   load, compare, selectFaculty, selectDepartment,
 } = useFreeTime(rawInitData)
 
-const locale = computed(() => {
-  const candidate = profile.value?.locale ?? languageCode.value
-  return candidate in messages ? candidate : 'en'
-})
+const locale = computed(() => normalizeLocale(profile.value?.locale ?? languageCode.value))
 const copy = computed<Record<string, string>>(
-  () => profile.value?.ui ?? messages[locale.value as keyof typeof messages].preferences,
+  () => profile.value?.ui ?? messages[locale.value].preferences,
 )
 
 /** Selected courses live in the URL so a comparison can be reloaded or shared with friends. */

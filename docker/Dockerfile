@@ -29,7 +29,7 @@ WORKDIR /frontend
 COPY frontend/package.json frontend/bun.lock ./
 RUN bun install --frozen-lockfile
 COPY frontend ./
-COPY --from=build /app/frontend/src/messages.json ./src/messages.json
+COPY --from=build /app/frontend/src/shared/i18n/messages.json ./src/shared/i18n/messages.json
 RUN bun run --bun build
 
 # ----------- Stage 2: Minimal Run -----------

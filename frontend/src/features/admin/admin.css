@@ -11,6 +11,7 @@
   --admin-hint: var(--tg-theme-hint-color, var(--admin-default-hint));
   --admin-divider: var(--tg-theme-section-separator-color, var(--admin-default-divider));
   --admin-section: var(--tg-theme-section-bg-color, var(--tg-theme-bg-color, var(--admin-default-section)));
+  --admin-card-padding: 12px;
   --accent: var(--admin-accent);
   min-height: 100dvh;
   background: var(--tg-theme-secondary-bg-color, var(--admin-default-bg));
@@ -25,25 +26,48 @@ html[data-theme='dark'] .telegram-admin {
   --admin-default-accent: #61a9ff;
   --admin-default-danger: #ff766a;
 }
-.admin-shell { --shell-inline: 16px; max-width: 680px; }
-.admin-header { display: grid; gap: 24px; margin-bottom: 20px; }
-.admin-header h1 { margin: 0; font-size: clamp(28px, 7vw, 34px); line-height: 1.12; letter-spacing: -.035em; }
-.admin-tabs { display: grid; grid-template-columns: 1fr 1fr; padding: 3px; border-radius: 12px; background: var(--admin-control); }
+.app-shell.admin-shell {
+  --shell-inline: clamp(16px, 3vw, 32px);
+  display: grid;
+  gap: 20px;
+  width: min(100%, 1280px);
+  align-items: start;
+}
+.admin-main { container: admin-content / inline-size; min-width: 0; overflow-wrap: anywhere; }
+.admin-main h1 { margin: 0 0 20px; font-size: clamp(28px, 4vw, 36px); line-height: 1.15; font-weight: 700; }
+.admin-main h2 { margin: 0 0 12px; font-size: 20px; line-height: 1.25; font-weight: 650; }
+.admin-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--admin-control);
+}
 .admin-tabs a {
   display: grid;
   place-items: center;
-  min-height: 40px;
-  padding: 6px;
+  min-height: 44px;
+  padding: 8px;
   color: inherit;
   text-align: center;
   text-decoration: none;
   font-size: 14px;
   font-weight: 600;
-  border-radius: 9px;
+  border-radius: 10px;
+  overflow-wrap: anywhere;
 }
-.admin-tabs a[aria-current='page'] { background: var(--admin-section); box-shadow: 0 1px 3px rgb(0 0 0 / 10%); }
-.admin-card { background: var(--admin-section); border-radius: 16px; padding: 16px; margin: 0 0 16px; min-width: 0; }
-.admin-card h2 { margin: 0 0 12px; font-size: 19px; }
+.admin-tabs a[aria-current='page'] { background: var(--admin-section); }
+.admin-tabs a:focus-visible { outline-offset: -3px; }
+.admin-card {
+  min-width: 0;
+  margin: 0 0 16px;
+  padding: var(--admin-card-padding);
+  border: 1px solid var(--admin-divider);
+  border-radius: 16px;
+  background: var(--admin-section);
+}
+.admin-split { display: grid; align-items: start; gap: 20px; }
 .admin-hint { color: var(--admin-hint); font-size: 14px; line-height: 1.45; }
 .admin-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .admin-button {
@@ -56,6 +80,8 @@ html[data-theme='dark'] .telegram-admin {
   background: var(--admin-section);
   text-decoration: none;
   font-weight: 600;
+  text-align: center;
+  max-width: 100%;
 }
 .admin-button.primary { background: var(--admin-accent); color: var(--tg-theme-button-text-color, #fff); }
 .admin-button:disabled { opacity: .65; }
@@ -70,5 +96,33 @@ html[data-theme='dark'] .telegram-admin {
   background: var(--admin-section);
   color: inherit;
   font: inherit;
+  font-size: 16px;
+  font-weight: 400;
 }
-.admin-field textarea { min-height: 112px; resize: vertical; }
+.admin-field :is(input, select, textarea):focus-visible, .telegram-admin summary:focus-visible {
+  outline: 2px solid var(--admin-accent);
+  outline-offset: 2px;
+}
+.admin-field textarea { min-height: 128px; resize: vertical; }
+
+@container admin-content (min-width: 480px) {
+  .admin-card { --admin-card-padding: 16px; }
+}
+
+@container admin-content (min-width: 760px) {
+  .admin-split { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 24px; }
+  .admin-field textarea { min-height: 160px; }
+}
+
+@media (min-width: 1024px) {
+  .app-shell.admin-shell { --shell-top: 32px; grid-template-columns: 176px minmax(0, 1fr); gap: 32px; }
+  .admin-tabs {
+    position: sticky;
+    top: max(var(--shell-top), env(safe-area-inset-top), var(--tg-viewport-content-safe-area-inset-top, 0px), var(--tg-viewport-safe-area-inset-top, 0px));
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0;
+    background: transparent;
+  }
+  .admin-tabs a { justify-items: start; padding-inline: 12px; text-align: start; }
+  .admin-tabs a[aria-current='page'] { background: var(--admin-control); }
+}
