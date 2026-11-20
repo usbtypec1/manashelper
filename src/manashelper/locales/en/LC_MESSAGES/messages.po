@@ -1259,6 +1259,27 @@ msgstr "Courses"
 msgid "miniapp.ui.note"
 msgstr "Choose what to hear about. Changes are saved immediately."
 
+msgid "miniapp.admin.title"
+msgstr "Admin panel"
+
+msgid "miniapp.admin.users"
+msgstr "Users"
+
+msgid "miniapp.admin.name"
+msgstr "Name"
+
+msgid "miniapp.admin.denied"
+msgstr "You don’t have access to the admin panel."
+
+msgid "miniapp.admin.empty"
+msgstr "No registered users yet."
+
+msgid "miniapp.admin.load_more"
+msgstr "Load more"
+
+msgid "miniapp.admin.refresh"
+msgstr "Refresh"
+
 msgid "miniapp.ui.loading"
 msgstr "Loading…"
 

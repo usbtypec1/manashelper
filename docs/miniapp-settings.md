@@ -49,3 +49,25 @@ Missing or invalid authentication returns 401; an unregistered user returns 403.
 Invalid JSON, extra body fields, invalid enum values, non-boolean flags, out-of-range
 weekdays, malformed catalog identifiers, and an empty, malformed or oversized free-time selection
 return 400. An unknown course returns 404.
+
+## Admin panel
+
+With `MANASHELPER_PUBLIC_URL` configured, the bot installs a personal Telegram menu button
+that opens `/app/admin` in each administrator's private chat. It sets the button at startup
+and on the administrator's `/start`. Set `MANASHELPER_ADMIN_USER_IDS` to a JSON array of positive
+Telegram user IDs. If unset, a positive `MANASHELPER_ADMIN_CHAT_ID` is the single allowed user.
+A group chat ID gives no one access. An explicit empty array disables access.
+
+`GET /api/admin/users` authenticates signed Telegram initData and checks the allowed user IDs
+on every request. It returns up to 50 registered users ordered by Telegram ID, including users
+who stopped the bot. Each entry contains only `id` (a decimal string), `full_name` and nullable
+`username`. Pass the returned `next_cursor` as the `after` query parameter to read the next page.
+A null cursor marks the end. Invalid authentication returns 401, a user outside the allowlist
+gets 403, and a malformed cursor returns 400. Responses use `Cache-Control: no-store`.
+
+Telegram retains per-chat button settings. After an ID is removed from the allowlist, the API
+denies its requests even if Telegram still shows its previously configured button.
+
+The directory uses Telegram's live palette, MainButton to load more or retry, and
+SecondaryButton to refresh when another page is available. At the end of the list,
+refresh becomes the primary action. See the [Mini App interaction guidelines](miniapp-interactions.md).

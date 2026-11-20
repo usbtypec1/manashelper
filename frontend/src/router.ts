@@ -25,6 +25,7 @@ export const router = createRouter({
     { path: '/settings', name: 'settings', component: preferences, props: { tab: 'settings' } },
     { path: '/courses', name: 'courses', component: preferences, props: { tab: 'courses' }, meta: { backTo: 'settings' } },
     { path: '/free-time', name: 'free-time', component: () => import('./pages/FreeTimePage.vue') },
+    { path: '/admin', name: 'admin', component: () => import('./pages/AdminUsersPage.vue') },
     {
       path: '/terms', name: 'terms', component: () => import('./TermsView.vue'),
       meta: {

@@ -1,6 +1,7 @@
 """Export Mini App boot/error copy from the same catalogs as the bot."""
 
 import json
+from gettext import NullTranslations
 from pathlib import Path
 
 from babel.messages.pofile import read_po
@@ -8,6 +9,19 @@ from babel.messages.pofile import read_po
 from manashelper.platform.legal import TERMS_SOURCES, TERMS_UPDATED
 
 ROOT = Path(__file__).resolve().parents[2]
+
+# Mark client-only strings for Babel and resolve them from each catalog below.
+_ = NullTranslations().gettext
+ADMIN_MESSAGES = (
+    _("miniapp.admin.title"),
+    _("miniapp.admin.users"),
+    _("miniapp.admin.name"),
+    _("miniapp.admin.denied"),
+    _("miniapp.admin.empty"),
+    _("miniapp.admin.load_more"),
+    _("miniapp.admin.refresh"),
+)
+
 messages = {}
 for locale in ("en", "ru", "ky", "tr", "zh"):
     with (ROOT / f"src/manashelper/locales/{locale}/LC_MESSAGES/messages.po").open(encoding="utf-8") as stream:
@@ -22,6 +36,7 @@ for locale in ("en", "ru", "ky", "tr", "zh"):
         for message in catalog
         if isinstance(message.id, str) and message.id.startswith("miniapp.ui.")
     }
+    messages[locale]["admin"] = {key.removeprefix("miniapp.admin."): catalog[key].string for key in ADMIN_MESSAGES}
     messages[locale]["terms"] = {
         str(message.id).removeprefix("terms."): message.string
         for message in catalog

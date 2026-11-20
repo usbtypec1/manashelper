@@ -7,10 +7,11 @@ import {
 } from 'vue'
 import { useRouter } from 'vue-router'
 
-function useTelegramState() {
+function useTelegramState(available: boolean) {
   const rawInitData = useSignal(initData.raw)
   const user = useSignal(initData.user)
   return {
+    available,
     rawInitData,
     languageCode: computed(() => user.value?.language_code?.split('-')[0] ?? 'en'),
     dialogBack: shallowRef<(() => void) | undefined>(),
@@ -28,12 +29,13 @@ export function useTelegramProvider() {
     initData.restore()
     themeParams.mount()
     cleanups.push(themeParams.unmount)
+    cleanups.push(themeParams.bindCssVars())
     backButton.mount.ifAvailable()
     cleanups.push(() => { backButton.hide.ifAvailable(); backButton.unmount() })
     viewport.expand.ifAvailable()
   }
 
-  const context = useTelegramState()
+  const context = useTelegramState(available)
   const dark = useSignal(themeParams.isDark)
   const parentRoute = computed(() => {
     const route = router.currentRoute.value

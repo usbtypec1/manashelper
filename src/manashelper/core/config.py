@@ -2,7 +2,7 @@ from functools import lru_cache
 from typing import Self
 from urllib.parse import urlsplit
 
-from pydantic import Field, SecretStr, model_validator
+from pydantic import Field, PositiveInt, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     advertisement_channel_link: str = Field(alias="MANASHELPER_ADVERTISEMENT_CHANNEL_LINK")
     moderation_chat_id: int = Field(alias="MANASHELPER_MODERATION_CHAT_ID")
     admin_chat_id: int = Field(alias="MANASHELPER_ADMIN_CHAT_ID")
+    admin_user_ids: frozenset[PositiveInt] | None = Field(default=None, alias="MANASHELPER_ADMIN_USER_IDS")
     eders_password: SecretStr | None = Field(default=None, alias="MANASHELPER_EDERS_PASSWORD")
     eders_poll_minutes: int | None = Field(default=15, alias="MANASHELPER_EDERS_POLL_MINUTES", ge=15, le=60)
     public_url: str | None = Field(default=None, alias="MANASHELPER_PUBLIC_URL")
@@ -48,6 +49,12 @@ class Settings(BaseSettings):
             raise ValueError("MANASHELPER_WEBHOOK_SECRET must contain 32-256 URL-safe characters")
         self.public_url = self.public_url.rstrip("/")
         return self
+
+    @property
+    def admin_panel_user_ids(self) -> frozenset[int]:
+        if self.admin_user_ids is not None:
+            return self.admin_user_ids
+        return frozenset({self.admin_chat_id}) if self.admin_chat_id > 0 else frozenset()
 
     @property
     def eders_enabled(self) -> bool:

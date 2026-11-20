@@ -1,6 +1,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from manashelper.modules.users.application.profile import UserProfile
 from manashelper.modules.users.infrastructure.models.user import User
 
 
@@ -38,6 +39,13 @@ class UserRepository:
     async def get_active_ids(self) -> list[int]:
         result = await self._session.execute(select(User.id).where(User.bot_stopped.is_(False)))
         return list(result.scalars().all())
+
+    async def list_profiles(self, *, after: int | None, limit: int) -> list[UserProfile]:
+        query = select(User.id, User.full_name, User.username).order_by(User.id).limit(limit)
+        if after is not None:
+            query = query.where(User.id > after)
+        result = await self._session.execute(query)
+        return [UserProfile(user_id, full_name, username) for user_id, full_name, username in result.tuples()]
 
     async def set_bot_stopped(self, user_id: int, stopped: bool) -> None:
         user = await self.get_by_id(user_id)
