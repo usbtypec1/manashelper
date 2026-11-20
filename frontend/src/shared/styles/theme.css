@@ -1,0 +1,134 @@
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #f6f3ff;
+  background: #080a16;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  --text: #f6f3ff;
+  --muted: #a6a0b9;
+  --faint: #77708d;
+  --accent: #71d7ce;
+  --accent-ink: #102b31;
+  --glass: rgb(255 255 255 / 7%);
+  --line: rgb(255 255 255 / 10%);
+  --avatar-text: #e9deff;
+  color-scheme: dark;
+}
+:root[data-theme='light'] {
+  color: #232038;
+  background: #f4f1fa;
+  --text: #232038;
+  --muted: #6d647e;
+  --faint: #81778f;
+  --accent: #8cdbd3;
+  --accent-ink: #14353b;
+  --glass: rgb(255 255 255 / 62%);
+  --line: rgb(74 42 101 / 12%);
+  --avatar-text: #51436c;
+  color-scheme: light;
+}
+
+body {
+  background:
+    radial-gradient(ellipse at 102% 0%, rgb(0 124 129 / 29%), transparent 48%),
+    radial-gradient(ellipse at -30% 50%, rgb(116 41 209 / 39%), transparent 56%),
+    radial-gradient(ellipse at 74% 63%, rgb(37 59 129 / 32%), transparent 52%),
+    radial-gradient(ellipse at 20% 120%, rgb(97 9 118 / 40%), transparent 58%);
+}
+:root[data-theme='light'] body {
+  background:
+    radial-gradient(ellipse at 102% 0%, rgb(0 124 129 / 8%), transparent 48%),
+    radial-gradient(ellipse at -30% 50%, rgb(116 41 209 / 10%), transparent 56%),
+    radial-gradient(ellipse at 74% 63%, rgb(37 59 129 / 8%), transparent 52%),
+    radial-gradient(ellipse at 20% 120%, rgb(97 9 118 / 10%), transparent 58%);
+}
+
+/* Bot personality and Telegram light/dark appearance are independent choices. */
+:root[data-bot-theme='pickme'] {
+  color: #ffedf4;
+  background: #24121d;
+  --text: #ffedf4;
+  --muted: #d5b0c2;
+  --faint: #b991a6;
+  --accent: #ffaccb;
+  --accent-ink: #4a1730;
+  --glass: rgb(255 195 219 / 9%);
+  --line: rgb(255 195 219 / 20%);
+  --avatar-text: #ffedf4;
+}
+:root[data-bot-theme='pickme'][data-theme='light'] {
+  color: #4a2136;
+  background: #fff4f7;
+  --text: #4a2136;
+  --muted: #80556a;
+  --faint: #8a5d73;
+  --accent: #a92b60;
+  --accent-ink: #fff4f7;
+  --glass: rgb(255 255 255 / 72%);
+  --line: rgb(143 50 91 / 20%);
+  --avatar-text: #4a2136;
+}
+:root[data-bot-theme='pickme'] body {
+  background: radial-gradient(ellipse at 90% 0%, rgb(237 106 158 / 13%), transparent 65%);
+}
+
+:root[data-bot-theme='deadinside'] {
+  color: #ede9ea;
+  background: #121214;
+  --text: #ede9ea;
+  --muted: #b9b0b4;
+  --faint: #a89ca2;
+  --accent: #d99aaa;
+  --accent-ink: #29131b;
+  --glass: rgb(220 200 210 / 7%);
+  --line: rgb(220 200 210 / 18%);
+  --avatar-text: #ede9ea;
+}
+:root[data-bot-theme='deadinside'][data-theme='light'] {
+  color: #292328;
+  background: #eeebec;
+  --text: #292328;
+  --muted: #655960;
+  --faint: #756770;
+  --accent: #843d55;
+  --accent-ink: #fff5f8;
+  --glass: rgb(255 255 255 / 65%);
+  --line: rgb(58 36 48 / 20%);
+  --avatar-text: #292328;
+}
+:root[data-bot-theme='deadinside'] body { background: none; }
+
+:root[data-bot-theme='gta_vi'] {
+  color: var(--text);
+  background: #1c1729;
+  --text: #fff0e6;
+  --muted: #debfc6;
+  --faint: #c59da9;
+  --accent: #ffad8a;
+  --accent-ink: #32192b;
+  --glass: rgb(255 210 188 / 10%);
+  --line: rgb(255 210 188 / 26%);
+  --avatar-text: #fff0e6;
+  --gta-surface: #302239;
+  --gta-horizon: rgb(239 105 112 / 34%);
+  --gta-water: #122b35;
+}
+:root[data-bot-theme='gta_vi'][data-theme='light'] {
+  background: #fff3e6;
+  --text: #351d35;
+  --muted: #704052;
+  --faint: #805061;
+  --accent: #963352;
+  --accent-ink: #fff6ef;
+  --glass: rgb(255 250 243 / 76%);
+  --line: rgb(131 63 80 / 28%);
+  --avatar-text: #351d35;
+  --gta-surface: #ffede3;
+  --gta-horizon: rgb(240 125 122 / 29%);
+  --gta-water: #d5ece7;
+}
+:root[data-bot-theme='gta_vi'] body {
+  background:
+    radial-gradient(ellipse at 85% 0%, var(--gta-horizon), transparent 64%),
+    linear-gradient(175deg, transparent 50%, var(--gta-water) 100%);
+}

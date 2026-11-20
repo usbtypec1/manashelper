@@ -100,6 +100,6 @@ for locale in ("en", "ru", "ky", "tr", "zh"):
     }
     messages[locale]["terms"]["sources"] = TERMS_SOURCES
     messages[locale]["terms"]["updated"] = TERMS_UPDATED
-target = ROOT / "frontend/src/messages.json"
+target = ROOT / "frontend/src/shared/i18n/messages.json"
 target.parent.mkdir(parents=True, exist_ok=True)
 target.write_text(json.dumps(messages, ensure_ascii=False) + "\n", encoding="utf-8")

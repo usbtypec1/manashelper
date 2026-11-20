@@ -14,19 +14,19 @@ watchEffect(() => {
 
 <template>
   <div class="telegram-admin">
-    <main class="app-shell admin-shell">
-      <header class="admin-header">
-        <nav class="admin-tabs" :aria-label="copy.admin.title">
-          <RouterLink :to="{ name: 'admin' }" :aria-current="section === 'users' ? 'page' : undefined">
-            {{ copy.admin.users }}
-          </RouterLink>
-          <RouterLink :to="{ name: 'admin-broadcasts' }" :aria-current="section === 'broadcasts' ? 'page' : undefined">
-            {{ copy.admin.broadcasts }}
-          </RouterLink>
-        </nav>
+    <div class="app-shell admin-shell">
+      <nav class="admin-tabs" :aria-label="copy.admin.title">
+        <RouterLink :to="{ name: 'admin' }" :aria-current="section === 'users' ? 'page' : undefined">
+          {{ copy.admin.users }}
+        </RouterLink>
+        <RouterLink :to="{ name: 'admin-broadcasts' }" :aria-current="section === 'broadcasts' ? 'page' : undefined">
+          {{ copy.admin.broadcasts }}
+        </RouterLink>
+      </nav>
+      <main class="admin-main">
         <h1 id="admin-page-title">{{ title }}</h1>
-      </header>
-      <slot />
-    </main>
+        <slot />
+      </main>
+    </div>
   </div>
 </template>

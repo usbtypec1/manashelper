@@ -80,8 +80,8 @@ Names and descriptions come from `src/manashelper/locales/<locale>/LC_MESSAGES/m
 
 Shared interface copy uses `gamification.ui.*` in the same catalogs. After changing UI copy,
 export messages and rebuild the frontend using the commands below.
-The medal sprite atlas is `frontend/src/assets/achievement-medals.png`; cell order and
-sheet colors are mapped by stable achievement key in `frontend/src/achievementArt.ts`.
+The medal sprite atlas is `frontend/src/assets/achievements/achievement-medals.png`. Cell order and
+sheet colors are mapped by stable achievement key in `frontend/src/features/achievements/achievementArt.ts`.
 An individual `achievement-<key with dashes>.png` in the same directory (for example `achievement-thin-ice.png`)
 is picked up automatically by `achievementArt.ts`; a key without an image or atlas cell shows the locked medal.
 Current images:

@@ -20,5 +20,5 @@ docker/docker-compose*.yaml
 frontend/node_modules/
 frontend/test-results/
 frontend/playwright-report/
-frontend/src/messages.json
+frontend/src/shared/i18n/messages.json
 src/manashelper/platform/web/static/

@@ -1,0 +1,39 @@
+* { box-sizing: border-box; }
+html { min-width: 280px; min-height: 100%; }
+body {
+  margin: 0;
+  min-height: 100dvh;
+}
+button, a { -webkit-tap-highlight-color: transparent; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button, a { touch-action: manipulation; }
+button:focus-visible, a:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 5px;
+}
+button { border: 0; }
+button:disabled { cursor: default; }
+.app-shell {
+  --shell-top: 20px;
+  --shell-bottom: 24px;
+  --shell-inline: 20px;
+  width: min(100%, 720px);
+  margin: 0 auto;
+  padding: max(var(--shell-top), env(safe-area-inset-top), var(--tg-viewport-content-safe-area-inset-top, 0px), var(--tg-viewport-safe-area-inset-top, 0px))
+    max(var(--shell-inline), env(safe-area-inset-right), var(--tg-viewport-content-safe-area-inset-right, 0px), var(--tg-viewport-safe-area-inset-right, 0px))
+    max(var(--shell-bottom), env(safe-area-inset-bottom), var(--tg-viewport-content-safe-area-inset-bottom, 0px), var(--tg-viewport-safe-area-inset-bottom, 0px))
+    max(var(--shell-inline), env(safe-area-inset-left), var(--tg-viewport-content-safe-area-inset-left, 0px), var(--tg-viewport-safe-area-inset-left, 0px));
+}
+h1 { margin: 0; font-size: clamp(30px, 7vw, 38px); font-weight: 750; letter-spacing: -.035em; line-height: 1.2; }
+
+@media (min-width: 600px) {
+  .app-shell { --shell-top: 30px; --shell-bottom: 30px; --shell-inline: 36px; }
+}
+
+@media (max-width: 350px) {
+  .app-shell { --shell-inline: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
