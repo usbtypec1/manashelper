@@ -1,9 +1,11 @@
+from collections import Counter
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import httpx
 import pytest
+from bs4 import BeautifulSoup
 
 from manashelper.modules.eders.application.eders import filter_activities
 from manashelper.modules.eders.application.models import (
@@ -24,6 +26,7 @@ from manashelper.modules.eders.errors import (
     EdersUnsafeUrlError,
 )
 from manashelper.modules.eders.infrastructure import client as eders_client
+from manashelper.modules.eders.infrastructure import parser as eders_parser
 from manashelper.modules.eders.infrastructure.client import EdersClient
 from manashelper.modules.eders.infrastructure.parser import (
     parse_account_timezone,
@@ -226,6 +229,14 @@ async def test_client_authenticates_once_and_retries_expired_snapshot(monkeypatc
     requests = []
     clients = []
     expired = False
+    snapshot_pages = {fixture(name): name for name in ("profile", "course", "assignment", "quiz")}
+    parsed_pages: Counter[str] = Counter()
+
+    def parse_html(html, *args, **kwargs):
+        name = snapshot_pages.get(html)
+        if name is not None:
+            parsed_pages[name] += 1
+        return BeautifulSoup(html, *args, **kwargs)
 
     def handler(request: httpx.Request) -> httpx.Response:
         nonlocal expired
@@ -272,8 +283,11 @@ async def test_client_authenticates_once_and_retries_expired_snapshot(monkeypatc
         return client
 
     monkeypatch.setattr(eders_client, "new_http_client", factory)
+    monkeypatch.setattr(eders_client, "BeautifulSoup", parse_html)
+    monkeypatch.setattr(eders_parser, "BeautifulSoup", parse_html)
     result = await make_eders_client().fetch_snapshot("fake-student")
     assert len(result.activities) == 3
+    assert parsed_pages == {"profile": 2, "course": 1, "assignment": 1, "quiz": 1}
     assert all(client.is_closed for client in clients)
     assert len(clients) == 2
     assert all(

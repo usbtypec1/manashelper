@@ -1,5 +1,7 @@
 import json
 import re
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
 from urllib.parse import parse_qs, urljoin, urlsplit
@@ -17,7 +19,7 @@ from manashelper.modules.eders.application.models import (
     GradingStatus,
     SubmissionStatus,
 )
-from manashelper.modules.eders.errors import EdersParseError, EdersUnsafeUrlError
+from manashelper.modules.eders.errors import EdersLoginPageError, EdersParseError, EdersUnsafeUrlError
 from manashelper.modules.eders.infrastructure.urls import EDERS_BASE_URL, eders_id, safe_eders_url
 
 
@@ -44,53 +46,59 @@ def parse_enrolled_courses(payload: object) -> tuple[list[EdersCourse], int | No
     return list(courses.values()), next_offset
 
 
-def _page(html: str) -> BeautifulSoup:
+@contextmanager
+def _page(html: str) -> Iterator[BeautifulSoup]:
     soup = BeautifulSoup(html, "lxml")
-    if soup.select_one("input[name=logintoken], input[name='LoginForm[username]']"):
-        raise EdersParseError("Authentication page instead of eders content")
-    if soup.select_one("#region-main") is None:
-        raise EdersParseError("Missing eders content region")
-    if soup.select_one("#region-main .errorbox, #region-main .alert-danger"):
-        raise EdersParseError("Eders error page")
-    return soup
+    try:
+        if soup.select_one("input[name=logintoken], input[name='LoginForm[username]']"):
+            raise EdersLoginPageError("Authentication page instead of eders content")
+        if soup.select_one("#region-main") is None:
+            raise EdersParseError("Missing eders content region")
+        if soup.select_one("#region-main .errorbox, #region-main .alert-danger"):
+            raise EdersParseError("Eders error page")
+        yield soup
+    finally:
+        # Break links between nodes before the next response arrives.
+        soup.clear(decompose=True)
 
 
 def parse_courses(html: str) -> list[EdersCourse]:
-    soup = _page(html)
-    table = soup.select_one("#region-main table#overview-grade")
-    if table is None:
-        # Moodle renders a notification for an account with no grade-report courses.
-        empty = soup.select_one("#region-main .alert-info")
-        if empty and empty.get_text(" ", strip=True) == "No courses":
-            return []
-        raise EdersParseError("Missing eders course overview table")
-    courses: dict[int, EdersCourse] = {}
-    for link in table.select("a[href]"):
-        href = link.get("href")
-        if not isinstance(href, str):
-            continue
-        parts = urlsplit(urljoin(EDERS_BASE_URL, href))
-        params = parse_qs(parts.query, keep_blank_values=True)
-        if parts.scheme != "https" or parts.netloc != "eders.manas.edu.kg" or parts.fragment:
-            continue
-        if parts.path not in {"/course/user.php", "/course/view.php", "/grade/report/user/index.php"}:
-            continue
-        if set(params) - {"id", "user", "userid", "mode", "group"} or params.get("mode", ["grade"]) != ["grade"]:
-            continue
-        ids = params.get("id", [])
-        if len(ids) != 1 or not ids[0].isascii() or not ids[0].isdecimal() or int(ids[0]) <= 0:
-            continue
-        name = link.get_text(" ", strip=True)
-        if name:
-            identifier = int(ids[0])
-            courses[identifier] = EdersCourse(identifier, name)
-    if not courses and table.select("tbody tr"):
-        raise EdersParseError("Unrecognized eders course overview rows")
-    return list(courses.values())
+    with _page(html) as soup:
+        table = soup.select_one("#region-main table#overview-grade")
+        if table is None:
+            # Moodle renders a notification for an account with no grade-report courses.
+            empty = soup.select_one("#region-main .alert-info")
+            if empty and empty.get_text(" ", strip=True) == "No courses":
+                return []
+            raise EdersParseError("Missing eders course overview table")
+        courses: dict[int, EdersCourse] = {}
+        for link in table.select("a[href]"):
+            href = link.get("href")
+            if not isinstance(href, str):
+                continue
+            parts = urlsplit(urljoin(EDERS_BASE_URL, href))
+            params = parse_qs(parts.query, keep_blank_values=True)
+            if parts.scheme != "https" or parts.netloc != "eders.manas.edu.kg" or parts.fragment:
+                continue
+            if parts.path not in {"/course/user.php", "/course/view.php", "/grade/report/user/index.php"}:
+                continue
+            if set(params) - {"id", "user", "userid", "mode", "group"} or params.get("mode", ["grade"]) != ["grade"]:
+                continue
+            ids = params.get("id", [])
+            if len(ids) != 1 or not ids[0].isascii() or not ids[0].isdecimal() or int(ids[0]) <= 0:
+                continue
+            name = link.get_text(" ", strip=True)
+            if name:
+                identifier = int(ids[0])
+                courses[identifier] = EdersCourse(identifier, name)
+        if not courses and table.select("tbody tr"):
+            raise EdersParseError("Unrecognized eders course overview rows")
+        return list(courses.values())
 
 
 def parse_account_timezone(html: str) -> ZoneInfo | None:
-    return _account_timezone(_page(html))
+    with _page(html) as soup:
+        return _account_timezone(soup)
 
 
 def _account_timezone(soup: BeautifulSoup) -> ZoneInfo | None:
@@ -249,11 +257,21 @@ def _completion(node: Tag | BeautifulSoup, activity_id: int) -> bool | None:
 
 
 def parse_course_activities(html: str, course: EdersCourse, timezone: ZoneInfo | None = None) -> list[EdersActivity]:
-    soup = _page(html)
+    return parse_course_page(html, course, timezone)[0]
+
+
+def parse_course_page(
+    html: str, course: EdersCourse, timezone: ZoneInfo | None = None
+) -> tuple[list[EdersActivity], ZoneInfo | None]:
+    with _page(html) as soup:
+        course_timezone = _account_timezone(soup) or timezone
+        return _course_activities(soup, course, course_timezone), course_timezone
+
+
+def _course_activities(soup: BeautifulSoup, course: EdersCourse, timezone: ZoneInfo | None) -> list[EdersActivity]:
     if soup.select_one("#region-main .course-content") is None:
         raise EdersParseError("Missing eders course content")
     activities: dict[tuple[ActivityKind, int], EdersActivity] = {}
-    timezone = _account_timezone(soup) or timezone
     for item in soup.select(".course-content li.activity"):
         section_node = item.find_parent("li", class_="section")
         heading = section_node.select_one(".sectionname") if section_node else None
@@ -392,7 +410,11 @@ def _latest_attempt(states: list[tuple[SubmissionStatus, GradingStatus]]) -> tup
 
 
 def parse_activity_details(html: str, activity: EdersActivity, timezone: ZoneInfo | None = None) -> EdersActivity:
-    soup = _page(html)
+    with _page(html) as soup:
+        return _activity_details(soup, activity, timezone)
+
+
+def _activity_details(soup: BeautifulSoup, activity: EdersActivity, timezone: ZoneInfo | None) -> EdersActivity:
     timezone = _account_timezone(soup) or timezone
     body = soup.select_one("body")
     expected = f"page-mod-{activity.kind.value}-view"
