@@ -2,7 +2,7 @@
 // sprite cell in the fixed 4 × 3 atlas, or to the locked medal (cell 11) when it has no cell either.
 const images = import.meta.glob<string>('../../assets/achievements/achievement-*.png', { eager: true, import: 'default' })
 
-type AchievementArt = { cell?: number; color: string; symbol?: string; image?: string }
+type AchievementArt = { cell?: number; color: string; image?: string }
 
 const art: Record<string, AchievementArt> = {
   night_owl: { cell: 0, color: '#c6b4ed' },
@@ -13,7 +13,7 @@ const art: Record<string, AchievementArt> = {
   comeback: { cell: 5, color: '#a8dfdb' },
   fall: { cell: 6, color: '#f2b0aa' },
   seller: { cell: 7, color: '#cdb9ea' },
-  pokemon: { symbol: '🐱', color: '#f4d098' },
+  pokemon: { color: '#f4d098' },
   eldin_balasy: { cell: 9, color: '#edd6ae' },
   thin_ice: { cell: 10, color: '#add7f0' },
   phoenix: { color: '#f6b98f' },

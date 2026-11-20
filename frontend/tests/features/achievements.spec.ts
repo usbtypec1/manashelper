@@ -62,13 +62,19 @@ test('custom artwork loads and Telegram theme changes preserve the layout', asyn
   await page.goto('/app/')
   await expect(page.getByRole('heading', { name: 'Ачивки' })).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
-  expect(await page.locator('.achievement-badge').first().evaluate(async element => {
+  const pokemon = page.getByRole('button', { name: /Покемон/ })
+  await expect(pokemon.locator('[data-medal="pokemon"]')).toHaveAttribute('data-locked', 'true')
+  await pokemon.click()
+  const pokemonArt = page.getByRole('dialog').locator('[data-medal="pokemon"]')
+  await expect(pokemonArt).toHaveCSS('background-image', /achievement-pokemon[^"]*\.png/)
+  expect(await pokemonArt.evaluate(async element => {
     const url = getComputedStyle(element).backgroundImage.slice(4, -1).replace(/^["']|["']$/g, '')
     const image = new Image()
     image.src = url
     await image.decode()
     return image.naturalWidth > 0
   })).toBe(true)
+  await page.keyboard.press('Escape')
   await page.screenshot({ path: `test-results/collection-light-${test.info().project.name}.png`, fullPage: true, animations: 'disabled' })
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   await page.evaluate(() => window.telegramTest.changeTheme('dark'))
