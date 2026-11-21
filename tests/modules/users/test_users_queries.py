@@ -1,6 +1,6 @@
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
-from manashelper.modules.users.queries import UsersQuery
 
 
 async def test_users_query_includes_all_users_and_reads_current_database_state(session):

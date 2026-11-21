@@ -20,7 +20,7 @@ from manashelper.modules.broadcast.application.campaigns import (
 from manashelper.modules.broadcast.application.queries import CampaignsQuery
 from manashelper.modules.broadcast.application.use_cases.create_campaign import CreateCampaignUseCase
 from manashelper.modules.broadcast.application.use_cases.retry_campaign import RetryCampaignUseCase
-from manashelper.modules.broadcast.sender import broadcast_body_fits
+from manashelper.modules.broadcast.presentation.sender import broadcast_body_fits
 from manashelper.platform.web.admin import admin_scope, parse_telegram_id, user_cursor
 
 _PAGE_SIZE = 25

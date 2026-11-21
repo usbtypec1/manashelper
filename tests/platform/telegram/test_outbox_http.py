@@ -16,7 +16,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from manashelper.core.provider import CoreProvider
-from manashelper.modules.broadcast.sender import TelegramBroadcastSender
+from manashelper.modules.broadcast.presentation.sender import TelegramBroadcastSender
 from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.users.application.bot_status import BotStatusQuery
 from manashelper.modules.users.application.locale import LocaleQuery

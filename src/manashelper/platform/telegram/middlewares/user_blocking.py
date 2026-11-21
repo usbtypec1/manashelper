@@ -6,7 +6,7 @@ from aiogram.types import TelegramObject, Update, User
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import CONTAINER_NAME
 
-from manashelper.modules.users.queries import UsersQuery
+from manashelper.modules.users.application.queries import UsersQuery
 
 
 class UserBlockingMiddleware(BaseMiddleware):

@@ -6,10 +6,10 @@ from aiogram import Bot, Dispatcher
 from aiohttp.test_utils import TestClient, TestServer
 
 from manashelper.core.config import get_settings
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.application.use_cases.set_user_blocked import SetUserBlockedUseCase
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
-from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.web.server import create_web_app
 from tests.platform.web.factories import TOKEN, USER_ID, authorization
 

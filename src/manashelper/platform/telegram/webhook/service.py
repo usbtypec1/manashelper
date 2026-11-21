@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
-from manashelper.platform.telegram.webhook_repository import WebhookReceiptRepository
+from manashelper.platform.telegram.webhook.repository import WebhookReceiptRepository
 
 
 class ConcurrentWebhookUpdateError(Exception):

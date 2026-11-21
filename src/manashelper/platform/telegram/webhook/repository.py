@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import delete, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.platform.telegram.webhook_models import ProcessedTelegramUpdate
+from manashelper.platform.telegram.webhook.models import ProcessedTelegramUpdate
 
 
 @dataclass(frozen=True, slots=True)

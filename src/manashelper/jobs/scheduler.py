@@ -12,7 +12,7 @@ from manashelper.modules.food_menu.jobs import broadcast_dinner_menu_job, broadc
 from manashelper.modules.obis.jobs import poll_obis_notifications_job
 from manashelper.modules.schedule.jobs import sync_room_catalog_job, sync_timetable_job
 from manashelper.platform.telegram.outbox.jobs import cleanup_outbox_job, run_outbox_worker
-from manashelper.platform.telegram.webhook_jobs import cleanup_webhook_receipts_job
+from manashelper.platform.telegram.webhook.jobs import cleanup_webhook_receipts_job
 
 
 def create_scheduler(container: AsyncContainer, bot: Bot) -> AsyncIOScheduler:

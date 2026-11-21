@@ -13,9 +13,9 @@ from manashelper.modules.advertisements.infrastructure.repositories.advertisemen
 from manashelper.modules.advertisements.infrastructure.repositories.advertisement_contact_view import (
     AdvertisementContactViewRepository,
 )
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
-from manashelper.modules.users.queries import UsersQuery
 from tests.modules.advertisements.application_factories import (
     build_advertisement_moderation_service,
     build_advertisement_service,

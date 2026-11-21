@@ -9,7 +9,7 @@ from manashelper.modules.food_menu.application.food_menu_notification_settings i
 from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notification_settings import (
     FoodMenuNotificationSettingsRepository,
 )
-from manashelper.modules.users.queries import UsersQuery
+from manashelper.modules.users.application.queries import UsersQuery
 
 
 @dataclass(frozen=True, slots=True)

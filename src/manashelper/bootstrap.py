@@ -42,6 +42,6 @@ def load_models() -> None:
     from manashelper.modules.users.infrastructure.models.user import User
     from manashelper.platform.telegram.audit.orm import ActionLog
     from manashelper.platform.telegram.outbox.models import OutboxMessage, OutboxRateBucket
-    from manashelper.platform.telegram.webhook_models import ProcessedTelegramUpdate
+    from manashelper.platform.telegram.webhook.models import ProcessedTelegramUpdate
 
     Base.registry.configure()

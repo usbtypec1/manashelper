@@ -34,6 +34,7 @@ from manashelper.modules.schedule.infrastructure.models.faculty import Faculty
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
 from manashelper.modules.users.application.locale import LocaleQuery
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.modules.users.application.use_cases.resolve_user_locale import ResolveUserLocaleUseCase
 from manashelper.modules.users.infrastructure.models.user import User as DbUser
@@ -43,7 +44,6 @@ from manashelper.modules.users.presentation.callbacks import (
 )
 from manashelper.modules.users.presentation.routers import locale
 from manashelper.modules.users.provider import UsersProvider
-from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
 from manashelper.platform.telegram.outbox.provider import OutboxProvider

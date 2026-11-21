@@ -6,7 +6,7 @@ from manashelper.modules.broadcast.application.use_cases.create_campaign import 
 from manashelper.modules.broadcast.application.use_cases.retry_campaign import RetryCampaignUseCase
 from manashelper.modules.broadcast.application.use_cases.send_broadcast import SendBroadcastUseCase
 from manashelper.modules.broadcast.infrastructure.repositories.campaign import CampaignRepository
-from manashelper.modules.broadcast.sender import TelegramCampaignDelivery
+from manashelper.modules.broadcast.presentation.sender import TelegramCampaignDelivery
 
 
 class BroadcastProvider(Provider):

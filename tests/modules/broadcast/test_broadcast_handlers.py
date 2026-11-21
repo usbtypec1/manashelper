@@ -12,10 +12,10 @@ from aiogram.types import BotCommandScopeChat, CallbackQuery, Chat, Message, Pho
 
 from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme
-from manashelper.modules.broadcast import router as handlers
 from manashelper.modules.broadcast.application.use_cases.send_broadcast import SendBroadcastUseCase
-from manashelper.modules.broadcast.callbacks import BroadcastAction, BroadcastCallback
-from manashelper.modules.broadcast.keyboards import build_broadcast_confirm_keyboard
+from manashelper.modules.broadcast.presentation import router as handlers
+from manashelper.modules.broadcast.presentation.callbacks import BroadcastAction, BroadcastCallback
+from manashelper.modules.broadcast.presentation.keyboards import build_broadcast_confirm_keyboard
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.commands import setup_commands

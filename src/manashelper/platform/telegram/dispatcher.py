@@ -11,7 +11,7 @@ from manashelper.modules.advertisements.presentation.advertisement_contact impor
 from manashelper.modules.advertisements.presentation.advertisement_moderation import (
     router as advertisement_moderation_router,
 )
-from manashelper.modules.broadcast.router import router as broadcast_router
+from manashelper.modules.broadcast.presentation.router import router as broadcast_router
 from manashelper.modules.eders.presentation.router import menu_router as eders_menu_router
 from manashelper.modules.eders.presentation.router import router as eders_router
 from manashelper.modules.feedback.router import router as feedback_router
@@ -39,7 +39,7 @@ from manashelper.platform.telegram.middlewares.user_blocking import UserBlocking
 from manashelper.platform.telegram.routers.navigation import router as navigation_router
 from manashelper.platform.telegram.routers.settings import router as settings_router
 from manashelper.platform.telegram.routers.start import router as start_router
-from manashelper.platform.telegram.webhook_context import webhook_processing
+from manashelper.platform.telegram.webhook.context import webhook_processing
 
 logger = logging.getLogger(__name__)
 

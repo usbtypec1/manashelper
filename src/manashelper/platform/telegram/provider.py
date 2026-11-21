@@ -2,8 +2,8 @@ from dishka import Provider, Scope, provide
 
 from manashelper.platform.telegram.audit.repository import ActionLogRepository
 from manashelper.platform.telegram.audit.service import ActionLogService
-from manashelper.platform.telegram.webhook_repository import WebhookReceiptRepository
-from manashelper.platform.telegram.webhook_service import WebhookReceiptService
+from manashelper.platform.telegram.webhook.repository import WebhookReceiptRepository
+from manashelper.platform.telegram.webhook.service import WebhookReceiptService
 
 
 class TelegramPlatformProvider(Provider):

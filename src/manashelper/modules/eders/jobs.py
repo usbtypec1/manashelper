@@ -7,8 +7,8 @@ from manashelper.modules.eders.application.use_cases.poll_eders_user import Poll
 from manashelper.modules.eders.errors import EdersFetchError, EdersParseError, EdersUnsafeUrlError
 from manashelper.modules.eders.presentation.sender import TelegramEdersNotificationSender
 from manashelper.modules.obis.errors import ObisLoginError, ObisParseError, UserHasNoCredentialsError, UserNotFoundError
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.application.theme import ThemeQuery
-from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.telegram.outbox.service import OutboxService
 
 logger = logging.getLogger(__name__)

@@ -7,7 +7,7 @@ from manashelper.modules.notifications.settings import (
     get_or_create_notification_settings,
     to_summary,
 )
-from manashelper.modules.users.queries import UsersQuery
+from manashelper.modules.users.application.queries import UsersQuery
 
 
 @dataclass(frozen=True, slots=True)

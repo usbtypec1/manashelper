@@ -11,8 +11,8 @@ from manashelper.core.config import Settings
 from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme
 from manashelper.modules.users.application.profile import ProfileFilter
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.application.use_cases.set_user_blocked import SetUserBlockedUseCase
-from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.web.auth import authenticate
 
 _PAGE_SIZE = 50

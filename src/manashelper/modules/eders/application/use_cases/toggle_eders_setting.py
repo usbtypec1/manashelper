@@ -6,7 +6,7 @@ from manashelper.modules.eders.application.tracking import (
     get_eders_settings,
 )
 from manashelper.modules.eders.infrastructure.repositories.eders import EdersRepository
-from manashelper.modules.users.queries import UsersQuery
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.platform.telegram.outbox.service import OutboxService
 
 

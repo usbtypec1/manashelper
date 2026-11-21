@@ -2,7 +2,7 @@ import logging
 
 from dishka import AsyncContainer
 
-from manashelper.platform.telegram.webhook_service import WebhookReceiptService
+from manashelper.platform.telegram.webhook.service import WebhookReceiptService
 
 logger = logging.getLogger(__name__)
 

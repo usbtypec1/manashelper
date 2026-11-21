@@ -12,7 +12,7 @@ from babel.messages.pofile import read_po
 
 from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme
-from manashelper.modules.broadcast.sender import TelegramBroadcastSender
+from manashelper.modules.broadcast.presentation.sender import TelegramBroadcastSender
 from manashelper.modules.eders.application.tracking import EdersEvent
 from manashelper.modules.eders.presentation.sender import TelegramEdersNotificationSender
 from manashelper.modules.food_menu.application.daily_menu import DailyMenuModel, DishModel

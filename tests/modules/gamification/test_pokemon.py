@@ -12,9 +12,9 @@ from manashelper.modules.gamification.application.queries import GamificationQue
 from manashelper.modules.gamification.infrastructure.models.achievement import UserAchievement
 from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
 from manashelper.modules.gamification.presentation import pokemon
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
-from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.middlewares.private_chat_only import PrivateChatOnlyMiddleware
 from tests.modules.gamification.factories import build_awards

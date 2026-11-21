@@ -11,7 +11,7 @@ from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notific
     WEEKDAYS,
     FoodMenuNotificationSettingsRepository,
 )
-from manashelper.modules.users.queries import UsersQuery
+from manashelper.modules.users.application.queries import UsersQuery
 
 
 @dataclass(frozen=True, slots=True)

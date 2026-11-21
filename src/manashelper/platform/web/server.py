@@ -14,12 +14,12 @@ from manashelper.modules.eders.presentation.browser_login import register_browse
 from manashelper.modules.gamification.application.queries import GamificationQuery
 from manashelper.modules.gamification.presentation.catalog import localize_leaderboard, localize_profile, ui_strings
 from manashelper.modules.users.application.locale import LocaleQuery
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.application.theme import ThemeQuery
-from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
-from manashelper.platform.telegram.webhook_context import webhook_processing
-from manashelper.platform.telegram.webhook_middleware import WebhookReceiptMiddleware
-from manashelper.platform.telegram.webhook_service import ConcurrentWebhookUpdateError
+from manashelper.platform.telegram.webhook.context import webhook_processing
+from manashelper.platform.telegram.webhook.middleware import WebhookReceiptMiddleware
+from manashelper.platform.telegram.webhook.service import ConcurrentWebhookUpdateError
 from manashelper.platform.web.admin import register_admin_routes
 from manashelper.platform.web.admin_broadcasts import register_admin_broadcast_routes
 from manashelper.platform.web.auth import authenticate

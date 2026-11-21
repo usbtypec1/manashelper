@@ -27,10 +27,10 @@ from manashelper.modules.notifications.provider import NotificationsProvider
 from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
 from manashelper.modules.users.provider import UsersProvider
-from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
 from tests.modules.advertisements.application_factories import build_advertisement_service

@@ -19,7 +19,7 @@ from manashelper.modules.advertisements.domain.enums import AdvertisementStatus
 from manashelper.modules.advertisements.infrastructure.models.advertisement import Advertisement
 from manashelper.modules.advertisements.infrastructure.models.advertisement_media import AdvertisementMedia
 from manashelper.modules.advertisements.infrastructure.repositories.advertisement import AdvertisementRepository
-from manashelper.modules.users.queries import UsersQuery
+from manashelper.modules.users.application.queries import UsersQuery
 
 
 @dataclass(frozen=True, slots=True)

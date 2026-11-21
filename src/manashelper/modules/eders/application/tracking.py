@@ -9,7 +9,7 @@ from manashelper.modules.eders.infrastructure.models.eders import EdersNotificat
 from manashelper.modules.eders.infrastructure.repositories.eders import EdersRepository
 from manashelper.modules.eders.infrastructure.serialization import deserialize_snapshot, serialize_snapshot
 from manashelper.modules.obis.errors import UserNotFoundError
-from manashelper.modules.users.queries import UsersQuery
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.platform.telegram.outbox.service import OutboxService
 
 

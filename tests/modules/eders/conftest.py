@@ -2,9 +2,9 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.modules.eders.infrastructure.repositories.eders import EdersRepository
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
-from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.telegram.outbox.repository import OutboxRepository
 from manashelper.platform.telegram.outbox.service import OutboxService
 from tests.modules.eders.application_factories import build_eders_tracking_service

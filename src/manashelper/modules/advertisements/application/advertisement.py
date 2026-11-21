@@ -10,7 +10,7 @@ from manashelper.modules.advertisements.domain.contact import (
 from manashelper.modules.advertisements.domain.enums import AdvertisementMediaType, AdvertisementStatus
 from manashelper.modules.advertisements.infrastructure.models.advertisement import Advertisement
 from manashelper.modules.advertisements.infrastructure.repositories.advertisement import AdvertisementRepository
-from manashelper.modules.users.queries import UsersQuery
+from manashelper.modules.users.application.queries import UsersQuery
 
 PAGE_SIZE = 10
 

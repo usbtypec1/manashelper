@@ -2,6 +2,7 @@ from dishka import Provider, Scope, provide
 
 from manashelper.modules.users.application.bot_status import BotStatusQuery
 from manashelper.modules.users.application.locale import LocaleQuery
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.modules.users.application.use_cases.resolve_user_locale import ResolveUserLocaleUseCase
 from manashelper.modules.users.application.use_cases.set_user_blocked import SetUserBlockedUseCase
@@ -9,7 +10,6 @@ from manashelper.modules.users.application.use_cases.set_user_locale import SetU
 from manashelper.modules.users.application.use_cases.set_user_theme import SetUserThemeUseCase
 from manashelper.modules.users.application.use_cases.stop_bot_delivery import StopBotDeliveryUseCase
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
-from manashelper.modules.users.queries import UsersQuery
 
 
 class UsersProvider(Provider):
