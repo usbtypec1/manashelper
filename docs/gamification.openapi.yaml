@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Manashelper achievements
-  version: 1.1.0
+  version: 1.2.0
 servers:
   - url: https://bot.example.com
 paths:
@@ -132,6 +132,27 @@ paths:
         '403': { description: Admin access denied. }
         '404': { description: Unknown achievement or recipient. }
         '409': { description: The recipient is blocked or has achievements disabled. }
+    delete:
+      operationId: revokeAchievement
+      description: Revokes an award and cancels its pending notification. A later manual grant can restore the award.
+      security: [{ TelegramInitData: [] }]
+      parameters:
+        - { name: key, in: path, required: true, schema: { type: string } }
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Revoked or already absent award.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, enum: [revoked, not_awarded] }
+        '400': { description: Invalid Telegram user ID. }
+        '401': { description: Invalid or expired initData. }
+        '403': { description: Admin access denied. }
+        '404': { description: Unknown achievement or recipient. }
   /telegram/webhook:
     post:
       operationId: receiveTelegramUpdate

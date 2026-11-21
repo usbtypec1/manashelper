@@ -7,7 +7,7 @@ tables, and actions on a specific item in Vue. `@tma.js/sdk-vue` is the bridge t
 
 | Entry point | When to use it |
 | --- | --- |
-| Personal bot MenuButton | A destination that a user opens regularly. Use per-chat `setChatMenuButton` for the admin panel. Install it only for configured personal user IDs in private chats. |
+| Bot MenuButton | The default private-chat button opens personal settings. Per-chat overrides open the admin panel for configured administrator IDs. |
 | Inline Web App button in a bot message | A contextual authenticated flow such as a particular settings or achievement screen. Inline and bot menu launches provide signed `initData`. |
 | Reply-keyboard Web App button | A small, standalone input that sends up to 4096 bytes through `sendData` and closes the Mini App. Use the authenticated API for Manashelper screens. |
 | Bot profile Main Mini App or `startapp` link | A discoverable or shareable entry point. Validate the requested screen and check permission on the server even when launch data is signed. |

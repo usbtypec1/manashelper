@@ -28,7 +28,7 @@ from manashelper.modules.obis.provider import ObisProvider
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.provider import StudyWeekProvider
 from manashelper.modules.users.provider import UsersProvider
-from manashelper.platform.telegram.admin_menu import setup_admin_menu_buttons
+from manashelper.platform.telegram.admin_menu import setup_mini_app_menu_buttons
 from manashelper.platform.telegram.commands import setup_commands
 from manashelper.platform.telegram.dispatcher import create_dispatcher
 from manashelper.platform.telegram.outbox.provider import OutboxProvider
@@ -87,7 +87,7 @@ async def main() -> None:
         stack.callback(scheduler.shutdown)
 
         await setup_commands(bot, settings)
-        await setup_admin_menu_buttons(bot, settings)
+        await setup_mini_app_menu_buttons(bot, settings)
         if settings.public_url:
             app = create_web_app(bot, dispatcher, container, settings)
             runner = web.AppRunner(app, shutdown_timeout=60)

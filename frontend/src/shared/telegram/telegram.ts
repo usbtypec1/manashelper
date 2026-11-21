@@ -85,6 +85,10 @@ export function useTelegram() {
   return context
 }
 
+export function closeTelegramMiniApp() {
+  miniApp.close.ifAvailable()
+}
+
 export function useTelegramDialogBack(active: Readonly<Ref<boolean>>, close: () => void) {
   const { dialogBack } = useTelegram()
   const clear = () => { if (dialogBack.value === close) dialogBack.value = undefined }

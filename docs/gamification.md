@@ -13,8 +13,8 @@ Node is needed only for building the Vue/Vite frontend.
   No activity progress or awards (including temporarily retired achievements) are recorded, and the transcript-only HTTP refresh is skipped.
   Regular OBIS synchronization continues. Disabling preserves awards/progress; enabling resumes them without
   backfilling missed activity. Academic history can qualify on the next successful refresh.
-- The catalog contains sixteen achievements. Each visible earned achievement is worth one point in the collection
-  and leaderboard. Awards are permanent and unique per Telegram user/key.
+- The catalog contains sixteen achievements. Each visible, active earned achievement is worth one point in the
+  collection and leaderboard. Each Telegram user can hold one award per achievement.
 - Pokémon: in a private chat, use `/pokemon` and send a photo of yourself with @yunbae. The bot sends it to the
   configured admin chat. An admin reviews the photo and grants the award with its inline button. The award
   records the admin's Telegram ID. Historical Pokémon awards count again and keep their original dates.
@@ -66,14 +66,21 @@ locally; committed tests use a synthetic structural fixture, without its profile
 ## Mini App artwork and editable copy
 
 Authorized Mini App administrators can open **Admin → Achievements** at `/app/admin/achievements`.
-Select an achievement to grant it to a registered, unblocked Telegram user with achievements enabled, or edit its display.
+The full catalog shows editable names and visibility. Each row saves its own changes.
+Select an achievement and enter a Telegram ID to grant or revoke it. Granting requires an unblocked,
+registered user with achievements enabled.
 A repeated grant reports that the award already exists and preserves its date and original grantor.
+Revocation removes the award from the user's score and cancels any pending award notification.
+A revoked award stays out of the collection and ranking until an administrator grants it again.
 The display name is shared across languages. Clearing it restores the localized catalog names.
 Hiding removes the achievement from the collection, leaderboard and score, and suppresses new award notifications.
 Stored awards and progress remain available when the achievement is shown again.
 The public and admin API contracts are in [gamification.openapi.yaml](gamification.openapi.yaml).
 Migration V38 adds a display settings table. Rolling back V38 removes custom names and visibility settings.
 Existing awards and progress are stored separately and survive the rollback.
+Migration V39 records revocations on existing award rows and links pending award notifications
+to the relevant achievement. Downgrading to V38 preserves award rows and drops revocation timestamps,
+so the older version displays previously revoked awards again.
 
 The collection uses illustrated round medals featuring the human mascot from `reference/mascot.JPG` and a locked medal for unearned achievements.
 Opening an achievement reveals its illustration, description, status and earned date.

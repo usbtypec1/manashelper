@@ -1,3 +1,4 @@
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from manashelper.modules.obis.application.models import ObisCaptcha
@@ -16,7 +17,12 @@ class AutoLoginObisUseCase:
     recognizer: CaptchaRecognizer
 
     async def execute(
-        self, user_id: int, student_number: str | None = None, plain_password: str | None = None
+        self,
+        user_id: int,
+        student_number: str | None = None,
+        plain_password: str | None = None,
+        *,
+        on_recognition_started: Callable[[], Awaitable[None]] | None = None,
     ) -> ObisCaptcha | None:
         """Authenticate, or return an unsubmitted challenge for the existing manual fallback.
 
@@ -27,6 +33,8 @@ class AutoLoginObisUseCase:
         for attempt in range(5):
             if captcha.expected_hash is None:
                 return captcha
+            if attempt == 0 and on_recognition_started is not None:
+                await on_recognition_started()
             answer = await self.recognizer.solve(captcha.image, captcha.expected_hash)
             if answer is not None:
                 try:

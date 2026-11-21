@@ -36,6 +36,7 @@ class UserAchievement(Base):
     achievement_key: Mapped[str] = mapped_column(String(32), primary_key=True)
     earned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     granted_by: Mapped[int | None] = mapped_column(BigInteger)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class AchievementDisplayOverride(Base):

@@ -21,7 +21,7 @@ You just chat with it on Telegram like you would with a friend, tapping buttons 
   lesson-attendance/skip budget straight from the chat. The bot can also notify you as soon as a new grade is
   posted or an absence is recorded, without you needing to check manually.
 - ⚙️ **Notification settings** — configure Schedule, OBIS, Food menu, Eders and broadcast notifications under
-  **Settings → Notifications**, or in the Mini App. Both interfaces share the same saved preferences.
+  **Settings** in the Telegram menu button. In polling mode, use the bot command `/settings`.
 - 📚 **Eders** — buttons in **Studies** open deadlines, course materials and the study week. Notification settings
   configure reminders one day and two hours before a deadline, activity openings and deadline changes. The study week combines
   the next seven days of classes, activity dates and newly discovered materials. Eders is checked every 15 minutes

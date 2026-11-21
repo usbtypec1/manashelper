@@ -83,15 +83,20 @@ ADMIN_MESSAGES = (
     _("miniapp.admin.achievement_hide"),
     _("miniapp.admin.achievement_hidden"),
     _("miniapp.admin.achievement_save"),
-    _("miniapp.admin.achievement_grant_title"),
+    _("miniapp.admin.achievement_award_title"),
     _("miniapp.admin.achievement_grant"),
     _("miniapp.admin.achievement_recipient_hint"),
     _("miniapp.admin.achievement_grant_confirm"),
     _("miniapp.admin.achievement_saved"),
+    _("miniapp.admin.achievement_save_error"),
     _("miniapp.admin.achievement_granted"),
     _("miniapp.admin.achievement_already_granted"),
     _("miniapp.admin.achievement_missing"),
     _("miniapp.admin.achievement_unavailable"),
+    _("miniapp.admin.achievement_revoke"),
+    _("miniapp.admin.achievement_revoke_confirm"),
+    _("miniapp.admin.achievement_revoked"),
+    _("miniapp.admin.achievement_not_awarded"),
 )
 
 messages = {}

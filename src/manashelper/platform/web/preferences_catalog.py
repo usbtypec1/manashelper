@@ -1,5 +1,9 @@
 from aiogram.utils.i18n import gettext as _
 
+from manashelper.localization.locale import Locale
+from manashelper.localization.theme import Theme
+from manashelper.modules.users.presentation.keyboards.locale import native_language_name
+from manashelper.modules.users.presentation.keyboards.theme import theme_name
 from manashelper.platform.i18n.catalog import i18n
 
 
@@ -7,6 +11,18 @@ def ui_strings(locale: str) -> dict[str, str]:
     with i18n.context(), i18n.use_locale(locale):
         return {
             "title": _("miniapp.ui.title"),
+            "language": _("settings.language"),
+            "theme": _("settings.theme"),
+            "obis": _("obis.settings"),
+            "obis_link": _("obis.enter_credentials"),
+            "obis_update": _("obis.update_credentials"),
+            "obis_remove": _("obis.clear_credentials"),
+            "obis_remove_prompt": _("obis.clear_confirmation"),
+            "obis_remove_confirm": _("obis.confirm_clear"),
+            "feedback": _("settings.feedback"),
+            "sent_to_chat": _("miniapp.ui.sent_to_chat"),
+            **{f"locale_{option.value}": native_language_name(option) for option in Locale},
+            **{f"theme_{option.value}": theme_name(option) for option in Theme},
             "achievements": _("miniapp.ui.achievements"),
             "notifications": _("miniapp.ui.notifications"),
             "courses": _("miniapp.ui.courses"),

@@ -29,7 +29,16 @@ async def set_admin_menu_button(bot: Bot, settings: Settings, user_id: int) -> N
         logger.warning("Could not set the admin menu button for Telegram user %d", user_id, exc_info=True)
 
 
-async def setup_admin_menu_buttons(bot: Bot, settings: Settings) -> None:
+async def setup_mini_app_menu_buttons(bot: Bot, settings: Settings) -> None:
     with i18n.context(), i18n.use_locale(DEFAULT_LOCALE.value):
+        button = (
+            MenuButtonWebApp(text=_("menu.settings"), web_app=WebAppInfo(url=f"{settings.public_url}/app/settings"))
+            if settings.public_url
+            else MenuButtonDefault()
+        )
+        try:
+            await bot.set_chat_menu_button(menu_button=button)
+        except TelegramAPIError:
+            logger.warning("Could not set the default Mini App menu button", exc_info=True)
         for user_id in sorted(settings.admin_panel_user_ids):
             await set_admin_menu_button(bot, settings, user_id)

@@ -1,4 +1,5 @@
 from aiogram import F, Router, flags
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.i18n import gettext as _
@@ -14,6 +15,7 @@ from manashelper.platform.telegram.keyboards.settings import build_settings_keyb
 router = Router(name="settings")
 
 
+@router.message(Command("settings"))
 @router.message(TranslatedText("menu.settings"))
 @flags.private_chat_only
 async def on_settings_button(message: Message, state: FSMContext) -> None:

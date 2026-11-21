@@ -1,4 +1,4 @@
-import { getJson, putJson } from '../../shared/api/http'
+import { deleteJson, getJson, postJson, putJson } from '../../shared/api/http'
 
 export const notificationKeys = ['schedule_changes', 'exam_grades', 'lesson_skips'] as const
 export const meals = ['lunch', 'dinner'] as const
@@ -12,6 +12,7 @@ export type Settings = {
   locale: string
   theme: string
   ui: Record<string, string>
+  has_obis_credentials: boolean
   notifications: { schedule_changes_enabled: boolean; exam_grades_enabled: boolean; lesson_skips_enabled: boolean; broadcast_muted_until: string | null }
   food: { weekday: number; lunch_enabled: boolean; dinner_enabled: boolean }[]
   eders: Record<string, boolean> | null
@@ -20,6 +21,22 @@ export type Settings = {
 
 export function getSettings(initData: string) {
   return getJson('settings', initData) as Promise<Settings>
+}
+
+export function updateLocale(initData: string, locale: string) {
+  return putJson('settings/locale', initData, { locale }) as Promise<Settings>
+}
+
+export function updateTheme(initData: string, theme: string) {
+  return putJson('settings/theme', initData, { theme }) as Promise<Settings>
+}
+
+export function disconnectObis(initData: string) {
+  return deleteJson('settings/obis', initData) as Promise<Settings>
+}
+
+export function requestChatSettings(initData: string, section: 'obis' | 'feedback') {
+  return postJson('settings/chat', initData, { section })
 }
 
 export async function getFaculties(initData: string) {

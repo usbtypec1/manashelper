@@ -5,14 +5,20 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import asdict
 from functools import partial
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
+from aiogram import Bot
+from aiogram.exceptions import TelegramAPIError
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.utils.i18n import gettext as _
 from aiohttp import web
 from dishka import AsyncContainer
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from manashelper.core.config import Settings
+from manashelper.localization.locale import Locale
+from manashelper.localization.theme import Theme
 from manashelper.modules.eders.application.tracking import EdersSetting, EdersTrackingService
 from manashelper.modules.eders.application.use_cases.toggle_eders_setting import ToggleEdersSettingUseCase
 from manashelper.modules.food_menu.application.food_menu_notification_settings import (
@@ -28,6 +34,9 @@ from manashelper.modules.notifications.application.use_cases.toggle_notification
     ToggleNotificationSettingUseCase,
 )
 from manashelper.modules.notifications.settings import NotificationSetting
+from manashelper.modules.obis.application.credentials import ObisCredentialsQuery
+from manashelper.modules.obis.application.use_cases.clear_obis_credentials import ClearObisCredentialsUseCase
+from manashelper.modules.obis.presentation.keyboards import build_obis_settings_keyboard
 from manashelper.modules.schedule.application.course import CourseNotFoundError, CourseQuery
 from manashelper.modules.schedule.application.department import DepartmentQuery
 from manashelper.modules.schedule.application.faculty import FacultyQuery
@@ -41,7 +50,10 @@ from manashelper.modules.schedule.application.use_cases.toggle_tracked_course im
 from manashelper.modules.users.application.locale import LocaleQuery
 from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.application.theme import ThemeQuery
+from manashelper.modules.users.application.use_cases.set_user_locale import SetUserLocaleUseCase
+from manashelper.modules.users.application.use_cases.set_user_theme import SetUserThemeUseCase
 from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.callbacks import SettingsAction, SettingsCallback
 from manashelper.platform.web.auth import authenticate
 from manashelper.platform.web.preferences_catalog import ui_strings
 
@@ -70,6 +82,18 @@ class EdersInput(PreferenceInput):
 
 class BroadcastInput(PreferenceInput):
     muted: bool = Field(strict=True)
+
+
+class LocaleInput(PreferenceInput):
+    locale: Locale
+
+
+class ThemeInput(PreferenceInput):
+    theme: Theme
+
+
+class ChatInput(PreferenceInput):
+    section: Literal["obis", "feedback"]
 
 
 class CourseInput(PreferenceInput):
@@ -112,12 +136,14 @@ async def _settings(scope: AsyncContainer, user_id: int, settings: Settings) -> 
     food = await (await scope.get(FoodMenuSettingsQuery)).get_settings(user_id)
     eders = await (await scope.get(EdersTrackingService)).get_settings(user_id) if settings.eders_enabled else None
     courses = await (await scope.get(CourseQuery)).get_tracked_courses(user_id)
+    has_obis_credentials = await (await scope.get(ObisCredentialsQuery)).has_credentials(user_id)
     with i18n.use_theme(theme):
         ui = ui_strings(locale.value)
     return {
         "locale": locale.value,
         "theme": theme.value,
         "ui": ui,
+        "has_obis_credentials": has_obis_credentials,
         "notifications": asdict(notifications),
         "food": [asdict(day) for day in food.days],
         "eders": asdict(eders) if eders is not None else None,
@@ -125,7 +151,7 @@ async def _settings(scope: AsyncContainer, user_id: int, settings: Settings) -> 
     }
 
 
-def register_preferences_routes(app: web.Application, container: AsyncContainer, settings: Settings) -> None:
+def register_preferences_routes(app: web.Application, container: AsyncContainer, settings: Settings, bot: Bot) -> None:
     @asynccontextmanager
     async def authorized(request: web.Request) -> AsyncIterator[tuple[AsyncContainer, int]]:
         user_id = authenticate(request.headers.get("Authorization", ""), settings.telegram_bot_token)
@@ -138,6 +164,54 @@ def register_preferences_routes(app: web.Application, container: AsyncContainer,
         async with authorized(request) as (scope, user_id):
             payload = await _settings(scope, user_id, settings)
         return _json(payload)
+
+    async def set_locale(request: web.Request) -> web.Response:
+        async with authorized(request) as (scope, user_id):
+            body = await _body(request, LocaleInput)
+            await (await scope.get(SetUserLocaleUseCase)).execute(user_id, body.locale)
+            payload = await _settings(scope, user_id, settings)
+        return _json(payload)
+
+    async def set_theme(request: web.Request) -> web.Response:
+        async with authorized(request) as (scope, user_id):
+            body = await _body(request, ThemeInput)
+            await (await scope.get(SetUserThemeUseCase)).execute(user_id, body.theme)
+            payload = await _settings(scope, user_id, settings)
+        return _json(payload)
+
+    async def disconnect_obis(request: web.Request) -> web.Response:
+        async with authorized(request) as (scope, user_id):
+            await (await scope.get(ClearObisCredentialsUseCase)).execute(user_id)
+            payload = await _settings(scope, user_id, settings)
+        return _json(payload)
+
+    async def open_chat(request: web.Request) -> web.Response:
+        async with authorized(request) as (scope, user_id):
+            body = await _body(request, ChatInput)
+            locale = await (await scope.get(LocaleQuery)).get_locale(user_id)
+            theme = await (await scope.get(ThemeQuery)).get_theme(user_id)
+            with i18n.context(), i18n.use_locale(locale.value), i18n.use_theme(theme):
+                if body.section == "obis":
+                    text = _("obis.settings")
+                    has_credentials = await (await scope.get(ObisCredentialsQuery)).has_credentials(user_id)
+                    keyboard = build_obis_settings_keyboard(has_credentials)
+                else:
+                    text = _("settings.feedback")
+                    keyboard = InlineKeyboardMarkup(
+                        inline_keyboard=[
+                            [
+                                InlineKeyboardButton(
+                                    text=text,
+                                    callback_data=SettingsCallback(action=SettingsAction.OPEN_FEEDBACK).pack(),
+                                )
+                            ]
+                        ]
+                    )
+        try:
+            await bot.send_message(chat_id=user_id, text=text, reply_markup=keyboard)
+        except TelegramAPIError as error:
+            raise web.HTTPBadGateway() from error
+        return web.json_response({"ok": True})
 
     async def notifications(request: web.Request) -> web.Response:
         async with authorized(request) as (scope, user_id):
@@ -237,6 +311,10 @@ def register_preferences_routes(app: web.Application, container: AsyncContainer,
         )
 
     app.router.add_get("/api/settings", get_settings)
+    app.router.add_put("/api/settings/locale", set_locale)
+    app.router.add_put("/api/settings/theme", set_theme)
+    app.router.add_delete("/api/settings/obis", disconnect_obis)
+    app.router.add_post("/api/settings/chat", open_chat)
     app.router.add_put("/api/settings/notifications", notifications)
     app.router.add_put("/api/settings/food", food)
     app.router.add_put("/api/settings/eders", eders)

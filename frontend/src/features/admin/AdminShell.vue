@@ -27,6 +27,7 @@ watchEffect(() => {
         </RouterLink>
       </nav>
       <main class="admin-main">
+        <RouterLink class="admin-button" :to="{ name: 'settings' }">{{ copy.preferences.title }}</RouterLink>
         <h1 id="admin-page-title">{{ title }}</h1>
         <slot />
       </main>

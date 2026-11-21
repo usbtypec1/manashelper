@@ -1,11 +1,12 @@
 # Mini App settings and course selection
 
-Inline Telegram Web App buttons open `/app/settings` or `/app/courses`.
+The default private Telegram menu button opens `/app/settings`. An inline course-selection button opens `/app/courses`.
+Administrators can reach personal settings from the admin panel.
 Vue Router uses HTML5 history under `/app/`; direct requests and reloads serve the same application shell.
 Old `/app/?view=settings` and `/app/?view=courses` links redirect while preserving other query parameters.
 Settings/course navigation updates the URL, so browser Back/Forward restores the selected view.
 Both views are available to registered users regardless of achievement access.
-Without `MANASHELPER_PUBLIC_URL`, use the bot's native settings and course selection.
+Without `MANASHELPER_PUBLIC_URL`, use `/settings` and the bot's native course selection.
 
 Every API request requires `Authorization: tma <signed Telegram initData>`.
 Authentication uses the configured bot token and the same expiration checks as achievements.
@@ -15,6 +16,10 @@ must not contain a user ID. API responses use `Cache-Control: no-store`.
 | Method | Path | Input |
 | --- | --- | --- |
 | GET | `/api/settings` | None |
+| PUT | `/api/settings/locale` | `locale`: `ky`, `ru`, `en`, `tr`, or `zh` |
+| PUT | `/api/settings/theme` | `theme`: `basic`, `halloween`, `pickme`, `deadinside`, or `gta_vi` |
+| DELETE | `/api/settings/obis` | None |
+| POST | `/api/settings/chat` | `section`: `obis` or `feedback` |
 | PUT | `/api/settings/notifications` | `setting`: `schedule_changes`, `exam_grades`, or `lesson_skips`; `enabled`: boolean |
 | PUT | `/api/settings/food` | `weekday`: integer 0–6 (Monday–Sunday); `meal`: `lunch` or `dinner`; `enabled`: boolean |
 | PUT | `/api/settings/eders` | `setting`: `day_before`, `two_hours_before`, `openings`, `deadline_changes`, `hide_archived`, or `new_materials`; `enabled`: boolean |
@@ -25,8 +30,11 @@ must not contain a user ID. API responses use `Cache-Control: no-store`.
 | PUT | `/api/studies/courses/{course_id}` | `tracked`: boolean |
 | GET | `/api/studies/free-time` | Query: `course_ids`, 1–8 comma-separated positive course IDs |
 
-Settings reads and successful writes return `locale`, the saved bot `theme`, localized `ui` strings,
-`notifications`, seven `food` day settings, `eders`, and `tracked_courses`.
+Settings reads and successful preference writes return `locale`, the saved bot `theme`, localized `ui` strings,
+`has_obis_credentials`, `notifications`, seven `food` day settings, `eders`, and `tracked_courses`.
+Disconnecting OBIS removes the saved account, session and snapshots through the same use case as the bot.
+The chat endpoint sends a button to the authenticated user's private chat and returns `{"ok": true}`.
+OBIS account linking and feedback continue in that chat. The Mini App handles the transition after delivery.
 Catalog reads return `faculties`, `departments`, or `courses` arrays. Courses and tracked courses include
 `level` (`bachelor`, `master` or `doctorate`); graduate programmes are labelled by name, not by year 5/6.
 
@@ -43,7 +51,7 @@ They set explicit values, so retries do not toggle values again. Repeating an ac
 broadcast mute preserves its existing deadline; a new mute lasts 14 days.
 The bot and Mini App share saved preferences and tracked courses.
 The Mini App uses the saved bot theme for copy. Pick me, Dead inside and GTA VI also apply their own
-palettes in both Telegram appearances. Choose the bot theme under Settings → Theme.
+palettes in both Telegram appearances. Choose the bot theme in Mini App settings.
 
 Missing or invalid authentication returns 401; an unregistered user returns 403.
 Invalid JSON, extra body fields, invalid enum values, non-boolean flags, out-of-range

@@ -96,7 +96,8 @@ async def test_all_achievement_sources_enqueue_once_on_first_award(session):
     assert not await awards.execute(991101, "pokemon", start, granted_by=42)
     rows = await queued(session)
     assert len(rows) == len(ACHIEVEMENT_KEYS)
-    assert {row.deduplication_key for row in rows} == {f"achievement:991101:{key}" for key in ACHIEVEMENT_KEYS}
+    assert {tuple(row.source_keys) for row in rows} == {(f"achievement:991101:{key}",) for key in ACHIEVEMENT_KEYS}
+    assert len({row.deduplication_key for row in rows}) == len(ACHIEVEMENT_KEYS)
     assert set(await repository.get_awards(991101)) == set(ACHIEVEMENT_KEYS)
     assert all(row.category == "achievement" and row.status == "pending" for row in rows)
     assert all(row.methods[0]["method"] == "sendMessage" for row in rows)

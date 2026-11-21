@@ -56,7 +56,6 @@ def build_main_keyboard(*, achievements_enabled: bool = False) -> ReplyKeyboardM
                     else []
                 ),
             ],
-            [KeyboardButton(text=_("menu.settings"))],
         ],
         resize_keyboard=True,
     )

@@ -1,4 +1,4 @@
-import { getJson, isRecord, putJson } from '../../../shared/api/http'
+import { deleteJson, getJson, isRecord, putJson } from '../../../shared/api/http'
 
 export type AchievementDisplay = {
   custom_name: string | null
@@ -42,6 +42,15 @@ export async function grantAchievement(initData: string, key: string, userId: st
   )
   if (!isRecord(data) || (data.status !== 'granted' && data.status !== 'already_granted')) {
     throw new Error('Invalid achievement grant')
+  }
+  return data.status
+}
+
+export async function revokeAchievement(initData: string, key: string, userId: string) {
+  const path = `admin/achievements/${encodeURIComponent(key)}/grants/${encodeURIComponent(userId)}`
+  const data = await deleteJson(path, initData)
+  if (!isRecord(data) || (data.status !== 'revoked' && data.status !== 'not_awarded')) {
+    throw new Error('Invalid achievement revocation')
   }
   return data.status
 }

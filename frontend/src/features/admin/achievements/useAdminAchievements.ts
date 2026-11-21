@@ -1,14 +1,19 @@
 import { onScopeDispose, ref, watch, type Ref } from 'vue'
 import { HttpError } from '../../../shared/api/http'
-import { getAchievements, grantAchievement, setAchievementDisplay, type AchievementDisplay, type AdminAchievement } from './api'
+import {
+  getAchievements, grantAchievement, revokeAchievement, setAchievementDisplay,
+  type AchievementDisplay, type AdminAchievement,
+} from './api'
 
 type Status = 'open_telegram' | 'loading' | 'ready' | 'denied' | 'session_expired' | 'error'
-type Notice = 'saved' | 'granted' | 'already_granted' | 'missing' | 'unavailable' | 'error'
+type Notice = 'saved' | 'granted' | 'already_granted' | 'revoked' | 'not_awarded' | 'missing' | 'unavailable' | 'error'
+type AwardAction = 'grant' | 'revoke'
+type Operation = 'save' | AwardAction
 
 export function useAdminAchievements(rawInitData: Readonly<Ref<string | undefined>>) {
   const status = ref<Status>('open_telegram')
   const achievements = ref<AdminAchievement[]>([])
-  const pending = ref<'save' | 'grant' | null>(null)
+  const pending = ref<Operation | null>(null)
   const notice = ref<Notice | null>(null)
   let read: AbortController | undefined
   let disposed = false
@@ -42,7 +47,7 @@ export function useAdminAchievements(rawInitData: Readonly<Ref<string | undefine
   }
 
   async function mutate(
-    operation: 'save' | 'grant', perform: (initData: string) => Promise<() => Notice>,
+    operation: Operation, perform: (initData: string) => Promise<() => Notice>,
   ) {
     const initData = rawInitData.value
     if (!initData || pending.value || status.value !== 'ready') return
@@ -53,7 +58,7 @@ export function useAdminAchievements(rawInitData: Readonly<Ref<string | undefine
       if (!disposed && rawInitData.value === initData) notice.value = apply()
     } catch (error) {
       if (disposed || rawInitData.value !== initData || handleDenied(error)) return
-      if (operation === 'grant' && error instanceof HttpError && error.status === 404) notice.value = 'missing'
+      if (operation !== 'save' && error instanceof HttpError && error.status === 404) notice.value = 'missing'
       else if (operation === 'grant' && error instanceof HttpError && error.status === 409) notice.value = 'unavailable'
       else notice.value = 'error'
     } finally {
@@ -72,9 +77,10 @@ export function useAdminAchievements(rawInitData: Readonly<Ref<string | undefine
     })
   }
 
-  function grant(key: string, userId: string) {
-    return mutate('grant', async initData => {
-      const result = await grantAchievement(initData, key, userId)
+  function changeAward(action: AwardAction, key: string, userId: string) {
+    const change = action === 'grant' ? grantAchievement : revokeAchievement
+    return mutate(action, async initData => {
+      const result = await change(initData, key, userId)
       return () => result
     })
   }
@@ -84,5 +90,5 @@ export function useAdminAchievements(rawInitData: Readonly<Ref<string | undefine
     disposed = true
     read?.abort()
   })
-  return { status, achievements, notice, pending, load, save, grant }
+  return { status, achievements, notice, pending, load, save, changeAward }
 }

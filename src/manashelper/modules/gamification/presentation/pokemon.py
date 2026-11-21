@@ -17,8 +17,10 @@ from manashelper.localization.theme import Theme
 from manashelper.modules.gamification.application.catalog import POKEMON_KEY
 from manashelper.modules.gamification.application.queries import GamificationQuery
 from manashelper.modules.gamification.application.use_cases.award_achievement import AwardAchievementUseCase
+from manashelper.modules.gamification.presentation.catalog import achievement_strings
 from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
+from manashelper.platform.telegram.html import escape_html
 
 logger = logging.getLogger(__name__)
 router = Router(name="pokemon")
@@ -32,6 +34,10 @@ class PokemonGrantCallback(CallbackData, prefix="pokemon_grant"):
     user_id: int
 
 
+def _pokemon_name(custom_name: str | None) -> str:
+    return custom_name or achievement_strings()[POKEMON_KEY][0]
+
+
 async def _can_submit(message: Message, state: FSMContext, query: GamificationQuery) -> bool:
     if message.from_user is None:
         return False
@@ -41,7 +47,9 @@ async def _can_submit(message: Message, state: FSMContext, query: GamificationQu
         return False
     if await query.has_award(message.from_user.id, POKEMON_KEY):
         await state.clear()
-        await message.answer(_("gamification.pokemon.already_earned"))
+        display = await query.display_for(POKEMON_KEY)
+        name = escape_html(_pokemon_name(display.custom_name))
+        await message.answer(_("gamification.pokemon.already_earned").format(name=name))
         return False
     return True
 
@@ -71,8 +79,9 @@ async def submit_pokemon_photo(
     if user is None or not message.photo or not await _can_submit(message, state, gamification):
         return
     sender = f"{user.full_name} (@{user.username})" if user.username else user.full_name
+    display = await gamification.display_for(POKEMON_KEY)
     with i18n.use_locale(DEFAULT_LOCALE.value), i18n.use_theme(Theme.BASIC):
-        caption = _("gamification.pokemon.admin_photo").format(sender=sender)
+        caption = _("gamification.pokemon.admin_photo").format(sender=sender, name=_pokemon_name(display.custom_name))
         button = InlineKeyboardButton(
             text=_("gamification.pokemon.grant"), callback_data=PokemonGrantCallback(user_id=user.id).pack()
         )
@@ -107,6 +116,7 @@ async def grant_pokemon(
     settings: FromDishka[Settings],
     users: FromDishka[UsersQuery],
     awards: FromDishka[AwardAchievementUseCase],
+    gamification: FromDishka[GamificationQuery],
 ) -> None:
     message = callback_query.message
     # Telegram clients can submit arbitrary callback data. Take the recipient from a button on our proof message.
@@ -130,5 +140,9 @@ async def grant_pokemon(
     granted = await users.can_use_bot(user_id) and await awards.execute(
         user_id, POKEMON_KEY, datetime.now(UTC), granted_by=callback_query.from_user.id
     )
-    key = _("gamification.pokemon.granted") if granted else _("gamification.pokemon.grant_unavailable")
-    await callback_query.answer(key, show_alert=True)
+    if granted:
+        display = await gamification.display_for(POKEMON_KEY)
+        text = _("gamification.pokemon.granted").format(name=_pokemon_name(display.custom_name))
+    else:
+        text = _("gamification.pokemon.grant_unavailable")
+    await callback_query.answer(text, show_alert=True)

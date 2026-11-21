@@ -108,7 +108,7 @@ def create_web_app(bot: Bot, dispatcher: Dispatcher, container: AsyncContainer, 
     register_admin_routes(app, container, settings)
     register_admin_achievement_routes(app, container, settings)
     register_admin_broadcast_routes(app, container, settings)
-    register_preferences_routes(app, container, settings)
+    register_preferences_routes(app, container, settings, bot)
     register_browser_login_routes(app, container, settings)
     app.router.add_get("/app", index)
     app.router.add_get("/app/", index)

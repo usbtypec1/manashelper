@@ -2259,7 +2259,7 @@ msgid "gamification.pokemon.photo_prompt"
 msgstr "Send a photo of yourself with @yunbae. The bot will send it to an admin for review."
 
 msgid "gamification.pokemon.already_earned"
-msgstr "You’ve already earned Pokémon."
+msgstr "You’ve already earned “{name}”."
 
 msgid "gamification.pokemon.photo_required"
 msgstr "Please send the image as a Telegram photo."
@@ -2271,16 +2271,16 @@ msgid "gamification.pokemon.send_failed"
 msgstr "The photo couldn’t be sent. Please try sending it again."
 
 msgid "gamification.pokemon.admin_photo"
-msgstr "Pokémon submission from {sender}. Check that the photo shows the sender with @yunbae."
+msgstr "“{name}” submission from {sender}. Check that the photo shows the sender with @yunbae."
 
 msgid "gamification.pokemon.grant"
 msgstr "Grant achievement"
 
 msgid "gamification.pokemon.granted"
-msgstr "Pokémon granted."
+msgstr "“{name}” granted."
 
 msgid "gamification.pokemon.grant_unavailable"
-msgstr "The user already has Pokémon or cannot receive it right now."
+msgstr "The user already has this achievement or cannot receive it right now."
 
 msgid "miniapp.admin.achievements"
 msgstr "Achievements"
@@ -2289,7 +2289,7 @@ msgid "miniapp.admin.achievement"
 msgstr "Achievement"
 
 msgid "miniapp.admin.achievement_display"
-msgstr "Display"
+msgstr "Edit achievement names and visibility"
 
 msgid "miniapp.admin.achievement_custom_name"
 msgstr "Custom name"
@@ -2306,8 +2306,8 @@ msgstr "Hidden"
 msgid "miniapp.admin.achievement_save"
 msgstr "Save changes"
 
-msgid "miniapp.admin.achievement_grant_title"
-msgstr "Grant achievement"
+msgid "miniapp.admin.achievement_award_title"
+msgstr "Manage a user’s awards"
 
 msgid "miniapp.admin.achievement_grant"
 msgstr "Grant"
@@ -2332,3 +2332,27 @@ msgstr "User or achievement not found."
 
 msgid "miniapp.admin.achievement_unavailable"
 msgstr "Achievements are disabled for this user or the user is blocked."
+
+msgid "commands.settings"
+msgstr "Open settings"
+
+msgid "obis.captcha_recognizing"
+msgstr "Solving the OBIS CAPTCHA…"
+
+msgid "miniapp.ui.sent_to_chat"
+msgstr "The bot sent the next step to your chat."
+
+msgid "miniapp.admin.achievement_save_error"
+msgstr "Could not save this achievement."
+
+msgid "miniapp.admin.achievement_revoke"
+msgstr "Revoke"
+
+msgid "miniapp.admin.achievement_revoke_confirm"
+msgstr "Revoke “{name}” from Telegram user {id}?"
+
+msgid "miniapp.admin.achievement_revoked"
+msgstr "Achievement revoked."
+
+msgid "miniapp.admin.achievement_not_awarded"
+msgstr "The user does not have this achievement."
