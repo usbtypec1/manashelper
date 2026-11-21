@@ -4,7 +4,7 @@ import { RouterLink } from 'vue-router'
 import { useAdminCopy } from './useAdminCopy'
 import './admin.css'
 
-const props = defineProps<{ title: string; section: 'users' | 'broadcasts' }>()
+const props = defineProps<{ title: string; section: 'users' | 'broadcasts' | 'achievements' }>()
 const { copy, locale } = useAdminCopy()
 watchEffect(() => {
   document.documentElement.lang = locale.value
@@ -21,6 +21,9 @@ watchEffect(() => {
         </RouterLink>
         <RouterLink :to="{ name: 'admin-broadcasts' }" :aria-current="section === 'broadcasts' ? 'page' : undefined">
           {{ copy.admin.broadcasts }}
+        </RouterLink>
+        <RouterLink :to="{ name: 'admin-achievements' }" :aria-current="section === 'achievements' ? 'page' : undefined">
+          {{ copy.admin.achievements }}
         </RouterLink>
       </nav>
       <main class="admin-main">

@@ -1066,8 +1066,8 @@ msgstr "Bu Mini App uygulamasını Telegram’daki Manashelper botundan aç."
 msgid "gamification.ui.subtitle"
 msgstr "Öğrencilik hayatının başarımları."
 
-msgid "gamification.ui.top_ten"
-msgstr "İlk 10 öğrenci"
+msgid "gamification.ui.participants"
+msgstr "Tüm katılımcılar"
 
 msgid "gamification.night_owl.name"
 msgstr "Gece kuşu"
@@ -1962,7 +1962,7 @@ msgid "terms.ranking.title"
 msgstr "6. Başarımlar ve sıralama"
 
 msgid "terms.ranking.body"
-msgstr "Başarım erişimi açıkken uygun eylemler kaydedilir; menü görüntüleme, ilanlar ve akademik kopyalara göre ödüller hesaplanır. Ödüllü katılımcılar ilk ona girebilir. Diğer yetkili katılımcılar Telegram profil adını, sırayı, ödül sayısını, kazanılan ödülleri, açıklamalarını ve kazanılma tarihlerini görebilir. Ham notlar, GPA, devam ayrıntıları, öğrenci numarası, giriş bilgileri ve tamamlanmamış ilerleme sıralamada verilmez. Ancak akademik ödüller ve koşulları öğreniminiz hakkında dolaylı bilgi verebilir. Erişimi kapatmak kişiyi sıralamadan gizler ve yeni ilerlemeyi durdurur; eski ödüller korunur. Bunun için Geri bildirim üzerinden yöneticiye başvurun."
+msgstr "Başarım erişimi açıkken uygun eylemler kaydedilir; menü görüntüleme, ilanlar ve akademik kopyalara göre ödüller hesaplanır. Başarımlara erişimi açık ve en az bir görünür ödülü olan tüm katılımcılar sıralamada yer alır. Diğer yetkili katılımcılar Telegram profil adını, sırayı, ödül sayısını, kazanılan ödülleri, açıklamalarını ve kazanılma tarihlerini görebilir. Ham notlar, GPA, devam ayrıntıları, öğrenci numarası, giriş bilgileri ve tamamlanmamış ilerleme sıralamada verilmez. Ancak akademik ödüller ve koşulları öğreniminiz hakkında dolaylı bilgi verebilir. Erişimi kapatmak kişiyi sıralamadan gizler ve yeni ilerlemeyi durdurur; eski ödüller korunur. Bunun için Geri bildirim üzerinden yöneticiye başvurun."
 
 msgid "terms.controls.title"
 msgstr "7. Kontroller ve veri talepleri"
@@ -2280,3 +2280,54 @@ msgstr "Pokémon başarımı verildi."
 
 msgid "gamification.pokemon.grant_unavailable"
 msgstr "Kullanıcı bu başarımı zaten aldı veya şu anda alamıyor."
+
+msgid "miniapp.admin.achievements"
+msgstr "Başarımlar"
+
+msgid "miniapp.admin.achievement"
+msgstr "Başarım"
+
+msgid "miniapp.admin.achievement_display"
+msgstr "Görünüm"
+
+msgid "miniapp.admin.achievement_custom_name"
+msgstr "Özel ad"
+
+msgid "miniapp.admin.achievement_name_hint"
+msgstr "Her dilde özgün adı kullanmak için boş bırakın."
+
+msgid "miniapp.admin.achievement_hide"
+msgstr "Koleksiyondan ve sıralamadan gizle"
+
+msgid "miniapp.admin.achievement_hidden"
+msgstr "Gizli"
+
+msgid "miniapp.admin.achievement_save"
+msgstr "Değişiklikleri kaydet"
+
+msgid "miniapp.admin.achievement_grant_title"
+msgstr "Başarım ver"
+
+msgid "miniapp.admin.achievement_grant"
+msgstr "Ver"
+
+msgid "miniapp.admin.achievement_recipient_hint"
+msgstr "Telegram kimliğini Kullanıcılar sekmesinden kopyalayın."
+
+msgid "miniapp.admin.achievement_grant_confirm"
+msgstr "“{name}” başarımı {id} numaralı Telegram kullanıcısına verilsin mi?"
+
+msgid "miniapp.admin.achievement_saved"
+msgstr "Değişiklikler kaydedildi."
+
+msgid "miniapp.admin.achievement_granted"
+msgstr "Başarım verildi."
+
+msgid "miniapp.admin.achievement_already_granted"
+msgstr "Kullanıcı bu başarıma zaten sahip."
+
+msgid "miniapp.admin.achievement_missing"
+msgstr "Kullanıcı veya başarım bulunamadı."
+
+msgid "miniapp.admin.achievement_unavailable"
+msgstr "Bu kullanıcı için başarımlar kapalı veya kullanıcının erişimi engellenmiş."

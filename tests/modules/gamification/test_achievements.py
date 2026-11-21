@@ -102,7 +102,7 @@ async def test_first_semester_has_no_invented_baseline(session):
     assert not await repo.get_awards(991001)
 
 
-async def test_ranking_ties_top_ten_and_own_position(session):
+async def test_leaderboard_includes_all_awarded_participants_and_preserves_ties(session):
     # This fixture rolls the deletion back, preserving existing local awards.
     await session.execute(delete(UserAchievement))
     repo = await seed(session)
@@ -113,11 +113,13 @@ async def test_ranking_ties_top_ten_and_own_position(session):
         await repo.award(user_id, "seller", now + timedelta(seconds=index))
     await repo.award(991001, "seller", now)
     await repo.award(991001, "formula_one", now)
-    rows = await repo.ranking()
-    assert len(rows) == 10
-    assert rows[0][0] == 991001 and rows[0][3] == 1
-    assert all(row[3] == 2 for row in rows[1:])
-    assert (await repo.ranking(991013))[0][3] == 2
+    query = GamificationQuery(repo)
+    entries = await query.leaderboard()
+    assert [entry.user_id for entry in entries] == list(range(991001, 991014))
+    assert entries[0].rank == 1
+    assert all(entry.rank == 2 for entry in entries[1:])
+    assert entries[-1].achievements[0].key == "seller"
+    assert (await query.profile(991013)).rank == 2
 
 
 async def test_retired_awards_are_preserved_but_excluded_from_collection_and_ranking(session):

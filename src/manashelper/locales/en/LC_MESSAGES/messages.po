@@ -1088,8 +1088,8 @@ msgstr "Open this Mini App from the Manashelper bot in Telegram."
 msgid "gamification.ui.subtitle"
 msgstr "Small habits. A growing collection."
 
-msgid "gamification.ui.top_ten"
-msgstr "Top 10 students"
+msgid "gamification.ui.participants"
+msgstr "All participants"
 
 msgid "gamification.night_owl.name"
 msgstr "Night owl"
@@ -1963,7 +1963,7 @@ msgid "terms.ranking.title"
 msgstr "6. Achievements and leaderboard"
 
 msgid "terms.ranking.body"
-msgstr "When achievement access is enabled, the service records eligible activity and derives awards from cafeteria views, marketplace activity and academic snapshots. Participants with awards may appear in the top ten. Other authorized achievement participants can see the Telegram profile name, rank, award count, earned awards, their descriptions and award dates. Raw grades, GPA, attendance details, student number, credentials and unfinished progress are not returned in the leaderboard. Academic awards and their conditions can nevertheless reveal information about your studies. Disabling achievement access hides the participant from the ranking and stops new progress while preserving prior awards. Contact the administrator through Feedback to request this."
+msgstr "When achievement access is enabled, the service records eligible activity and derives awards from cafeteria views, marketplace activity and academic snapshots. The ranking includes all participants with achievement access enabled and at least one visible award. Other authorized achievement participants can see the Telegram profile name, rank, award count, earned awards, their descriptions and award dates. Raw grades, GPA, attendance details, student number, credentials and unfinished progress are not returned in the leaderboard. Academic awards and their conditions can nevertheless reveal information about your studies. Disabling achievement access hides the participant from the ranking and stops new progress while preserving prior awards. Contact the administrator through Feedback to request this."
 
 msgid "terms.controls.title"
 msgstr "7. Your controls and data requests"
@@ -2281,3 +2281,54 @@ msgstr "Pokémon granted."
 
 msgid "gamification.pokemon.grant_unavailable"
 msgstr "The user already has Pokémon or cannot receive it right now."
+
+msgid "miniapp.admin.achievements"
+msgstr "Achievements"
+
+msgid "miniapp.admin.achievement"
+msgstr "Achievement"
+
+msgid "miniapp.admin.achievement_display"
+msgstr "Display"
+
+msgid "miniapp.admin.achievement_custom_name"
+msgstr "Custom name"
+
+msgid "miniapp.admin.achievement_name_hint"
+msgstr "Leave blank to use the original name in each language."
+
+msgid "miniapp.admin.achievement_hide"
+msgstr "Hide from the collection and leaderboard"
+
+msgid "miniapp.admin.achievement_hidden"
+msgstr "Hidden"
+
+msgid "miniapp.admin.achievement_save"
+msgstr "Save changes"
+
+msgid "miniapp.admin.achievement_grant_title"
+msgstr "Grant achievement"
+
+msgid "miniapp.admin.achievement_grant"
+msgstr "Grant"
+
+msgid "miniapp.admin.achievement_recipient_hint"
+msgstr "Copy the Telegram ID from the Users tab."
+
+msgid "miniapp.admin.achievement_grant_confirm"
+msgstr "Grant “{name}” to Telegram user {id}?"
+
+msgid "miniapp.admin.achievement_saved"
+msgstr "Changes saved."
+
+msgid "miniapp.admin.achievement_granted"
+msgstr "Achievement granted."
+
+msgid "miniapp.admin.achievement_already_granted"
+msgstr "The user already has this achievement."
+
+msgid "miniapp.admin.achievement_missing"
+msgstr "User or achievement not found."
+
+msgid "miniapp.admin.achievement_unavailable"
+msgstr "Achievements are disabled for this user or the user is blocked."

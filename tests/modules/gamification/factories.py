@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.core.config import get_settings
+from manashelper.modules.gamification.application.queries import GamificationQuery
 from manashelper.modules.gamification.application.use_cases.award_achievement import AwardAchievementUseCase
 from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
 from manashelper.modules.gamification.presentation.sender import TelegramAchievementNotificationSender
@@ -15,5 +16,8 @@ from manashelper.platform.telegram.outbox.service import OutboxService
 def build_awards(session: AsyncSession) -> AwardAchievementUseCase:
     users = UserRepository(session)
     outbox = OutboxService(OutboxRepository(session), BotStatusQuery(users))
-    sender = TelegramAchievementNotificationSender(outbox, LocaleQuery(users), ThemeQuery(users), get_settings())
-    return AwardAchievementUseCase(AchievementRepository(session), sender)
+    repository = AchievementRepository(session)
+    sender = TelegramAchievementNotificationSender(
+        outbox, LocaleQuery(users), ThemeQuery(users), get_settings(), GamificationQuery(repository)
+    )
+    return AwardAchievementUseCase(repository, sender)

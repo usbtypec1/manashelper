@@ -52,7 +52,7 @@ def ui_strings(locale: str) -> dict[str, str]:
             "retry": _("gamification.ui.retry"),
             "openTelegram": _("gamification.ui.open_telegram"),
             "subtitle": _("gamification.ui.subtitle"),
-            "topTen": _("gamification.ui.top_ten"),
+            "participants": _("gamification.ui.participants"),
         }
 
 
@@ -61,7 +61,8 @@ def localize_profile(profile: AchievementProfile, locale: str) -> dict[str, Any]
     with i18n.context(), i18n.use_locale(locale):
         strings = achievement_strings()
         for card in result["achievements"]:
-            card["name"], card["description"] = strings[card["key"]]
+            name, card["description"] = strings[card["key"]]
+            card["name"] = card.pop("custom_name") or name
     result["locale"] = locale
     return result
 
@@ -79,7 +80,7 @@ def localize_leaderboard(entries: tuple[LeaderboardEntry, ...], viewer_id: int, 
                     "achievements": [
                         {
                             "key": award.key,
-                            "name": strings[award.key][0],
+                            "name": award.custom_name or strings[award.key][0],
                             "description": strings[award.key][1],
                             "earned_at": award.earned_at,
                         }

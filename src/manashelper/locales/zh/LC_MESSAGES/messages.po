@@ -1059,8 +1059,8 @@ msgstr "请从 Telegram 中的 Manashelper 机器人打开此迷你应用。"
 msgid "gamification.ui.subtitle"
 msgstr "用成就记录大学生活。"
 
-msgid "gamification.ui.top_ten"
-msgstr "前十名学生"
+msgid "gamification.ui.participants"
+msgstr "所有参与者"
 
 msgid "gamification.night_owl.name"
 msgstr "夜猫子"
@@ -1955,7 +1955,7 @@ msgid "terms.ranking.title"
 msgstr "6. 成就与排行榜"
 
 msgid "terms.ranking.body"
-msgstr "启用成就访问后，服务记录符合条件的行为，并根据菜单查看、广告活动和学习快照计算奖励。有奖励的参与者可能进入前十。其他获授权的成就参与者可看到 Telegram 姓名、名次、奖励数量、已获得奖励、说明和获得日期。排行榜不返回原始成绩、GPA、出勤明细、学号、凭据或未完成进度。但学习类奖励及条件仍可能间接透露学习情况。关闭成就访问会将参与者从榜单隐藏并停止新进度，同时保留原有奖励。请通过反馈联系管理员申请。"
+msgstr "启用成就访问后，服务记录符合条件的行为，并根据菜单查看、广告活动和学习快照计算奖励。排行榜纳入所有已启用成就访问且至少获得一项可见奖励的参与者。其他获授权的成就参与者可看到 Telegram 姓名、名次、奖励数量、已获得奖励、说明和获得日期。排行榜不返回原始成绩、GPA、出勤明细、学号、凭据或未完成进度。但学习类奖励及条件仍可能间接透露学习情况。关闭成就访问会将参与者从榜单隐藏并停止新进度，同时保留原有奖励。请通过反馈联系管理员申请。"
 
 msgid "terms.controls.title"
 msgstr "7. 控制与数据请求"
@@ -2273,3 +2273,54 @@ msgstr "已授予「宝可梦」成就。"
 
 msgid "gamification.pokemon.grant_unavailable"
 msgstr "该用户已获得此成就，或暂时无法获得。"
+
+msgid "miniapp.admin.achievements"
+msgstr "成就"
+
+msgid "miniapp.admin.achievement"
+msgstr "成就"
+
+msgid "miniapp.admin.achievement_display"
+msgstr "显示设置"
+
+msgid "miniapp.admin.achievement_custom_name"
+msgstr "自定义名称"
+
+msgid "miniapp.admin.achievement_name_hint"
+msgstr "留空可恢复各语言的原始名称。"
+
+msgid "miniapp.admin.achievement_hide"
+msgstr "在收藏和排行榜中隐藏"
+
+msgid "miniapp.admin.achievement_hidden"
+msgstr "已隐藏"
+
+msgid "miniapp.admin.achievement_save"
+msgstr "保存更改"
+
+msgid "miniapp.admin.achievement_grant_title"
+msgstr "授予成就"
+
+msgid "miniapp.admin.achievement_grant"
+msgstr "授予"
+
+msgid "miniapp.admin.achievement_recipient_hint"
+msgstr "从「用户」标签页复制 Telegram ID。"
+
+msgid "miniapp.admin.achievement_grant_confirm"
+msgstr "将「{name}」授予 Telegram 用户 {id}？"
+
+msgid "miniapp.admin.achievement_saved"
+msgstr "更改已保存。"
+
+msgid "miniapp.admin.achievement_granted"
+msgstr "已授予成就。"
+
+msgid "miniapp.admin.achievement_already_granted"
+msgstr "该用户已拥有此成就。"
+
+msgid "miniapp.admin.achievement_missing"
+msgstr "未找到用户或成就。"
+
+msgid "miniapp.admin.achievement_unavailable"
+msgstr "此用户的成就功能已关闭，或该用户已被封禁。"

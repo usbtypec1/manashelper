@@ -19,7 +19,7 @@ export function useAchievements() {
     if (!ui) return fallback
     return { ...fallback, ...ui, source_pending: ui.sourcePending ?? fallback.source_pending,
       baseline_missing: ui.baselineMissing ?? fallback.baseline_missing,
-      open_telegram: ui.openTelegram ?? fallback.open_telegram, top_ten: ui.topTen ?? fallback.top_ten }
+      open_telegram: ui.openTelegram ?? fallback.open_telegram }
   })
 
   async function load() {

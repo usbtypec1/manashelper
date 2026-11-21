@@ -57,3 +57,35 @@ async def test_access_migration_defaults_off_and_preserves_existing_data_on_roun
         assert await connection.scalar(text("SELECT enabled FROM gamification_progress WHERE user_id = 1")) is False
         assert await connection.scalar(text("SELECT count(*) FROM gamification_achievements")) == 1
         await connection.rollback()
+
+
+async def test_achievement_display_migration_round_trip_preserves_awards(engine):
+    original = load_migration("V28_add_gamification_and_webhook_receipts")
+    migration = load_migration("V38_add_achievement_display")
+    schema = "achievement_display_" + uuid4().hex
+    async with engine.connect() as connection, connection.begin():
+        await connection.execute(text(f'CREATE SCHEMA "{schema}"'))
+        await connection.execute(text(f'SET LOCAL search_path TO "{schema}"'))
+        await connection.execute(text("CREATE TABLE users (id BIGINT PRIMARY KEY)"))
+
+        def apply(sync_connection, operation):
+            with Operations.context(MigrationContext.configure(sync_connection)):
+                operation()
+
+        await connection.run_sync(apply, original.upgrade)
+        await connection.execute(text("INSERT INTO users VALUES (1)"))
+        await connection.execute(
+            text(
+                "INSERT INTO gamification_achievements (user_id, achievement_key, earned_at) "
+                "VALUES (1, 'seller', '2026-11-01T00:00:00Z')"
+            )
+        )
+        await connection.run_sync(apply, migration.upgrade)
+        await connection.execute(
+            text("INSERT INTO gamification_achievement_display VALUES ('seller', 'Custom title', true)")
+        )
+        await connection.run_sync(apply, migration.downgrade)
+        await connection.run_sync(apply, migration.upgrade)
+        assert await connection.scalar(text("SELECT count(*) FROM gamification_achievement_display")) == 0
+        assert await connection.scalar(text("SELECT achievement_key FROM gamification_achievements")) == "seller"
+        await connection.rollback()

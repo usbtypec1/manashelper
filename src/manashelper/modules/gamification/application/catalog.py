@@ -8,6 +8,12 @@ class Achievement:
     target: int | float
 
 
+@dataclass(frozen=True, slots=True)
+class AchievementDisplay:
+    custom_name: str | None = None
+    hidden: bool = False
+
+
 # Add to ACHIEVEMENTS when ready to expose and award it.
 DISH_COMPLETION_ACHIEVEMENT = Achievement("dish_completion", "🍽", 1)
 POKEMON_KEY = "pokemon"
