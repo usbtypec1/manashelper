@@ -1,7 +1,7 @@
 import base64
 import hashlib
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import ANY, AsyncMock
 
 import httpx
 import pytest
@@ -290,7 +290,7 @@ async def test_credentials_form_deletes_password_and_opens_captcha(monkeypatch, 
         assert await state.get_state() == "ObisCredentialsForm:password"
         request.reset_mock()
         await router.on_password_entered(message.model_copy(update={"text": " fake-password "}), state, service)
-    service.execute.assert_awaited_once_with(user.id, "fake-student", "fake-password")
+    service.execute.assert_awaited_once_with(user.id, "fake-student", "fake-password", on_recognition_started=ANY)
     methods = [call.args[1] for call in request.await_args_list]
     assert methods[0].__api_method__ == "deleteMessage"
     assert all("fake-password" not in str(method.model_dump()) for method in methods)
@@ -334,7 +334,7 @@ async def test_login_button_reuses_saved_account_and_reports_missing_credentials
     service.execute.return_value = ObisCaptcha(PENDING, b"captcha-png")
     with i18n.context(), i18n.use_locale("en"):
         await router.on_login(callback, state, service)
-        service.execute.assert_awaited_once_with(user.id)
+        service.execute.assert_awaited_once_with(user.id, on_recognition_started=ANY)
         assert await state.get_state() == "ObisCredentialsForm:captcha"
         assert request.await_args.args[1].__api_method__ == "sendPhoto"
 
@@ -544,7 +544,7 @@ async def test_password_step_automatically_logs_in_without_asking_for_captcha(mo
         assert methods[0].__api_method__ == "deleteMessage"
         assert all(method.__api_method__ != "sendPhoto" for method in methods)
         assert methods[-1].text == i18n.gettext("obis.login_failed" if wrong_credentials else "obis.logged_in")
-    service.execute.assert_awaited_once_with(user.id, "student", "password")
+    service.execute.assert_awaited_once_with(user.id, "student", "password", on_recognition_started=ANY)
     assert await state.get_state() == (router.ObisCredentialsForm.student_number.state if wrong_credentials else None)
     assert "password" not in await state.get_data()
 
@@ -552,11 +552,18 @@ async def test_password_step_automatically_logs_in_without_asking_for_captcha(mo
 async def test_login_button_reuses_saved_credentials_and_finishes_without_a_photo(monkeypatch):
     user, _, callback, request, state = _form_context(monkeypatch)
     service = AsyncMock()
-    service.execute.return_value = None
+
+    async def login(user_id, *, on_recognition_started):
+        await on_recognition_started()
+        assert request.await_args.args[1].text == i18n.gettext("obis.captcha_recognizing")
+        return None
+
+    service.execute.side_effect = login
     with i18n.context(), i18n.use_locale("ru"):
         await router.on_login(callback, state, service)
+        assert request.await_args_list[-2].args[1].__api_method__ == "deleteMessage"
         assert request.await_args.args[1].text == i18n.gettext("obis.logged_in")
-    service.execute.assert_awaited_once_with(user.id)
+    service.execute.assert_awaited_once_with(user.id, on_recognition_started=ANY)
     assert await state.get_state() is None
     assert all(call.args[1].__api_method__ != "sendPhoto" for call in request.await_args_list)
 

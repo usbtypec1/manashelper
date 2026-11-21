@@ -4,19 +4,35 @@ import { RouterLink } from 'vue-router'
 import { meals, notificationKeys, type CourseLevel } from '../features/preferences/api'
 import { usePreferences } from '../features/preferences/usePreferences'
 import TermsLink from '../features/terms/TermsLink.vue'
+import { locales } from '../shared/i18n/locale'
+import { confirmTelegramAction } from '../shared/telegram/confirmation'
 import '../features/admin/admin.css'
 
 const props = defineProps<{ tab: 'settings' | 'courses' }>()
 const {
-  rawInitData, locale, data, copy, loading, busy, error, expired, saved,
+  rawInitData, locale, data, copy, loading, busy, error, expired, saved, sentToChat,
   faculties, departments, courses, faculty, department, broadcastsEnabled,
-  load, selectFaculty, selectDepartment, setNotification, setFood, setEders, setBroadcast, setCourse,
+  load, selectFaculty, selectDepartment, setLocale, setTheme, openChat, clearObis,
+  setNotification, setFood, setEders, setBroadcast, setCourse,
 } = usePreferences()
 const tab = computed(() => props.tab)
 const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
+const themes = computed(() => Object.entries(copy.value)
+  .filter(([key]) => key.startsWith('theme_'))
+  .map(([key, name]) => ({ value: key.slice('theme_'.length), name })))
 
 function selectedValue(event: Event) {
   return (event.target as HTMLSelectElement).value
+}
+function changeProfile(event: Event, current: string, update: (value: string) => Promise<void>) {
+  const select = event.target as HTMLSelectElement
+  const desired = select.value
+  select.value = current
+  void update(desired)
+}
+async function confirmObisRemoval() {
+  if (busy.value || !copy.value.obis_remove_prompt || !copy.value.obis_remove_confirm) return
+  if (await confirmTelegramAction(copy.value.obis_remove_prompt, copy.value.obis_remove_confirm)) await clearObis()
 }
 function checked(event: Event) {
   const input = event.target as HTMLInputElement
@@ -40,7 +56,7 @@ function courseName(course: { number: number; level?: CourseLevel }) {
     <div v-else-if="expired" class="app-shell"><section class="notice" role="alert"><p>{{ copy.session_expired }}</p></section></div>
     <div v-else class="app-shell admin-shell preferences">
       <nav class="admin-tabs" :aria-label="copy.title">
-        <RouterLink :to="{ name: 'settings' }" :aria-current="tab === 'settings' ? 'page' : undefined">{{ copy.notifications }}</RouterLink>
+        <RouterLink :to="{ name: 'settings' }" :aria-current="tab === 'settings' ? 'page' : undefined">{{ copy.title }}</RouterLink>
         <RouterLink :to="{ name: 'courses' }" :aria-current="tab === 'courses' ? 'page' : undefined">{{ copy.courses }}</RouterLink>
       </nav>
       <main class="admin-main">
@@ -49,9 +65,36 @@ function courseName(course: { number: number; level?: CourseLevel }) {
           <p class="admin-hint">{{ copy.error }}</p>
           <button class="admin-button primary" :disabled="busy" @click="load">{{ copy.retry }}</button>
         </div>
-        <p class="admin-hint" role="status" aria-live="polite">{{ busy ? copy.saving : saved ? copy.saved : '' }}</p>
+        <p class="admin-hint" role="status" aria-live="polite">
+          {{ busy ? copy.saving : sentToChat ? copy.sent_to_chat : saved ? copy.saved : '' }}
+        </p>
         <template v-if="data">
           <template v-if="tab === 'settings'">
+            <fieldset class="admin-card profile-settings" :disabled="busy">
+              <label class="admin-field">
+                <span>{{ copy.language }}</span>
+                <select :value="data.locale" @change="changeProfile($event, data.locale, setLocale)">
+                  <option v-for="option in locales" :key="option" :value="option">{{ copy[`locale_${option}`] }}</option>
+                </select>
+              </label>
+              <label class="admin-field">
+                <span>{{ copy.theme }}</span>
+                <select :value="data.theme" @change="changeProfile($event, data.theme, setTheme)">
+                  <option v-for="option in themes" :key="option.value" :value="option.value">{{ option.name }}</option>
+                </select>
+              </label>
+            </fieldset>
+            <fieldset class="admin-card" :disabled="busy">
+              <h2>{{ copy.obis }}</h2>
+              <div class="admin-actions">
+                <button type="button" class="admin-button" @click="openChat('obis')">
+                  {{ data.has_obis_credentials ? copy.obis_update : copy.obis_link }}
+                </button>
+                <button v-if="data.has_obis_credentials" type="button" class="admin-button" @click="confirmObisRemoval">
+                  {{ copy.obis_remove }}
+                </button>
+              </div>
+            </fieldset>
             <fieldset class="admin-card" :disabled="busy">
               <h2>{{ copy.notifications }}</h2>
               <p class="admin-hint">{{ copy.note }}</p>
@@ -89,6 +132,9 @@ function courseName(course: { number: number; level?: CourseLevel }) {
                 {{ copy.muted_until?.replace('{until}', new Date(data.notifications.broadcast_muted_until).toLocaleString(locale)) }}
               </p>
             </fieldset>
+            <button type="button" class="admin-button" :disabled="busy" @click="openChat('feedback')">
+              {{ copy.feedback }}
+            </button>
           </template>
           <template v-else>
             <fieldset class="admin-card" :disabled="busy">
@@ -127,6 +173,7 @@ function courseName(course: { number: number; level?: CourseLevel }) {
 </template>
 
 <style scoped>
+.profile-settings { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr)); }
 .food-day { margin: 20px 0; }
 .food-day:first-child { margin-top: 0; }
 .food-day h3 { margin: 0 0 4px; font-size: 16px; font-weight: 600; color: var(--admin-hint); }

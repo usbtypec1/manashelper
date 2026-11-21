@@ -2259,7 +2259,7 @@ msgid "gamification.pokemon.photo_prompt"
 msgstr "Пришли фото, на котором ты вместе с @yunbae. Бот отправит снимок админу на проверку."
 
 msgid "gamification.pokemon.already_earned"
-msgstr "У тебя уже есть ачивка «Покемон»."
+msgstr "У тебя уже есть ачивка «{name}»."
 
 msgid "gamification.pokemon.photo_required"
 msgstr "Отправь снимок как фото в Telegram."
@@ -2271,13 +2271,13 @@ msgid "gamification.pokemon.send_failed"
 msgstr "Не удалось отправить фото админу. Попробуй прислать его ещё раз."
 
 msgid "gamification.pokemon.admin_photo"
-msgstr "Заявка на «Покемона» от {sender}. Проверь, что на фото есть отправитель и @yunbae."
+msgstr "Заявка на ачивку «{name}» от {sender}. Проверь, что на фото есть отправитель и @yunbae."
 
 msgid "gamification.pokemon.grant"
 msgstr "Выдать ачивку"
 
 msgid "gamification.pokemon.granted"
-msgstr "Ачивка «Покемон» выдана."
+msgstr "Ачивка «{name}» выдана."
 
 msgid "gamification.pokemon.grant_unavailable"
 msgstr "У пользователя уже есть ачивка или сейчас её нельзя выдать."
@@ -2289,7 +2289,7 @@ msgid "miniapp.admin.achievement"
 msgstr "Достижение"
 
 msgid "miniapp.admin.achievement_display"
-msgstr "Отображение"
+msgstr "Названия и видимость ачивок"
 
 msgid "miniapp.admin.achievement_custom_name"
 msgstr "Своё название"
@@ -2306,8 +2306,8 @@ msgstr "Скрыто"
 msgid "miniapp.admin.achievement_save"
 msgstr "Сохранить изменения"
 
-msgid "miniapp.admin.achievement_grant_title"
-msgstr "Выдать достижение"
+msgid "miniapp.admin.achievement_award_title"
+msgstr "Награды пользователя"
 
 msgid "miniapp.admin.achievement_grant"
 msgstr "Выдать"
@@ -2332,3 +2332,27 @@ msgstr "Пользователь или достижение не найдены
 
 msgid "miniapp.admin.achievement_unavailable"
 msgstr "У пользователя отключены достижения или заблокирован доступ к боту."
+
+msgid "commands.settings"
+msgstr "Открыть настройки"
+
+msgid "obis.captcha_recognizing"
+msgstr "Решаем капчу OBIS…"
+
+msgid "miniapp.ui.sent_to_chat"
+msgstr "Бот отправил следующий шаг в чат."
+
+msgid "miniapp.admin.achievement_save_error"
+msgstr "Не удалось сохранить ачивку."
+
+msgid "miniapp.admin.achievement_revoke"
+msgstr "Отнять"
+
+msgid "miniapp.admin.achievement_revoke_confirm"
+msgstr "Отнять ачивку «{name}» у пользователя Telegram {id}?"
+
+msgid "miniapp.admin.achievement_revoked"
+msgstr "Ачивка отозвана."
+
+msgid "miniapp.admin.achievement_not_awarded"
+msgstr "У пользователя нет этой ачивки."

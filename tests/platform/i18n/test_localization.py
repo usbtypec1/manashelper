@@ -198,7 +198,7 @@ async def test_translated_reply_keyboard_buttons_match_filters(
     from manashelper.core.config import get_settings
 
     monkeypatch.setattr(get_settings(), "eders_password", SecretStr("fake-password") if eders_enabled else None)
-    main_keys = ["menu.food", "menu.study", "menu.marketplace", "menu.settings"]
+    main_keys = ["menu.food", "menu.study", "menu.marketplace"]
     study_keys = [
         "menu.schedule",
         "menu.obis",

@@ -3,6 +3,7 @@ import json
 import os
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
@@ -285,6 +286,44 @@ async def test_preference_writes_set_values_idempotently_and_are_shared_with_nat
         assert (await response.json())["notifications"]["broadcast_muted_until"] == until
         response = await client.put("/api/settings/broadcast", headers=headers, json={"muted": False})
         assert (await response.json())["notifications"]["broadcast_muted_until"] is None
+
+
+async def test_profile_and_obis_settings_share_the_signed_users_account(monkeypatch):
+    send = AsyncMock()
+    monkeypatch.setattr(Bot, "send_message", send)
+    async with application() as (client, container, _):
+        headers = {"Authorization": authorization()}
+        for path, body in (("locale", {"locale": "en"}), ("theme", {"theme": "gta_vi"})):
+            assert (await client.put(f"/api/settings/{path}", json=body)).status == 401
+            response = await client.put(f"/api/settings/{path}", headers=headers, json=body)
+            assert response.status == 200
+            assert (await response.json())[path] == body[path]
+        async with container() as scope:
+            session = await scope.get(AsyncSession)
+            user = await session.get_one(User, USER_ID)
+            assert (user.locale, user.theme) == ("en", "gta_vi")
+            user.student_number = "fixture-student"
+            user.encrypted_password = "fixture-stored-value"
+
+        data = await (await client.get("/api/settings", headers=headers)).text()
+        assert json.loads(data)["has_obis_credentials"]
+        assert "fixture-student" not in data and "fixture-stored-value" not in data
+        assert (
+            await client.post("/api/settings/chat", headers=headers, json={"section": "obis", "user_id": USER_ID + 1})
+        ).status == 400
+        send.assert_not_awaited()
+        response = await client.post("/api/settings/chat", headers=headers, json={"section": "obis"})
+        assert response.status == 200
+        assert send.await_args.kwargs["chat_id"] == USER_ID
+        assert any(
+            button.callback_data == "obis:start_credentials"
+            for row in send.await_args.kwargs["reply_markup"].inline_keyboard
+            for button in row
+        )
+        assert (await client.delete("/api/settings/obis")).status == 401
+        for _ in range(2):
+            response = await client.delete("/api/settings/obis", headers=headers)
+            assert response.status == 200 and not (await response.json())["has_obis_credentials"]
 
 
 async def test_course_catalog_concurrent_selection_retries_and_removal_share_bot_tracking():

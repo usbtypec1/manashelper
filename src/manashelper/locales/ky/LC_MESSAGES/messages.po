@@ -2262,7 +2262,7 @@ msgid "gamification.pokemon.photo_prompt"
 msgstr "@yunbae менен чогуу түшкөн сүрөтүңдү жөнөт. Бот сүрөттү админге текшерүүгө жиберет."
 
 msgid "gamification.pokemon.already_earned"
-msgstr "«Покемон» жетишкендигин мурда алгансың."
+msgstr "«{name}» жетишкендигин мурда алгансың."
 
 msgid "gamification.pokemon.photo_required"
 msgstr "Сүрөттү Telegram'да фото катары жөнөт."
@@ -2274,13 +2274,13 @@ msgid "gamification.pokemon.send_failed"
 msgstr "Сүрөт админге жөнөтүлгөн жок. Кайра жөнөтүп көр."
 
 msgid "gamification.pokemon.admin_photo"
-msgstr "{sender} «Покемонго» арыз берди. Сүрөттө жөнөтүүчү жана @yunbae бар экенин текшер."
+msgstr "{sender} «{name}» жетишкендигине арыз берди. Сүрөттө жөнөтүүчү жана @yunbae бар экенин текшер."
 
 msgid "gamification.pokemon.grant"
 msgstr "Жетишкендикти берүү"
 
 msgid "gamification.pokemon.granted"
-msgstr "«Покемон» жетишкендиги берилди."
+msgstr "«{name}» жетишкендиги берилди."
 
 msgid "gamification.pokemon.grant_unavailable"
 msgstr "Колдонуучу жетишкендикти мурда алган же азыр аны берүү мүмкүн эмес."
@@ -2292,7 +2292,7 @@ msgid "miniapp.admin.achievement"
 msgstr "Жетишкендик"
 
 msgid "miniapp.admin.achievement_display"
-msgstr "Көрсөтүү"
+msgstr "Жетишкендиктердин аталышы жана көрүнүшү"
 
 msgid "miniapp.admin.achievement_custom_name"
 msgstr "Өз аталышы"
@@ -2309,8 +2309,8 @@ msgstr "Жашырылган"
 msgid "miniapp.admin.achievement_save"
 msgstr "Өзгөртүүлөрдү сактоо"
 
-msgid "miniapp.admin.achievement_grant_title"
-msgstr "Жетишкендик берүү"
+msgid "miniapp.admin.achievement_award_title"
+msgstr "Колдонуучунун сыйлыктары"
 
 msgid "miniapp.admin.achievement_grant"
 msgstr "Берүү"
@@ -2335,3 +2335,27 @@ msgstr "Колдонуучу же жетишкендик табылган жок
 
 msgid "miniapp.admin.achievement_unavailable"
 msgstr "Колдонуучунун жетишкендиктери өчүрүлгөн же ботко кирүүсү бөгөттөлгөн."
+
+msgid "commands.settings"
+msgstr "Жөндөөлөрдү ачуу"
+
+msgid "obis.captcha_recognizing"
+msgstr "OBIS капчасы чечилип жатат…"
+
+msgid "miniapp.ui.sent_to_chat"
+msgstr "Бот кийинки кадамды чатка жөнөттү."
+
+msgid "miniapp.admin.achievement_save_error"
+msgstr "Жетишкендикти сактоо мүмкүн болгон жок."
+
+msgid "miniapp.admin.achievement_revoke"
+msgstr "Алып салуу"
+
+msgid "miniapp.admin.achievement_revoke_confirm"
+msgstr "Telegram колдонуучу {id}ден «{name}» жетишкендигин алып саласызбы?"
+
+msgid "miniapp.admin.achievement_revoked"
+msgstr "Жетишкендик алынып салынды."
+
+msgid "miniapp.admin.achievement_not_awarded"
+msgstr "Колдонуучуда бул жетишкендик жок."

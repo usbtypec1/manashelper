@@ -2258,7 +2258,7 @@ msgid "gamification.pokemon.photo_prompt"
 msgstr "@yunbae ile birlikte çekildiğin fotoğrafı gönder. Bot, incelemesi için fotoğrafı yöneticiye iletir."
 
 msgid "gamification.pokemon.already_earned"
-msgstr "Pokémon başarımını zaten kazandın."
+msgstr "“{name}” başarımını zaten kazandın."
 
 msgid "gamification.pokemon.photo_required"
 msgstr "Görseli Telegram’da fotoğraf olarak gönder."
@@ -2270,13 +2270,13 @@ msgid "gamification.pokemon.send_failed"
 msgstr "Fotoğraf yöneticiye gönderilemedi. Tekrar göndermeyi dene."
 
 msgid "gamification.pokemon.admin_photo"
-msgstr "{sender} Pokémon başarımı için başvurdu. Gönderenin ve @yunbae’nin fotoğrafta olduğunu kontrol et."
+msgstr "{sender} “{name}” başarımı için başvurdu. Gönderenin ve @yunbae’nin fotoğrafta olduğunu kontrol et."
 
 msgid "gamification.pokemon.grant"
 msgstr "Başarımı ver"
 
 msgid "gamification.pokemon.granted"
-msgstr "Pokémon başarımı verildi."
+msgstr "“{name}” başarımı verildi."
 
 msgid "gamification.pokemon.grant_unavailable"
 msgstr "Kullanıcı bu başarımı zaten aldı veya şu anda alamıyor."
@@ -2288,7 +2288,7 @@ msgid "miniapp.admin.achievement"
 msgstr "Başarım"
 
 msgid "miniapp.admin.achievement_display"
-msgstr "Görünüm"
+msgstr "Başarım adları ve görünürlüğü"
 
 msgid "miniapp.admin.achievement_custom_name"
 msgstr "Özel ad"
@@ -2305,8 +2305,8 @@ msgstr "Gizli"
 msgid "miniapp.admin.achievement_save"
 msgstr "Değişiklikleri kaydet"
 
-msgid "miniapp.admin.achievement_grant_title"
-msgstr "Başarım ver"
+msgid "miniapp.admin.achievement_award_title"
+msgstr "Kullanıcının ödülleri"
 
 msgid "miniapp.admin.achievement_grant"
 msgstr "Ver"
@@ -2331,3 +2331,27 @@ msgstr "Kullanıcı veya başarım bulunamadı."
 
 msgid "miniapp.admin.achievement_unavailable"
 msgstr "Bu kullanıcı için başarımlar kapalı veya kullanıcının erişimi engellenmiş."
+
+msgid "commands.settings"
+msgstr "Ayarları aç"
+
+msgid "obis.captcha_recognizing"
+msgstr "OBIS CAPTCHA’sı çözülüyor…"
+
+msgid "miniapp.ui.sent_to_chat"
+msgstr "Bot bir sonraki adımı sohbete gönderdi."
+
+msgid "miniapp.admin.achievement_save_error"
+msgstr "Başarım kaydedilemedi."
+
+msgid "miniapp.admin.achievement_revoke"
+msgstr "Geri al"
+
+msgid "miniapp.admin.achievement_revoke_confirm"
+msgstr "Telegram kullanıcısı {id} için “{name}” başarımı geri alınsın mı?"
+
+msgid "miniapp.admin.achievement_revoked"
+msgstr "Başarım geri alındı."
+
+msgid "miniapp.admin.achievement_not_awarded"
+msgstr "Kullanıcı bu başarıma sahip değil."

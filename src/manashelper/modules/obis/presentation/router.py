@@ -117,6 +117,22 @@ async def _show_login_outcome(message: Message, state: FSMContext, captcha: Obis
     await message.answer(_("obis.logged_in"), reply_markup=build_obis_settings_keyboard(has_credentials=True))
 
 
+async def _attempt_login(
+    message: Message, auto_login: AutoLoginObisUseCase, user_id: int, *credentials: str
+) -> ObisCaptcha | None:
+    progress = await message.answer(_("obis.logging_in"))
+
+    async def show_recognition() -> None:
+        with suppress(TelegramAPIError):
+            await progress.edit_text(_("obis.captcha_recognizing"))
+
+    try:
+        return await auto_login.execute(user_id, *credentials, on_recognition_started=show_recognition)
+    finally:
+        with suppress(TelegramAPIError):
+            await progress.delete()
+
+
 @menu_router.message(TranslatedText("menu.obis"))
 @flags.private_chat_only
 async def on_obis_menu(message: Message, state: FSMContext) -> None:
@@ -450,9 +466,8 @@ async def on_password_entered(
         await message.answer(_("common.error_retry"))
         return
 
-    await message.answer(_("obis.logging_in"))
     try:
-        captcha = await auto_login.execute(message.from_user.id, student_number, password)
+        captcha = await _attempt_login(message, auto_login, message.from_user.id, student_number, password)
     except ObisLoginError:
         await state.clear()
         await state.set_state(ObisCredentialsForm.student_number)
@@ -480,9 +495,8 @@ async def on_login(
     if not isinstance(message, Message):
         return
     await state.clear()
-    await message.answer(_("obis.logging_in"))
     try:
-        captcha = await auto_login.execute(callback_query.from_user.id)
+        captcha = await _attempt_login(message, auto_login, callback_query.from_user.id)
     except ObisLoginError:
         await state.set_state(ObisCredentialsForm.student_number)
         await message.answer(_("obis.login_failed"), reply_markup=build_cancel_keyboard())

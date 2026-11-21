@@ -7,6 +7,7 @@ from manashelper.modules.gamification.application.use_cases.grant_achievement im
 from manashelper.modules.gamification.application.use_cases.record_activity import RecordActivityUseCase
 from manashelper.modules.gamification.application.use_cases.record_attendance import RecordAttendanceUseCase
 from manashelper.modules.gamification.application.use_cases.record_transcript import RecordTranscriptUseCase
+from manashelper.modules.gamification.application.use_cases.revoke_achievement import RevokeAchievementUseCase
 from manashelper.modules.gamification.application.use_cases.set_achievement_display import SetAchievementDisplayUseCase
 from manashelper.modules.gamification.application.use_cases.set_gamification_enabled import (
     SetGamificationEnabledUseCase,
@@ -22,6 +23,7 @@ class GamificationProvider(Provider):
     notifications = provide(TelegramAchievementNotificationSender, provides=AchievementNotificationSender)
     awards = provide(AwardAchievementUseCase)
     grant_award = provide(GrantAchievementUseCase)
+    revoke_award = provide(RevokeAchievementUseCase)
     set_display = provide(SetAchievementDisplayUseCase)
     activity = provide(RecordActivityUseCase)
     attendance = provide(RecordAttendanceUseCase)

@@ -79,12 +79,13 @@ Shared Telegram navigation lives in `platform/telegram/navigation.py`; feature r
 The main keyboard groups academic features under Studies. Its reply submenu opens the timetable directly,
 with Change courses in the first button row; subject search is a separate Studies entry. An untracked user
 gets an explanation with a course-selection button. OBIS has Attendance and Grades; Eders has Materials
-and Deadlines. Settings has no My lessons entry. All notification controls live under Settings → Notifications:
-Schedule, OBIS, Food menu, Eders (when enabled) and broadcasts. Feature notification submenus return there.
-OBIS credentials remain in general Settings. Settings navigation precedes feature FSM handlers and clears drafts.
-The authenticated Mini App provides the same notification preferences and course selection to every registered
-user, independently of gamification. Launch it using inline Web App buttons at `/app/settings` or
-`/app/courses`. Vue Router owns Mini App navigation; `App.vue` only renders `RouterView`.
+and Deadlines. The private Telegram menu button opens Mini App settings at `/app/settings` for regular users.
+Administrators can open personal settings from their admin panel. The main reply keyboard has no Settings button.
+Mini App settings include language, theme, OBIS account management, notifications and course selection for every
+registered user, independently of gamification. OBIS login continues through the private chat credential flow.
+The `/settings` command opens native settings in polling mode and offers the Mini App link when configured.
+Settings navigation precedes feature FSM handlers and clears drafts.
+Vue Router owns Mini App navigation and `App.vue` renders `RouterView`.
 Legacy `/app/?view=...` links redirect to the corresponding route. Its idempotent API reuses owning use cases
 and serializes mutations on the user's database row.
 See `docs/miniapp-settings.md` for the contract. Never accept a client-provided user ID for these operations.

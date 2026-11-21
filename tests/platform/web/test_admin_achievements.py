@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -10,6 +11,7 @@ from manashelper.core.config import get_settings
 from manashelper.modules.gamification.application.catalog import ACHIEVEMENT_KEYS
 from manashelper.modules.gamification.application.queries import GamificationQuery
 from manashelper.modules.gamification.application.use_cases.grant_achievement import GrantAchievementUseCase
+from manashelper.modules.gamification.application.use_cases.revoke_achievement import RevokeAchievementUseCase
 from manashelper.modules.gamification.application.use_cases.set_achievement_display import SetAchievementDisplayUseCase
 from manashelper.modules.gamification.infrastructure.models.achievement import UserAchievement
 from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
@@ -45,13 +47,15 @@ async def test_admin_achievement_display_and_grant_use_signed_identity_and_persi
     gamification = GamificationQuery(repository)
     users_repo = UserRepository(session)
     users = UsersQuery(users_repo)
+    awards = build_awards(session)
     services = {
         GamificationQuery: gamification,
         UsersQuery: users,
         LocaleQuery: LocaleQuery(users_repo),
         ThemeQuery: ThemeQuery(users_repo),
         SetAchievementDisplayUseCase: SetAchievementDisplayUseCase(repository),
-        GrantAchievementUseCase: GrantAchievementUseCase(build_awards(session), gamification, users),
+        GrantAchievementUseCase: GrantAchievementUseCase(awards, gamification, users),
+        RevokeAchievementUseCase: RevokeAchievementUseCase(repository, awards.notifications, users),
     }
 
     @asynccontextmanager
@@ -72,6 +76,7 @@ async def test_admin_achievement_display_and_grant_use_signed_identity_and_persi
         assert (await client.get(prefix, headers=recipient)).status == 403
         assert (await client.put(display_path, json=display, headers=recipient)).status == 403
         assert (await client.put(grant_path, headers=recipient)).status == 403
+        assert (await client.delete(grant_path, headers=recipient)).status == 403
         response = await client.get(prefix, headers=admin)
         assert response.status == 200 and response.headers["Cache-Control"] == "no-store"
         catalog = {entry["key"]: entry for entry in (await response.json())["achievements"]}
@@ -127,6 +132,32 @@ async def test_admin_achievement_display_and_grant_use_signed_identity_and_persi
             next(item for item in profile["achievements"] if item["key"] == "pokemon")["name"]
             == (catalog["pokemon"]["default_name"])
         )
+
+        for expected in ("revoked", "not_awarded"):
+            response = await client.delete(grant_path, headers=admin)
+            assert response.status == 200 and (await response.json())["status"] == expected
+        profile = await (await client.get("/api/gamification/me", headers=recipient)).json()
+        assert (profile["score"], profile["rank"]) == (0, None)
+        assert next(item for item in profile["achievements"] if item["key"] == "pokemon")["earned_at"] is None
+        leaderboard = await (await client.get("/api/gamification/leaderboard", headers=recipient)).json()
+        assert all(not entry["is_self"] for entry in leaderboard["entries"])
+        assert outbox[0].status == "cancelled"
+
+        assert await awards.execute(recipient_id, "seller", datetime.now(UTC))
+        seller_path = f"{prefix}/seller/grants/{recipient_id}"
+        response = await client.delete(seller_path, headers=admin)
+        assert (await response.json())["status"] == "revoked"
+        assert not await awards.execute(recipient_id, "seller", datetime.now(UTC))
+        assert not await gamification.has_award(recipient_id, "seller")
+        response = await client.put(seller_path, headers=admin)
+        assert response.status == 200 and (await response.json())["status"] == "granted"
+        assert await gamification.has_award(recipient_id, "seller")
+        statuses = await session.scalars(
+            select(OutboxMessage.status)
+            .where(OutboxMessage.source_keys.contains([f"achievement:{recipient_id}:seller"]))
+            .order_by(OutboxMessage.id)
+        )
+        assert list(statuses) == ["cancelled", "pending"]
 
         actor.is_blocked = True
         await session.flush()

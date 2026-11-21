@@ -8,6 +8,8 @@ test('settings persist for a user without achievement access', async ({ page, re
   await mockTelegram(page, fixture)
   await page.goto('/app/?view=settings')
   await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible()
+  await expect(page.getByRole('combobox', { name: 'Language' })).toHaveValue('en')
+  await expect(page.getByRole('combobox', { name: 'Theme' })).toHaveValue('basic')
   const grades = page.getByRole('checkbox', { name: 'Exam grades', exact: true })
   await expect(grades).toBeChecked()
   await grades.click()

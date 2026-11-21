@@ -20,6 +20,10 @@ export async function putJson(path: string, rawInitData: string, body: unknown):
   return sendJson('PUT', path, rawInitData, body)
 }
 
+export async function deleteJson(path: string, rawInitData: string): Promise<unknown> {
+  return requestJson(path, rawInitData, { method: 'DELETE' })
+}
+
 async function sendJson(method: 'POST' | 'PUT', path: string, rawInitData: string, body: unknown): Promise<unknown> {
   return requestJson(path, rawInitData, {
     method,

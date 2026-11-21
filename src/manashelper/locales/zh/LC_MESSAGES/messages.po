@@ -2251,7 +2251,7 @@ msgid "gamification.pokemon.photo_prompt"
 msgstr "请发送你与 @yunbae 的合影。机器人会将照片发给管理员审核。"
 
 msgid "gamification.pokemon.already_earned"
-msgstr "你已经获得「宝可梦」成就。"
+msgstr "你已经获得「{name}」成就。"
 
 msgid "gamification.pokemon.photo_required"
 msgstr "请以 Telegram 照片的形式发送图片。"
@@ -2263,13 +2263,13 @@ msgid "gamification.pokemon.send_failed"
 msgstr "照片未能发给管理员，请重新发送。"
 
 msgid "gamification.pokemon.admin_photo"
-msgstr "{sender} 申请了「宝可梦」成就。请确认照片中有发送者和 @yunbae。"
+msgstr "{sender} 申请了「{name}」成就。请确认照片中有发送者和 @yunbae。"
 
 msgid "gamification.pokemon.grant"
 msgstr "授予成就"
 
 msgid "gamification.pokemon.granted"
-msgstr "已授予「宝可梦」成就。"
+msgstr "已授予「{name}」成就。"
 
 msgid "gamification.pokemon.grant_unavailable"
 msgstr "该用户已获得此成就，或暂时无法获得。"
@@ -2281,7 +2281,7 @@ msgid "miniapp.admin.achievement"
 msgstr "成就"
 
 msgid "miniapp.admin.achievement_display"
-msgstr "显示设置"
+msgstr "成就名称和可见性"
 
 msgid "miniapp.admin.achievement_custom_name"
 msgstr "自定义名称"
@@ -2298,8 +2298,8 @@ msgstr "已隐藏"
 msgid "miniapp.admin.achievement_save"
 msgstr "保存更改"
 
-msgid "miniapp.admin.achievement_grant_title"
-msgstr "授予成就"
+msgid "miniapp.admin.achievement_award_title"
+msgstr "管理用户成就"
 
 msgid "miniapp.admin.achievement_grant"
 msgstr "授予"
@@ -2324,3 +2324,27 @@ msgstr "未找到用户或成就。"
 
 msgid "miniapp.admin.achievement_unavailable"
 msgstr "此用户的成就功能已关闭，或该用户已被封禁。"
+
+msgid "commands.settings"
+msgstr "打开设置"
+
+msgid "obis.captcha_recognizing"
+msgstr "正在识别 OBIS 验证码…"
+
+msgid "miniapp.ui.sent_to_chat"
+msgstr "机器人已在聊天中发送下一步。"
+
+msgid "miniapp.admin.achievement_save_error"
+msgstr "无法保存此成就。"
+
+msgid "miniapp.admin.achievement_revoke"
+msgstr "撤销"
+
+msgid "miniapp.admin.achievement_revoke_confirm"
+msgstr "撤销 Telegram 用户 {id} 的「{name}」成就？"
+
+msgid "miniapp.admin.achievement_revoked"
+msgstr "已撤销成就。"
+
+msgid "miniapp.admin.achievement_not_awarded"
+msgstr "该用户没有此成就。"

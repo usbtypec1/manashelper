@@ -89,3 +89,43 @@ async def test_achievement_display_migration_round_trip_preserves_awards(engine)
         assert await connection.scalar(text("SELECT count(*) FROM gamification_achievement_display")) == 0
         assert await connection.scalar(text("SELECT achievement_key FROM gamification_achievements")) == "seller"
         await connection.rollback()
+
+
+async def test_revocation_migration_preserves_awards_and_backfills_pending_sources(engine):
+    outbox = load_migration("V27_add_telegram_outbox")
+    awards = load_migration("V28_add_gamification_and_webhook_receipts")
+    migration = load_migration("V39_add_achievement_revocation")
+    schema = "achievement_revocation_" + uuid4().hex
+    async with engine.connect() as connection, connection.begin():
+        await connection.execute(text(f'CREATE SCHEMA "{schema}"'))
+        await connection.execute(text(f'SET LOCAL search_path TO "{schema}"'))
+        await connection.execute(text("CREATE TABLE users (id BIGINT PRIMARY KEY)"))
+
+        def apply(sync_connection, operation):
+            with Operations.context(MigrationContext.configure(sync_connection)):
+                operation()
+
+        for revision in (outbox, awards):
+            await connection.run_sync(apply, revision.upgrade)
+        await connection.execute(text("INSERT INTO users VALUES (1)"))
+        await connection.execute(
+            text("INSERT INTO gamification_achievements VALUES (1, 'seller', '2026-11-01T00:00:00Z')")
+        )
+        await connection.execute(
+            text(
+                "INSERT INTO telegram_outbox "
+                "(user_id, category, methods, source_keys, deduplication_key, created_at, available_at, expires_at) "
+                "VALUES (1, 'achievement', '[]', '[]', 'achievement:1:seller', now(), now(), now() + interval '1 day')"
+            )
+        )
+        await connection.run_sync(apply, migration.upgrade)
+        assert await connection.scalar(text("SELECT revoked_at FROM gamification_achievements")) is None
+        assert await connection.scalar(text("SELECT source_keys->>0 FROM telegram_outbox")) == "achievement:1:seller"
+        await connection.execute(text("UPDATE gamification_achievements SET revoked_at = now()"))
+        await connection.run_sync(apply, migration.downgrade)
+        await connection.run_sync(apply, migration.upgrade)
+        assert (
+            await connection.execute(text("SELECT user_id, achievement_key, revoked_at FROM gamification_achievements"))
+        ).one() == (1, "seller", None)
+        assert await connection.scalar(text("SELECT source_keys->>0 FROM telegram_outbox")) == "achievement:1:seller"
+        await connection.rollback()

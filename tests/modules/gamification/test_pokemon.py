@@ -8,6 +8,7 @@ from aiogram.types import CallbackQuery, Chat, Message, PhotoSize, Update
 from aiogram.types import User as TelegramUser
 
 from manashelper.core.config import get_settings
+from manashelper.modules.gamification.application.catalog import AchievementDisplay
 from manashelper.modules.gamification.application.queries import GamificationQuery
 from manashelper.modules.gamification.infrastructure.models.achievement import UserAchievement
 from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
@@ -31,6 +32,7 @@ async def test_pokemon_photo_requires_manual_grant_from_its_admin_message(sessio
     session.add(user)
     await session.flush()
     repo = AchievementRepository(session)
+    await repo.save_display("pokemon", AchievementDisplay(custom_name="Team <award>"))
     awards = build_awards(session)
     dispatcher = Dispatcher(
         settings=settings,
@@ -91,6 +93,7 @@ async def test_pokemon_photo_requires_manual_grant_from_its_admin_message(sessio
             assert sent_photo.chat_id == settings.admin_chat_id
             assert sent_photo.photo == "proof-photo" and sent_photo.parse_mode is None
             assert "Student <name> (@teststudent)" in sent_photo.caption
+            assert "Team <award>" in sent_photo.caption
             [[button]] = sent_photo.reply_markup.inline_keyboard
             assert not await repo.get_awards(student.id)
 
@@ -114,12 +117,16 @@ async def test_pokemon_photo_requires_manual_grant_from_its_admin_message(sessio
             assert not await repo.get_awards(student.id)
             user.is_blocked = False
             await session.flush()
-            assert await press_button(10, proof, button.callback_data) == i18n.gettext("gamification.pokemon.granted")
+            assert await press_button(10, proof, button.callback_data) == i18n.gettext(
+                "gamification.pokemon.granted"
+            ).format(name="Team <award>")
             assert await press_button(11, proof, button.callback_data) == unavailable
             stored = await session.get(UserAchievement, (student.id, "pokemon"))
             assert stored is not None and stored.granted_by == admin.id
             after_award = await send_message(12, text="/pokemon")
-            assert after_award.text == i18n.gettext("gamification.pokemon.already_earned")
+            assert after_award.text == i18n.gettext("gamification.pokemon.already_earned").format(
+                name="Team &lt;award&gt;"
+            )
     await dispatcher.storage.close()
 
 

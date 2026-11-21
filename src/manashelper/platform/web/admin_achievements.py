@@ -10,6 +10,7 @@ from manashelper.core.config import Settings
 from manashelper.modules.gamification.application.catalog import ACHIEVEMENTS, AchievementDisplay
 from manashelper.modules.gamification.application.queries import GamificationQuery
 from manashelper.modules.gamification.application.use_cases.grant_achievement import GrantAchievementUseCase
+from manashelper.modules.gamification.application.use_cases.revoke_achievement import RevokeAchievementUseCase
 from manashelper.modules.gamification.application.use_cases.set_achievement_display import SetAchievementDisplayUseCase
 from manashelper.modules.gamification.presentation.catalog import achievement_strings
 from manashelper.modules.users.application.locale import LocaleQuery
@@ -29,6 +30,16 @@ class _DisplayInput(BaseModel):
         if value is not None and any(category(char) in {"Cc", "Cs", "Zl", "Zp"} for char in value):
             raise ValueError("The name must be one line of text")
         return value
+
+
+def _recipient_id(request: web.Request) -> int:
+    try:
+        target_id = parse_telegram_id(request.match_info["id"])
+        if target_id <= 0:
+            raise ValueError("A recipient must be a Telegram user")
+        return target_id
+    except ValueError as error:
+        raise web.HTTPBadRequest() from error
 
 
 def register_admin_achievement_routes(app: web.Application, container: AsyncContainer, settings: Settings) -> None:
@@ -68,20 +79,23 @@ def register_admin_achievement_routes(app: web.Application, container: AsyncCont
 
     async def grant(request: web.Request) -> web.Response:
         async with admin_scope(request, container, settings) as (scope, actor_id):
-            try:
-                target_id = parse_telegram_id(request.match_info["id"])
-                if target_id <= 0:
-                    raise ValueError("A recipient must be a Telegram user")
-            except ValueError as error:
-                raise web.HTTPBadRequest() from error
             action = await scope.get(GrantAchievementUseCase)
-            status = await action.execute(target_id, request.match_info["key"], granted_by=actor_id)
+            status = await action.execute(_recipient_id(request), request.match_info["key"], granted_by=actor_id)
             if status == "missing":
                 raise web.HTTPNotFound()
             if status == "unavailable":
                 raise web.HTTPConflict()
         return web.json_response({"status": status})
 
+    async def revoke(request: web.Request) -> web.Response:
+        async with admin_scope(request, container, settings) as (scope, _):
+            action = await scope.get(RevokeAchievementUseCase)
+            status = await action.execute(_recipient_id(request), request.match_info["key"])
+            if status == "missing":
+                raise web.HTTPNotFound()
+        return web.json_response({"status": status})
+
     app.router.add_get("/api/admin/achievements", list_achievements)
     app.router.add_put("/api/admin/achievements/{key}", set_display)
     app.router.add_put("/api/admin/achievements/{key}/grants/{id}", grant)
+    app.router.add_delete("/api/admin/achievements/{key}/grants/{id}", revoke)

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import ARRAY, BigInteger, any_, cast, func, select
+from sqlalchemy import ARRAY, BigInteger, any_, cast, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -68,10 +68,29 @@ class AchievementRepository:
             return False
         if key not in ACHIEVEMENT_KEYS or await self.lock_progress(user_id) is None:
             return False
+        statement = insert(UserAchievement).values(
+            user_id=user_id, achievement_key=key, earned_at=now, granted_by=granted_by
+        )
+        if granted_by is None:
+            statement = statement.on_conflict_do_nothing()
+        else:
+            statement = statement.on_conflict_do_update(
+                index_elements=[UserAchievement.user_id, UserAchievement.achievement_key],
+                set_={"earned_at": now, "granted_by": granted_by, "revoked_at": None},
+                where=UserAchievement.revoked_at.is_not(None),
+            )
+        result = await self.session.scalar(statement.returning(UserAchievement.achievement_key))
+        return result is not None
+
+    async def revoke(self, user_id: int, key: str, now: datetime) -> bool:
         result = await self.session.scalar(
-            insert(UserAchievement)
-            .values(user_id=user_id, achievement_key=key, earned_at=now, granted_by=granted_by)
-            .on_conflict_do_nothing()
+            update(UserAchievement)
+            .where(
+                UserAchievement.user_id == user_id,
+                UserAchievement.achievement_key == key,
+                UserAchievement.revoked_at.is_(None),
+            )
+            .values(revoked_at=now)
             .returning(UserAchievement.achievement_key)
         )
         return result is not None
@@ -83,7 +102,9 @@ class AchievementRepository:
     async def get_awards(self, user_id: int) -> dict[str, datetime]:
         rows = await self.session.execute(
             select(UserAchievement.achievement_key, UserAchievement.earned_at).where(
-                UserAchievement.user_id == user_id, UserAchievement.achievement_key.in_(ACHIEVEMENT_KEYS)
+                UserAchievement.user_id == user_id,
+                UserAchievement.achievement_key.in_(ACHIEVEMENT_KEYS),
+                UserAchievement.revoked_at.is_(None),
             )
         )
         return {key: earned_at for key, earned_at in rows}
@@ -93,6 +114,7 @@ class AchievementRepository:
             select(UserAchievement.user_id, UserAchievement.achievement_key, UserAchievement.earned_at).where(
                 UserAchievement.user_id == any_(cast(user_ids, ARRAY(BigInteger))),
                 UserAchievement.achievement_key.in_(ACHIEVEMENT_KEYS),
+                UserAchievement.revoked_at.is_(None),
             )
         )
         awards: dict[int, dict[str, datetime]] = {}
@@ -134,7 +156,7 @@ class AchievementRepository:
                 func.count().label("score"),
                 func.max(UserAchievement.earned_at).label("reached_at"),
             )
-            .where(UserAchievement.achievement_key.in_(keys))
+            .where(UserAchievement.achievement_key.in_(keys), UserAchievement.revoked_at.is_(None))
             .group_by(UserAchievement.user_id)
             .subquery()
         )

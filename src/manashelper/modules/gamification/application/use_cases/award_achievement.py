@@ -14,5 +14,5 @@ class AwardAchievementUseCase:
         # The award and notification share the caller's request transaction.
         awarded = await self.repository.award(user_id, key, now, granted_by=granted_by)
         if awarded:
-            await self.notifications.earned(user_id, key)
+            await self.notifications.earned(user_id, key, now)
         return awarded

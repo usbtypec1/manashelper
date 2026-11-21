@@ -75,14 +75,23 @@ async def test_auto_login_completes_the_same_form_and_returns_no_manual_challeng
 async def test_missing_hash_keeps_unsubmitted_manual_challenge(auto):
     captcha = replace(CHALLENGE, expected_hash=None)
     auto.start.execute.return_value = captcha
-    assert await auto.service.execute(123) is captcha
+    progress = AsyncMock()
+    assert await auto.service.execute(123, on_recognition_started=progress) is captcha
+    progress.assert_not_awaited()
     auto.recognizer.solve.assert_not_awaited()
     auto.complete.execute.assert_not_awaited()
 
 
 async def test_uncertain_answer_fetches_another_challenge_without_submitting(auto):
-    auto.recognizer.solve.side_effect = [None, "qinug"]
-    assert await auto.service.execute(123) is None
+    progress = AsyncMock()
+    answers = iter((None, "qinug"))
+
+    async def solve(*args):
+        progress.assert_awaited_once()
+        return next(answers)
+
+    auto.recognizer.solve.side_effect = solve
+    assert await auto.service.execute(123, on_recognition_started=progress) is None
     auto.complete.execute.assert_awaited_once_with(123, auto.refreshed[0].pending, "qinug")
     assert auto.refreshed[0].pending.attempt != PENDING.attempt
 

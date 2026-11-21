@@ -2,10 +2,11 @@ import { computed, onMounted, ref } from 'vue'
 import { HttpError } from '../../shared/api/http'
 import { normalizeLocale } from '../../shared/i18n/locale'
 import messages from '../../shared/i18n/messages.json'
-import { useTelegram } from '../../shared/telegram/telegram'
+import { closeTelegramMiniApp, useTelegram } from '../../shared/telegram/telegram'
 import {
   getCourses, getDepartments, getFaculties, getSettings, meals, notificationKeys,
-  updateBroadcast, updateCourse, updateEders, updateFood, updateNotification,
+  disconnectObis, requestChatSettings, updateBroadcast, updateCourse, updateEders, updateFood,
+  updateLocale, updateNotification, updateTheme,
   type CatalogItem, type Course, type Settings,
 } from './api'
 
@@ -19,6 +20,7 @@ export function usePreferences() {
   const error = ref(false)
   const expired = ref(false)
   const saved = ref(false)
+  const sentToChat = ref(false)
   const faculties = ref<CatalogItem[]>([])
   const departments = ref<CatalogItem[]>([])
   const courses = ref<Course[]>([])
@@ -49,6 +51,7 @@ export function usePreferences() {
   async function load() {
     loading.value = true
     error.value = false
+    sentToChat.value = false
     expired.value = false
     const initData = rawInitData.value ?? ''
     try {
@@ -64,10 +67,24 @@ export function usePreferences() {
     if (busy.value) return
     busy.value = true
     saved.value = false
+    sentToChat.value = false
     error.value = false
     try {
       apply(await withSession(update(rawInitData.value ?? '')))
       saved.value = true
+    } catch { error.value = true }
+    finally { busy.value = false }
+  }
+  async function openChat(section: 'obis' | 'feedback') {
+    if (!rawInitData.value || busy.value) return
+    busy.value = true
+    saved.value = false
+    sentToChat.value = false
+    error.value = false
+    try {
+      await withSession(requestChatSettings(rawInitData.value, section))
+      sentToChat.value = true
+      closeTelegramMiniApp()
     } catch { error.value = true }
     finally { busy.value = false }
   }
@@ -99,9 +116,12 @@ export function usePreferences() {
   })
 
   return {
-    rawInitData, locale, data, copy, loading, busy, error, expired, saved,
+    rawInitData, locale, data, copy, loading, busy, error, expired, saved, sentToChat,
     faculties, departments, courses, faculty, department, broadcastsEnabled,
-    load, selectFaculty, selectDepartment,
+    load, selectFaculty, selectDepartment, openChat,
+    setLocale: (value: string) => save(initData => updateLocale(initData, value)),
+    setTheme: (value: string) => save(initData => updateTheme(initData, value)),
+    clearObis: () => save(disconnectObis),
     setNotification: (setting: typeof notificationKeys[number], enabled: boolean) =>
       save(initData => updateNotification(initData, setting, enabled)),
     setFood: (weekday: number, meal: typeof meals[number], enabled: boolean) =>
