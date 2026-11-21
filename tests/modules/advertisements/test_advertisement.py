@@ -13,9 +13,9 @@ from manashelper.modules.advertisements.domain.contact import InvalidPhoneNumber
 from manashelper.modules.advertisements.domain.enums import AdvertisementMediaType
 from manashelper.modules.advertisements.infrastructure.models.advertisement import Advertisement
 from manashelper.modules.advertisements.infrastructure.repositories.advertisement import AdvertisementRepository
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
-from manashelper.modules.users.queries import UsersQuery
 from tests.modules.advertisements.application_factories import build_advertisement_service
 
 

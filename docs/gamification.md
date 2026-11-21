@@ -13,11 +13,12 @@ Node is needed only for building the Vue/Vite frontend.
   No activity progress or awards (including temporarily retired achievements) are recorded, and the transcript-only HTTP refresh is skipped.
   Regular OBIS synchronization continues. Disabling preserves awards/progress; enabling resumes them without
   backfilling missed activity. Academic history can qualify on the next successful refresh.
-- The collection contains sixteen achievements. One achievement = one point. Awards are permanent and unique per Telegram user/key.
+- The catalog contains sixteen achievements. Each visible earned achievement is worth one point in the collection
+  and leaderboard. Awards are permanent and unique per Telegram user/key.
 - Pokémon: in a private chat, use `/pokemon` and send a photo of yourself with @yunbae. The bot sends it to the
   configured admin chat. An admin reviews the photo and grants the award with its inline button. The award
   records the admin's Telegram ID. Historical Pokémon awards count again and keep their original dates.
-- Each newly earned achievement queues a localized text notification with its name and condition in
+- Each newly earned visible achievement queues a localized text notification with its name and condition in
   `telegram_outbox` (category `achievement`, 24-hour TTL). The award and queue entry commit together;
   failures roll both back. Repeated observations and existing awards do not enqueue again.
   Delivery uses the recipient's locale/theme and the shared stopped-user, retry and night-silence policy.
@@ -25,7 +26,7 @@ Node is needed only for building the Vue/Vite frontend.
   inline Web App button. The keyboard is persisted with the message and reused on delivery retries.
   Existing awards are not backfilled with notifications. Outbox delivery remains at least once.
 - Equal scores share competition ranks (1, 1, 3). Display ties by the time the score was reached, then user ID.
-  Top ten contains only users with at least one award. The profile includes the user's rank outside that list.
+  The leaderboard includes every enabled user with at least one visible award. The profile includes the user's rank.
 - Food has one counter for both thresholds (50 and 100); ten minutes since the last counted view.
   Opening a selector, rating, errors and automatic notifications do not count. Group views count for the actor.
 - Night grades count successful initial displays, not pagination or polling: `[02:00, 05:00)` in Bishkek,
@@ -63,6 +64,16 @@ the first observation. Afterward the frozen baseline is retained. The supplied `
 locally; committed tests use a synthetic structural fixture, without its profile/CSRF token/course history.
 
 ## Mini App artwork and editable copy
+
+Authorized Mini App administrators can open **Admin → Achievements** at `/app/admin/achievements`.
+Select an achievement to grant it to a registered, unblocked Telegram user with achievements enabled, or edit its display.
+A repeated grant reports that the award already exists and preserves its date and original grantor.
+The display name is shared across languages. Clearing it restores the localized catalog names.
+Hiding removes the achievement from the collection, leaderboard and score, and suppresses new award notifications.
+Stored awards and progress remain available when the achievement is shown again.
+The public and admin API contracts are in [gamification.openapi.yaml](gamification.openapi.yaml).
+Migration V38 adds a display settings table. Rolling back V38 removes custom names and visibility settings.
+Existing awards and progress are stored separately and survive the rollback.
 
 The collection uses illustrated round medals featuring the human mascot from `reference/mascot.JPG` and a locked medal for unearned achievements.
 Opening an achievement reveals its illustration, description, status and earned date.

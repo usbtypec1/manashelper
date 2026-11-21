@@ -89,7 +89,7 @@ useTelegramDialogBack(computed(() => !!selected.value), close)
           <h1>{{ copy.leaderboard }}</h1>
           <p>{{ copy.rank }} <strong>{{ profile.rank ? `#${profile.rank}` : '—' }}</strong></p>
         </header>
-        <p class="section-label">{{ copy.top_ten }}</p>
+        <p class="section-label">{{ copy.participants }}</p>
         <p v-if="!entries.length" class="empty">{{ copy.empty }}</p>
         <ol v-else class="ranking-list">
           <li v-for="(entry, index) in entries" :key="index" :class="{ self: entry.is_self }">

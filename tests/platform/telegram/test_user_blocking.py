@@ -4,9 +4,9 @@ from aiogram.types import User as TelegramUser
 from dishka import Provider, Scope, make_async_container, provide
 from dishka.integrations.aiogram import setup_dishka
 
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
-from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.telegram.middlewares.user_blocking import UserBlockingMiddleware
 
 

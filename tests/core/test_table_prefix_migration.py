@@ -93,6 +93,7 @@ def _verify_migration(connection):
         "telegram_outbox_rate_buckets",
         "gamification_progress",
         "gamification_achievements",
+        "gamification_achievement_display",
         "telegram_processed_updates",
         "obis_sessions",
         "obis_auth_states",

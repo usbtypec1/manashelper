@@ -5,9 +5,9 @@ from dishka import Provider, Scope, make_async_container, provide
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from manashelper.core.provider import CoreProvider
+from manashelper.modules.broadcast.application.service import BroadcastResult, BroadcastSender
 from manashelper.modules.broadcast.application.use_cases.send_broadcast import SendBroadcastUseCase
 from manashelper.modules.broadcast.provider import BroadcastProvider
-from manashelper.modules.broadcast.service import BroadcastResult, BroadcastSender
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
 from manashelper.modules.notifications.repository import NotificationSettingsRepository
 from manashelper.modules.users.infrastructure.models.user import User

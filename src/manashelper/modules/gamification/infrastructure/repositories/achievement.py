@@ -3,18 +3,38 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import func, select
+from sqlalchemy import ARRAY, BigInteger, any_, cast, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from manashelper.modules.gamification.application.catalog import ACHIEVEMENT_KEYS, POKEMON_KEY
-from manashelper.modules.gamification.infrastructure.models.achievement import GamificationProgress, UserAchievement
+from manashelper.modules.gamification.application.catalog import ACHIEVEMENT_KEYS, POKEMON_KEY, AchievementDisplay
+from manashelper.modules.gamification.infrastructure.models.achievement import (
+    AchievementDisplayOverride,
+    GamificationProgress,
+    UserAchievement,
+)
 from manashelper.modules.users.infrastructure.models.user import User
 
 
 @dataclass(frozen=True, slots=True)
 class AchievementRepository:
     session: AsyncSession
+
+    async def display_overrides(self) -> dict[str, AchievementDisplay]:
+        rows = await self.session.scalars(select(AchievementDisplayOverride))
+        return {row.achievement_key: AchievementDisplay(row.custom_name, row.hidden) for row in rows}
+
+    async def display_for(self, key: str) -> AchievementDisplay:
+        row = await self.session.get(AchievementDisplayOverride, key)
+        return AchievementDisplay(row.custom_name, row.hidden) if row else AchievementDisplay()
+
+    async def save_display(self, key: str, display: AchievementDisplay) -> None:
+        values = {"custom_name": display.custom_name, "hidden": display.hidden}
+        await self.session.execute(
+            insert(AchievementDisplayOverride)
+            .values(achievement_key=key, **values)
+            .on_conflict_do_update(index_elements=[AchievementDisplayOverride.achievement_key], set_=values)
+        )
 
     async def is_enabled(self, user_id: int) -> bool:
         return bool(
@@ -71,7 +91,8 @@ class AchievementRepository:
     async def get_awards_for_users(self, user_ids: list[int]) -> dict[int, dict[str, datetime]]:
         rows = await self.session.execute(
             select(UserAchievement.user_id, UserAchievement.achievement_key, UserAchievement.earned_at).where(
-                UserAchievement.user_id.in_(user_ids), UserAchievement.achievement_key.in_(ACHIEVEMENT_KEYS)
+                UserAchievement.user_id == any_(cast(user_ids, ARRAY(BigInteger))),
+                UserAchievement.achievement_key.in_(ACHIEVEMENT_KEYS),
             )
         )
         awards: dict[int, dict[str, datetime]] = {}
@@ -101,15 +122,19 @@ class AchievementRepository:
             return False, 0
         return True, row.attendance_count
 
-    async def ranking(self, user_id: int | None = None) -> list[tuple[int, str, int, int]]:
-        # Ties share a place; SQL limits the result rather than loading every user.
+    async def ranking(
+        self, user_id: int | None = None, *, keys: tuple[str, ...] = ACHIEVEMENT_KEYS
+    ) -> list[tuple[int, str, int, int]]:
+        if not keys:
+            return []
+        # Ties share a place. The outer query orders rows without breaking rank ties.
         totals = (
             select(
                 UserAchievement.user_id,
                 func.count().label("score"),
                 func.max(UserAchievement.earned_at).label("reached_at"),
             )
-            .where(UserAchievement.achievement_key.in_(ACHIEVEMENT_KEYS))
+            .where(UserAchievement.achievement_key.in_(keys))
             .group_by(UserAchievement.user_id)
             .subquery()
         )
@@ -128,7 +153,7 @@ class AchievementRepository:
         )
         statement = select(ranked.c.id, ranked.c.full_name, ranked.c.score, ranked.c.place)
         if user_id is None:
-            statement = statement.order_by(ranked.c.score.desc(), ranked.c.reached_at, ranked.c.id).limit(10)
+            statement = statement.order_by(ranked.c.score.desc(), ranked.c.reached_at, ranked.c.id)
         else:
             statement = statement.where(ranked.c.id == user_id)
         rows = await self.session.execute(statement)

@@ -1067,8 +1067,8 @@ msgstr "Открой Mini App из бота Manashelper в Telegram."
 msgid "gamification.ui.subtitle"
 msgstr "Студенческая жизнь в достижениях."
 
-msgid "gamification.ui.top_ten"
-msgstr "Топ-10 студентов"
+msgid "gamification.ui.participants"
+msgstr "Все участники"
 
 msgid "gamification.night_owl.name"
 msgstr "Тревожник"
@@ -1963,7 +1963,7 @@ msgid "terms.ranking.title"
 msgstr "6. Достижения и лидерборд"
 
 msgid "terms.ranking.body"
-msgstr "При включённом доступе к достижениям сервис учитывает подходящие действия и рассчитывает награды по просмотрам меню, объявлениям и снимкам учебных данных. Участники с наградами могут попасть в топ-10. Другим авторизованным участникам достижений видны имя профиля Telegram, место, количество наград, полученные награды, их описания и даты получения. Лидерборд не возвращает исходные оценки, GPA, детали посещаемости, студенческий номер, учётные данные и незавершённый прогресс. Однако учебные награды и условия их получения могут косвенно раскрывать сведения об учёбе. Отключение доступа скрывает участника из рейтинга и прекращает новый прогресс, сохраняя прежние награды. Для этого обратитесь к администратору через «Обратную связь»."
+msgstr "При включённом доступе к достижениям сервис учитывает подходящие действия и рассчитывает награды по просмотрам меню, объявлениям и снимкам учебных данных. В рейтинг входят все участники с включённым доступом к достижениям и хотя бы одной видимой наградой. Другим авторизованным участникам достижений видны имя профиля Telegram, место, количество наград, полученные награды, их описания и даты получения. Лидерборд не возвращает исходные оценки, GPA, детали посещаемости, студенческий номер, учётные данные и незавершённый прогресс. Однако учебные награды и условия их получения могут косвенно раскрывать сведения об учёбе. Отключение доступа скрывает участника из рейтинга и прекращает новый прогресс, сохраняя прежние награды. Для этого обратитесь к администратору через «Обратную связь»."
 
 msgid "terms.controls.title"
 msgstr "7. Управление и запросы о данных"
@@ -2281,3 +2281,54 @@ msgstr "Ачивка «Покемон» выдана."
 
 msgid "gamification.pokemon.grant_unavailable"
 msgstr "У пользователя уже есть ачивка или сейчас её нельзя выдать."
+
+msgid "miniapp.admin.achievements"
+msgstr "Достижения"
+
+msgid "miniapp.admin.achievement"
+msgstr "Достижение"
+
+msgid "miniapp.admin.achievement_display"
+msgstr "Отображение"
+
+msgid "miniapp.admin.achievement_custom_name"
+msgstr "Своё название"
+
+msgid "miniapp.admin.achievement_name_hint"
+msgstr "Оставьте поле пустым, чтобы вернуть исходное название на каждом языке."
+
+msgid "miniapp.admin.achievement_hide"
+msgstr "Скрыть из коллекции и рейтинга"
+
+msgid "miniapp.admin.achievement_hidden"
+msgstr "Скрыто"
+
+msgid "miniapp.admin.achievement_save"
+msgstr "Сохранить изменения"
+
+msgid "miniapp.admin.achievement_grant_title"
+msgstr "Выдать достижение"
+
+msgid "miniapp.admin.achievement_grant"
+msgstr "Выдать"
+
+msgid "miniapp.admin.achievement_recipient_hint"
+msgstr "Скопируйте Telegram ID из раздела «Пользователи»."
+
+msgid "miniapp.admin.achievement_grant_confirm"
+msgstr "Выдать «{name}» пользователю Telegram {id}?"
+
+msgid "miniapp.admin.achievement_saved"
+msgstr "Изменения сохранены."
+
+msgid "miniapp.admin.achievement_granted"
+msgstr "Достижение выдано."
+
+msgid "miniapp.admin.achievement_already_granted"
+msgstr "У пользователя уже есть это достижение."
+
+msgid "miniapp.admin.achievement_missing"
+msgstr "Пользователь или достижение не найдены."
+
+msgid "miniapp.admin.achievement_unavailable"
+msgstr "У пользователя отключены достижения или заблокирован доступ к боту."

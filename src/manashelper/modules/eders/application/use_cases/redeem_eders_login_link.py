@@ -5,7 +5,7 @@ from manashelper.modules.eders.errors import InvalidEdersLoginLinkError
 from manashelper.modules.eders.infrastructure.client import EdersClient
 from manashelper.modules.obis.application.access import ObisAccessService
 from manashelper.modules.obis.application.ports import CredentialsStore
-from manashelper.modules.users.queries import UsersQuery
+from manashelper.modules.users.application.queries import UsersQuery
 
 
 @dataclass(frozen=True, slots=True)

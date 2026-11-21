@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from manashelper.modules.broadcast.service import BroadcastResult, BroadcastSender
+from manashelper.modules.broadcast.application.service import BroadcastResult, BroadcastSender
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
 
 

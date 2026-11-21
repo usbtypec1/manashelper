@@ -1070,8 +1070,8 @@ msgstr "Mini App колдонмосун Telegram ичиндеги Manashelper б
 msgid "gamification.ui.subtitle"
 msgstr "Студенттик жашоо жетишкендиктерде."
 
-msgid "gamification.ui.top_ten"
-msgstr "Мыкты 10 студент"
+msgid "gamification.ui.participants"
+msgstr "Бардык катышуучулар"
 
 msgid "gamification.night_owl.name"
 msgstr "Түнкү санаачыл"
@@ -1966,7 +1966,7 @@ msgid "terms.ranking.title"
 msgstr "6. Жетишкендиктер жана рейтинг"
 
 msgid "terms.ranking.body"
-msgstr "Жетишкендиктерге кирүү иштетилсе, кызмат тиешелүү аракеттерди эсептеп, меню көрүү, жарыя жана окуу көчүрмөлөрү боюнча сыйлыктарды аныктайт. Сыйлыгы барлар топ-10го кириши мүмкүн. Башка уруксат берилген катышуучулар Telegram атын, ордун, сыйлыктардын санын, алынган сыйлыктарды, сүрөттөмөлөрүн жана даталарын көрөт. Чийки баалар, GPA, катышуу чоо-жайы, студенттик номер, сырсөз жана бүтө элек прогресс рейтингде берилбейт. Бирок окуу сыйлыктары жана шарттары окуу тууралуу маалыматты кыйыр ачышы мүмкүн. Кирүүнү өчүрүү катышуучуну рейтингден жашырып, жаңы прогрессти токтотот; мурдагы сыйлыктар сакталат. Бул үчүн кайтарым байланыш аркылуу администраторго кайрылыңыз."
+msgstr "Жетишкендиктерге кирүү иштетилсе, кызмат тиешелүү аракеттерди эсептеп, меню көрүү, жарыя жана окуу көчүрмөлөрү боюнча сыйлыктарды аныктайт. Жетишкендиктерге кирүүсү иштетилген жана жок дегенде бир көрүнгөн сыйлыгы бар бардык катышуучулар рейтингге кирет. Башка уруксат берилген катышуучулар Telegram атын, ордун, сыйлыктардын санын, алынган сыйлыктарды, сүрөттөмөлөрүн жана даталарын көрөт. Чийки баалар, GPA, катышуу чоо-жайы, студенттик номер, сырсөз жана бүтө элек прогресс рейтингде берилбейт. Бирок окуу сыйлыктары жана шарттары окуу тууралуу маалыматты кыйыр ачышы мүмкүн. Кирүүнү өчүрүү катышуучуну рейтингден жашырып, жаңы прогрессти токтотот; мурдагы сыйлыктар сакталат. Бул үчүн кайтарым байланыш аркылуу администраторго кайрылыңыз."
 
 msgid "terms.controls.title"
 msgstr "7. Башкаруу жана маалымат өтүнүчтөрү"
@@ -2284,3 +2284,54 @@ msgstr "«Покемон» жетишкендиги берилди."
 
 msgid "gamification.pokemon.grant_unavailable"
 msgstr "Колдонуучу жетишкендикти мурда алган же азыр аны берүү мүмкүн эмес."
+
+msgid "miniapp.admin.achievements"
+msgstr "Жетишкендиктер"
+
+msgid "miniapp.admin.achievement"
+msgstr "Жетишкендик"
+
+msgid "miniapp.admin.achievement_display"
+msgstr "Көрсөтүү"
+
+msgid "miniapp.admin.achievement_custom_name"
+msgstr "Өз аталышы"
+
+msgid "miniapp.admin.achievement_name_hint"
+msgstr "Ар бир тилдеги баштапкы аталышты колдонуу үчүн талааны бош калтырыңыз."
+
+msgid "miniapp.admin.achievement_hide"
+msgstr "Жыйнактан жана рейтингден жашыруу"
+
+msgid "miniapp.admin.achievement_hidden"
+msgstr "Жашырылган"
+
+msgid "miniapp.admin.achievement_save"
+msgstr "Өзгөртүүлөрдү сактоо"
+
+msgid "miniapp.admin.achievement_grant_title"
+msgstr "Жетишкендик берүү"
+
+msgid "miniapp.admin.achievement_grant"
+msgstr "Берүү"
+
+msgid "miniapp.admin.achievement_recipient_hint"
+msgstr "Telegram ID'ни «Колдонуучулар» бөлүмүнөн көчүрүңүз."
+
+msgid "miniapp.admin.achievement_grant_confirm"
+msgstr "«{name}» жетишкендигин {id} Telegram колдонуучусуна бересизби?"
+
+msgid "miniapp.admin.achievement_saved"
+msgstr "Өзгөртүүлөр сакталды."
+
+msgid "miniapp.admin.achievement_granted"
+msgstr "Жетишкендик берилди."
+
+msgid "miniapp.admin.achievement_already_granted"
+msgstr "Колдонуучуда бул жетишкендик бар."
+
+msgid "miniapp.admin.achievement_missing"
+msgstr "Колдонуучу же жетишкендик табылган жок."
+
+msgid "miniapp.admin.achievement_unavailable"
+msgstr "Колдонуучунун жетишкендиктери өчүрүлгөн же ботко кирүүсү бөгөттөлгөн."

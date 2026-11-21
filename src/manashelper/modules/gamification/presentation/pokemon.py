@@ -17,7 +17,7 @@ from manashelper.localization.theme import Theme
 from manashelper.modules.gamification.application.catalog import POKEMON_KEY
 from manashelper.modules.gamification.application.queries import GamificationQuery
 from manashelper.modules.gamification.application.use_cases.award_achievement import AwardAchievementUseCase
-from manashelper.modules.users.queries import UsersQuery
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
 
 logger = logging.getLogger(__name__)

@@ -4,7 +4,7 @@ from enum import StrEnum
 
 from manashelper.modules.notifications.orm import NotificationSettings
 from manashelper.modules.notifications.repository import NotificationSettingsRepository
-from manashelper.modules.users.queries import UsersQuery
+from manashelper.modules.users.application.queries import UsersQuery
 
 
 class UserNotFoundError(Exception):

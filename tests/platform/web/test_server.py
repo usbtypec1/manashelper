@@ -50,8 +50,8 @@ from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.dispatcher import on_error
 from manashelper.platform.telegram.outbox.provider import OutboxProvider
 from manashelper.platform.telegram.provider import TelegramPlatformProvider
-from manashelper.platform.telegram.webhook_jobs import cleanup_webhook_receipts_job
-from manashelper.platform.telegram.webhook_models import ProcessedTelegramUpdate
+from manashelper.platform.telegram.webhook.jobs import cleanup_webhook_receipts_job
+from manashelper.platform.telegram.webhook.models import ProcessedTelegramUpdate
 from manashelper.platform.web.auth import authenticate
 from manashelper.platform.web.server import create_web_app
 from tests.platform.web.factories import SECRET, TOKEN, USER_ID, authorization

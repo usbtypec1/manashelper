@@ -18,11 +18,11 @@ from manashelper.modules.food_menu.infrastructure.repositories.food_menu_notific
 from manashelper.modules.notifications.orm import NotificationSettings
 from manashelper.modules.notifications.repository import NotificationSettingsRepository
 from manashelper.modules.schedule.infrastructure.models.course import Course
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.modules.users.application.use_cases.resolve_user_locale import ResolveUserLocaleUseCase
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
-from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.telegram.delivery import UserMessageDelivery
 from manashelper.platform.telegram.middlewares.i18n import LocaleMiddleware
 from tests.modules.users.application_factories import (

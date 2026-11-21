@@ -10,16 +10,20 @@ from dishka import FromDishka
 
 from manashelper.core.config import Settings
 from manashelper.localization.locale import DEFAULT_LOCALE
+from manashelper.modules.broadcast.application.content import (
+    BroadcastButton,
+    InvalidBroadcastButtonsError,
+    parse_buttons,
+)
+from manashelper.modules.broadcast.application.service import BroadcastSender
 from manashelper.modules.broadcast.application.use_cases.send_broadcast import SendBroadcastUseCase
-from manashelper.modules.broadcast.callbacks import BroadcastAction, BroadcastCallback
-from manashelper.modules.broadcast.content import BroadcastButton, InvalidBroadcastButtonsError, parse_buttons
-from manashelper.modules.broadcast.keyboards import (
+from manashelper.modules.broadcast.presentation.callbacks import BroadcastAction, BroadcastCallback
+from manashelper.modules.broadcast.presentation.keyboards import (
     build_broadcast_buttons,
     build_broadcast_buttons_editor,
     build_broadcast_confirm_keyboard,
 )
-from manashelper.modules.broadcast.sender import TelegramBroadcastSender, broadcast_body_fits
-from manashelper.modules.broadcast.service import BroadcastSender
+from manashelper.modules.broadcast.presentation.sender import TelegramBroadcastSender, broadcast_body_fits
 from manashelper.modules.users.application.locale import LocaleQuery
 from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.platform.i18n.catalog import i18n

@@ -2,8 +2,8 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from manashelper.modules.broadcast.callbacks import BroadcastAction, BroadcastCallback
-from manashelper.modules.broadcast.content import BroadcastButton
+from manashelper.modules.broadcast.application.content import BroadcastButton
+from manashelper.modules.broadcast.presentation.callbacks import BroadcastAction, BroadcastCallback
 from manashelper.modules.notifications.callbacks import BroadcastMuteCallback
 
 

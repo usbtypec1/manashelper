@@ -24,9 +24,9 @@ from manashelper.modules.obis.infrastructure import client as obis_client
 from manashelper.modules.obis.infrastructure.client import OBIS_BASE_URL, OBIS_HOST, ObisClient
 from manashelper.modules.obis.infrastructure.crypto import CryptoService
 from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
-from manashelper.modules.users.queries import UsersQuery
 from tests.modules.eders.application_factories import build_eders_service, build_eders_tracking_service
 from tests.modules.eders.factories import make_eders_client
 from tests.modules.gamification.factories import build_awards
@@ -487,8 +487,8 @@ async def test_browser_login_hands_native_key_to_separate_browser_without_exposi
     from manashelper.modules.eders.application.use_cases.issue_eders_login_link import IssueEdersLoginLinkUseCase
     from manashelper.modules.eders.application.use_cases.redeem_eders_login_link import RedeemEdersLoginLinkUseCase
     from manashelper.modules.eders.errors import InvalidEdersLoginLinkError
+    from manashelper.modules.users.application.queries import UsersQuery
     from manashelper.modules.users.infrastructure.repositories.user import UserRepository
-    from manashelper.modules.users.queries import UsersQuery
 
     transports = install_client(monkeypatch, "browser-login")
     crypto = CryptoService(SimpleNamespace(obis_encryption_key=base64.b64encode(bytes(range(32))).decode()))

@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock
 import pytest
 from aiogram.types import CallbackQuery, Message
 
+from manashelper.modules.broadcast.application.service import BroadcastSender
 from manashelper.modules.broadcast.application.use_cases.send_broadcast import SendBroadcastUseCase
-from manashelper.modules.broadcast.keyboards import build_broadcast_delivery_keyboard
-from manashelper.modules.broadcast.service import BroadcastSender
+from manashelper.modules.broadcast.presentation.keyboards import build_broadcast_delivery_keyboard
 from manashelper.modules.notifications import router
 from manashelper.modules.notifications.callbacks import BroadcastMuteCallback
 from manashelper.modules.notifications.keyboards import build_notifications_keyboard
@@ -15,9 +15,9 @@ from manashelper.modules.notifications.orm import NotificationSettings
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
 from manashelper.modules.notifications.repository import NotificationSettingsRepository
 from manashelper.modules.notifications.settings import UserNotFoundError
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
-from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
 from tests.modules.notifications.application_factories import build_notification_settings_service
 

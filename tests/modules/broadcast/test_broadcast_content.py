@@ -1,6 +1,10 @@
 import pytest
 
-from manashelper.modules.broadcast.content import BroadcastButton, InvalidBroadcastButtonsError, parse_buttons
+from manashelper.modules.broadcast.application.content import (
+    BroadcastButton,
+    InvalidBroadcastButtonsError,
+    parse_buttons,
+)
 
 
 def test_buttons_preserve_links_callback_payloads_and_order():

@@ -3,9 +3,11 @@ from dishka import Provider, Scope, provide
 from manashelper.modules.gamification.application.notifications import AchievementNotificationSender
 from manashelper.modules.gamification.application.queries import GamificationQuery
 from manashelper.modules.gamification.application.use_cases.award_achievement import AwardAchievementUseCase
+from manashelper.modules.gamification.application.use_cases.grant_achievement import GrantAchievementUseCase
 from manashelper.modules.gamification.application.use_cases.record_activity import RecordActivityUseCase
 from manashelper.modules.gamification.application.use_cases.record_attendance import RecordAttendanceUseCase
 from manashelper.modules.gamification.application.use_cases.record_transcript import RecordTranscriptUseCase
+from manashelper.modules.gamification.application.use_cases.set_achievement_display import SetAchievementDisplayUseCase
 from manashelper.modules.gamification.application.use_cases.set_gamification_enabled import (
     SetGamificationEnabledUseCase,
 )
@@ -19,6 +21,8 @@ class GamificationProvider(Provider):
     repository = provide(AchievementRepository)
     notifications = provide(TelegramAchievementNotificationSender, provides=AchievementNotificationSender)
     awards = provide(AwardAchievementUseCase)
+    grant_award = provide(GrantAchievementUseCase)
+    set_display = provide(SetAchievementDisplayUseCase)
     activity = provide(RecordActivityUseCase)
     attendance = provide(RecordAttendanceUseCase)
     access = provide(SetGamificationEnabledUseCase)

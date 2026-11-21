@@ -41,9 +41,9 @@ from manashelper.modules.schedule.application.schedule import NoTrackedCoursesEr
 from manashelper.modules.schedule.provider import ScheduleProvider
 from manashelper.modules.study_week.application.use_cases.get_study_week import GetStudyWeekUseCase
 from manashelper.modules.study_week.provider import StudyWeekProvider
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.modules.users.provider import UsersProvider
-from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.telegram.dispatcher import create_dispatcher
 from manashelper.platform.telegram.outbox.provider import OutboxProvider

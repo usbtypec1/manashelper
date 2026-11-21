@@ -18,9 +18,9 @@ from manashelper.modules.obis.infrastructure.crypto import CryptoService
 from manashelper.modules.obis.infrastructure.models.session import ObisSession
 from manashelper.modules.obis.infrastructure.models.snapshot import ObisSnapshot
 from manashelper.modules.obis.infrastructure.repositories.credentials import ObisCredentialsRepository
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
-from manashelper.modules.users.queries import UsersQuery
 from tests.modules.eders.application_factories import build_eders_service, build_eders_tracking_service
 from tests.modules.obis.factories import build_obis
 

@@ -8,8 +8,8 @@ from manashelper.modules.obis.application.queries import ObisResultsQuery
 from manashelper.modules.obis.application.use_cases.poll_obis_user import PollObisUserUseCase
 from manashelper.modules.obis.presentation.sender import TelegramObisNotificationSender
 from manashelper.modules.users.application.locale import LocaleQuery
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.application.theme import ThemeQuery
-from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.telegram.outbox.service import OutboxService
 
 logger = logging.getLogger(__name__)

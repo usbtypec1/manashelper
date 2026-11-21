@@ -2,13 +2,18 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 from manashelper.core.time import BISHKEK_TZ
-from manashelper.modules.gamification.application.catalog import ACHIEVEMENTS
+from manashelper.modules.gamification.application.catalog import ACHIEVEMENTS, Achievement, AchievementDisplay
 from manashelper.modules.gamification.infrastructure.repositories.achievement import AchievementRepository
 
 ACADEMIC_KEYS = frozenset(
     {"formula_one", "champion", "comeback", "fall", "eldin_balasy", "phoenix", "stability", "einstein"}
 )
 ATTENDANCE_KEYS = frozenset({"thin_ice", "iron_attendance"})
+DEFAULT_DISPLAY = AchievementDisplay()
+
+
+def _visible_achievements(overrides: dict[str, AchievementDisplay]) -> tuple[Achievement, ...]:
+    return tuple(item for item in ACHIEVEMENTS if not overrides.get(item.key, DEFAULT_DISPLAY).hidden)
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,6 +25,7 @@ class AchievementCard:
     earned_at: str | None
     available: bool
     blocked_reason: str | None
+    custom_name: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,6 +40,7 @@ class AchievementProfile:
 class EarnedAchievement:
     key: str
     earned_at: str
+    custom_name: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,7 +62,16 @@ class GamificationQuery:
     async def has_award(self, user_id: int, key: str) -> bool:
         return key in await self.repository.get_awards(user_id)
 
+    async def display_overrides(self) -> dict[str, AchievementDisplay]:
+        return await self.repository.display_overrides()
+
+    async def display_for(self, key: str) -> AchievementDisplay:
+        return await self.repository.display_for(key)
+
     async def profile(self, user_id: int) -> AchievementProfile:
+        overrides = await self.display_overrides()
+        visible = _visible_achievements(overrides)
+        visible_keys = tuple(item.key for item in visible)
         food, streak, night_date, ratings = await self.repository.get_progress(user_id)
         today = datetime.now(UTC).astimezone(BISHKEK_TZ).date()
         if night_date is None or night_date < today - timedelta(days=1):
@@ -63,7 +79,7 @@ class GamificationQuery:
         awards = await self.repository.get_awards(user_id)
         academic_ready, baseline, current_gpa, aa_count = await self.repository.academic_progress(user_id)
         attendance_ready, attendance_count = await self.repository.attendance_progress(user_id)
-        ranking = await self.repository.ranking(user_id)
+        ranking = await self.repository.ranking(user_id, keys=visible_keys)
         counters: dict[str, int] = {
             "foodie": food,
             "cafeteria_boss": food,
@@ -73,7 +89,7 @@ class GamificationQuery:
             "thin_ice": attendance_count,
         }
         cards = []
-        for achievement in ACHIEVEMENTS:
+        for achievement in visible:
             earned = awards.get(achievement.key)
             progress: int | float = counters.get(achievement.key, 0)
             available = True
@@ -100,12 +116,16 @@ class GamificationQuery:
                     earned.isoformat() if earned else None,
                     available,
                     blocked_reason,
+                    overrides.get(achievement.key, DEFAULT_DISPLAY).custom_name,
                 )
             )
-        return AchievementProfile(len(awards), len(ACHIEVEMENTS), ranking[0][3] if ranking else None, tuple(cards))
+        score = sum(key in awards for key in visible_keys)
+        return AchievementProfile(score, len(visible), ranking[0][3] if ranking else None, tuple(cards))
 
     async def leaderboard(self) -> tuple[LeaderboardEntry, ...]:
-        ranking = await self.repository.ranking()
+        overrides = await self.display_overrides()
+        visible = _visible_achievements(overrides)
+        ranking = await self.repository.ranking(keys=tuple(item.key for item in visible))
         awards = await self.repository.get_awards_for_users([row[0] for row in ranking])
         return tuple(
             LeaderboardEntry(
@@ -114,8 +134,12 @@ class GamificationQuery:
                 score,
                 rank,
                 tuple(
-                    EarnedAchievement(achievement.key, earned_at.isoformat())
-                    for achievement in ACHIEVEMENTS
+                    EarnedAchievement(
+                        achievement.key,
+                        earned_at.isoformat(),
+                        overrides.get(achievement.key, DEFAULT_DISPLAY).custom_name,
+                    )
+                    for achievement in visible
                     if (earned_at := awards.get(user_id, {}).get(achievement.key)) is not None
                 ),
             )

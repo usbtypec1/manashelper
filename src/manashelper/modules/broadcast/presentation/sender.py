@@ -5,7 +5,7 @@ from aiogram.utils.i18n import gettext as _
 from manashelper.localization.locale import Locale
 from manashelper.localization.theme import Theme
 from manashelper.modules.broadcast.application.campaigns import CampaignDraft
-from manashelper.modules.broadcast.keyboards import build_broadcast_delivery_keyboard
+from manashelper.modules.broadcast.presentation.keyboards import build_broadcast_delivery_keyboard
 from manashelper.modules.users.application.locale import LocaleQuery
 from manashelper.modules.users.application.theme import ThemeQuery
 from manashelper.platform.i18n.catalog import i18n

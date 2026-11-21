@@ -5,6 +5,7 @@ from textwrap import dedent
 EXPECTED_TABLES = {
     "gamification_progress",
     "gamification_achievements",
+    "gamification_achievement_display",
     "telegram_processed_updates",
     "action_logs",
     "advertisement_ads",

@@ -13,14 +13,14 @@ from manashelper.modules.broadcast.application.queries import CampaignsQuery
 from manashelper.modules.broadcast.application.use_cases.create_campaign import CreateCampaignUseCase
 from manashelper.modules.broadcast.application.use_cases.retry_campaign import RetryCampaignUseCase
 from manashelper.modules.broadcast.infrastructure.repositories.campaign import CampaignRepository
-from manashelper.modules.broadcast.sender import TelegramCampaignDelivery
+from manashelper.modules.broadcast.presentation.sender import TelegramCampaignDelivery
 from manashelper.modules.notifications.orm import NotificationSettings
 from manashelper.modules.notifications.queries import NotificationRecipientsQuery
 from manashelper.modules.notifications.repository import NotificationSettingsRepository
 from manashelper.modules.users.application.bot_status import BotStatusQuery
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.infrastructure.models.user import User
 from manashelper.modules.users.infrastructure.repositories.user import UserRepository
-from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.telegram.outbox.models import OutboxMessage
 from manashelper.platform.telegram.outbox.repository import OutboxRepository
 from manashelper.platform.telegram.outbox.service import OutboxService

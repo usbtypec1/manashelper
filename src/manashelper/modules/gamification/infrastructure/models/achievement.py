@@ -36,3 +36,11 @@ class UserAchievement(Base):
     achievement_key: Mapped[str] = mapped_column(String(32), primary_key=True)
     earned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     granted_by: Mapped[int | None] = mapped_column(BigInteger)
+
+
+class AchievementDisplayOverride(Base):
+    __tablename__ = "gamification_achievement_display"
+
+    achievement_key: Mapped[str] = mapped_column(String(32), primary_key=True)
+    custom_name: Mapped[str | None] = mapped_column(String(80))
+    hidden: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())

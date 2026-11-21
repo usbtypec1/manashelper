@@ -31,7 +31,8 @@ Advertisements separates presentation, application and infrastructure, with doma
 Feedback keeps its flat persistence/presentation layout and owns application/use_cases plus FeedbackQuery.
 The student survey and its response table are removed; only historical Alembic migrations remain.
 Broadcast lives in `modules/broadcast/`: SendBroadcastUseCase uses active, unmuted IDs from NotificationRecipientsQuery and a delivery protocol;
-Telegram localization, HTML and photo/text preparation stay in its sender adapter. Its provider retains REQUEST scope.
+draft parsing and delivery contracts live in `application/`. Telegram handlers and sender adapters live in `presentation/`,
+where they own localization, HTML and photo/text preparation. Its provider retains REQUEST scope.
 Broadcast accepts a text/photo draft and URL or existing callback buttons, with preview and explicit confirmation.
 Each delivery adds a localized 14-day unsubscribe button. Notifications owns the timezone-aware
 broadcast_muted_until setting, recipient filtering and early reset under Settings → Notifications.
@@ -124,6 +125,7 @@ matched/allowed updates from private chats only, masks password text with `[mask
 Scheduled message deletion and food menu auto-delete settings have been removed, including their tables.
 Immediate message deletion remains available for advertisement publication removal.
 The gettext adapter lives in `platform/i18n/catalog.py`; pure Locale/weekday labels stay in `localization/`.
+Telegram webhook processing, including update deduplication and cleanup, lives in `platform/telegram/webhook/`.
 Command JSON and .mo runtime directories are unchanged, with checkout/Docker-like path tests.
 OBIS lives in `modules/obis/`: application queries/use cases/snapshot comparison, HTTP/parser/crypto,
 credential and snapshot repositories/ORM, Telegram presentation, provider and jobs. ObisProvider keeps

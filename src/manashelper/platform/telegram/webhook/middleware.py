@@ -5,7 +5,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, Update
 from dishka.integrations.aiogram import CONTAINER_NAME
 
-from manashelper.platform.telegram.webhook_service import WebhookReceiptService
+from manashelper.platform.telegram.webhook.service import WebhookReceiptService
 
 
 class WebhookReceiptMiddleware(BaseMiddleware):

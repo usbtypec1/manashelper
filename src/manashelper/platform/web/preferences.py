@@ -39,8 +39,8 @@ from manashelper.modules.schedule.application.free_time import (
 from manashelper.modules.schedule.application.time_ranges import format_minutes
 from manashelper.modules.schedule.application.use_cases.toggle_tracked_course import ToggleTrackedCourseUseCase
 from manashelper.modules.users.application.locale import LocaleQuery
+from manashelper.modules.users.application.queries import UsersQuery
 from manashelper.modules.users.application.theme import ThemeQuery
-from manashelper.modules.users.queries import UsersQuery
 from manashelper.platform.i18n.catalog import i18n
 from manashelper.platform.web.auth import authenticate
 from manashelper.platform.web.preferences_catalog import ui_strings
